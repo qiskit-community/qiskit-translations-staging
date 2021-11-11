@@ -74,7 +74,7 @@ Style Guide
 ===========
 
 To enforce a consistent code style in the project, we use `Pylint
-<https://www.pylint.org>`__ and `pycodesytle
+<https://www.pylint.org>`__ and `pycodestyle
 <https://pycodestyle.readthedocs.io/en/latest/>`__ to verify that code
 contributions conform to and respect the project's style guide. To verify that
 your changes conform to the style guide, run: ``tox -elint``
@@ -164,7 +164,7 @@ Do not assume the reviewer understands what the original problem was.
    When reading an issue, after a number of back & forth comments, it is often
    clear what the root cause problem is. The commit message should have a clear
    statement as to what the original problem is. The bug is merely interesting
-   historical background on *how* the problem was identified. It should be
+   for historical background on *how* the problem was identified. It should be
    possible to review a proposed patch for correctness from the commit message,
    without needing to read the bug ticket.
 
@@ -324,6 +324,7 @@ raised by a private method that only has one caller, ``stack_level=3`` might be
 appropriate.
 
 
+.. _stable_branch_policy:
 
 Stable Branch Policy
 ====================
@@ -519,7 +520,7 @@ documentation from Terra's 0.10.0 release. When the meta-package's requirements
 are bumped, then it will start pulling documentation from the new version. This
 means that fixes for incorrect API documentation will need to be
 included in a new release. Documentation fixes are valid backports for a stable
-patch release per the stable branch policy (see that section below).
+patch release per the stable branch policy (see :ref:`stable_branch_policy`).
 
 During the build process, the contents of each element's ``docs/apidocs/``
 are recursively copied into a shared copy of ``doc/apidocs/`` in the meta-package
@@ -676,10 +677,55 @@ steps for each element.
 Set up the Virtual Development Environment
 ==========================================
 
-.. code-block:: sh
+Virtual environments are used for Qiskit development to isolate the development environment
+from system-wide packages. This way, we avoid inadvertently becoming dependent on a
+particular system configuration. For developers, this also makes it easy to maintain multiple
+environments (e.g. one per supported Python version, for older versions of Qiskit, etc.).
 
-   conda create -y -n QiskitDevenv python=3
-   conda activate QiskitDevenv
+.. note::
+
+   **M1 Mac users:** Some Qiskit dependencies may not yet be available in PyPI. Until they are,
+   Conda is recommended.
+
+
+.. tabbed:: Python venv
+
+   All Python versions supported by Qiskit include built-in virtual environment module
+   `venv <https://docs.python.org/3/tutorial/venv.html>`__.
+
+   Start by creating a new virtual environment with ``venv``. The resulting
+   environment will use the same version of Python that created it and will not inherit installed
+   system-wide packages by default. The specified folder will be created and is used to hold the environment's
+   installation. It can be placed anywhere. For more detail, see the official Python documentation,
+   `Creation of virtual environments <https://docs.python.org/3/library/venv.html>`__.
+
+   .. code-block:: sh
+
+      python3 -m venv ~/.venvs/qiskit-dev
+
+   Activate the environment by invoking the appropriate activation script for your system, which can
+   be found within the environment folder. For example, for bash/zsh:
+
+   .. code-block:: sh
+
+      source ~/.venvs/qiskit-dev/bin/activate
+
+   Upgrade pip within the environment to ensure Qiskit dependencies installed in the subsequent sections
+   can be located for your system.
+
+   .. code-block:: sh
+
+      pip install -U pip
+
+.. tabbed:: Conda
+
+   For Conda users, a new environment can be created as follows.
+
+   .. code-block:: sh
+
+      conda create -y -n QiskitDevenv python=3
+      conda activate QiskitDevenv
+
 
 .. _install-qiskit-terra:
 
@@ -841,6 +887,11 @@ universally depending on operating system.
 
 
 .. tabbed:: macOS
+
+   .. note::
+      **Mac M1 Users:** There are ongoing issues with building Aer for AArch64 macOS.
+      See `#1286 <https://github.com/Qiskit/qiskit-aer/issues/1286>`__ for discussion and
+      workarounds before continuing.
 
    3. Install dependencies.
 

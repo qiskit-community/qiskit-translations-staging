@@ -22,6 +22,7 @@
 
    .. autoattribute:: backend_requirements
    .. autoattribute:: creation_date
+   .. autoattribute:: data
    .. autoattribute:: description
    .. autoattribute:: interim_results
    .. autoattribute:: is_public
@@ -29,4 +30,4 @@
    .. autoattribute:: name
    .. autoattribute:: program_id
    .. autoattribute:: return_values
-   .. autoattribute:: version
+   .. autoattribute:: update_date

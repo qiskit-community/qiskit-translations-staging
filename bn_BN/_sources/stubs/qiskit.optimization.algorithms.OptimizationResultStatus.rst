@@ -11,6 +11,6 @@
 
    .. rubric:: Attributes
 
+   .. autoattribute:: SUCCESS
    .. autoattribute:: FAILURE
    .. autoattribute:: INFEASIBLE
-   .. autoattribute:: SUCCESS
