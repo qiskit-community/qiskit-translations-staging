@@ -11,6 +11,6 @@
 
    .. rubric:: Attributes
 
-   .. autoattribute:: BRAVYI_KITAEV
    .. autoattribute:: JORDAN_WIGNER
    .. autoattribute:: PARITY
+   .. autoattribute:: BRAVYI_KITAEV

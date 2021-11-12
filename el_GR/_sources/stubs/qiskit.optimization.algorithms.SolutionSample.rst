@@ -8,3 +8,10 @@
    :show-inheritance:
 
 
+
+   .. rubric:: Attributes
+
+   .. autoattribute:: x
+   .. autoattribute:: fval
+   .. autoattribute:: probability
+   .. autoattribute:: status

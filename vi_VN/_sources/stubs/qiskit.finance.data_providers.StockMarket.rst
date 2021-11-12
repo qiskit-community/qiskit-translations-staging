@@ -11,6 +11,6 @@
 
    .. rubric:: Attributes
 
-   .. autoattribute:: EURONEXT
    .. autoattribute:: LONDON
+   .. autoattribute:: EURONEXT
    .. autoattribute:: SINGAPORE

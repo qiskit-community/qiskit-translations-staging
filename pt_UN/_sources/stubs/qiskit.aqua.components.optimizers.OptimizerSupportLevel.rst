@@ -11,7 +11,7 @@
 
    .. rubric:: Attributes
 
-   .. autoattribute:: ignored
    .. autoattribute:: not_supported
-   .. autoattribute:: required
+   .. autoattribute:: ignored
    .. autoattribute:: supported
+   .. autoattribute:: required

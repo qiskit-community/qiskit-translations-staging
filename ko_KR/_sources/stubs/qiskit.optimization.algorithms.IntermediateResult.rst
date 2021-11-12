@@ -11,6 +11,6 @@
 
    .. rubric:: Attributes
 
-   .. autoattribute:: ALL_ITERATIONS
-   .. autoattribute:: LAST_ITERATION
    .. autoattribute:: NO_ITERATIONS
+   .. autoattribute:: LAST_ITERATION
+   .. autoattribute:: ALL_ITERATIONS
