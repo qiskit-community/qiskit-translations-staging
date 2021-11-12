@@ -11,10 +11,10 @@
 
    .. rubric:: Attributes
 
-   .. autoattribute:: INITIALIZING
-   .. autoattribute:: QUEUED
-   .. autoattribute:: VALIDATING
-   .. autoattribute:: RUNNING
    .. autoattribute:: CANCELLED
    .. autoattribute:: DONE
    .. autoattribute:: ERROR
+   .. autoattribute:: INITIALIZING
+   .. autoattribute:: QUEUED
+   .. autoattribute:: RUNNING
+   .. autoattribute:: VALIDATING

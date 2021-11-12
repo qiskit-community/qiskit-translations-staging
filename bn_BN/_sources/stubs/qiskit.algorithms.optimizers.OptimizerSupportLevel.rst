@@ -11,7 +11,7 @@ OptimizerSupportLevel
 
    .. rubric:: Attributes
 
-   .. autoattribute:: not_supported
    .. autoattribute:: ignored
-   .. autoattribute:: supported
+   .. autoattribute:: not_supported
    .. autoattribute:: required
+   .. autoattribute:: supported

@@ -29,6 +29,5 @@
    .. rubric:: Attributes
 
    .. autoattribute:: creation_date
-   .. autoattribute:: image
    .. autoattribute:: inputs
    .. autoattribute:: program_id

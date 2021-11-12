@@ -17,8 +17,3 @@
       ~PulseDefaults.to_dict
 
 
-
-   .. rubric:: Attributes
-
-   .. autoattribute:: qubit_freq_est
-   .. autoattribute:: meas_freq_est
