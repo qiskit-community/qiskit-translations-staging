@@ -429,7 +429,9 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">second_q_op</span><span class="p">:</span> <span class="n">SecondQuantizedOp</span><span class="p">,</span>
         <span class="n">num_particles</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">sector_locator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Z2Symmetries</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sector_locator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
+            <span class="n">Callable</span><span class="p">[[</span><span class="n">Z2Symmetries</span><span class="p">,</span> <span class="s2">&quot;QubitConverter&quot;</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PauliSumOp</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Map the given second quantized operator to a qubit operators. Also it will</span>
@@ -441,10 +443,10 @@
 <span class="sd">            second_q_op: A second quantized operator.</span>
 <span class="sd">            num_particles: Needed for two qubit reduction to determine correct sector. If</span>
 <span class="sd">                not supplied, even if two_qubit_reduction is possible, it will not be done.</span>
-<span class="sd">            sector_locator: An optional callback, that given the detected Z2Symmetries can</span>
-<span class="sd">                determine the correct sector of the tapered operators so the correct one</span>
-<span class="sd">                can be returned, which contains the problem solution, out of the set that are</span>
-<span class="sd">                the result of tapering.</span>
+<span class="sd">            sector_locator: An optional callback, that given the detected Z2Symmetries, and also</span>
+<span class="sd">                the instance of the converter, can determine the correct sector of the tapered</span>
+<span class="sd">                operators so the correct one can be returned, which contains the problem solution,</span>
+<span class="sd">                out of the set that are the result of tapering.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            PauliSumOp qubit operator</span>
@@ -457,6 +459,30 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_z2symmetries</span> <span class="o">=</span> <span class="n">z2symmetries</span>
 
         <span class="k">return</span> <span class="n">tapered_op</span></div>
+
+<div class="viewcode-block" id="QubitConverter.convert_only"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.converters.second_quantization.QubitConverter.convert_only.html#qiskit_nature.converters.second_quantization.QubitConverter.convert_only">[documenti]</a>    <span class="k">def</span> <span class="nf">convert_only</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">second_q_op</span><span class="p">:</span> <span class="n">SecondQuantizedOp</span><span class="p">,</span>
+        <span class="n">num_particles</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PauliSumOp</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Map the given second quantized operator to a qubit operators using the mapper</span>
+<span class="sd">        and possibly two qubit reduction. No tapering is done, nor is any conversion state saved,</span>
+<span class="sd">        as is done in :meth:`convert` where a later :meth:`convert_match` will convert</span>
+<span class="sd">        further operators in an identical manner.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            second_q_op: A second quantized operator.</span>
+<span class="sd">            num_particles: Needed for two qubit reduction to determine correct sector. If</span>
+<span class="sd">                not supplied, even if two_qubit_reduction is possible, it will not be done.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            PauliSumOp qubit operator</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">qubit_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_map</span><span class="p">(</span><span class="n">second_q_op</span><span class="p">)</span>
+        <span class="n">reduced_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_two_qubit_reduce</span><span class="p">(</span><span class="n">qubit_op</span><span class="p">,</span> <span class="n">num_particles</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">reduced_op</span></div>
 
 <div class="viewcode-block" id="QubitConverter.force_match"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.converters.second_quantization.QubitConverter.force_match.html#qiskit_nature.converters.second_quantization.QubitConverter.force_match">[documenti]</a>    <span class="k">def</span> <span class="nf">force_match</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -498,6 +524,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">second_q_ops</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">SecondQuantizedOp</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">SecondQuantizedOp</span><span class="p">]],</span>
         <span class="n">suppress_none</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">check_commutes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">PauliSumOp</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">PauliSumOp</span><span class="p">]]]:</span>
         <span class="sd">&quot;&quot;&quot;Convert further operators to match that done in :meth:`convert`, or as set by</span>
 <span class="sd">            :meth:`force_match`.</span>
@@ -505,8 +532,12 @@
 <span class="sd">        Args:</span>
 <span class="sd">            second_q_ops: A second quantized operator or list thereof to be converted</span>
 <span class="sd">            suppress_none: If None should be placed in the output list where an operator</span>
-<span class="sd">               did not commute with symmetry, to maintain order, or whether that should</span>
-<span class="sd">               be suppressed where the output list length may then be smaller than the input</span>
+<span class="sd">                did not commute with symmetry, to maintain order, or whether that should</span>
+<span class="sd">                be suppressed where the output list length may then be smaller than the input</span>
+<span class="sd">            check_commutes: If True (default) a tapered operator must commute with the</span>
+<span class="sd">                symmetry to be tapered otherwise None is returned for that operator. When</span>
+<span class="sd">                False the operator is tapered with no check so due consideration needs to</span>
+<span class="sd">                be given in this case to how such operator(s) are eventually used.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A qubit operator or list thereof of the same length as the second_q_ops list. All</span>
@@ -528,7 +559,7 @@
         <span class="n">reduced_ops</span> <span class="o">=</span> <span class="p">[</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_two_qubit_reduce</span><span class="p">(</span><span class="n">qubit_op</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_particles</span><span class="p">)</span> <span class="k">for</span> <span class="n">qubit_op</span> <span class="ow">in</span> <span class="n">qubit_ops</span>
         <span class="p">]</span>
-        <span class="n">tapered_ops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_symmetry_reduce</span><span class="p">(</span><span class="n">reduced_ops</span><span class="p">,</span> <span class="n">suppress_none</span><span class="p">)</span>
+        <span class="n">tapered_ops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_symmetry_reduce</span><span class="p">(</span><span class="n">reduced_ops</span><span class="p">,</span> <span class="n">suppress_none</span><span class="p">,</span> <span class="n">check_commutes</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">wrapped</span><span class="p">:</span>
             <span class="n">tapered_ops</span> <span class="o">=</span> <span class="n">tapered_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -580,7 +611,9 @@
     <span class="k">def</span> <span class="nf">_find_taper_op</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">qubit_op</span><span class="p">:</span> <span class="n">PauliSumOp</span><span class="p">,</span>
-        <span class="n">sector_locator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Z2Symmetries</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sector_locator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
+            <span class="n">Callable</span><span class="p">[[</span><span class="n">Z2Symmetries</span><span class="p">,</span> <span class="s2">&quot;QubitConverter&quot;</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">PauliSumOp</span><span class="p">,</span> <span class="n">Z2Symmetries</span><span class="p">]:</span>
         <span class="c1"># Return operator unchanged and empty symmetries if we do not taper</span>
         <span class="n">tapered_qubit_op</span> <span class="o">=</span> <span class="n">qubit_op</span>
@@ -595,7 +628,7 @@
                 <span class="c1"># As we have symmetries, if we have a sector locator, if that provides one back</span>
                 <span class="c1"># it will override any value defined on constructor</span>
                 <span class="k">if</span> <span class="n">sector_locator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">z2symmetry_reduction</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
-                    <span class="n">z2symmetry_reduction</span> <span class="o">=</span> <span class="n">sector_locator</span><span class="p">(</span><span class="n">z2_symmetries</span><span class="p">)</span>
+                    <span class="n">z2symmetry_reduction</span> <span class="o">=</span> <span class="n">sector_locator</span><span class="p">(</span><span class="n">z2_symmetries</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">z2symmetry_reduction</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">z2symmetry_reduction</span> <span class="o">=</span> <span class="n">z2symmetry_reduction</span>  <span class="c1"># Overrides any value</span>
 
@@ -637,29 +670,38 @@
         <span class="k">return</span> <span class="n">tapered_qubit_op</span><span class="p">,</span> <span class="n">z2_symmetries</span>
 
     <span class="k">def</span> <span class="nf">_symmetry_reduce</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">qubit_ops</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PauliSumOp</span><span class="p">],</span> <span class="n">suppress_none</span><span class="p">:</span> <span class="nb">bool</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">qubit_ops</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PauliSumOp</span><span class="p">],</span>
+        <span class="n">suppress_none</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">check_commutes</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">PauliSumOp</span><span class="p">]]:</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_z2symmetries</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_z2symmetries</span><span class="o">.</span><span class="n">is_empty</span><span class="p">():</span>
             <span class="n">tapered_qubit_ops</span> <span class="o">=</span> <span class="n">qubit_ops</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Checking operators commute with symmetry:&quot;</span><span class="p">)</span>
-            <span class="n">symmetry_ops</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">symmetry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_z2symmetries</span><span class="o">.</span><span class="n">symmetries</span><span class="p">:</span>
-                <span class="n">symmetry_ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PauliSumOp</span><span class="o">.</span><span class="n">from_list</span><span class="p">([(</span><span class="n">symmetry</span><span class="o">.</span><span class="n">to_label</span><span class="p">(),</span> <span class="mf">1.0</span><span class="p">)]))</span>
-            <span class="n">commuted</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">qubit_op</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">qubit_ops</span><span class="p">):</span>
-                <span class="n">commutes</span> <span class="o">=</span> <span class="n">QubitConverter</span><span class="o">.</span><span class="n">_check_commutes</span><span class="p">(</span><span class="n">symmetry_ops</span><span class="p">,</span> <span class="n">qubit_op</span><span class="p">)</span>
-                <span class="n">commuted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">commutes</span><span class="p">)</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Qubit operators commuted with symmetry </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">commuted</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">check_commutes</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Checking operators commute with symmetry:&quot;</span><span class="p">)</span>
+                <span class="n">symmetry_ops</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">symmetry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_z2symmetries</span><span class="o">.</span><span class="n">symmetries</span><span class="p">:</span>
+                    <span class="n">symmetry_ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PauliSumOp</span><span class="o">.</span><span class="n">from_list</span><span class="p">([(</span><span class="n">symmetry</span><span class="o">.</span><span class="n">to_label</span><span class="p">(),</span> <span class="mf">1.0</span><span class="p">)]))</span>
+                <span class="n">commuted</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">qubit_op</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">qubit_ops</span><span class="p">):</span>
+                    <span class="n">commutes</span> <span class="o">=</span> <span class="n">QubitConverter</span><span class="o">.</span><span class="n">_check_commutes</span><span class="p">(</span><span class="n">symmetry_ops</span><span class="p">,</span> <span class="n">qubit_op</span><span class="p">)</span>
+                    <span class="n">commuted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">commutes</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Qubit operators commuted with symmetry </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">commuted</span><span class="p">)</span>
 
-            <span class="c1"># Tapering values were set from prior convert so we go ahead and taper operators</span>
-            <span class="n">tapered_qubit_ops</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">commutes</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">commuted</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">commutes</span><span class="p">:</span>
-                    <span class="n">tapered_qubit_ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_z2symmetries</span><span class="o">.</span><span class="n">taper</span><span class="p">(</span><span class="n">qubit_ops</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
-                <span class="k">elif</span> <span class="ow">not</span> <span class="n">suppress_none</span><span class="p">:</span>
-                    <span class="n">tapered_qubit_ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+                <span class="c1"># Tapering values were set from prior convert so we go ahead and taper operators</span>
+                <span class="n">tapered_qubit_ops</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">commutes</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">commuted</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">commutes</span><span class="p">:</span>
+                        <span class="n">tapered_qubit_ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_z2symmetries</span><span class="o">.</span><span class="n">taper</span><span class="p">(</span><span class="n">qubit_ops</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                    <span class="k">elif</span> <span class="ow">not</span> <span class="n">suppress_none</span><span class="p">:</span>
+                        <span class="n">tapered_qubit_ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Tapering operators whether they commute with symmetry or not:&quot;</span><span class="p">)</span>
+                <span class="n">tapered_qubit_ops</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">qubit_op</span> <span class="ow">in</span> <span class="n">qubit_ops</span><span class="p">:</span>
+                    <span class="n">tapered_qubit_ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_z2symmetries</span><span class="o">.</span><span class="n">taper</span><span class="p">(</span><span class="n">qubit_op</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="n">tapered_qubit_ops</span>
 

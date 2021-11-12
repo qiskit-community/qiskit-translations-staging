@@ -297,7 +297,7 @@
 <span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">PauliSumOp</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow.primitive_ops</span> <span class="kn">import</span> <span class="n">Z2Symmetries</span>
 
-<span class="kn">from</span> <span class="nn">qiskit_nature.circuit.library.initial_states.hartree_fock</span> <span class="kn">import</span> <span class="n">hartree_fock_bitstring</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.circuit.library.initial_states.hartree_fock</span> <span class="kn">import</span> <span class="n">hartree_fock_bitstring_mapped</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.drivers</span> <span class="kn">import</span> <span class="n">QMolecule</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.drivers.second_quantization</span> <span class="kn">import</span> <span class="n">ElectronicStructureDriver</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.operators.second_quantization</span> <span class="kn">import</span> <span class="n">SecondQuantizedOp</span>
@@ -333,6 +333,11 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">num_particles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grouped_property_transformed</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s2">&quot;ParticleNumber&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">num_particles</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">num_spin_orbitals</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the number of spin orbitals.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grouped_property_transformed</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s2">&quot;ParticleNumber&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">num_spin_orbitals</span>
 
 <div class="viewcode-block" id="ElectronicStructureProblem.second_q_ops"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.problems.second_quantization.ElectronicStructureProblem.second_q_ops.html#qiskit_nature.problems.second_quantization.ElectronicStructureProblem.second_q_ops">[belgeler]</a>    <span class="k">def</span> <span class="nf">second_q_ops</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">SecondQuantizedOp</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Returns a list of `SecondQuantizedOp` created based on a driver and transformations</span>
@@ -474,23 +479,34 @@
 
         <span class="k">return</span> <span class="n">partial</span><span class="p">(</span><span class="n">filter_criterion</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ElectronicStructureProblem.symmetry_sector_locator"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.problems.second_quantization.ElectronicStructureProblem.symmetry_sector_locator.html#qiskit_nature.problems.second_quantization.ElectronicStructureProblem.symmetry_sector_locator">[belgeler]</a>    <span class="k">def</span> <span class="nf">symmetry_sector_locator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z2_symmetries</span><span class="p">:</span> <span class="n">Z2Symmetries</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;Given the detected Z2Symmetries can determine the correct sector of the tapered</span>
-<span class="sd">        operators so the correct one can be returned</span>
+<div class="viewcode-block" id="ElectronicStructureProblem.symmetry_sector_locator"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.problems.second_quantization.ElectronicStructureProblem.symmetry_sector_locator.html#qiskit_nature.problems.second_quantization.ElectronicStructureProblem.symmetry_sector_locator">[belgeler]</a>    <span class="k">def</span> <span class="nf">symmetry_sector_locator</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">z2_symmetries</span><span class="p">:</span> <span class="n">Z2Symmetries</span><span class="p">,</span>
+        <span class="n">converter</span><span class="p">:</span> <span class="n">QubitConverter</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Given the detected Z2Symmetries this determines the correct sector of the tapered</span>
+<span class="sd">        operator that contains the ground state we need and returns that information.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            z2_symmetries: the z2 symmetries object.</span>
+<span class="sd">            converter: the qubit converter instance used for the operator conversion that</span>
+<span class="sd">                symmetries are to be determined for.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The sector of the tapered operators with the problem solution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">hf_bitstr</span> <span class="o">=</span> <span class="n">hartree_fock_bitstring</span><span class="p">(</span>
-            <span class="n">num_spin_orbitals</span><span class="o">=</span><span class="n">z2_symmetries</span><span class="o">.</span><span class="n">symmetries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">,</span>
+        <span class="c1"># We need the HF bitstring mapped to the qubit space but without any tapering done</span>
+        <span class="c1"># by the converter (just qubit mapping and any two qubit reduction) since we are</span>
+        <span class="c1"># going to determine the tapering sector</span>
+        <span class="n">hf_bitstr</span> <span class="o">=</span> <span class="n">hartree_fock_bitstring_mapped</span><span class="p">(</span>
+            <span class="n">num_spin_orbitals</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_spin_orbitals</span><span class="p">,</span>
             <span class="n">num_particles</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_particles</span><span class="p">,</span>
+            <span class="n">qubit_converter</span><span class="o">=</span><span class="n">converter</span><span class="p">,</span>
+            <span class="n">match_convert</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">sector_locator</span> <span class="o">=</span> <span class="n">ElectronicStructureProblem</span><span class="o">.</span><span class="n">_pick_sector</span><span class="p">(</span><span class="n">z2_symmetries</span><span class="p">,</span> <span class="n">hf_bitstr</span><span class="p">)</span>
+        <span class="n">sector</span> <span class="o">=</span> <span class="n">ElectronicStructureProblem</span><span class="o">.</span><span class="n">_pick_sector</span><span class="p">(</span><span class="n">z2_symmetries</span><span class="p">,</span> <span class="n">hf_bitstr</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">sector_locator</span></div>
+        <span class="k">return</span> <span class="n">sector</span></div>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_pick_sector</span><span class="p">(</span><span class="n">z2_symmetries</span><span class="p">:</span> <span class="n">Z2Symmetries</span><span class="p">,</span> <span class="n">hf_str</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>

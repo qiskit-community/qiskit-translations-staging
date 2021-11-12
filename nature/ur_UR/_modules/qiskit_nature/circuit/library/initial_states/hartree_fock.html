@@ -317,26 +317,65 @@
 <span class="sd">                           beta-spin electrons in the first and second number, respectively.</span>
 <span class="sd">            qubit_converter: a QubitConverter instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># get the bitstring encoding the Hartree Fock state</span>
-        <span class="n">bitstr</span> <span class="o">=</span> <span class="n">hartree_fock_bitstring</span><span class="p">(</span><span class="n">num_spin_orbitals</span><span class="p">,</span> <span class="n">num_particles</span><span class="p">)</span>
-
-        <span class="c1"># encode the bitstring as a `FermionicOp`</span>
-        <span class="n">label</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;+&quot;</span> <span class="k">if</span> <span class="n">bit</span> <span class="k">else</span> <span class="s2">&quot;I&quot;</span> <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">bitstr</span><span class="p">]</span>
-        <span class="n">bitstr_op</span> <span class="o">=</span> <span class="n">FermionicOp</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">label</span><span class="p">),</span> <span class="n">display_format</span><span class="o">=</span><span class="s2">&quot;dense&quot;</span><span class="p">)</span>
-
-        <span class="c1"># map the `FermionicOp` to a qubit operator</span>
-        <span class="n">qubit_op</span><span class="p">:</span> <span class="n">PauliSumOp</span> <span class="o">=</span> <span class="n">qubit_converter</span><span class="o">.</span><span class="n">convert_match</span><span class="p">(</span><span class="n">bitstr_op</span><span class="p">)</span>
-
-        <span class="c1"># construct the circuit</span>
-        <span class="n">qr</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="n">qubit_op</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">,</span> <span class="s2">&quot;q&quot;</span><span class="p">)</span>
+        <span class="c1"># Get the mapped/tapered hartree fock bitstring as we need it to match to whatever</span>
+        <span class="c1"># conversion was done by the given qubit converter</span>
+        <span class="n">bitstr</span> <span class="o">=</span> <span class="n">hartree_fock_bitstring_mapped</span><span class="p">(</span>
+            <span class="n">num_spin_orbitals</span><span class="p">,</span> <span class="n">num_particles</span><span class="p">,</span> <span class="n">qubit_converter</span><span class="p">,</span> <span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="c1"># Construct the circuit for this bitstring. Since this is defined as an initial state</span>
+        <span class="c1"># circuit its assumed that this is applied first to the qubits that are initialized to</span>
+        <span class="c1"># the zero state. Hence we just need to account for all True entries and set those.</span>
+        <span class="n">qr</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bitstr</span><span class="p">),</span> <span class="s2">&quot;q&quot;</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">qr</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;HF&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Add gates in the right positions: we are only interested in the `X` gates because we want</span>
-        <span class="c1"># to create particles (0 -&gt; 1) where the initial state introduced a creation (`+`) operator.</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">bit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">qubit_op</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">bit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bitstr</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">bit</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">hartree_fock_bitstring_mapped</span><span class="p">(</span>
+    <span class="n">num_spin_orbitals</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">num_particles</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">qubit_converter</span><span class="p">:</span> <span class="n">QubitConverter</span><span class="p">,</span>
+    <span class="n">match_convert</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Compute the bitstring representing the mapped Hartree-Fock state for the specified system.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        num_spin_orbitals: The number of spin orbitals, has a min. value of 1.</span>
+<span class="sd">        num_particles: The number of particles as a tuple (alpha, beta) containing the number of</span>
+<span class="sd">            alpha- and  beta-spin electrons, respectively.</span>
+<span class="sd">        qubit_converter: A QubitConverter instance.</span>
+<span class="sd">        match_convert: Whether to use `convert_match` method of the qubit converter (default),</span>
+<span class="sd">            or just do mapping and possibly two qubit reduction but no tapering. The latter</span>
+<span class="sd">            is an advanced usage - e.g. if we are trying to auto-select the tapering sector</span>
+<span class="sd">            then we would not want any match conversion done on a converter that was set to taper.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The bitstring representing the mapped state of the Hartree-Fock state as array of bools.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># get the bitstring encoding the Hartree Fock state</span>
+    <span class="n">bitstr</span> <span class="o">=</span> <span class="n">hartree_fock_bitstring</span><span class="p">(</span><span class="n">num_spin_orbitals</span><span class="p">,</span> <span class="n">num_particles</span><span class="p">)</span>
+
+    <span class="c1"># encode the bitstring as a `FermionicOp`</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;+&quot;</span> <span class="k">if</span> <span class="n">bit</span> <span class="k">else</span> <span class="s2">&quot;I&quot;</span> <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">bitstr</span><span class="p">]</span>
+    <span class="n">bitstr_op</span> <span class="o">=</span> <span class="n">FermionicOp</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">label</span><span class="p">),</span> <span class="n">display_format</span><span class="o">=</span><span class="s2">&quot;sparse&quot;</span><span class="p">)</span>
+
+    <span class="c1"># map the `FermionicOp` to a qubit operator</span>
+    <span class="n">qubit_op</span><span class="p">:</span> <span class="n">PauliSumOp</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">qubit_converter</span><span class="o">.</span><span class="n">convert_match</span><span class="p">(</span><span class="n">bitstr_op</span><span class="p">,</span> <span class="n">check_commutes</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match_convert</span>
+        <span class="k">else</span> <span class="n">qubit_converter</span><span class="o">.</span><span class="n">convert_only</span><span class="p">(</span><span class="n">bitstr_op</span><span class="p">,</span> <span class="n">num_particles</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># We check the mapped operator `x` part of the paulis because we want to have particles</span>
+    <span class="c1"># i.e. True, where the initial state introduced a creation (`+`) operator.</span>
+    <span class="n">bits</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">qubit_op</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">bits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">bits</span>
 
 
 <span class="k">def</span> <span class="nf">hartree_fock_bitstring</span><span class="p">(</span><span class="n">num_spin_orbitals</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_particles</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
