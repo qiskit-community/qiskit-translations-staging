@@ -19,11 +19,11 @@
 
    .. rubric:: Attributes
 
+   .. autoattribute:: type
    .. autoattribute:: cargs
+   .. autoattribute:: sort_key
    .. autoattribute:: condition
    .. autoattribute:: name
    .. autoattribute:: op
    .. autoattribute:: qargs
-   .. autoattribute:: sort_key
-   .. autoattribute:: type
    .. autoattribute:: wire

@@ -11,6 +11,7 @@
 
    .. rubric:: Attributes
 
-   .. autoattribute:: ATOM
-   .. autoattribute:: HCORE
    .. autoattribute:: MINAO
+   .. autoattribute:: HCORE
+   .. autoattribute:: ONE_E
+   .. autoattribute:: ATOM
