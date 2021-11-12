@@ -11,6 +11,6 @@
 
    .. rubric:: Attributes
 
-   .. autoattribute:: BSTO3G
    .. autoattribute:: B631G
    .. autoattribute:: B631GSS
+   .. autoattribute:: BSTO3G

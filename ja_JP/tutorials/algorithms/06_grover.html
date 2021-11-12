@@ -1,0 +1,1312 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="ja-JP" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="ja-JP" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Grover のアルゴリズムと振幅増幅 &mdash; Qiskit 0.30.1 ドキュメント</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../../_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme-override.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/gallery.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="検索" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://qiskit.org/" aria-label="PyTorch"></a>
+
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="../../getting_started.html">Getting started</a>
+          </li>
+
+          <li>
+            <a href="../../tutorials.html">Tutorials</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.org/documentation/partners/" target="_blank">Partners</a>
+          </li>
+
+          <li>
+            <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
+              <a class="resource-option with-down-orange-arrow">
+                Applications
+              </a>
+              <div class="resources-dropdown-menu">
+                <a class="nav-dropdown-item" href="https://qiskit.org/documentation/machine-learning/">
+                  <span class="dropdown-title">Machine learning</span>
+                  <p>QSVM, VQC (Variational Quantum Classifier), and QGAN (Quantum Generative
+                    Adversarial Network) algorithms.</p>
+                </a>
+                <a class="nav-dropdown-item" href="https://qiskit.org/documentation/nature/">
+                  <span class="dropdown-title">Nature</span>
+                  <p>Quantum applications in chemistry, physics, and biology.</p>
+                </a>
+                <a class="nav-dropdown-item" href="https://qiskit.org/documentation/finance/">
+                  <span class="dropdown-title">Finance</span>
+                  <p>Uncertainty components for stock/securities problems, Ising translators for
+                    portfolio optimizations and data providers to source real or random data.</p>
+                </a>
+                <a class="nav-dropdown-item" href="https://qiskit.org/documentation/optimization/">
+                  <span class="dropdown-title">Optimization</span>
+                  <p>High-level optimization problems that are ready to
+                    run on simulators and real quantum devices</p>
+                </a>
+              </div>
+          </li>
+          <li>
+              <a href=="https://qiskit.org/documentation/experiments/" target="_blank">Experiments</a>
+          </li>
+          <li>
+            <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
+              <a class="resource-option with-down-orange-arrow">
+                Resources
+              </a>
+              <div class="resources-dropdown-menu">
+                <a class="doc-dropdown-option nav-dropdown-item" href="https://qiskit.slack.com">
+                  <span class="dropdown-title">Slack support</span>
+                  <p></p>
+                </a>
+                <a class="doc-dropdown-option nav-dropdown-item" href="https://qiskit.org/textbook">
+                  <span class="dropdown-title">Qiskit Textbook</span>
+                  <p></p>
+                </a>
+                <a class="doc-dropdown-option nav-dropdown-item" href="https://qiskit.org/events">
+                  <span class="dropdown-title">Qiskit events</span>
+                  <p></p>
+                </a>
+            </div>
+          </li>
+          <li>
+            <a href="https://github.com/Qiskit/" target="_blank">Github</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+
+  </div>
+</div>
+
+
+<body class="pytorch-body">
+
+   
+
+    
+
+    <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="rst-current-version-label">Japanese</span>
+    <span class="rst-versions-dropdown-icon"></span>
+  </span>
+  <div class="rst-other-versions">
+    
+    <dl>
+      <dt>言語</dt>
+      
+        <dd><a class="version" href="/documentation/tutorials/algorithms/06_grover.html">English</a></dd>
+      
+        <dd><a class="version" href="/documentation/locale/ja_JP/tutorials/algorithms/06_grover.html">Japanese</a></dd>
+      
+        <dd><a class="version" href="/documentation/locale/de_DE/tutorials/algorithms/06_grover.html">German</a></dd>
+      
+        <dd><a class="version" href="/documentation/locale/ko_KR/tutorials/algorithms/06_grover.html">Korean</a></dd>
+      
+        <dd><a class="version" href="/documentation/locale/pt_BR/tutorials/algorithms/06_grover.html">Portuguese, Brazilian</a></dd>
+      
+        <dd><a class="version" href="/documentation/locale/fr_FR/tutorials/algorithms/06_grover.html">French</a></dd>
+      
+        <dd><a class="version" href="/documentation/locale/ta_IN/tutorials/algorithms/06_grover.html">Tamil</a></dd>
+      
+    </dl>
+    
+    <dl>
+      <dt>Previous Releases</dt>
+      
+        <dd><a class="version" href="/documentation/stable/0.19/index.html">0.19</a></dd>
+      
+        <dd><a class="version" href="/documentation/stable/0.24/index.html">0.24</a></dd>
+      
+        <dd><a class="version" href="/documentation/stable/0.25/index.html">0.25</a></dd>
+      
+        <dd><a class="version" href="/documentation/stable/0.26/index.html">0.26</a></dd>
+      
+        <dd><a class="version" href="/documentation/stable/0.27/index.html">0.27</a></dd>
+      
+        <dd><a class="version" href="/documentation/stable/0.28/index.html">0.28</a></dd>
+      
+        <dd><a class="version" href="/documentation/stable/0.29/index.html">0.29</a></dd>
+      
+    </dl>
+  </div>
+  <script>
+    jQuery('.version').click((evt) => {
+      const hash = window.location.hash
+      const complete_url = evt.target.href + hash
+      window.location = complete_url
+      evt.preventDefault()
+    })
+  </script>
+</div>
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="pytorch-left-menu" id="pytorch-left-menu">
+      <div class="pytorch-side-scroll">
+        <div class="pytorch-menu pytorch-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="pytorch-left-menu-search">
+            
+
+            
+              
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Documentation Homepage</a></li>
+</ul>
+<p><span class="caption-text">始めに</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../qc_intro.html">量子コンピューティングの概要</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../intro_tutorial1.html">Qiskit 入門</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing_to_qiskit.html">Qiskit に貢献する</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">ローカル構成</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">よくある質問</a></li>
+</ul>
+<p><span class="caption-text">ライブラリ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../apidoc/circuit_library.html">回路ライブラリ</a></li>
+</ul>
+<p><span class="caption-text">API リファレンス</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../apidoc/terra.html">Qiskit Terra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apidoc/aer.html">Qiskit Aer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
+</ul>
+<p><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
+</ul>
+<p><span class="caption-text">トラブルシューティング</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://quantum-computing.ibm.com/lab/docs/iql/manage/errors">IBM Quantum API エラー・コード</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <div class="pytorch-container">
+      <div class="pytorch-page-level-bar" id="pytorch-page-level-bar">
+        <div class="pytorch-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="pytorch-breadcrumbs">
+    
+      <li>
+        <a href="../../index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+      <li>Grover のアルゴリズムと振幅増幅</li>
+    
+    
+      <li class="pytorch-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/tutorials/algorithms/06_grover.ipynb" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="pytorch-shortcuts-wrapper" id="pytorch-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="pytorch-content-wrap" class="pytorch-content-wrap">
+        <div class="pytorch-content-left">
+          
+          <div class="rst-content style-external-links">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
+              
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt a.copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>このページは  <a class="reference external" href="https://github.com/Qiskit/qiskit-tutorials/blob/master/tutorials/algorithms/06_grover.ipynb">tutorials/algorithms/01_grover.ipynb</a> から生成されました。</p>
+</div>
+<section id="Grover-のアルゴリズムと振幅増幅">
+<h1>Grover のアルゴリズムと振幅増幅<a class="headerlink" href="#Grover-のアルゴリズムと振幅増幅" title="このヘッドラインへのパーマリンク">¶</a></h1>
+<p>Grover のアルゴリズムは、 1996 年に Lov Grover によって提案された、最も有名な量子アルゴリズムの一つです [1] 。最初は非構造検索問題、すなわち非構造化データベース内のマークされた要素を見つける問題のために提案されました。しかし Grover のアルゴリズムは、現在 Grover Adaptive Search [2] のような他のいくつかのアルゴリズムのサブルーチンとなっています。 Grover のアルゴリズムの詳細については、 Qiskit textbook の <a class="reference external" href="https://qiskit.org/textbook/ch-algorithms/grover.html">GroverのAlgorithm</a> を参照してください。</p>
+<p>Qiskitは、 <code class="docutils literal notranslate"><span class="pre">Grover</span></code> クラスにGroverのアルゴリズムを実装します。 このクラスには、一般化されたバージョンである振幅増幅 [3] も含まれており、個々の反復やその他のメタ設定をグローバーのアルゴリズムに設定できます。</p>
+<p><strong>参考文献：</strong></p>
+<p>[1]: L. K. Grover, A fast quantum mechanical algorithm for database search. Proceedings 28th Annual Symposium on the Theory of Computing (STOC) 1996, pp. 212-219. <a class="reference external" href="https://arxiv.org/abs/quant-ph/9605043">https://arxiv.org/abs/quant-ph/9605043</a></p>
+<p>[2]: A. Gilliam, S. Woerner, C. Gonciulea, Grover Adaptive Search for Constrained Polynomial Binary Optimization. <a class="reference external" href="https://arxiv.org/abs/1912.04088">https://arxiv.org/abs/1912.04088</a></p>
+<p>[3]: Brassard, G., Hoyer, P., Mosca, M., &amp; Tapp, A. (2000). Quantum Amplitude Amplification and Estimation. <a class="reference external" href="http://arxiv.org/abs/quant-ph/0005055">http://arxiv.org/abs/quant-ph/0005055</a></p>
+<section id="Grover-のアルゴリズム">
+<h2>Grover のアルゴリズム<a class="headerlink" href="#Grover-のアルゴリズム" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p>Grover のアルゴリズムは、 Grover 演算子 <span class="math notranslate nohighlight">\(\mathcal{Q}\)</span> を用いて、所望の状態の振幅を増幅します。</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{Q} = \mathcal{A}\mathcal{S_0}\mathcal{A}^\dagger \mathcal{S_f}\]</div>
+<p>ここでは、 * <span class="math notranslate nohighlight">\(\mathcal{A}\)</span> は、アルゴリズムの初期検索状態です。これは、アダマール、教科書のGrover検索の場合は <span class="math notranslate nohighlight">\(H^{\otimes n}\)</span> ですが、振幅増幅の場合はさらに複雑になる可能性があります。 * <span class="math notranslate nohighlight">\(\mathcal{S_0}\)</span> は、すべて0の状態に関する反転です。</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}|x\rangle \mapsto \begin{cases} -|x\rangle, &amp;x \neq 0 \\ |x\rangle, &amp;x = 0\end{cases}\end{split}\]</div>
+<p>* <span class="math notranslate nohighlight">\(\mathcal{S_f}\)</span> は適用するオラクルです。</p>
+<div class="math notranslate nohighlight">
+\[|x\rangle \mapsto (-1)^{f(x)}|x\rangle\]</div>
+<p><span class="math notranslate nohighlight">\(f(x)\)</span> は <span class="math notranslate nohighlight">\(x\)</span> が所望の状態の場合 1 となり、それ以外の場合は 0 になります。</p>
+<p>一言で言えば、グローバーのアルゴリズムは異なる <span class="math notranslate nohighlight">\(\mathcal{Q}\)</span> の累乗を適用し、各実行後に適切な解が見つかったかどうかをチェックします。</p>
+<section id="Grover-のアルゴリズムの実行">
+<h3>Grover のアルゴリズムの実行<a class="headerlink" href="#Grover-のアルゴリズムの実行" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Grover</span></code> クラスでGroverのアルゴリズムを実行するには、まず、Groverのアルゴリズムの回路にオラクルを指定する必要があります。次の例では、グローバーのアルゴリズムのオラクルとして <code class="docutils literal notranslate"><span class="pre">QuantumCircuit</span></code> を使用しています。 ただし、グローバーのアルゴリズムのオラクルとして使用できるクラスは他にもいくつかあります。 これらについては、このチュートリアルの後半で説明します。</p>
+<p><code class="docutils literal notranslate"><span class="pre">Grover</span></code> のアルゴリズムのためのオラクルは、 <em>位相反転</em> オラクルであることに注意してください。つまり 「所望の状態」 の振幅に <span class="math notranslate nohighlight">\(-1\)</span> の係数を乗じています。 <em>ビット反転</em> オラクルを位相反転オラクルに変換する方法については後述します。</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
+<span class="kn">from</span> <span class="nn">qiskit.algorithms</span> <span class="kn">import</span> <span class="n">AmplificationProblem</span>
+
+<span class="c1"># the state we desire to find is &#39;11&#39;</span>
+<span class="n">good_state</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;11&#39;</span><span class="p">]</span>
+
+<span class="c1"># specify the oracle that marks the state &#39;11&#39; as a good solution</span>
+<span class="n">oracle</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">oracle</span><span class="o">.</span><span class="n">cz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># define Grover&#39;s algorithm</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">AmplificationProblem</span><span class="p">(</span><span class="n">oracle</span><span class="p">,</span> <span class="n">is_good_state</span><span class="o">=</span><span class="n">good_state</span><span class="p">)</span>
+
+<span class="c1"># now we can have a look at the Grover operator that is used in running the algorithm</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">grover_operator</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;mpl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/tutorials_algorithms_06_grover_2_0.png" src="../../_images/tutorials_algorithms_06_grover_2_0.png" />
+</div>
+</div>
+<p>次に、バックエンドを指定し、バックエンドを使用して <code class="docutils literal notranslate"><span class="pre">Grover</span></code> の <code class="docutils literal notranslate"><span class="pre">run</span></code> メソッドを呼び出して回路を実行します。 返される結果タイプは <code class="docutils literal notranslate"><span class="pre">GroverResult</span></code> です。</p>
+<p>探索が成功した場合は、 <code class="docutils literal notranslate"><span class="pre">oracle_evaluation</span></code> 属性が <code class="docutils literal notranslate"><span class="pre">True</span></code> となります。この場合、最も多くサンプリングされた測定値である <code class="docutils literal notranslate"><span class="pre">top_measurement</span></code> が「所望の状態」の一つであることを示します。そうでなければ、 <code class="docutils literal notranslate"><span class="pre">oracle_evaluation</span></code> は False となります。</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">Aer</span>
+<span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">QuantumInstance</span>
+<span class="kn">from</span> <span class="nn">qiskit.algorithms</span> <span class="kn">import</span> <span class="n">Grover</span>
+
+<span class="n">aer_simulator</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;aer_simulator&#39;</span><span class="p">)</span>
+<span class="n">grover</span> <span class="o">=</span> <span class="n">Grover</span><span class="p">(</span><span class="n">quantum_instance</span><span class="o">=</span><span class="n">aer_simulator</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">grover</span><span class="o">.</span><span class="n">amplify</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Result type:&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Success!&#39;</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">oracle_evaluation</span> <span class="k">else</span> <span class="s1">&#39;Failure!&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Top measurement:&#39;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">top_measurement</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Result type: &lt;class &#39;qiskit.algorithms.amplitude_amplifiers.grover.GroverResult&#39;&gt;
+
+Success!
+Top measurement: 11
+</pre></div></div>
+</div>
+<p>この例では、 <code class="docutils literal notranslate"><span class="pre">top_measurement</span></code> の結果が <code class="docutils literal notranslate"><span class="pre">11</span></code> となっており、これは「所望の状態」の一つとなっています。このように、 <code class="docutils literal notranslate"><span class="pre">Grover</span></code> を用いて解を見つけることに成功しました。</p>
+</section>
+<section id="Grover-のオラクルとしてさまざまなタイプのクラスを使用する">
+<h3><code class="docutils literal notranslate"><span class="pre">Grover</span></code> のオラクルとしてさまざまなタイプのクラスを使用する<a class="headerlink" href="#Grover-のオラクルとしてさまざまなタイプのクラスを使用する" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>上の例では、 <code class="docutils literal notranslate"><span class="pre">Grover</span></code> のオラクルとして <code class="docutils literal notranslate"><span class="pre">QuantumCircuit</span></code> を用いました。しかし、 <code class="docutils literal notranslate"><span class="pre">qiskit.quantum_info.Statevector</span></code> をオラクルとして用いることも可能です。以下の例は全て、<span class="math notranslate nohighlight">\(|11\rangle\)</span> が「所望の状態」である場合です。</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">qiskit.quantum_info</span> <span class="kn">import</span> <span class="n">Statevector</span>
+<span class="n">oracle</span> <span class="o">=</span> <span class="n">Statevector</span><span class="o">.</span><span class="n">from_label</span><span class="p">(</span><span class="s1">&#39;11&#39;</span><span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">AmplificationProblem</span><span class="p">(</span><span class="n">oracle</span><span class="p">,</span> <span class="n">is_good_state</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;11&#39;</span><span class="p">])</span>
+
+<span class="n">grover</span> <span class="o">=</span> <span class="n">Grover</span><span class="p">(</span><span class="n">quantum_instance</span><span class="o">=</span><span class="n">aer_simulator</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">grover</span><span class="o">.</span><span class="n">amplify</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Result type:&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Success!&#39;</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">oracle_evaluation</span> <span class="k">else</span> <span class="s1">&#39;Failure!&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Top measurement:&#39;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">top_measurement</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Result type: &lt;class &#39;qiskit.algorithms.amplitude_amplifiers.grover.GroverResult&#39;&gt;
+
+Success!
+Top measurement: 11
+</pre></div></div>
+</div>
+<p>内部的には、状態ベクトルが量子回路にマッピングされています。</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">problem</span><span class="o">.</span><span class="n">grover_operator</span><span class="o">.</span><span class="n">oracle</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;mpl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/tutorials_algorithms_06_grover_9_0.png" src="../../_images/tutorials_algorithms_06_grover_9_0.png" />
+</div>
+</div>
+<p>Qiskit ではより複雑なオラクルを簡単に構築することができます: * <code class="docutils literal notranslate"><span class="pre">PhaseOracle</span></code> は、 <code class="docutils literal notranslate"><span class="pre">'~a</span> <span class="pre">|</span> <span class="pre">b'</span></code> のような論理式を解析します。 これは特に3-SAT問題を解決するのに役立ち、付随する`Grover の例 &lt;07_grover_examples.ipynb&gt;`__ チュートリアルで説明されています。</p>
+<p>ここでは <code class="docutils literal notranslate"><span class="pre">PhaseOracle</span></code> を用い、<code class="docutils literal notranslate"><span class="pre">'a</span> <span class="pre">&amp;</span> <span class="pre">b'</span></code> に対応する状態である <span class="math notranslate nohighlight">\(|11\rangle\)</span> を見つける、簡単な例を示します。</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">qiskit.circuit.library.phase_oracle</span> <span class="kn">import</span> <span class="n">PhaseOracle</span>
+<span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">MissingOptionalLibraryError</span>
+
+<span class="c1"># `Oracle` (`PhaseOracle`) as the `oracle` argument</span>
+<span class="n">expression</span> <span class="o">=</span> <span class="s1">&#39;(a &amp; b)&#39;</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">oracle</span> <span class="o">=</span> <span class="n">PhaseOracle</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span>
+    <span class="n">problem</span> <span class="o">=</span> <span class="n">AmplificationProblem</span><span class="p">(</span><span class="n">oracle</span><span class="p">)</span>
+    <span class="n">display</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">grover_operator</span><span class="o">.</span><span class="n">oracle</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;mpl&#39;</span><span class="p">))</span>
+<span class="k">except</span> <span class="n">MissingOptionalLibraryError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/tutorials_algorithms_06_grover_11_0.png" src="../../_images/tutorials_algorithms_06_grover_11_0.png" />
+</div>
+</div>
+<p>このオラクルは実際には2量子ビットではなく3量子ビットで実装されていることがわかります。</p>
+<p>これは、 <code class="docutils literal notranslate"><span class="pre">PhaseOracle</span></code> が位相反転オラクル (所望の状態の位相を判定させる) ではなく、ビット反転オラクルだからです。これは他のビットが条件を満たしていれば、補助ビットの状態を反転させることというを意味しています。しかし、 Grover のアルゴリズムでは、位相反転オラクルが必要です。ビット反転オラクルを位相反転オラクルに変換するために、上記の回路で見られるように、 <span class="math notranslate nohighlight">\(X\)</span> ゲートと <span class="math notranslate nohighlight">\(H\)</span> ゲートでCNOT ゲートを挟みます。</p>
+<p><strong>注記：</strong> ビット反転から位相反転のオラクルへのこの変換は一般的なものであり、これを使用してオラクルを正しい表現に変換できます。</p>
+</section>
+</section>
+<section id="振幅増幅">
+<h2>振幅増幅<a class="headerlink" href="#振幅増幅" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p>Grover のアルゴリズムでは、 Grover 演算子 <span class="math notranslate nohighlight">\(\mathcal{Q}\)</span> の最初において、全ての状態の一様な重ね合わせをアダマールゲートによって用意します。所望の状態に関する情報がある際には、一様な重ね合わせから始めるのではなく、特定の状態だけを初期化する方が便利な場合があります。 Grover のアルゴリズムがこのように一般化されたものは、 <em>振幅増幅</em> と呼ばれています。</p>
+<p>Qiskitでは、 <code class="docutils literal notranslate"><span class="pre">state_preparation</span></code> 引数を設定することで、初期の重ね合わせ状態を簡単に調整できます。</p>
+<section id="状態の準備">
+<h3>状態の準備<a class="headerlink" href="#状態の準備" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>引数 <code class="docutils literal notranslate"><span class="pre">state_preparation</span></code> は、振幅増幅における開始点の量子状態を準備する量子回路の指定のために用いられます。デフォルトでは:math:<cite>H^{otimes n}</cite> の回路が、一様な重ね合わせを準備するために用いられています (これにより Grover 探索となります) 。振幅増幅における拡散回路は <code class="docutils literal notranslate"><span class="pre">state_preparation</span></code> を自動的に反転します。</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># Specifying `state_preparation`</span>
+<span class="c1"># to prepare a superposition of |01&gt;, |10&gt;, and |11&gt;</span>
+<span class="n">oracle</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">oracle</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">oracle</span><span class="o">.</span><span class="n">ccx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">oracle</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">theta</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="n">state_preparation</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">state_preparation</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">state_preparation</span><span class="o">.</span><span class="n">ch</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">state_preparation</span><span class="o">.</span><span class="n">x</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">state_preparation</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># we only care about the first two bits being in state 1, thus add both possibilities for the last qubit</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">AmplificationProblem</span><span class="p">(</span><span class="n">oracle</span><span class="p">,</span> <span class="n">state_preparation</span><span class="o">=</span><span class="n">state_preparation</span><span class="p">,</span> <span class="n">is_good_state</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;110&#39;</span><span class="p">,</span> <span class="s1">&#39;111&#39;</span><span class="p">])</span>
+
+<span class="c1"># state_preparation</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;state preparation circuit:&#39;</span><span class="p">)</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">grover_operator</span><span class="o">.</span><span class="n">state_preparation</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;mpl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+state preparation circuit:
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/tutorials_algorithms_06_grover_14_1.png" src="../../_images/tutorials_algorithms_06_grover_14_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">grover</span> <span class="o">=</span> <span class="n">Grover</span><span class="p">(</span><span class="n">quantum_instance</span><span class="o">=</span><span class="n">aer_simulator</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">grover</span><span class="o">.</span><span class="n">amplify</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Success!&#39;</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">oracle_evaluation</span> <span class="k">else</span> <span class="s1">&#39;Failure!&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Top measurement:&#39;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">top_measurement</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Success!
+Top measurement: 111
+</pre></div></div>
+</div>
+</section>
+<section id="完全な柔軟性">
+<h3>完全な柔軟性<a class="headerlink" href="#完全な柔軟性" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>より高度な使用法として、 <code class="docutils literal notranslate"><span class="pre">grover_operator</span></code> 引数を設定することにより、Grover演算子全体を指定することもできます。 これは、ゼロ反転、オラクル、および状態の準備によるデフォルトの構築よりも <span class="math notranslate nohighlight">\(\mathcal{Q}\)</span> のより効率的な実装を知っている場合に役立つ可能性があります。</p>
+<p><code class="docutils literal notranslate"><span class="pre">qiskit.circuit.library.GroverOperator</span></code> は良い出発点であり、Groverオペレーターの自動構築のためのより多くのオプションを提供します。 あなたは例えば次のようにすることができます。 * <code class="docutils literal notranslate"><span class="pre">mcx_mode</span></code> を設定します。 * <code class="docutils literal notranslate"><span class="pre">reflection_qubits</span></code> を設定して、ゼロ反転の量子ビットを無視します。 * <code class="docutils literal notranslate"><span class="pre">oracle</span></code> 、 <code class="docutils literal notranslate"><span class="pre">zero_reflection</span></code> 、 <code class="docutils literal notranslate"><span class="pre">state_preparation</span></code> 引数を使用して、 <span class="math notranslate nohighlight">\(\mathcal{S_f} 、 \mathcal{S_0}\)</span> および <span class="math notranslate nohighlight">\(\mathcal{A}\)</span> 演算を明示的に交換します。</p>
+<p>たとえば、所望の状態が3量子ビット状態 <span class="math notranslate nohighlight">\(|111\rangle\)</span> であるとしてください。ただし、補助量子ビットとして2つの追加量子ビットを使用します。</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">GroverOperator</span><span class="p">,</span> <span class="n">ZGate</span>
+
+<span class="n">oracle</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">oracle</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ZGate</span><span class="p">()</span><span class="o">.</span><span class="n">control</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="n">oracle</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;mpl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/tutorials_algorithms_06_grover_18_0.png" src="../../_images/tutorials_algorithms_06_grover_18_0.png" />
+</div>
+</div>
+<p>次に、デフォルトで、Grover演算子は5つの量子ビットすべてにゼロ反転を実装します。</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">grover_op</span> <span class="o">=</span> <span class="n">GroverOperator</span><span class="p">(</span><span class="n">oracle</span><span class="p">,</span> <span class="n">insert_barriers</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">grover_op</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;mpl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/tutorials_algorithms_06_grover_20_0.png" src="../../_images/tutorials_algorithms_06_grover_20_0.png" />
+</div>
+</div>
+<p>しかし、最初の3つだけを考慮する必要があることはわかっています。</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">grover_op</span> <span class="o">=</span> <span class="n">GroverOperator</span><span class="p">(</span><span class="n">oracle</span><span class="p">,</span> <span class="n">reflection_qubits</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">insert_barriers</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">grover_op</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;mpl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/tutorials_algorithms_06_grover_22_0.png" src="../../_images/tutorials_algorithms_06_grover_22_0.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="Grover-の他の引数について">
+<h2><code class="docutils literal notranslate"><span class="pre">Grover</span></code> の他の引数について<a class="headerlink" href="#Grover-の他の引数について" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Grover</span></code> には <code class="docutils literal notranslate"><span class="pre">oracle</span></code> と <code class="docutils literal notranslate"><span class="pre">state_preparation</span></code> 以外にも引数があります。このセクションでは、それらについて説明します。</p>
+<section id="good_state-の指定">
+<h3><code class="docutils literal notranslate"><span class="pre">good_state</span></code> の指定<a class="headerlink" href="#good_state-の指定" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">good_state</span></code> は測定結果が正しいかどうかを内部的にチェックするために使用します。これは、バイナリ文字列のリスト、整数のリスト、 <code class="docutils literal notranslate"><span class="pre">Statevector</span></code> 、 Callable のいずれかになります。入力がビット列のリストの場合、リスト内の各ビット列が所望の状態を表します。入力が整数のリストならば、それぞれの整数は所望の状態で <span class="math notranslate nohighlight">\(|1\rangle\)</span> となるインデックスを表します。 <code class="docutils literal notranslate"><span class="pre">Statevector</span></code> の場合は、全ての所望の状態の重ね合わせを表します。</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># a list of binary strings good state</span>
+<span class="n">oracle</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">oracle</span><span class="o">.</span><span class="n">cz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">good_state</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;11&#39;</span><span class="p">,</span> <span class="s1">&#39;00&#39;</span><span class="p">]</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">AmplificationProblem</span><span class="p">(</span><span class="n">oracle</span><span class="p">,</span> <span class="n">is_good_state</span><span class="o">=</span><span class="n">good_state</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">is_good_state</span><span class="p">(</span><span class="s1">&#39;11&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+True
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># a list of integer good state</span>
+<span class="n">oracle</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">oracle</span><span class="o">.</span><span class="n">cz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">good_state</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">AmplificationProblem</span><span class="p">(</span><span class="n">oracle</span><span class="p">,</span> <span class="n">is_good_state</span><span class="o">=</span><span class="n">good_state</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">is_good_state</span><span class="p">(</span><span class="s1">&#39;11&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+True
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">qiskit.quantum_info</span> <span class="kn">import</span> <span class="n">Statevector</span>
+
+<span class="c1"># `Statevector` good state</span>
+<span class="n">oracle</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">oracle</span><span class="o">.</span><span class="n">cz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">good_state</span> <span class="o">=</span> <span class="n">Statevector</span><span class="o">.</span><span class="n">from_label</span><span class="p">(</span><span class="s1">&#39;11&#39;</span><span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">AmplificationProblem</span><span class="p">(</span><span class="n">oracle</span><span class="p">,</span> <span class="n">is_good_state</span><span class="o">=</span><span class="n">good_state</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">is_good_state</span><span class="p">(</span><span class="s1">&#39;11&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+True
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># Callable good state</span>
+<span class="k">def</span> <span class="nf">callable_good_state</span><span class="p">(</span><span class="n">bitstr</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">bitstr</span> <span class="o">==</span> <span class="s2">&quot;11&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span>
+
+<span class="n">oracle</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">oracle</span><span class="o">.</span><span class="n">cz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">AmplificationProblem</span><span class="p">(</span><span class="n">oracle</span><span class="p">,</span> <span class="n">is_good_state</span><span class="o">=</span><span class="n">good_state</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">is_good_state</span><span class="p">(</span><span class="s1">&#39;11&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+True
+</pre></div></div>
+</div>
+</section>
+<section id="iterations-の回数">
+<h3><code class="docutils literal notranslate"><span class="pre">iterations</span></code> の回数<a class="headerlink" href="#iterations-の回数" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>Grover 演算子のアルゴリズムで正しい結果を得るためには、 Grover 演算子を適用する際の繰り返し回数が重要です。繰り返し回数は <code class="docutils literal notranslate"><span class="pre">Grover</span></code> の引数 <code class="docutils literal notranslate"><span class="pre">iterations</span></code> で設定することができます。次の入力がサポートされています。入力が整数ならば、適用される Grover 演算子 の回数を表します。入力が整数のリストならば、 Grover 演算子がそれらの回数だけ連続して適用され、各回の実行後に正しい解が見つかったかどうかチェックされます。</p>
+<p>これらに加えて、 <code class="docutils literal notranslate"><span class="pre">sample_from_iterations</span></code> という引数もあります。これが <code class="docutils literal notranslate"><span class="pre">True</span></code> になっている場合、 <code class="docutils literal notranslate"><span class="pre">iterations</span></code> で指定された指数の代わりに、 0 と <code class="docutils literal notranslate"><span class="pre">iterations</span></code> の間のランダムな整数を Grover 演算子の指数として用いることができます。この方法は、解の個数すら分からない場合に有用です。</p>
+<p><code class="docutils literal notranslate"><span class="pre">sample_from_iterations</span></code> を使用したアルゴリズムの詳細については、[4] を参照してください。</p>
+<p><strong>参考文献：</strong></p>
+<p>[4]: Boyer et al., Tight bounds on quantum searching <a class="reference external" href="https://arxiv.org/abs/quant-ph/9605034">arxiv:quant-ph/9605034</a></p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># integer iteration</span>
+<span class="n">oracle</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">oracle</span><span class="o">.</span><span class="n">cz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">AmplificationProblem</span><span class="p">(</span><span class="n">oracle</span><span class="p">,</span> <span class="n">is_good_state</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;11&#39;</span><span class="p">])</span>
+<span class="n">grover</span> <span class="o">=</span> <span class="n">Grover</span><span class="p">(</span><span class="n">iterations</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># list iteration</span>
+<span class="n">oracle</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">oracle</span><span class="o">.</span><span class="n">cz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">AmplificationProblem</span><span class="p">(</span><span class="n">oracle</span><span class="p">,</span> <span class="n">is_good_state</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;11&#39;</span><span class="p">])</span>
+<span class="n">grover</span> <span class="o">=</span> <span class="n">Grover</span><span class="p">(</span><span class="n">iterations</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># using sample_from_iterations</span>
+<span class="n">oracle</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">oracle</span><span class="o">.</span><span class="n">cz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">AmplificationProblem</span><span class="p">(</span><span class="n">oracle</span><span class="p">,</span> <span class="n">is_good_state</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;11&#39;</span><span class="p">])</span>
+<span class="n">grover</span> <span class="o">=</span> <span class="n">Grover</span><span class="p">(</span><span class="n">iterations</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">sample_from_iterations</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>解の数がわかっている場合は、静的メソッド <code class="docutils literal notranslate"><span class="pre">optimal_num_iterations</span></code> を使用して、最適な反復回数を見つけることもできます。出力の反復は概算値であることに注意してください。量子ビットの数が少ない場合、出力の反復が最適でない場合があります。</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">iterations</span> <span class="o">=</span> <span class="n">Grover</span><span class="o">.</span><span class="n">optimal_num_iterations</span><span class="p">(</span><span class="n">num_solutions</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_qubits</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">iterations</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+12
+</pre></div></div>
+</div>
+</section>
+<section id="post_processing-の適用">
+<h3><code class="docutils literal notranslate"><span class="pre">post_processing</span></code> の適用<a class="headerlink" href="#post_processing-の適用" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>読みやすさのために、最も多く得られた測定値に後処理を適用することができます。これは例えば、測定値のビット表現 <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">0,</span> <span class="pre">1]</span></code> を DIMACS CNF 形式 <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">-2,</span> <span class="pre">3]</span></code> に変換するために使用することができます。</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">def</span> <span class="nf">to_DIAMACS_CNF_format</span><span class="p">(</span><span class="n">bit_rep</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span> <span class="k">if</span> <span class="n">val</span><span class="o">==</span><span class="mi">1</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bit_rep</span><span class="p">)]</span>
+
+<span class="n">oracle</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">oracle</span><span class="o">.</span><span class="n">cz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">AmplificationProblem</span><span class="p">(</span><span class="n">oracle</span><span class="p">,</span> <span class="n">is_good_state</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;11&#39;</span><span class="p">],</span> <span class="n">post_processing</span><span class="o">=</span><span class="n">to_DIAMACS_CNF_format</span><span class="p">)</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">post_processing</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[1, -2, 3]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+<span class="o">%</span><span class="k">qiskit_version_table</span>
+<span class="o">%</span><span class="k">qiskit_copyright</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td>Qiskit</td><td>None</td></tr><tr><td>Terra</td><td>0.17.4</td></tr><tr><td>Aer</td><td>0.8.2</td></tr><tr><td>Ignis</td><td>0.6.0</td></tr><tr><td>Aqua</td><td>None</td></tr><tr><td>IBM Q Provider</td><td>None</td></tr><tr><th>System information</th></tr><tr><td>Python</td><td>3.8.8 (default, Apr 13 2021, 12:59:45)
+[Clang 10.0.0 ]</td></tr><tr><td>OS</td><td>Darwin</td></tr><tr><td>CPUs</td><td>2</td></tr><tr><td>Memory (Gb)</td><td>12.0</td></tr><tr><td colspan='2'>Thu Jun 03 11:28:48 2021 EDT</td></tr></table></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2021.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, Qiskit Development Team.
+      最終更新: 2021/10/02
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="pytorch-content-right" id="pytorch-content-right">
+          <div class="pytorch-right-menu" id="pytorch-right-menu">
+            <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">Grover のアルゴリズムと振幅増幅</a><ul>
+<li><a class="reference internal" href="#Grover-のアルゴリズム">Grover のアルゴリズム</a><ul>
+<li><a class="reference internal" href="#Grover-のアルゴリズムの実行">Grover のアルゴリズムの実行</a></li>
+<li><a class="reference internal" href="#Grover-のオラクルとしてさまざまなタイプのクラスを使用する"><code class="docutils literal notranslate"><span class="pre">Grover</span></code> のオラクルとしてさまざまなタイプのクラスを使用する</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#振幅増幅">振幅増幅</a><ul>
+<li><a class="reference internal" href="#状態の準備">状態の準備</a></li>
+<li><a class="reference internal" href="#完全な柔軟性">完全な柔軟性</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Grover-の他の引数について"><code class="docutils literal notranslate"><span class="pre">Grover</span></code> の他の引数について</a><ul>
+<li><a class="reference internal" href="#good_state-の指定"><code class="docutils literal notranslate"><span class="pre">good_state</span></code> の指定</a></li>
+<li><a class="reference internal" href="#iterations-の回数"><code class="docutils literal notranslate"><span class="pre">iterations</span></code> の回数</a></li>
+<li><a class="reference internal" href="#post_processing-の適用"><code class="docutils literal notranslate"><span class="pre">post_processing</span></code> の適用</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+         <script src="../../_static/jquery.js"></script>
+         <script src="../../_static/underscore.js"></script>
+         <script src="../../_static/doctools.js"></script>
+         <script src="../../_static/language_data.js"></script>
+         <script src="../../_static/thebelab-helper.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+         <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "tex2jax_ignore|mathjax_ignore|document", "processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
+     
+
+  
+
+  <script type="text/javascript" src="../../_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="../../_static/js/vendor/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+  <div>
+    <br>
+  </div>
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://qiskit.org/" aria-label="PyTorch"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="../../getting_started.html">Getting Started</a>
+          </li>
+          <li>
+            <a href="../../tutorials.html">Tutorials</a>
+          </li>
+          <li>
+            <a href="https://qiskit.org/documentation/partners/">Partners</a>
+          </li>
+          <br>
+          <li class="resources-mobile-menu-title">
+            Applications
+          </li>
+          <ul class="resources-mobile-menu-items">
+            <li>
+              <a href="https://qiskit.org/documentation/machine-learning/">Machine learning</a>
+            </li>
+
+            <li>
+              <a href="https://qiskit.org/documentation/nature/">Nature</a>
+            </li>
+
+            <li>
+              <a href="https://qiskit.org/documentation/finance/">Finance</a>
+            </li>
+
+            <li>
+              <a href="https://qiskit.org/documentation/optimization/">Optimization</a>
+            </li>
+          </ul>
+          <br>
+          <li>
+            <a href="https://qiskit.org/documentation/experiments/">Experiments</a>
+          </li>
+          <br>
+          <li class="resources-mobile-menu-title">
+            Resources
+          </li>
+
+          <ul class="resources-mobile-menu-items">
+            <li>
+              <a href="https://qiskit.slack.com">Slack support</a>
+            </li>
+          </ul>
+          <br>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="../../_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      pytorchAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+      filterTags.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.pytorch-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

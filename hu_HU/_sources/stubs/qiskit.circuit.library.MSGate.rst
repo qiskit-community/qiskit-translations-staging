@@ -1,0 +1,19 @@
+﻿MSGate
+======
+
+.. currentmodule:: qiskit.circuit.library
+
+.. autoclass:: MSGate
+   :no-members:
+   :show-inheritance:
+
+
+
+   .. rubric:: Attributes
+
+   .. autoattribute:: decompositions
+   .. autoattribute:: definition
+   .. autoattribute:: duration
+   .. autoattribute:: label
+   .. autoattribute:: params
+   .. autoattribute:: unit
