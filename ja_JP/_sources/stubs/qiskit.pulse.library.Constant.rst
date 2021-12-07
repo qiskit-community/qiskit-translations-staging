@@ -1,4 +1,4 @@
-Constant
+﻿Constant
 ========
 
 .. currentmodule:: qiskit.pulse.library
@@ -13,8 +13,6 @@ Constant
       :nosignatures:
       :toctree: ../stubs/
 
-      ~Constant.assign
-      ~Constant.assign_parameters
       ~Constant.draw
       ~Constant.get_waveform
       ~Constant.is_parameterized

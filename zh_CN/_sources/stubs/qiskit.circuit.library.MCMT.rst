@@ -28,6 +28,7 @@
    .. autoattribute:: global_phase
    .. autoattribute:: header
    .. autoattribute:: instances
+   .. autoattribute:: label
    .. autoattribute:: metadata
    .. autoattribute:: num_ancilla_qubits
    .. autoattribute:: num_ancillas

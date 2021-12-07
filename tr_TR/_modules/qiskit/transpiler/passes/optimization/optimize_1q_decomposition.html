@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.optimization.optimize_1q_decomposition &mdash; Qiskit 0.32.0 belgelendirmesi</title>
+  <title>qiskit.transpiler.passes.optimization.optimize_1q_decomposition &mdash; Qiskit 0.33.0 belgelendirmesi</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ignis.html">Qiskit Ignis (kullanımdan kaldırıldı)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aqua.html">Qiskit Aqua (kullanımdan kaldırıldı)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Hata Giderme</span></p>
 <ul>
@@ -347,7 +342,6 @@
 
 <span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -397,6 +391,82 @@
                             <span class="nb">tuple</span><span class="p">(</span><span class="n">gates</span><span class="p">)</span>
                         <span class="p">]</span> <span class="o">=</span> <span class="n">one_qubit_decompose</span><span class="o">.</span><span class="n">OneQubitEulerDecomposer</span><span class="p">(</span><span class="n">euler_basis_name</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">_resynthesize_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resynthesizes one `run`, typically extracted via `dag.collect_1q_runs`.</span>
+
+<span class="sd">        Returns (basis, circuit) containing the newly synthesized circuit in the indicated basis, or</span>
+<span class="sd">        (None, None) if no synthesis routine applied.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">operator</span> <span class="o">=</span> <span class="n">run</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">to_matrix</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">run</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">operator</span> <span class="o">=</span> <span class="n">gate</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">to_matrix</span><span class="p">()</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span>
+
+        <span class="n">new_circs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">_decompose</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decomposers</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+        <span class="n">new_basis</span><span class="p">,</span> <span class="n">new_circ</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_circs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">new_basis</span><span class="p">,</span> <span class="n">new_circ</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">new_circs</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="k">return</span> <span class="n">new_basis</span><span class="p">,</span> <span class="n">new_circ</span>
+
+    <span class="k">def</span> <span class="nf">_substitution_checks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag</span><span class="p">,</span> <span class="n">old_run</span><span class="p">,</span> <span class="n">new_circ</span><span class="p">,</span> <span class="n">new_basis</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns `True` when it is recommended to replace `old_run` with `new_circ`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">new_circ</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># do we even have calibrations?</span>
+        <span class="n">has_cals_p</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">calibrations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">calibrations</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="c1"># is this run in the target set of this particular decomposer and also uncalibrated?</span>
+        <span class="n">rewriteable_and_in_basis_p</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">new_basis</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">has_cals_p</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">dag</span><span class="o">.</span><span class="n">has_calibration_for</span><span class="p">(</span><span class="n">g</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">old_run</span>
+        <span class="p">)</span>
+        <span class="c1"># does this run have uncalibrated gates?</span>
+        <span class="n">uncalibrated_p</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">has_cals_p</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="n">dag</span><span class="o">.</span><span class="n">has_calibration_for</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">old_run</span><span class="p">)</span>
+        <span class="c1"># does this run have gates not in the image of ._decomposers _and_ uncalibrated?</span>
+        <span class="n">uncalibrated_and_not_basis_p</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_basis</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">has_cals_p</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">dag</span><span class="o">.</span><span class="n">has_calibration_for</span><span class="p">(</span><span class="n">g</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">old_run</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">rewriteable_and_in_basis_p</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">old_run</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_circ</span><span class="p">):</span>
+            <span class="c1"># NOTE: This is short-circuited on calibrated gates, which we&#39;re timid about</span>
+            <span class="c1">#       reducing.</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Resynthesized </span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">old_run</span><span class="p">])</span>
+                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">and got</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">new_circ</span><span class="p">])</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">but the original was native (for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_basis</span><span class="si">}</span><span class="s2">) and the new value &quot;</span>
+                <span class="s2">&quot;is longer.  This indicates an efficiency bug in synthesis.  Please report it by &quot;</span>
+                <span class="s2">&quot;opening an issue here: &quot;</span>
+                <span class="s2">&quot;https://github.com/Qiskit/qiskit-terra/issues/new/choose&quot;</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># if we&#39;re outside of the basis set, we&#39;re obligated to logically decompose.</span>
+        <span class="c1"># if we&#39;re outside of the set of gates for which we have physical definitions,</span>
+        <span class="c1">#    then we _try_ to decompose, using the results if we see improvement.</span>
+        <span class="c1"># NOTE: Here we use circuit length as a weak proxy for &quot;improvement&quot;; in reality,</span>
+        <span class="c1">#       we care about something more like fidelity at runtime, which would mean,</span>
+        <span class="c1">#       e.g., a preference for `RZGate`s over `RXGate`s.  In fact, users sometimes</span>
+        <span class="c1">#       express a preference for a &quot;canonical form&quot; of a circuit, which may come in</span>
+        <span class="c1">#       the form of some parameter values, also not visible at the level of circuit</span>
+        <span class="c1">#       length.  Since we don&#39;t have a framework for the caller to programmatically</span>
+        <span class="c1">#       express what they want here, we include some special casing for particular</span>
+        <span class="c1">#       gates which we&#39;ve promised to normalize --- but this is fragile and should</span>
+        <span class="c1">#       ultimately be done away with.</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">uncalibrated_and_not_basis_p</span>
+            <span class="ow">or</span> <span class="p">(</span><span class="n">uncalibrated_p</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">old_run</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_circ</span><span class="p">))</span>
+            <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_run</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">U3Gate</span><span class="p">)</span>
+        <span class="p">)</span>
+
 <div class="viewcode-block" id="Optimize1qGatesDecomposition.run"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.Optimize1qGatesDecomposition.run.html#qiskit.transpiler.passes.Optimize1qGatesDecomposition.run">[belgeler]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run the Optimize1qGatesDecomposition pass on `dag`.</span>
 
@@ -409,6 +479,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decomposers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Skipping pass because no basis is set&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">dag</span>
+
         <span class="n">runs</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">collect_1q_runs</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">runs</span><span class="p">:</span>
             <span class="c1"># SPECIAL CASE: Don&#39;t bother to optimize single U3 gates which are in the basis set.</span>
@@ -422,67 +493,15 @@
                 <span class="k">if</span> <span class="s2">&quot;u2&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_basis</span> <span class="ow">and</span> <span class="s2">&quot;u1&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_basis</span><span class="p">:</span>
                     <span class="k">continue</span>
 
-            <span class="n">operator</span> <span class="o">=</span> <span class="n">run</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">to_matrix</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">run</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
-                <span class="n">operator</span> <span class="o">=</span> <span class="n">gate</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">to_matrix</span><span class="p">()</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span>
+            <span class="n">new_basis</span><span class="p">,</span> <span class="n">new_circ</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resynthesize_run</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
 
-            <span class="n">new_circs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">_decompose</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decomposers</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="k">if</span> <span class="n">new_circ</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_substitution_checks</span><span class="p">(</span><span class="n">dag</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">new_circ</span><span class="p">,</span> <span class="n">new_basis</span><span class="p">):</span>
+                <span class="n">new_dag</span> <span class="o">=</span> <span class="n">circuit_to_dag</span><span class="p">(</span><span class="n">new_circ</span><span class="p">)</span>
+                <span class="n">dag</span><span class="o">.</span><span class="n">substitute_node_with_dag</span><span class="p">(</span><span class="n">run</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_dag</span><span class="p">)</span>
+                <span class="c1"># Delete the other nodes in the run</span>
+                <span class="k">for</span> <span class="n">current_node</span> <span class="ow">in</span> <span class="n">run</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                    <span class="n">dag</span><span class="o">.</span><span class="n">remove_op_node</span><span class="p">(</span><span class="n">current_node</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_circs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">new_basis</span><span class="p">,</span> <span class="n">new_circ</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">new_circs</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-
-                <span class="c1"># do we even have calibrations?</span>
-                <span class="n">has_cals_p</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">calibrations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">calibrations</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-                <span class="c1"># is this run in the target set of this particular decomposer and also uncalibrated?</span>
-                <span class="n">rewriteable_and_in_basis_p</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span>
-                    <span class="n">g</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">new_basis</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">has_cals_p</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">dag</span><span class="o">.</span><span class="n">has_calibration_for</span><span class="p">(</span><span class="n">g</span><span class="p">))</span>
-                    <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">run</span>
-                <span class="p">)</span>
-                <span class="c1"># does this run have uncalibrated gates?</span>
-                <span class="n">uncalibrated_p</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">has_cals_p</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="n">dag</span><span class="o">.</span><span class="n">has_calibration_for</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">run</span><span class="p">)</span>
-                <span class="c1"># does this run have gates not in the image of ._decomposers _and_ uncalibrated?</span>
-                <span class="n">uncalibrated_and_not_basis_p</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
-                    <span class="n">g</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_basis</span>
-                    <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">has_cals_p</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">dag</span><span class="o">.</span><span class="n">has_calibration_for</span><span class="p">(</span><span class="n">g</span><span class="p">))</span>
-                    <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">run</span>
-                <span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">rewriteable_and_in_basis_p</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">run</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_circ</span><span class="p">):</span>
-                    <span class="c1"># NOTE: This is short-circuited on calibrated gates, which we&#39;re timid about</span>
-                    <span class="c1">#       reducing.</span>
-                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                        <span class="s2">&quot;Resynthesized </span><span class="se">\n\n</span><span class="s2">&quot;</span>
-                        <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">run</span><span class="p">])</span>
-                        <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">and got</span><span class="se">\n\n</span><span class="s2">&quot;</span>
-                        <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">new_circ</span><span class="p">])</span>
-                        <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">but the original was native (for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_basis</span><span class="si">}</span><span class="s2">) and the new &quot;</span>
-                        <span class="s2">&quot;value is longer.  This indicates an efficiency bug in synthesis.  Please &quot;</span>
-                        <span class="s2">&quot;report it by opening an issue here: &quot;</span>
-                        <span class="s2">&quot;https://github.com/Qiskit/qiskit-terra/issues/new/choose&quot;</span><span class="p">,</span>
-                        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="c1"># if we&#39;re outside of the basis set, we&#39;re obligated to logically decompose.</span>
-                <span class="c1"># if we&#39;re outside of the set of gates for which we have physical definitions,</span>
-                <span class="c1">#    then we _try_ to decompose, using the results if we see improvement.</span>
-                <span class="c1"># NOTE: Here we use circuit length as a weak proxy for &quot;improvement&quot;; in reality,</span>
-                <span class="c1">#       we care about something more like fidelity at runtime, which would mean,</span>
-                <span class="c1">#       e.g., a preference for `RZGate`s over `RXGate`s.  In fact, users sometimes</span>
-                <span class="c1">#       express a preference for a &quot;canonical form&quot; of a circuit, which may come in</span>
-                <span class="c1">#       the form of some parameter values, also not visible at the level of circuit</span>
-                <span class="c1">#       length.  Since we don&#39;t have a framework for the caller to programmatically</span>
-                <span class="c1">#       express what they want here, we include some special casing for particular</span>
-                <span class="c1">#       gates which we&#39;ve promised to normalize --- but this is fragile and should</span>
-                <span class="c1">#       ultimately be done away with.</span>
-                <span class="k">if</span> <span class="p">(</span>
-                    <span class="n">uncalibrated_and_not_basis_p</span>
-                    <span class="ow">or</span> <span class="p">(</span><span class="n">uncalibrated_p</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">run</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_circ</span><span class="p">))</span>
-                    <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">run</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">U3Gate</span><span class="p">)</span>
-                <span class="p">):</span>
-                    <span class="n">new_dag</span> <span class="o">=</span> <span class="n">circuit_to_dag</span><span class="p">(</span><span class="n">new_circ</span><span class="p">)</span>
-                    <span class="n">dag</span><span class="o">.</span><span class="n">substitute_node_with_dag</span><span class="p">(</span><span class="n">run</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_dag</span><span class="p">)</span>
-                    <span class="c1"># Delete the other nodes in the run</span>
-                    <span class="k">for</span> <span class="n">current_node</span> <span class="ow">in</span> <span class="n">run</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
-                        <span class="n">dag</span><span class="o">.</span><span class="n">remove_op_node</span><span class="p">(</span><span class="n">current_node</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">dag</span></div></div>
 </pre></div>
 
@@ -501,7 +520,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Son güncelleme: 2021/11/19.
+      Son güncelleme: 2021/12/07.
 
     </p>
   </div>

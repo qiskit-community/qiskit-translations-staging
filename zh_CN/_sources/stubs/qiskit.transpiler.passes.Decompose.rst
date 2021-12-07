@@ -20,5 +20,6 @@
 
    .. rubric:: Attributes
 
+   .. autoattribute:: gate
    .. autoattribute:: is_analysis_pass
    .. autoattribute:: is_transformation_pass

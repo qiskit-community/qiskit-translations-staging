@@ -1,4 +1,4 @@
-Drag
+﻿Drag
 ====
 
 .. currentmodule:: qiskit.pulse.library
@@ -13,8 +13,6 @@ Drag
       :nosignatures:
       :toctree: ../stubs/
 
-      ~Drag.assign
-      ~Drag.assign_parameters
       ~Drag.draw
       ~Drag.get_waveform
       ~Drag.is_parameterized

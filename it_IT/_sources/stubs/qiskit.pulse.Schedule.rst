@@ -21,7 +21,6 @@
       ~Schedule.draw
       ~Schedule.exclude
       ~Schedule.filter
-      ~Schedule.flatten
       ~Schedule.get_parameters
       ~Schedule.initialize_from
       ~Schedule.insert

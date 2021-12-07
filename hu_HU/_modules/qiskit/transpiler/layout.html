@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.layout &mdash; Qiskit 0.32.0 dokumentáció</title>
+  <title>qiskit.transpiler.layout &mdash; Qiskit 0.33.0 dokumentáció</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Hibaelhárítás</span></p>
 <ul>
@@ -358,6 +353,8 @@
 
 <div class="viewcode-block" id="Layout"><a class="viewcode-back" href="../../../stubs/qiskit.transpiler.Layout.html#qiskit.transpiler.Layout">[docs]</a><span class="k">class</span> <span class="nc">Layout</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Two-ways dict to represent a Layout.&quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;_regs&quot;</span><span class="p">,</span> <span class="s2">&quot;_p2v&quot;</span><span class="p">,</span> <span class="s2">&quot;_v2p&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;construct a Layout from a bijective dictionary, mapping</span>
@@ -570,9 +567,9 @@
 <span class="sd">            LayoutError: another_layout can be bigger than self, but not smaller.</span>
 <span class="sd">                Otherwise, raises.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">edge_map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">edge_map</span> <span class="o">=</span> <span class="p">{}</span>
 
-        <span class="k">for</span> <span class="n">virtual</span><span class="p">,</span> <span class="n">physical</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_virtual_bits</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">virtual</span><span class="p">,</span> <span class="n">physical</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v2p</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">physical</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">another_layout</span><span class="o">.</span><span class="n">_p2v</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">LayoutError</span><span class="p">(</span>
                     <span class="s2">&quot;The wire_map_from_layouts() method does not support when the&quot;</span>
@@ -641,7 +638,10 @@
         <span class="n">num_qubits</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">reg</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">reg</span> <span class="ow">in</span> <span class="n">qregs</span><span class="p">)</span>
         <span class="c1"># Check if list is too short to cover all qubits</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">int_list</span><span class="p">)</span> <span class="o">!=</span> <span class="n">num_qubits</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">LayoutError</span><span class="p">(</span><span class="s2">&quot;Integer list length must equal number of qubits in circuit.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">LayoutError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Integer list length (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">int_list</span><span class="p">)</span><span class="si">}</span><span class="s2">) must equal number of qubits &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;in circuit (</span><span class="si">{</span><span class="n">num_qubits</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">int_list</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
         <span class="n">out</span> <span class="o">=</span> <span class="n">Layout</span><span class="p">()</span>
         <span class="n">main_idx</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">qreg</span> <span class="ow">in</span> <span class="n">qregs</span><span class="p">:</span>
@@ -700,7 +700,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Utolsó frissítés 2021/11/19.
+      Utolsó frissítés 2021/12/07.
 
     </p>
   </div>

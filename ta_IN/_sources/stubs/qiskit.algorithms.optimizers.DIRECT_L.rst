@@ -16,6 +16,7 @@ DIRECT\_L
       ~DIRECT_L.get_nlopt_optimizer
       ~DIRECT_L.get_support_level
       ~DIRECT_L.gradient_num_diff
+      ~DIRECT_L.minimize
       ~DIRECT_L.optimize
       ~DIRECT_L.print_options
       ~DIRECT_L.set_max_evals_grouped

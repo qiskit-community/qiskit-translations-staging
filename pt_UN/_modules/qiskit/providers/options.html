@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.providers.options &mdash; Documentação Qiskit 0.32.0</title>
+  <title>qiskit.providers.options &mdash; Documentação Qiskit 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">Qiskit Ignis (depreciado)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aqua.html">Qiskit Aqua (depreciado)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">Provedor Quântico IBM Qiskit</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Guias de Migração Qiskit Aqua</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../aqua_migration.html">Guias de Migração Qiskit Aqua</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Solução de problemas</span></p>
 <ul>
@@ -345,10 +340,10 @@
 
 <span class="sd">&quot;&quot;&quot;Container class for backend options.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">types</span>
+<span class="kn">import</span> <span class="nn">io</span>
 
 
-<div class="viewcode-block" id="Options"><a class="viewcode-back" href="../../../stubs/qiskit.providers.Options.html#qiskit.providers.Options">[documentos]</a><span class="k">class</span> <span class="nc">Options</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">SimpleNamespace</span><span class="p">):</span>
+<div class="viewcode-block" id="Options"><a class="viewcode-back" href="../../../stubs/qiskit.providers.Options.html#qiskit.providers.Options">[documentos]</a><span class="k">class</span> <span class="nc">Options</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Base options object</span>
 
 <span class="sd">    This class is the abstract class that all backend options are based</span>
@@ -359,13 +354,197 @@
 <span class="sd">    options.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="c1"># Here there are dragons.</span>
+
+    <span class="c1"># This class preamble is an abhorrent hack to make `Options` work similarly to a</span>
+    <span class="c1"># SimpleNamespace, but with its instance methods and attributes in a separate namespace.  This</span>
+    <span class="c1"># is required to make the initial release of Qiskit Terra 0.19 compatible with already released</span>
+    <span class="c1"># versions of Qiskit Experiments, which rely on both of</span>
+    <span class="c1">#       options.my_key = my_value</span>
+    <span class="c1">#       transpile(qc, **options.__dict__)</span>
+    <span class="c1"># working.</span>
+    <span class="c1">#</span>
+    <span class="c1"># Making `__dict__` a property which gets a slotted attribute solves the second line.  The</span>
+    <span class="c1"># slotted attributes are not stored in a `__dict__` anyway, and `__slots__` classes suppress the</span>
+    <span class="c1"># creation of `__dict__`.  That leaves it free for us to override it with a property, which</span>
+    <span class="c1"># returns the options namespace `_fields`.</span>
+    <span class="c1">#</span>
+    <span class="c1"># We need to make attribute setting simply set options as well, to support statements of the</span>
+    <span class="c1"># form `options.key = value`.  We also need to ensure that existing uses do not override any new</span>
+    <span class="c1"># methods.  We do this by overriding `__setattr__` to purely write into our `_fields` dict</span>
+    <span class="c1"># instead.  This has the highly unusual behavior that</span>
+    <span class="c1">#       &gt;&gt;&gt; options = Options()</span>
+    <span class="c1">#       &gt;&gt;&gt; options.validator = &quot;my validator option setting&quot;</span>
+    <span class="c1">#       &gt;&gt;&gt; options.validator</span>
+    <span class="c1">#       {}</span>
+    <span class="c1">#       &gt;&gt;&gt; options.get(&quot;validator&quot;)</span>
+    <span class="c1">#       &quot;my validator option setting&quot;</span>
+    <span class="c1"># This is the most we can do to support the old interface; _getting_ attributes must return the</span>
+    <span class="c1"># new forms where appropriate, but setting will work with anything.  All options can always be</span>
+    <span class="c1"># returned by `Options.get`.  To initialise the attributes in `__init__`, we need to dodge the</span>
+    <span class="c1"># overriding of `__setattr__`, and upcall to `object.__setattr__`.</span>
+    <span class="c1">#</span>
+    <span class="c1"># To support copying and pickling, we also have to define how to set our state, because Python&#39;s</span>
+    <span class="c1"># normal way of trying to get attributes in the unpickle will fail.</span>
+    <span class="c1">#</span>
+    <span class="c1"># This is a terrible hack, and is purely to ensure that Terra 0.19 does not break versions of</span>
+    <span class="c1"># other Qiskit-family packages that are already deployed.  It should be removed as soon as</span>
+    <span class="c1"># possible.</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;_fields&quot;</span><span class="p">,</span> <span class="s2">&quot;validator&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">__dict__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span>
+
+    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="n">_fields</span><span class="p">,</span> <span class="n">validator</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="s2">&quot;_fields&quot;</span><span class="p">,</span> <span class="n">_fields</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="s2">&quot;validator&quot;</span><span class="p">,</span> <span class="n">validator</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__copy__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a copy of the Options.</span>
+
+<span class="sd">        The returned option and validator values are shallow copies of the originals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">__setstate__</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">copy</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="s2">&quot;_fields&quot;</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="s2">&quot;validator&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+    <span class="c1"># The eldritch horrors are over, and normal service resumes below.  Beware that while</span>
+    <span class="c1"># `__setattr__` is overridden, you cannot do `self.x = y` (but `self.x[key] = y` is fine).  This</span>
+    <span class="c1"># should not be necessary, but if _absolutely_ required, you must do</span>
+    <span class="c1">#       super().__setattr__(&quot;x&quot;, y)</span>
+    <span class="c1"># to avoid just setting a value in `_fields`.</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">v</span><span class="si">!r}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">(</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Options</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Options</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_fields</span>
+        <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+<div class="viewcode-block" id="Options.set_validator"><a class="viewcode-back" href="../../../stubs/qiskit.providers.Options.set_validator.html#qiskit.providers.Options.set_validator">[documentos]</a>    <span class="k">def</span> <span class="nf">set_validator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">validator_value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set an optional validator for a field in the options</span>
+
+<span class="sd">        Setting a validator enables changes to an options values to be</span>
+<span class="sd">        validated for correctness when :meth:`~qiskit.providers.Options.update_options`</span>
+<span class="sd">        is called. For example if you have a numeric field like</span>
+<span class="sd">        ``shots`` you can specify a bounds tuple that set an upper and lower</span>
+<span class="sd">        bound on the value such as::</span>
+
+<span class="sd">            options.set_validator(&quot;shots&quot;, (1, 4096))</span>
+
+<span class="sd">        In this case whenever the ``&quot;shots&quot;`` option is updated by the user</span>
+<span class="sd">        it will enforce that the value is &gt;=1 and &lt;=4096. A ``ValueError`` will</span>
+<span class="sd">        be raised if it&#39;s outside those bounds. If a validator is already present</span>
+<span class="sd">        for the specified field it will be silently overriden.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            field (str): The field name to set the validator on</span>
+<span class="sd">            validator_value (list or tuple or type): The value to use for the</span>
+<span class="sd">                validator depending on the type indicates on how the value for</span>
+<span class="sd">                a field is enforced. If a tuple is passed in it must have a</span>
+<span class="sd">                length of two and will enforce the min and max value</span>
+<span class="sd">                (inclusive) for an integer or float value option. If it&#39;s a</span>
+<span class="sd">                list it will list the valid values for a field. If it&#39;s a</span>
+<span class="sd">                ``type`` the validator will just enforce the value is of a</span>
+<span class="sd">                certain type.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            KeyError: If field is not present in the options object</span>
+<span class="sd">            ValueError: If the ``validator_value`` has an invalid value for a</span>
+<span class="sd">                given type</span>
+<span class="sd">            TypeError: If ``validator_value`` is not a valid type</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Field &#39;</span><span class="si">%s</span><span class="s2">&#39; is not present in this options object&quot;</span> <span class="o">%</span> <span class="n">field</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">validator_value</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">validator_value</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;A tuple validator must be of the form &#39;(lower, upper)&#39; &quot;</span>
+                    <span class="s2">&quot;where lower and upper are the lower and upper bounds &quot;</span>
+                    <span class="s2">&quot;inclusive of the numeric value&quot;</span>
+                <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">validator_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">validator_value</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;A list validator must have at least one entry&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">validator_value</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">validator_value</span><span class="p">)</span><span class="si">}</span><span class="s2"> is not a valid validator type, it &quot;</span>
+                <span class="s2">&quot;must be a tuple, list, or class/type&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">validator_value</span></div>
+
 <div class="viewcode-block" id="Options.update_options"><a class="viewcode-back" href="../../../stubs/qiskit.providers.Options.update_options.html#qiskit.providers.Options.update_options">[documentos]</a>    <span class="k">def</span> <span class="nf">update_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Update options with kwargs&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span></div>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
+            <span class="n">field_validator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_validator</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">fields</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">field_validator</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">fields</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">field_validator</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Specified value for &#39;</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2">&#39; is not a valid value, &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;must be &gt;=</span><span class="si">{</span><span class="n">field_validator</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> or &lt;=</span><span class="si">{</span><span class="n">field_validator</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_validator</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">fields</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">field_validator</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Specified value for </span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2"> is not a valid choice, &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;must be one of </span><span class="si">{</span><span class="n">field_validator</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_validator</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="n">field</span><span class="p">],</span> <span class="n">field_validator</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Specified value for </span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2"> is not of required type </span><span class="si">{</span><span class="n">field_validator</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="c1"># This does not interrupt the normal lookup of things like methods or `_fields`, because</span>
+        <span class="c1"># those are successfully resolved by the normal Python lookup apparatus.  If we are here,</span>
+        <span class="c1"># then lookup has failed, so we must be looking for an option.  If the user has manually</span>
+        <span class="c1"># called `self.__getattr__(&quot;_fields&quot;)` then they&#39;ll get the option not the full dict, but</span>
+        <span class="c1"># that&#39;s not really our fault.  `getattr(self, &quot;_fields&quot;)` will still find the dict.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Option </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not defined&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span>
 
 <div class="viewcode-block" id="Options.get"><a class="viewcode-back" href="../../../stubs/qiskit.providers.Options.get.html#qiskit.providers.Options.get">[documentos]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get an option value for a given key.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">no_validator</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">no_validator</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out_str</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+            <span class="n">out_str</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">no_validator</span><span class="p">)</span>
+            <span class="n">out_str</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Where:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                    <span class="n">out_str</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2"> is &gt;= </span><span class="si">{</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> and &lt;= </span><span class="si">{</span><span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">out_str</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2"> is one of </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+                    <span class="n">out_str</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2"> is of type </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">out_str</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span></div>
 </pre></div>
 
              </article>
@@ -383,7 +562,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Última actualização em 2021/11/19.
+      Última actualização em 2021/12/07.
 
     </p>
   </div>

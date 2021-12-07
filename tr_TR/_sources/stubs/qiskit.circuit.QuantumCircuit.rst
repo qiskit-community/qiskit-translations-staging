@@ -20,6 +20,7 @@
       ~QuantumCircuit.assign_parameters
       ~QuantumCircuit.barrier
       ~QuantumCircuit.bind_parameters
+      ~QuantumCircuit.break_loop
       ~QuantumCircuit.cast
       ~QuantumCircuit.cbit_argument_conversion
       ~QuantumCircuit.ccx
@@ -29,6 +30,7 @@
       ~QuantumCircuit.cnot
       ~QuantumCircuit.combine
       ~QuantumCircuit.compose
+      ~QuantumCircuit.continue_loop
       ~QuantumCircuit.control
       ~QuantumCircuit.copy
       ~QuantumCircuit.count_ops
@@ -52,6 +54,8 @@
       ~QuantumCircuit.draw
       ~QuantumCircuit.ecr
       ~QuantumCircuit.extend
+      ~QuantumCircuit.find_bit
+      ~QuantumCircuit.for_loop
       ~QuantumCircuit.fredkin
       ~QuantumCircuit.from_qasm_file
       ~QuantumCircuit.from_qasm_str
@@ -61,6 +65,8 @@
       ~QuantumCircuit.has_register
       ~QuantumCircuit.i
       ~QuantumCircuit.id
+      ~QuantumCircuit.if_else
+      ~QuantumCircuit.if_test
       ~QuantumCircuit.initialize
       ~QuantumCircuit.inverse
       ~QuantumCircuit.iso
@@ -153,6 +159,7 @@
       ~QuantumCircuit.ucry
       ~QuantumCircuit.ucrz
       ~QuantumCircuit.unitary
+      ~QuantumCircuit.while_loop
       ~QuantumCircuit.width
       ~QuantumCircuit.x
       ~QuantumCircuit.y

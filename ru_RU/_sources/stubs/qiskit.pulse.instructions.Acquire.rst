@@ -1,4 +1,4 @@
-Acquire
+﻿Acquire
 =======
 
 .. currentmodule:: qiskit.pulse.instructions
@@ -14,12 +14,10 @@ Acquire
       :toctree: ../stubs/
 
       ~Acquire.append
-      ~Acquire.assign_parameters
       ~Acquire.ch_duration
       ~Acquire.ch_start_time
       ~Acquire.ch_stop_time
       ~Acquire.draw
-      ~Acquire.flatten
       ~Acquire.insert
       ~Acquire.is_parameterized
       ~Acquire.shift

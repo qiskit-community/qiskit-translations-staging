@@ -15,10 +15,14 @@
 
       ~CouplingMap.add_edge
       ~CouplingMap.add_physical_qubit
+      ~CouplingMap.compute_distance_matrix
       ~CouplingMap.distance
       ~CouplingMap.draw
       ~CouplingMap.from_full
       ~CouplingMap.from_grid
+      ~CouplingMap.from_heavy_hex
+      ~CouplingMap.from_heavy_square
+      ~CouplingMap.from_hexagonal_lattice
       ~CouplingMap.from_line
       ~CouplingMap.from_ring
       ~CouplingMap.get_edges
@@ -35,6 +39,8 @@
 
    .. rubric:: Attributes
 
+   .. autoattribute:: description
+   .. autoattribute:: graph
    .. autoattribute:: distance_matrix
    .. autoattribute:: is_symmetric
    .. autoattribute:: physical_qubits

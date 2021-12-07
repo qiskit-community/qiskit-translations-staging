@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.circuit.instructionset &mdash; Qiskit 0.32.0 Dokumentation</title>
+  <title>qiskit.circuit.instructionset &mdash; Qiskit 0.33.0 Dokumentation</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
 <ul>
@@ -346,22 +341,132 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Instruction collection.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
 <span class="kn">from</span> <span class="nn">qiskit.circuit.exceptions</span> <span class="kn">import</span> <span class="n">CircuitError</span>
 <span class="kn">from</span> <span class="nn">.instruction</span> <span class="kn">import</span> <span class="n">Instruction</span>
+<span class="kn">from</span> <span class="nn">.classicalregister</span> <span class="kn">import</span> <span class="n">Clbit</span><span class="p">,</span> <span class="n">ClassicalRegister</span>
+
+
+<span class="c1"># ClassicalRegister is hashable, and generally the registers in a circuit are completely fixed after</span>
+<span class="c1"># its creation, so caching this allows us to only pay the register-unrolling penalty once.  The</span>
+<span class="c1"># cache does not need to be large, because in general only one circuit is constructed at once.</span>
+<span class="nd">@functools</span><span class="o">.</span><span class="n">lru_cache</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_requester_from_cregs</span><span class="p">(</span><span class="n">cregs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ClassicalRegister</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Get a classical resource requester from an iterable of classical registers.</span>
+
+<span class="sd">    This implements the deprecated functionality of constructing an :obj:`.InstructionSet` with a</span>
+<span class="sd">    sequence of :obj:`.ClassicalRegister` instances.  This is the old method of resolving integer</span>
+<span class="sd">    indices to a :obj:`.Clbit`, which is now replaced by using a requester from the</span>
+<span class="sd">    :obj:`.QuantumCircuit` instance for consistency.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        This function has &quot;incorrect&quot; behaviour if any classical bit is in more than one register.</span>
+<span class="sd">        This is to maintain compatibility with the legacy usage of :obj:`.InstructionSet`, and</span>
+<span class="sd">        should not be used for any internal Qiskit code.  Instead, use the proper requester methods</span>
+<span class="sd">        within :obj:`.QuantumCircuit`.</span>
+
+<span class="sd">    This function can be removed when the deprecation of the ``circuit_cregs`` argument in</span>
+<span class="sd">    :obj:`.InstructionSet` expires.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        cregs: A tuple (needs to be immutable for the caching) of the classical registers to produce</span>
+<span class="sd">            a requester over.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A requester function that checks that a passed condition variable is valid, resolves</span>
+<span class="sd">        integers into concrete :obj:`.Clbit` instances, and returns a valid :obj:`.Clbit` or</span>
+<span class="sd">        :obj:`.ClassicalRegister` condition resource.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">clbit_flat</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">clbit</span> <span class="k">for</span> <span class="n">creg</span> <span class="ow">in</span> <span class="n">cregs</span> <span class="k">for</span> <span class="n">clbit</span> <span class="ow">in</span> <span class="n">creg</span><span class="p">)</span>
+    <span class="n">clbit_set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">clbit_flat</span><span class="p">)</span>
+    <span class="n">creg_set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">cregs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">requester</span><span class="p">(</span><span class="n">classical</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">classical</span><span class="p">,</span> <span class="n">Clbit</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">classical</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">clbit_set</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">CircuitError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Condition bit </span><span class="si">{</span><span class="n">classical</span><span class="si">}</span><span class="s2"> is not in the registers known here: </span><span class="si">{</span><span class="n">creg_set</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">classical</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">classical</span><span class="p">,</span> <span class="n">ClassicalRegister</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">classical</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">creg_set</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">CircuitError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Condition register </span><span class="si">{</span><span class="n">classical</span><span class="si">}</span><span class="s2"> is not one of the registers known here:&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">creg_set</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">classical</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">classical</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">clbit_flat</span><span class="p">[</span><span class="n">classical</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">CircuitError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Bit index </span><span class="si">{</span><span class="n">classical</span><span class="si">}</span><span class="s2"> is out-of-range.&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="bp">None</span>
+        <span class="k">raise</span> <span class="n">CircuitError</span><span class="p">(</span>
+            <span class="s2">&quot;Invalid classical condition. Must be an int, Clbit or ClassicalRegister, but received&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot; &#39;</span><span class="si">{</span><span class="n">classical</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">requester</span>
 
 
 <div class="viewcode-block" id="InstructionSet"><a class="viewcode-back" href="../../../stubs/qiskit.circuit.InstructionSet.html#qiskit.circuit.InstructionSet">[Doku]</a><span class="k">class</span> <span class="nc">InstructionSet</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Instruction collection, and their contexts.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;instructions&quot;</span><span class="p">,</span> <span class="s2">&quot;qargs&quot;</span><span class="p">,</span> <span class="s2">&quot;cargs&quot;</span><span class="p">,</span> <span class="s2">&quot;_requester&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circuit_cregs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">resource_requester</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;New collection of instructions.</span>
 
-<span class="sd">        The context (qargs and cargs that each instruction is attached to)</span>
-<span class="sd">        is also stored separately for each instruction.</span>
+<span class="sd">        The context (qargs and cargs that each instruction is attached to) is also stored separately</span>
+<span class="sd">        for each instruction.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            circuit_cregs (list[ClassicalRegister]): Optional. List of cregs of the</span>
+<span class="sd">                circuit to which the instruction is added. Default: `None`.</span>
+
+<span class="sd">                .. deprecated:: qiskit-terra 0.19</span>
+<span class="sd">                    The classical registers are insufficient to access all classical resources in a</span>
+<span class="sd">                    circuit, as there may be loose classical bits as well.  It can also cause</span>
+<span class="sd">                    integer indices to be resolved incorrectly if any registers overlap.  Instead,</span>
+<span class="sd">                    pass a complete requester to the ``resource_requester`` argument.</span>
+
+<span class="sd">            resource_requester: A callable that takes in the classical resource used in the</span>
+<span class="sd">                condition, verifies that it is present in the attached circuit, resolves any indices</span>
+<span class="sd">                into concrete :obj:`.Clbit` instances, and returns the concrete resource.  If this</span>
+<span class="sd">                is not given, specifying a condition with an index is forbidden, and all concrete</span>
+<span class="sd">                :obj:`.Clbit` and :obj:`.ClassicalRegister` resources will be assumed to be valid.</span>
+
+<span class="sd">                .. note::</span>
+
+<span class="sd">                    The callback ``resource_requester`` is called once for each call to</span>
+<span class="sd">                    :meth:`.c_if`, and assumes that a call implies that the resource will now be</span>
+<span class="sd">                    used.  It may throw an error if the resource is not valid for usage.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            CircuitError: if both ``resource_requester`` and ``circuit_cregs`` are passed.  Only one</span>
+<span class="sd">                of these may be passed, and it should be ``resource_requester``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">instructions</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">qargs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cargs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">circuit_cregs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">resource_requester</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">CircuitError</span><span class="p">(</span><span class="s2">&quot;Cannot pass both &#39;circuit_cregs&#39; and &#39;resource_requester&#39;.&quot;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The &#39;circuit_cregs&#39; argument to &#39;InstructionSet&#39; is deprecated as of&quot;</span>
+                <span class="s2">&quot; qiskit-terra 0.19, and will be removed no sooner than 3 months after its release.&quot;</span>
+                <span class="s2">&quot; Pass a complete resource requester as the &#39;resource_requester&#39; instead.&quot;</span><span class="p">,</span>
+                <span class="ne">DeprecationWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_requester</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="n">_requester_from_cregs</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">circuit_cregs</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_requester</span> <span class="o">=</span> <span class="n">resource_requester</span>
 
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return number of instructions in set&quot;&quot;&quot;</span>
@@ -385,8 +490,37 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">instructions</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="InstructionSet.c_if"><a class="viewcode-back" href="../../../stubs/qiskit.circuit.InstructionSet.c_if.html#qiskit.circuit.InstructionSet.c_if">[Doku]</a>    <span class="k">def</span> <span class="nf">c_if</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">classical</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Add condition on classical register to all instructions.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="InstructionSet.c_if"><a class="viewcode-back" href="../../../stubs/qiskit.circuit.InstructionSet.c_if.html#qiskit.circuit.InstructionSet.c_if">[Doku]</a>    <span class="k">def</span> <span class="nf">c_if</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">classical</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Clbit</span><span class="p">,</span> <span class="n">ClassicalRegister</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">val</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;InstructionSet&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Set a classical equality condition on all the instructions in this set between the</span>
+<span class="sd">        :obj:`.ClassicalRegister` or :obj:`.Clbit` ``classical`` and value ``val``.</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            This is a setter method, not an additive one.  Calling this multiple times will silently</span>
+<span class="sd">            override any previously set condition on any of the contained instructions; it does not</span>
+<span class="sd">            stack.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            classical: the classical resource the equality condition should be on.  If this is given</span>
+<span class="sd">                as an integer, it will be resolved into a :obj:`.Clbit` using the same conventions</span>
+<span class="sd">                as the circuit these instructions are attached to.</span>
+<span class="sd">            val: the value the classical resource should be equal to.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            This same instance of :obj:`.InstructionSet`, but now mutated to have the given equality</span>
+<span class="sd">            condition.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            CircuitError: if the passed classical resource is invalid, or otherwise not resolvable</span>
+<span class="sd">                to a concrete resource that these instructions are permitted to access.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_requester</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">classical</span><span class="p">,</span> <span class="p">(</span><span class="n">Clbit</span><span class="p">,</span> <span class="n">ClassicalRegister</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">CircuitError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot pass an index as a condition variable without specifying a requester&quot;</span>
+                <span class="s2">&quot; when creating this InstructionSet.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_requester</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">classical</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_requester</span><span class="p">(</span><span class="n">classical</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instructions</span><span class="p">:</span>
             <span class="n">gate</span><span class="o">.</span><span class="n">c_if</span><span class="p">(</span><span class="n">classical</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span></div></div>
@@ -407,7 +541,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Zuletzt aktualisiert am 2021/11/19.
+      Zuletzt aktualisiert am 2021/12/07.
 
     </p>
   </div>

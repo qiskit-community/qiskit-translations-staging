@@ -1,4 +1,4 @@
-GaussianSquare
+﻿GaussianSquare
 ==============
 
 .. currentmodule:: qiskit.pulse.library
@@ -13,8 +13,6 @@ GaussianSquare
       :nosignatures:
       :toctree: ../stubs/
 
-      ~GaussianSquare.assign
-      ~GaussianSquare.assign_parameters
       ~GaussianSquare.draw
       ~GaussianSquare.get_waveform
       ~GaussianSquare.is_parameterized

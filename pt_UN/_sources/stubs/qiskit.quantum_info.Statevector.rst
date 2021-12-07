@@ -24,6 +24,7 @@
       ~Statevector.from_instruction
       ~Statevector.from_int
       ~Statevector.from_label
+      ~Statevector.inner
       ~Statevector.is_valid
       ~Statevector.measure
       ~Statevector.probabilities

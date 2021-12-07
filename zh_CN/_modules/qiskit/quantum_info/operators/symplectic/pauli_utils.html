@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.quantum_info.operators.symplectic.pauli_utils &mdash; Qiskit 0.32.0 文档</title>
+  <title>qiskit.quantum_info.operators.symplectic.pauli_utils &mdash; Qiskit 0.33.0 文档</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
 <ul>
@@ -343,27 +338,43 @@
 <span class="c1"># copyright notice, and modified files need to carry a notice indicating</span>
 <span class="c1"># that they have been altered from the originals.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">PauliTable utility functions.</span>
+<span class="sd">PauliList utility functions.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">warnings</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">.pauli_table</span> <span class="kn">import</span> <span class="n">PauliTable</span>
+
+<span class="kn">from</span> <span class="nn">qiskit.quantum_info.operators.symplectic.pauli_list</span> <span class="kn">import</span> <span class="n">PauliList</span>
+<span class="kn">from</span> <span class="nn">qiskit.quantum_info.operators.symplectic.pauli_table</span> <span class="kn">import</span> <span class="n">PauliTable</span>
 
 
-<div class="viewcode-block" id="pauli_basis"><a class="viewcode-back" href="../../../../../stubs/qiskit.quantum_info.pauli_basis.html#qiskit.quantum_info.pauli_basis">[文档]</a><span class="k">def</span> <span class="nf">pauli_basis</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the ordered PauliTable for the n-qubit Pauli basis.</span>
+<div class="viewcode-block" id="pauli_basis"><a class="viewcode-back" href="../../../../../stubs/qiskit.quantum_info.pauli_basis.html#qiskit.quantum_info.pauli_basis">[文档]</a><span class="k">def</span> <span class="nf">pauli_basis</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">pauli_list</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the ordered PauliTable or PauliList for the n-qubit Pauli basis.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        num_qubits (int): number of qubits</span>
 <span class="sd">        weight (bool): if True optionally return the basis sorted by Pauli weight</span>
 <span class="sd">                       rather than lexicographic order (Default: False)</span>
+<span class="sd">        pauli_list (bool): if True, the return type becomes PauliList, otherwise PauliTable.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        PauliTable: the PauliTable for the basis</span>
+<span class="sd">        PauliTable, PauliList: the Paulis for the basis</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">pauli_1q</span> <span class="o">=</span> <span class="n">PauliTable</span><span class="p">(</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">],</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">],</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">],</span> <span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
-    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">pauli_list</span><span class="p">:</span>
+        <span class="n">pauli_1q</span> <span class="o">=</span> <span class="n">PauliList</span><span class="p">([</span><span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="s2">&quot;Z&quot;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;The return type of &#39;pauli_basis&#39; will change from PauliTable to PauliList in a &quot;</span>
+            <span class="s2">&quot;future release of Qiskit Terra.  Returning PauliTable is deprecated as of &quot;</span>
+            <span class="s2">&quot;Qiskit Terra 0.19, and will be removed in a future release.  To immediately switch &quot;</span>
+            <span class="s2">&quot;to the new behaviour, pass the keyword argument &#39;pauli_list=True&#39;.&quot;</span><span class="p">,</span>
+            <span class="ne">FutureWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">pauli_1q</span> <span class="o">=</span> <span class="n">PauliTable</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">],</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">],</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">],</span> <span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="p">)</span>
     <span class="k">if</span> <span class="n">num_qubits</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">pauli_1q</span>
     <span class="n">pauli</span> <span class="o">=</span> <span class="n">pauli_1q</span>
@@ -389,7 +400,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      最后更新于 2021/11/19.
+      最后更新于 2021/12/07.
 
     </p>
   </div>

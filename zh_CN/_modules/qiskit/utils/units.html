@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.utils.units &mdash; Qiskit 0.32.0 文档</title>
+  <title>qiskit.utils.units &mdash; Qiskit 0.33.0 文档</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
 <ul>
@@ -345,8 +340,14 @@
 
 <span class="sd">&quot;&quot;&quot;SI unit utilities&quot;&quot;&quot;</span>
 
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
-<div class="viewcode-block" id="apply_prefix"><a class="viewcode-back" href="../../../stubs/qiskit.utils.apply_prefix.html#qiskit.utils.apply_prefix">[文档]</a><span class="k">def</span> <span class="nf">apply_prefix</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">qiskit.circuit.parameterexpression</span> <span class="kn">import</span> <span class="n">ParameterExpression</span>
+
+
+<div class="viewcode-block" id="apply_prefix"><a class="viewcode-back" href="../../../stubs/qiskit.utils.apply_prefix.html#qiskit.utils.apply_prefix">[文档]</a><span class="k">def</span> <span class="nf">apply_prefix</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">],</span> <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Given a SI unit prefix and value, apply the prefix to convert to</span>
 <span class="sd">    standard SI unit.</span>
@@ -358,19 +359,117 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        Converted value.</span>
 
+<span class="sd">    .. note::</span>
+
+<span class="sd">        This may induce tiny value error due to internal representation of float object.</span>
+<span class="sd">        See https://docs.python.org/3/tutorial/floatingpoint.html for details.</span>
+
 <span class="sd">    Raises:</span>
-<span class="sd">        Exception: If the units aren&#39;t recognized.</span>
+<span class="sd">        ValueError: If the ``units`` aren&#39;t recognized.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">downfactors</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="mf">1e12</span><span class="p">,</span> <span class="s2">&quot;n&quot;</span><span class="p">:</span> <span class="mf">1e9</span><span class="p">,</span> <span class="s2">&quot;u&quot;</span><span class="p">:</span> <span class="mf">1e6</span><span class="p">,</span> <span class="s2">&quot;µ&quot;</span><span class="p">:</span> <span class="mf">1e6</span><span class="p">,</span> <span class="s2">&quot;m&quot;</span><span class="p">:</span> <span class="mf">1e3</span><span class="p">}</span>
-    <span class="n">upfactors</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;k&quot;</span><span class="p">:</span> <span class="mf">1e3</span><span class="p">,</span> <span class="s2">&quot;M&quot;</span><span class="p">:</span> <span class="mf">1e6</span><span class="p">,</span> <span class="s2">&quot;G&quot;</span><span class="p">:</span> <span class="mf">1e9</span><span class="p">}</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">unit</span><span class="p">:</span>
+    <span class="n">prefactors</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;f&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">15</span><span class="p">,</span>
+        <span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">12</span><span class="p">,</span>
+        <span class="s2">&quot;n&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">9</span><span class="p">,</span>
+        <span class="s2">&quot;u&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">6</span><span class="p">,</span>
+        <span class="s2">&quot;µ&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">6</span><span class="p">,</span>
+        <span class="s2">&quot;m&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span>
+        <span class="s2">&quot;k&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s2">&quot;M&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+        <span class="s2">&quot;G&quot;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span>
+        <span class="s2">&quot;P&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">unit</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># for example, &quot;m&quot; can represent meter</span>
         <span class="k">return</span> <span class="n">value</span>
-    <span class="k">if</span> <span class="n">unit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">downfactors</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">value</span> <span class="o">/</span> <span class="n">downfactors</span><span class="p">[</span><span class="n">unit</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-    <span class="k">elif</span> <span class="n">unit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">upfactors</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">value</span> <span class="o">*</span> <span class="n">upfactors</span><span class="p">[</span><span class="n">unit</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+    <span class="k">if</span> <span class="n">unit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">prefactors</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not understand unit: </span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">pow10</span> <span class="o">=</span> <span class="n">prefactors</span><span class="p">[</span><span class="n">unit</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+    <span class="c1"># to avoid round-off error of prefactor</span>
+    <span class="k">if</span> <span class="n">pow10</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="o">/</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="n">pow10</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">pow10</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="detach_prefix"><a class="viewcode-back" href="../../../stubs/qiskit.utils.detach_prefix.html#qiskit.utils.detach_prefix">[文档]</a><span class="k">def</span> <span class="nf">detach_prefix</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">decimal</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a SI unit value, find the most suitable prefix to scale the value.</span>
+
+<span class="sd">    For example, the ``value = 1.3e8`` will be converted into a tuple of ``(130.0, &quot;M&quot;)``,</span>
+<span class="sd">    which represents a scaled value and auxiliary unit that may be used to display the value.</span>
+<span class="sd">    In above example, that value might be displayed as ``130 MHz`` (unit is arbitrary here).</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">        &gt;&gt;&gt; value, prefix = detach_prefix(1e4)</span>
+<span class="sd">        &gt;&gt;&gt; print(f&quot;{value} {prefix}Hz&quot;)</span>
+<span class="sd">        10 kHz</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        value: The number to find prefix.</span>
+<span class="sd">        decimal: Optional. An arbitrary integer number to represent a precision of the value.</span>
+<span class="sd">            If specified, it tries to round the mantissa and adjust the prefix to rounded value.</span>
+<span class="sd">            For example, 999_999.91 will become 999.9999 k with ``decimal=4``,</span>
+<span class="sd">            while 1.0 M with ``decimal=3`` or less.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A tuple of scaled value and prefix.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        This may induce tiny value error due to internal representation of float object.</span>
+<span class="sd">        See https://docs.python.org/3/tutorial/floatingpoint.html for details.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the ``value`` is out of range.</span>
+<span class="sd">        ValueError: If the ``value`` is not real number.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">prefactors</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="o">-</span><span class="mi">15</span><span class="p">:</span> <span class="s2">&quot;f&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">12</span><span class="p">:</span> <span class="s2">&quot;p&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">9</span><span class="p">:</span> <span class="s2">&quot;n&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">6</span><span class="p">:</span> <span class="s2">&quot;µ&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;m&quot;</span><span class="p">,</span>
+        <span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;k&quot;</span><span class="p">,</span>
+        <span class="mi">6</span><span class="p">:</span> <span class="s2">&quot;M&quot;</span><span class="p">,</span>
+        <span class="mi">9</span><span class="p">:</span> <span class="s2">&quot;G&quot;</span><span class="p">,</span>
+        <span class="mi">12</span><span class="p">:</span> <span class="s2">&quot;T&quot;</span><span class="p">,</span>
+        <span class="mi">15</span><span class="p">:</span> <span class="s2">&quot;P&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isreal</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input should be real number. Cannot convert </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">pow10</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">value</span><span class="p">))</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not understand units: </span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+        <span class="n">pow10</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># to avoid round-off error of prefactor</span>
+    <span class="k">if</span> <span class="n">pow10</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">mant</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">pow10</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mant</span> <span class="o">=</span> <span class="n">value</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="n">pow10</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">decimal</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Corner case handling</span>
+        <span class="c1"># For example, 999_999.99 can be rounded to 1000.0 k rather than 1.0 M.</span>
+        <span class="n">mant</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">mant</span><span class="p">,</span> <span class="n">decimal</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mant</span> <span class="o">&gt;=</span> <span class="mi">1000</span><span class="p">:</span>
+            <span class="n">mant</span> <span class="o">/=</span> <span class="mi">1000</span>
+            <span class="n">pow10</span> <span class="o">+=</span> <span class="mi">3</span>
+
+    <span class="k">if</span> <span class="n">pow10</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">prefactors</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Value is out of range: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mant</span><span class="p">,</span> <span class="n">prefactors</span><span class="p">[</span><span class="n">pow10</span><span class="p">]</span></div>
 </pre></div>
 
              </article>
@@ -388,7 +487,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      最后更新于 2021/11/19.
+      最后更新于 2021/12/07.
 
     </p>
   </div>

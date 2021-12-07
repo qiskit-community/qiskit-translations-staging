@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.quantum_info.operators.symplectic.pauli &mdash; Documentation Qiskit 0.32.0</title>
+  <title>qiskit.quantum_info.operators.symplectic.pauli &mdash; Documentation Qiskit 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ignis.html">Qiskit Ignis (obsolète)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aqua.html">Qiskit Aqua (obsolète)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum (Fournisseur)</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Guide de migration Qiskit Aqua</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../aqua_migration.html">Guide de migration Qiskit Aqua</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Déboggage</span></p>
 <ul>
@@ -348,8 +343,8 @@
 <span class="c1"># pylint: disable=invalid-name</span>
 <span class="c1"># pylint: disable=bad-docstring-quotes  # for deprecate_function decorator</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
 <span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -511,8 +506,7 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]:</span>
                 <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span>
-                    <span class="s2">&quot;Invalid input tuple for Pauli, input tuple must be&quot;</span>
-                    <span class="s2">&quot; `(z, x, phase)` or `(z, x)`&quot;</span>
+                    <span class="s2">&quot;Invalid input tuple for Pauli, input tuple must be `(z, x, phase)` or `(z, x)`&quot;</span>
                 <span class="p">)</span>
             <span class="n">base_z</span><span class="p">,</span> <span class="n">base_x</span><span class="p">,</span> <span class="n">base_phase</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_from_array</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -934,20 +928,12 @@
         <span class="n">phase</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">coeff</span> <span class="k">else</span> <span class="n">_phase_from_label</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
 
         <span class="c1"># Convert to Symplectic representation</span>
-        <span class="n">num_qubits</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pauli</span><span class="p">)</span>
-        <span class="n">base_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_qubits</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
-        <span class="n">base_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_qubits</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
-        <span class="n">base_phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">phase</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pauli</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">char</span> <span class="o">==</span> <span class="s2">&quot;X&quot;</span><span class="p">:</span>
-                <span class="n">base_x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_qubits</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">elif</span> <span class="n">char</span> <span class="o">==</span> <span class="s2">&quot;Z&quot;</span><span class="p">:</span>
-                <span class="n">base_z</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_qubits</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">elif</span> <span class="n">char</span> <span class="o">==</span> <span class="s2">&quot;Y&quot;</span><span class="p">:</span>
-                <span class="n">base_x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_qubits</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="n">base_z</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_qubits</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="n">base_phase</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">return</span> <span class="n">base_z</span><span class="p">,</span> <span class="n">base_x</span><span class="p">,</span> <span class="n">base_phase</span> <span class="o">%</span> <span class="mi">4</span>
+        <span class="n">pauli_bytes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">pauli</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">pauli_bytes</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s2">&quot;Y&quot;</span><span class="p">)</span>
+        <span class="n">base_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">pauli_bytes</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s2">&quot;X&quot;</span><span class="p">),</span> <span class="n">ys</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">base_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">pauli_bytes</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s2">&quot;Z&quot;</span><span class="p">),</span> <span class="n">ys</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">base_phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">phase</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">ys</span><span class="p">))</span> <span class="o">%</span> <span class="mi">4</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">base_z</span><span class="p">,</span> <span class="n">base_x</span><span class="p">,</span> <span class="n">base_phase</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">_from_scalar_op</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
@@ -1168,7 +1154,7 @@
         <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span>
-                    <span class="s2">&quot;During updating whole z, you can not &quot;</span> <span class="s2">&quot;change the number of qubits.&quot;</span>
+                    <span class="s2">&quot;During updating whole z, you can not change the number of qubits.&quot;</span>
                 <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">z</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1205,7 +1191,7 @@
         <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span>
-                    <span class="s2">&quot;During updating whole x, you can not change &quot;</span> <span class="s2">&quot;the number of qubits.&quot;</span>
+                    <span class="s2">&quot;During updating whole x, you can not change the number of qubits.&quot;</span>
                 <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1357,7 +1343,9 @@
 <span class="sd">            Pauli: the random pauli</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># pylint: disable=cyclic-import</span>
-        <span class="kn">from</span> <span class="nn">qiskit.quantum_info.operators.symplectic.random</span> <span class="kn">import</span> <span class="n">random_pauli</span>
+        <span class="kn">from</span> <span class="nn">qiskit.quantum_info.operators.symplectic.random</span> <span class="kn">import</span> <span class="p">(</span>
+            <span class="n">random_pauli</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">random_pauli</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">group_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span></div></div>
 
@@ -1375,7 +1363,7 @@
     <span class="k">if</span> <span class="n">span</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">label</span><span class="p">):</span>
         <span class="n">invalid</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[IXYZ]+&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">label</span><span class="p">[</span><span class="n">span</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:]))</span>
         <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span>
-            <span class="s2">&quot;Pauli string contains invalid characters &quot;</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> ∉ [&#39;I&#39;, &#39;X&#39;, &#39;Y&#39;, &#39;Z&#39;]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">invalid</span><span class="p">)</span>
+            <span class="sa">f</span><span class="s2">&quot;Pauli string contains invalid characters </span><span class="si">{</span><span class="n">invalid</span><span class="si">}</span><span class="s2"> ∉ [&#39;I&#39;, &#39;X&#39;, &#39;Y&#39;, &#39;Z&#39;]&quot;</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">pauli</span><span class="p">,</span> <span class="n">coeff</span>
 
@@ -1386,7 +1374,7 @@
     <span class="n">label</span> <span class="o">=</span> <span class="n">label</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;j&quot;</span><span class="p">,</span> <span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">phases</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;-i&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;i&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
     <span class="k">if</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">phases</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;Invalid Pauli phase label &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">label</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid Pauli phase label &#39;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">phases</span><span class="p">[</span><span class="n">label</span><span class="p">]</span>
 
 
@@ -1409,7 +1397,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Mis à jour le 2021/11/19.
+      Mis à jour le 2021/12/07.
 
     </p>
   </div>

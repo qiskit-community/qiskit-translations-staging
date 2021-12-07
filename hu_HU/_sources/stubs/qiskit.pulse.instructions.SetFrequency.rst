@@ -1,4 +1,4 @@
-SetFrequency
+﻿SetFrequency
 ============
 
 .. currentmodule:: qiskit.pulse.instructions
@@ -14,12 +14,10 @@ SetFrequency
       :toctree: ../stubs/
 
       ~SetFrequency.append
-      ~SetFrequency.assign_parameters
       ~SetFrequency.ch_duration
       ~SetFrequency.ch_start_time
       ~SetFrequency.ch_stop_time
       ~SetFrequency.draw
-      ~SetFrequency.flatten
       ~SetFrequency.insert
       ~SetFrequency.is_parameterized
       ~SetFrequency.shift

@@ -18,6 +18,7 @@ QNSPSA
       ~QNSPSA.get_fidelity
       ~QNSPSA.get_support_level
       ~QNSPSA.gradient_num_diff
+      ~QNSPSA.minimize
       ~QNSPSA.optimize
       ~QNSPSA.print_options
       ~QNSPSA.set_max_evals_grouped

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.algorithms.optimizers.imfil &mdash; Τεκμηρίωση του Qiskit - 0.32.0</title>
+  <title>qiskit.algorithms.optimizers.imfil &mdash; Τεκμηρίωση του Qiskit - 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Αντιμετώπιση προβλημάτων</span></p>
 <ul>
@@ -345,10 +340,10 @@
 
 <span class="sd">&quot;&quot;&quot;IMplicit FILtering (IMFIL) optimizer.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">MissingOptionalLibraryError</span>
-<span class="kn">from</span> <span class="nn">.optimizer</span> <span class="kn">import</span> <span class="n">Optimizer</span><span class="p">,</span> <span class="n">OptimizerSupportLevel</span>
+<span class="kn">from</span> <span class="nn">.optimizer</span> <span class="kn">import</span> <span class="n">Optimizer</span><span class="p">,</span> <span class="n">OptimizerSupportLevel</span><span class="p">,</span> <span class="n">OptimizerResult</span><span class="p">,</span> <span class="n">POINT</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">skquant.opt</span> <span class="k">as</span> <span class="nn">skq</span>
@@ -403,6 +398,27 @@
             <span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_maxiter</span><span class="p">,</span>
         <span class="p">}</span>
 
+<div class="viewcode-block" id="IMFIL.minimize"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.optimizers.IMFIL.minimize.html#qiskit.algorithms.optimizers.IMFIL.minimize">[τεκμηρίωση]</a>    <span class="k">def</span> <span class="nf">minimize</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">fun</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">POINT</span><span class="p">],</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">x0</span><span class="p">:</span> <span class="n">POINT</span><span class="p">,</span>
+        <span class="n">jac</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">POINT</span><span class="p">],</span> <span class="n">POINT</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">bounds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizerResult</span><span class="p">:</span>
+        <span class="n">res</span><span class="p">,</span> <span class="n">history</span> <span class="o">=</span> <span class="n">skq</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span>
+            <span class="n">func</span><span class="o">=</span><span class="n">fun</span><span class="p">,</span>
+            <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span>
+            <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
+            <span class="n">budget</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_maxiter</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;imfil&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">optimizer_result</span> <span class="o">=</span> <span class="n">OptimizerResult</span><span class="p">()</span>
+        <span class="n">optimizer_result</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">optpar</span>
+        <span class="n">optimizer_result</span><span class="o">.</span><span class="n">fun</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">optval</span>
+        <span class="n">optimizer_result</span><span class="o">.</span><span class="n">nfev</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">optimizer_result</span></div>
+
 <div class="viewcode-block" id="IMFIL.optimize"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.optimizers.IMFIL.optimize.html#qiskit.algorithms.optimizers.IMFIL.optimize">[τεκμηρίωση]</a>    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_vars</span><span class="p">,</span>
@@ -415,14 +431,10 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span>
             <span class="n">num_vars</span><span class="p">,</span> <span class="n">objective_function</span><span class="p">,</span> <span class="n">gradient_function</span><span class="p">,</span> <span class="n">variable_bounds</span><span class="p">,</span> <span class="n">initial_point</span>
         <span class="p">)</span>
-        <span class="n">res</span><span class="p">,</span> <span class="n">history</span> <span class="o">=</span> <span class="n">skq</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span>
-            <span class="n">func</span><span class="o">=</span><span class="n">objective_function</span><span class="p">,</span>
-            <span class="n">x0</span><span class="o">=</span><span class="n">initial_point</span><span class="p">,</span>
-            <span class="n">bounds</span><span class="o">=</span><span class="n">variable_bounds</span><span class="p">,</span>
-            <span class="n">budget</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_maxiter</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;imfil&quot;</span><span class="p">,</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span>
+            <span class="n">objective_function</span><span class="p">,</span> <span class="n">initial_point</span><span class="p">,</span> <span class="n">gradient_function</span><span class="p">,</span> <span class="n">variable_bounds</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">optpar</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">optval</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">nfev</span></div></div>
 </pre></div>
 
              </article>
@@ -440,7 +452,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Τελευταία ενημέρωση στις 2021/11/19.
+      Τελευταία ενημέρωση στις 2021/12/07.
 
     </p>
   </div>

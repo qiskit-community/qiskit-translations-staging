@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.pulse.instructions.instruction &mdash; Documentação Qiskit 0.32.0</title>
+  <title>qiskit.pulse.instructions.instruction &mdash; Documentação Qiskit 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (depreciado)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aqua.html">Qiskit Aqua (depreciado)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Provedor Quântico IBM Qiskit</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Guias de Migração Qiskit Aqua</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../aqua_migration.html">Guias de Migração Qiskit Aqua</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Solução de problemas</span></p>
 <ul>
@@ -354,21 +349,17 @@
 <span class="sd">    sched = Schedule()</span>
 <span class="sd">    sched += Delay(duration, channel)  # Delay is a specific subclass of Instruction</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractproperty</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span>
 
-<span class="kn">from</span> <span class="nn">qiskit.circuit.parameterexpression</span> <span class="kn">import</span> <span class="n">ParameterExpression</span><span class="p">,</span> <span class="n">ParameterValueType</span>
 <span class="kn">from</span> <span class="nn">qiskit.pulse.channels</span> <span class="kn">import</span> <span class="n">Channel</span>
 <span class="kn">from</span> <span class="nn">qiskit.pulse.exceptions</span> <span class="kn">import</span> <span class="n">PulseError</span>
-<span class="kn">from</span> <span class="nn">qiskit.pulse.utils</span> <span class="kn">import</span> <span class="n">format_parameter_value</span><span class="p">,</span> <span class="n">deprecated_functionality</span>
 
 
 <span class="c1"># pylint: disable=missing-return-doc</span>
 
 
-<div class="viewcode-block" id="Instruction"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.instructions.Instruction.html#qiskit.pulse.Instruction">[documentos]</a><span class="k">class</span> <span class="nc">Instruction</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<div class="viewcode-block" id="Instruction"><a class="viewcode-back" href="../../../../apidoc/pulse.html#qiskit.pulse.instructions.Instruction">[documentos]</a><span class="k">class</span> <span class="nc">Instruction</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The smallest schedulable unit: a single instruction. It has a fixed duration and specified</span>
 <span class="sd">    channels.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -376,16 +367,12 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">operands</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">,</span>
-        <span class="n">duration</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">channels</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Channel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Instruction initializer.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            operands: The argument list.</span>
-<span class="sd">            duration: Deprecated.</span>
-<span class="sd">            channels: Deprecated.</span>
 <span class="sd">            name: Optional display name for this instruction.</span>
 
 <span class="sd">        Raises:</span>
@@ -393,28 +380,9 @@
 <span class="sd">            PulseError: If the input ``channels`` are not all of</span>
 <span class="sd">                type :class:`Channel`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;Specifying duration in the constructor is deprecated. &quot;</span>
-                <span class="s2">&quot;Now duration is an abstract property rather than class variable. &quot;</span>
-                <span class="s2">&quot;All subclasses should implement ``duration`` accordingly. &quot;</span>
-                <span class="s2">&quot;See Qiskit-Terra #5679 for more information.&quot;</span><span class="p">,</span>
-                <span class="ne">DeprecationWarning</span><span class="p">,</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">channels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;Specifying ``channels`` in the constructor is deprecated. &quot;</span>
-                <span class="s2">&quot;All channels should be stored in ``operands``.&quot;</span><span class="p">,</span>
-                <span class="ne">DeprecationWarning</span><span class="p">,</span>
-            <span class="p">)</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_operands</span> <span class="o">=</span> <span class="n">operands</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_table</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_parameter_table</span><span class="p">(</span><span class="n">operands</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">Channel</span><span class="p">):</span>
@@ -435,7 +403,8 @@
         <span class="sd">&quot;&quot;&quot;Return instruction operands.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_operands</span>
 
-    <span class="nd">@abstractproperty</span>
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">channels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Channel</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Returns the channels that this schedule uses.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
@@ -465,24 +434,24 @@
         <span class="sd">&quot;&quot;&quot;Iterable for getting instructions from Schedule tree.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_instructions</span><span class="p">())</span>
 
-<div class="viewcode-block" id="Instruction.ch_duration"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.instructions.Instruction.ch_duration.html#qiskit.pulse.Instruction.ch_duration">[documentos]</a>    <span class="k">def</span> <span class="nf">ch_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">channels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Channel</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">ch_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">channels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Channel</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Return duration of the supplied channels in this Instruction.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            *channels: Supplied channels</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ch_stop_time</span><span class="p">(</span><span class="o">*</span><span class="n">channels</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ch_stop_time</span><span class="p">(</span><span class="o">*</span><span class="n">channels</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Instruction.ch_start_time"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.instructions.Instruction.ch_start_time.html#qiskit.pulse.Instruction.ch_start_time">[documentos]</a>    <span class="k">def</span> <span class="nf">ch_start_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">channels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Channel</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">ch_start_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">channels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Channel</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="c1"># pylint: disable=unused-argument</span>
         <span class="sd">&quot;&quot;&quot;Return minimum start time for supplied channels.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            *channels: Supplied channels</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="mi">0</span></div>
+        <span class="k">return</span> <span class="mi">0</span>
 
-<div class="viewcode-block" id="Instruction.ch_stop_time"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.instructions.Instruction.ch_stop_time.html#qiskit.pulse.Instruction.ch_stop_time">[documentos]</a>    <span class="k">def</span> <span class="nf">ch_stop_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">channels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Channel</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">ch_stop_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">channels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Channel</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Return maximum start time for supplied channels.</span>
 
 <span class="sd">        Args:</span>
@@ -490,7 +459,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">chan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span> <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="n">channels</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span>
-        <span class="k">return</span> <span class="mi">0</span></div>
+        <span class="k">return</span> <span class="mi">0</span>
 
     <span class="k">def</span> <span class="nf">_instructions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;Instruction&quot;</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Iterable for flattening Schedule tree.</span>
@@ -504,18 +473,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">yield</span> <span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Instruction.flatten"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.instructions.Instruction.flatten.html#qiskit.pulse.Instruction.flatten">[documentos]</a>    <span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Instruction&quot;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Return itself as already single instruction.&quot;&quot;&quot;</span>
-
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;`This method is being deprecated. Please use &quot;</span>
-            <span class="s2">&quot;`qiskit.pulse.transforms.flatten` function with this schedule.&quot;</span><span class="p">,</span>
-            <span class="ne">DeprecationWarning</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">return</span> <span class="bp">self</span></div>
-
-<div class="viewcode-block" id="Instruction.shift"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.instructions.Instruction.shift.html#qiskit.pulse.Instruction.shift">[documentos]</a>    <span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a new schedule shifted forward by `time`.</span>
 
 <span class="sd">        Args:</span>
@@ -529,9 +487,9 @@
 
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
-        <span class="k">return</span> <span class="n">Schedule</span><span class="p">((</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">Schedule</span><span class="p">((</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Instruction.insert"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.instructions.Instruction.insert.html#qiskit.pulse.Instruction.insert">[documentos]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_time</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">schedule</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_time</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">schedule</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a new :class:`~qiskit.pulse.Schedule` with ``schedule`` inserted within</span>
 <span class="sd">        ``self`` at ``start_time``.</span>
 
@@ -547,9 +505,9 @@
 
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
-        <span class="k">return</span> <span class="n">Schedule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">schedule</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">Schedule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">schedule</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Instruction.append"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.instructions.Instruction.append.html#qiskit.pulse.Instruction.append">[documentos]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schedule</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schedule</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a new :class:`~qiskit.pulse.Schedule` with ``schedule`` inserted at the</span>
 <span class="sd">        maximum time over all channels shared between ``self`` and ``schedule``.</span>
 
@@ -562,7 +520,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">common_channels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">schedule</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span>
         <span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ch_stop_time</span><span class="p">(</span><span class="o">*</span><span class="n">common_channels</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">schedule</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">schedule</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">:</span>
@@ -574,64 +532,11 @@
                     <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">op_param</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">parameters</span>
 
-<div class="viewcode-block" id="Instruction.is_parameterized"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.instructions.Instruction.is_parameterized.html#qiskit.pulse.Instruction.is_parameterized">[documentos]</a>    <span class="k">def</span> <span class="nf">is_parameterized</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">is_parameterized</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Return True iff the instruction is parameterized.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">chan</span><span class="o">.</span><span class="n">is_parameterized</span><span class="p">()</span> <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">chan</span><span class="o">.</span><span class="n">is_parameterized</span><span class="p">()</span> <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_initialize_parameter_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operands</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">]):</span>
-        <span class="sd">&quot;&quot;&quot;A helper method to initialize parameter table.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            operands: List of operands associated with this instruction.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">operands</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">):</span>
-                <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_table</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">Channel</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">):</span>
-                <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_table</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
-
-<div class="viewcode-block" id="Instruction.assign_parameters"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.instructions.Instruction.assign_parameters.html#qiskit.pulse.Instruction.assign_parameters">[documentos]</a>    <span class="nd">@deprecated_functionality</span>
-    <span class="k">def</span> <span class="nf">assign_parameters</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">value_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ParameterExpression</span><span class="p">,</span> <span class="n">ParameterValueType</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Instruction&quot;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Modify and return self with parameters assigned according to the input.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            value_dict: A mapping from Parameters to either numeric values or another</span>
-<span class="sd">                Parameter expression.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Self with updated parameters.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">new_operands</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operands</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">parameter</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">value_dict</span><span class="p">:</span>
-                <span class="k">continue</span>
-
-            <span class="n">value</span> <span class="o">=</span> <span class="n">value_dict</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span>
-            <span class="n">op_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_table</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">op_idx</span> <span class="ow">in</span> <span class="n">op_indices</span><span class="p">:</span>
-                <span class="n">param_expr</span> <span class="o">=</span> <span class="n">new_operands</span><span class="p">[</span><span class="n">op_idx</span><span class="p">]</span>
-                <span class="n">new_operands</span><span class="p">[</span><span class="n">op_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">format_parameter_value</span><span class="p">(</span><span class="n">param_expr</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
-
-            <span class="c1"># Update parameter table</span>
-            <span class="n">entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_table</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">):</span>
-                <span class="k">for</span> <span class="n">new_parameter</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">new_parameter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_table</span><span class="p">:</span>
-                        <span class="n">new_entry</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">entry</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_table</span><span class="p">[</span><span class="n">new_parameter</span><span class="p">])</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_table</span><span class="p">[</span><span class="n">new_parameter</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">new_entry</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_table</span><span class="p">[</span><span class="n">new_parameter</span><span class="p">]</span> <span class="o">=</span> <span class="n">entry</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_operands</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">new_operands</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="bp">self</span></div>
-
-<div class="viewcode-block" id="Instruction.draw"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.instructions.Instruction.draw.html#qiskit.pulse.Instruction.draw">[documentos]</a>    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -683,7 +588,7 @@
             <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
             <span class="n">framechange</span><span class="o">=</span><span class="n">framechange</span><span class="p">,</span>
             <span class="n">channels</span><span class="o">=</span><span class="n">channels</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Instruction&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Check if this Instruction is equal to the `other` instruction.</span>
@@ -749,7 +654,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Última actualização em 2021/11/19.
+      Última actualização em 2021/12/07.
 
     </p>
   </div>

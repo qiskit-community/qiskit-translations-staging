@@ -18,6 +18,7 @@
       ~InstructionScheduleMap.get
       ~InstructionScheduleMap.get_parameters
       ~InstructionScheduleMap.has
+      ~InstructionScheduleMap.has_custom_gate
       ~InstructionScheduleMap.pop
       ~InstructionScheduleMap.qubit_instructions
       ~InstructionScheduleMap.qubits_with_instruction

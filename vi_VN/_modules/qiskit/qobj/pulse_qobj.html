@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.qobj.pulse_qobj &mdash; Tài liệu Qiskit 0.32.0</title>
+  <title>qiskit.qobj.pulse_qobj &mdash; Tài liệu Qiskit 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">Qiskit Ignis (không khuyên dùng)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aqua.html">Qiskit Aqua (không khuyên dùng)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">Trình cung cấp Lượng tử IBM Qiskit</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Hướng dẫn Qiskit Aqua Migration</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../aqua_migration.html">Hướng dẫn Qiskit Aqua Migration</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Xử lý sự cố</span></p>
 <ul>
@@ -345,23 +340,20 @@
 <span class="c1"># copyright notice, and modified files need to carry a notice indicating</span>
 <span class="c1"># that they have been altered from the originals.</span>
 
-<span class="c1"># pylint: disable=invalid-name,redefined-builtin,arguments-differ</span>
+<span class="c1"># pylint: disable=invalid-name,redefined-builtin</span>
 <span class="c1"># pylint: disable=super-init-not-called</span>
 
 <span class="sd">&quot;&quot;&quot;Module providing definitions of Pulse Qobj classes.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">pprint</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.qobj.common</span> <span class="kn">import</span> <span class="n">QobjDictField</span>
 <span class="kn">from</span> <span class="nn">qiskit.qobj.common</span> <span class="kn">import</span> <span class="n">QobjHeader</span>
 <span class="kn">from</span> <span class="nn">qiskit.qobj.common</span> <span class="kn">import</span> <span class="n">QobjExperimentHeader</span>
-<span class="kn">from</span> <span class="nn">qiskit.qobj.common</span> <span class="kn">import</span> <span class="n">validator</span>
 
 
 <div class="viewcode-block" id="QobjMeasurementOption"><a class="viewcode-back" href="../../../stubs/qiskit.qobj.QobjMeasurementOption.html#qiskit.qobj.QobjMeasurementOption">[docs]</a><span class="k">class</span> <span class="nc">QobjMeasurementOption</span><span class="p">:</span>
@@ -894,20 +886,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s2">&quot;PULSE&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">schema_version</span> <span class="o">=</span> <span class="s2">&quot;1.2.0&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_validate_json_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_dict</span><span class="p">):</span>
-        <span class="k">class</span> <span class="nc">PulseQobjEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
-            <span class="sd">&quot;&quot;&quot;A json encoder for pulse qobj&quot;&quot;&quot;</span>
-
-            <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-                    <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">complex</span><span class="p">):</span>
-                    <span class="k">return</span> <span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
-
-        <span class="n">json_str</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">out_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="o">=</span><span class="n">PulseQobjEncoder</span><span class="p">)</span>
-        <span class="n">validator</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_str</span><span class="p">))</span>
-
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">experiments_str</span> <span class="o">=</span> <span class="p">[</span><span class="nb">repr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">]</span>
         <span class="n">experiments_repr</span> <span class="o">=</span> <span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">experiments_str</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span>
@@ -930,7 +908,7 @@
             <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span>
 
-<div class="viewcode-block" id="PulseQobj.to_dict"><a class="viewcode-back" href="../../../stubs/qiskit.qobj.PulseQobj.to_dict.html#qiskit.qobj.PulseQobj.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="PulseQobj.to_dict"><a class="viewcode-back" href="../../../stubs/qiskit.qobj.PulseQobj.to_dict.html#qiskit.qobj.PulseQobj.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a dictionary format representation of the Pulse Qobj.</span>
 
 <span class="sd">        Note this dict is not in the json wire format expected by IBMQ and qobj</span>
@@ -954,10 +932,6 @@
 
 <span class="sd">            json.dumps(qobj.to_dict(), cls=QobjEncoder)</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            validate (bool): When set to true validate the output dictionary</span>
-<span class="sd">                against the jsonschema for qobj spec.</span>
-
 <span class="sd">        Returns:</span>
 <span class="sd">            dict: A dictionary representation of the PulseQobj object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -969,18 +943,6 @@
             <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
             <span class="s2">&quot;experiments&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">],</span>
         <span class="p">}</span>
-        <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;The jsonschema validation included in qiskit-terra &quot;</span>
-                <span class="s2">&quot;is deprecated and will be removed in a future release. &quot;</span>
-                <span class="s2">&quot;If you&#39;re relying on this schema validation you should &quot;</span>
-                <span class="s2">&quot;pull the schemas from the Qiskit/ibmq-schemas and directly &quot;</span>
-                <span class="s2">&quot;validate your payloads with that&quot;</span><span class="p">,</span>
-                <span class="ne">DeprecationWarning</span><span class="p">,</span>
-                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_json_schema</span><span class="p">(</span><span class="n">out_dict</span><span class="p">)</span>
-
         <span class="k">return</span> <span class="n">out_dict</span></div>
 
 <div class="viewcode-block" id="PulseQobj.from_dict"><a class="viewcode-back" href="../../../stubs/qiskit.qobj.PulseQobj.from_dict.html#qiskit.qobj.PulseQobj.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
@@ -1030,7 +992,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Cập nhật mới nhất vào 2021/11/19.
+      Cập nhật mới nhất vào 2021/12/07.
 
     </p>
   </div>

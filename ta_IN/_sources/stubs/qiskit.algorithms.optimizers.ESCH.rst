@@ -16,6 +16,7 @@ ESCH
       ~ESCH.get_nlopt_optimizer
       ~ESCH.get_support_level
       ~ESCH.gradient_num_diff
+      ~ESCH.minimize
       ~ESCH.optimize
       ~ESCH.print_options
       ~ESCH.set_max_evals_grouped

@@ -15,6 +15,7 @@ IMFIL
 
       ~IMFIL.get_support_level
       ~IMFIL.gradient_num_diff
+      ~IMFIL.minimize
       ~IMFIL.optimize
       ~IMFIL.print_options
       ~IMFIL.set_max_evals_grouped

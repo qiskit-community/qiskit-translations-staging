@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>BasisTranslator &mdash; Qiskit 0.32.0 文档</title>
+  <title>BasisTranslator &mdash; Qiskit 0.33.0 文档</title>
   
 
   
@@ -254,12 +254,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
 <ul>
@@ -359,6 +354,32 @@ into a set of gate replacement rules.</p></li>
 <li><p>The composed replacement rules are applied in-place to each op node which
 is not already in the target_basis.</p></li>
 </ul>
+<p>If the target keyword argument is specified and that
+<a class="reference internal" href="qiskit.transpiler.Target.html#qiskit.transpiler.Target" title="qiskit.transpiler.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target</span></code></a> objects contains operations
+which are non-global (i.e. they are defined only for a subset of qubits),
+as calculated by <a class="reference internal" href="qiskit.transpiler.Target.get_non_global_operation_names.html#qiskit.transpiler.Target.get_non_global_operation_names" title="qiskit.transpiler.Target.get_non_global_operation_names"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_non_global_operation_names()</span></code></a>,
+this pass will attempt to match the output translation to those constraints.
+For 1 qubit operations this is straightforward, the pass will perform a
+search using the union of the set of global operations with the set of operations
+defined solely on that qubit. For multi-qubit gates this is a bit more involved,
+while the behavior is initially similar to the single qubit case, just using all
+the qubits the operation is run on (where order is not significant) isn’t sufficient.
+We also need to consider any potential local qubits defined on subsets of the
+quantum arguments for the multi-qubit operation. This means the target used for the
+search of a non-global multi-qubit gate is the union of global operations, non-global
+multi-qubit gates sharing the same qubits, and any non-global gates defined on
+any subset of the qubits used.</p>
+<div class="admonition note">
+<p class="admonition-title">注解</p>
+<p>In the case of non-global operations it is possible for a single
+execution of this pass to output an incomplete translation if any
+non-global gates are defined on qubits that are a subset of a larger
+multi-qubit gate. For example, if you have a <code class="docutils literal notranslate"><span class="pre">u</span></code> gate only defined on
+qubit 0 and an <code class="docutils literal notranslate"><span class="pre">x</span></code> gate only on qubit 1 it is possible when
+translating a 2 qubit operation on qubit 0 and 1 that the output might
+have <code class="docutils literal notranslate"><span class="pre">u</span></code> on qubit 1 and <code class="docutils literal notranslate"><span class="pre">x</span></code> on qubit 0. Typically running this pass
+a second time will correct these issues.</p>
+</div>
 <p>Initialize a BasisTranslator instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">参数</dt>
@@ -367,6 +388,7 @@ is not already in the target_basis.</p></li>
 which will be used by the BasisTranslator pass. (Instructions in
 this library will not be unrolled by this pass.)</p></li>
 <li><p><strong>target_basis</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – Target basis names to unroll to, e.g. <cite>[‘u3’, ‘cx’]</cite>.</p></li>
+<li><p><strong>target</strong> (<a class="reference internal" href="qiskit.transpiler.Target.html#qiskit.transpiler.Target" title="qiskit.transpiler.Target"><em>Target</em></a>) – The backend compilation target</p></li>
 </ul>
 </dd>
 </dl>
@@ -432,7 +454,7 @@ but cannot modify the property set (but it can be read).</p>
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      最后更新于 2021/11/19.
+      最后更新于 2021/12/07.
 
     </p>
   </div>

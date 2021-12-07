@@ -16,6 +16,7 @@ ISRES
       ~ISRES.get_nlopt_optimizer
       ~ISRES.get_support_level
       ~ISRES.gradient_num_diff
+      ~ISRES.minimize
       ~ISRES.optimize
       ~ISRES.print_options
       ~ISRES.set_max_evals_grouped

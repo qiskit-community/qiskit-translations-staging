@@ -1,4 +1,4 @@
-ShiftPhase
+﻿ShiftPhase
 ==========
 
 .. currentmodule:: qiskit.pulse.instructions
@@ -14,12 +14,10 @@ ShiftPhase
       :toctree: ../stubs/
 
       ~ShiftPhase.append
-      ~ShiftPhase.assign_parameters
       ~ShiftPhase.ch_duration
       ~ShiftPhase.ch_start_time
       ~ShiftPhase.ch_stop_time
       ~ShiftPhase.draw
-      ~ShiftPhase.flatten
       ~ShiftPhase.insert
       ~ShiftPhase.is_parameterized
       ~ShiftPhase.shift

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.algorithms.optimizers.aqgd &mdash; Qiskit 0.32.0 문서</title>
+  <title>qiskit.algorithms.optimizers.aqgd &mdash; Qiskit 0.33.0 문서</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (더 이상 사용되지 않음)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aqua.html">Qiskit Aqua (더 이상 사용되지 않음)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Qiskit IBM 양자 공급자</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua 마이그레이션 가이드</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../aqua_migration.html">Qiskit Aqua 마이그레이션 가이드</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">문제 해결</span></p>
 <ul>
@@ -346,11 +341,11 @@
 <span class="sd">&quot;&quot;&quot;Analytical Quantum Gradient Descent (AQGD) optimizer.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils.validation</span> <span class="kn">import</span> <span class="n">validate_range_exclusive_max</span>
-<span class="kn">from</span> <span class="nn">.optimizer</span> <span class="kn">import</span> <span class="n">Optimizer</span><span class="p">,</span> <span class="n">OptimizerSupportLevel</span>
+<span class="kn">from</span> <span class="nn">.optimizer</span> <span class="kn">import</span> <span class="n">Optimizer</span><span class="p">,</span> <span class="n">OptimizerSupportLevel</span><span class="p">,</span> <span class="n">OptimizerResult</span><span class="p">,</span> <span class="n">POINT</span>
 <span class="kn">from</span> <span class="nn">..exceptions</span> <span class="kn">import</span> <span class="n">AlgorithmError</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -635,9 +630,20 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span>
             <span class="n">num_vars</span><span class="p">,</span> <span class="n">objective_function</span><span class="p">,</span> <span class="n">gradient_function</span><span class="p">,</span> <span class="n">variable_bounds</span><span class="p">,</span> <span class="n">initial_point</span>
         <span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span>
+            <span class="n">objective_function</span><span class="p">,</span> <span class="n">initial_point</span><span class="p">,</span> <span class="n">gradient_function</span><span class="p">,</span> <span class="n">variable_bounds</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">nfev</span></div>
 
-        <span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">initial_point</span><span class="p">)</span>
-        <span class="n">momentum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">num_vars</span><span class="p">,))</span>
+<div class="viewcode-block" id="AQGD.minimize"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.optimizers.AQGD.minimize.html#qiskit.algorithms.optimizers.AQGD.minimize">[문서]</a>    <span class="k">def</span> <span class="nf">minimize</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">fun</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">POINT</span><span class="p">],</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">x0</span><span class="p">:</span> <span class="n">POINT</span><span class="p">,</span>
+        <span class="n">jac</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">POINT</span><span class="p">],</span> <span class="n">POINT</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">bounds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizerResult</span><span class="p">:</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+        <span class="n">momentum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">size</span><span class="p">,))</span>
         <span class="c1"># empty out history of previous objectives/gradients/parameters</span>
         <span class="c1"># (in case this object is re-used)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prev_loss</span> <span class="o">=</span> <span class="p">[]</span>
@@ -664,13 +670,11 @@
                     <span class="k">break</span>
 
                 <span class="c1"># Calculate objective function and estimate of analytical gradient</span>
-                <span class="k">if</span> <span class="n">gradient_function</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">objval</span><span class="p">,</span> <span class="n">gradient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_objective_fn_and_gradient</span><span class="p">(</span>
-                        <span class="n">params</span><span class="p">,</span> <span class="n">objective_function</span>
-                    <span class="p">)</span>
+                <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">objval</span><span class="p">,</span> <span class="n">gradient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_objective_fn_and_gradient</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">fun</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">objval</span> <span class="o">=</span> <span class="n">objective_function</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
-                    <span class="n">gradient</span> <span class="o">=</span> <span class="n">gradient_function</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+                    <span class="n">objval</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+                    <span class="n">gradient</span> <span class="o">=</span> <span class="n">jac</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
 
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                     <span class="s2">&quot; Iter: </span><span class="si">%4d</span><span class="s2"> | Obj: </span><span class="si">%11.6f</span><span class="s2"> | Grad Norm: </span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span>
@@ -693,8 +697,13 @@
             <span class="n">epoch</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="c1"># end epoch iteration</span>
 
-        <span class="c1"># return last parameter values, objval estimate, and objective evaluation count</span>
-        <span class="k">return</span> <span class="n">params</span><span class="p">,</span> <span class="n">objval</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_count</span></div></div>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">OptimizerResult</span><span class="p">()</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">fun</span> <span class="o">=</span> <span class="n">objval</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">nfev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_count</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">nit</span> <span class="o">=</span> <span class="n">iter_count</span>
+
+        <span class="k">return</span> <span class="n">result</span></div></div>
 </pre></div>
 
              </article>
@@ -712,7 +721,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      최종 업데이트: 2021/11/19
+      최종 업데이트: 2021/12/07
 
     </p>
   </div>

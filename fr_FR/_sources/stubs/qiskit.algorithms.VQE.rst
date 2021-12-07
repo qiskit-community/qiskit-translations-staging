@@ -32,9 +32,12 @@
    .. rubric:: Attributes
 
    .. autoattribute:: ansatz
+   .. autoattribute:: callback
    .. autoattribute:: expectation
    .. autoattribute:: gradient
+   .. autoattribute:: include_custom
    .. autoattribute:: initial_point
+   .. autoattribute:: max_evals_grouped
    .. autoattribute:: optimal_params
    .. autoattribute:: optimizer
    .. autoattribute:: quantum_instance

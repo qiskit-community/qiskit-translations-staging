@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.utils.deprecation &mdash; Dokumentasi Qiskit 0.32.0</title>
+  <title>qiskit.utils.deprecation &mdash; Dokumentasi Qiskit 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
 <ul>
@@ -346,42 +341,7 @@
 <span class="sd">&quot;&quot;&quot;Deprecation utilities&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">functools</span>
-<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-
-
-<span class="k">def</span> <span class="nf">_filter_deprecation_warnings</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;Apply filters to deprecation warnings.</span>
-
-<span class="sd">    Force the `DeprecationWarning` warnings to be displayed for the qiskit</span>
-<span class="sd">    module, overriding the system configuration as they are ignored by default</span>
-<span class="sd">    [1] for end-users. Additionally, silence the `ChangedInMarshmallow3Warning`</span>
-<span class="sd">    messages.</span>
-
-<span class="sd">    TODO: on Python 3.7, this might not be needed due to PEP-0565 [2].</span>
-
-<span class="sd">    [1] https://docs.python.org/3/library/warnings.html#default-warning-filters</span>
-<span class="sd">    [2] https://www.python.org/dev/peps/pep-0565/</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">deprecation_filter</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">,</span>
-        <span class="kc">None</span><span class="p">,</span>
-        <span class="ne">DeprecationWarning</span><span class="p">,</span>
-        <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^qiskit\.*&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">UNICODE</span><span class="p">),</span>
-        <span class="mi">0</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="c1"># Instead of using warnings.simple_filter() directly, the internal</span>
-    <span class="c1"># _add_filter() function is used for being able to match against the</span>
-    <span class="c1"># module.</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">_add_filter</span><span class="p">(</span><span class="o">*</span><span class="n">deprecation_filter</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-        <span class="c1"># ._add_filter is internal and not available in some Python versions.</span>
-        <span class="k">pass</span>
-
-
-<span class="n">_filter_deprecation_warnings</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="deprecate_arguments"><a class="viewcode-back" href="../../../stubs/qiskit.utils.deprecate_arguments.html#qiskit.utils.deprecate_arguments">[docs]</a><span class="k">def</span> <span class="nf">deprecate_arguments</span><span class="p">(</span><span class="n">kwarg_map</span><span class="p">):</span>
@@ -413,13 +373,9 @@
     <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
         <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
         <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="c1"># warn only once</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">wrapper</span><span class="o">.</span><span class="n">_warned</span><span class="p">:</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="n">stacklevel</span><span class="p">)</span>
-                <span class="n">wrapper</span><span class="o">.</span><span class="n">_warned</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="n">stacklevel</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-        <span class="n">wrapper</span><span class="o">.</span><span class="n">_warned</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="n">wrapper</span>
 
     <span class="k">return</span> <span class="n">decorator</span></div>
@@ -456,7 +412,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Terakhir diperbarui pada 2021/11/19.
+      Terakhir diperbarui pada 2021/12/07.
 
     </p>
   </div>

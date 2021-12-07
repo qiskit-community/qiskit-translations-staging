@@ -37,4 +37,3 @@
    .. autoattribute:: dim
    .. autoattribute:: num_qubits
    .. autoattribute:: qargs
-   .. autoattribute:: settings

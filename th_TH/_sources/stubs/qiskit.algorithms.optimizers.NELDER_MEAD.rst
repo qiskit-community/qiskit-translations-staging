@@ -15,6 +15,7 @@ NELDER\_MEAD
 
       ~NELDER_MEAD.get_support_level
       ~NELDER_MEAD.gradient_num_diff
+      ~NELDER_MEAD.minimize
       ~NELDER_MEAD.optimize
       ~NELDER_MEAD.print_options
       ~NELDER_MEAD.set_max_evals_grouped

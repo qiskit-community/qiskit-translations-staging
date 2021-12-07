@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.algorithms.minimum_eigen_solvers.minimum_eigen_solver &mdash; Qiskit 0.32.0 문서</title>
+  <title>qiskit.algorithms.minimum_eigen_solvers.minimum_eigen_solver &mdash; Qiskit 0.33.0 문서</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (더 이상 사용되지 않음)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aqua.html">Qiskit Aqua (더 이상 사용되지 않음)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Qiskit IBM 양자 공급자</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua 마이그레이션 가이드</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../aqua_migration.html">Qiskit Aqua 마이그레이션 가이드</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">문제 해결</span></p>
 <ul>
@@ -346,11 +341,15 @@
 <span class="sd">&quot;&quot;&quot;The Minimum Eigensolver interface&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TypeVar</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">OperatorBase</span>
 <span class="kn">from</span> <span class="nn">..algorithm_result</span> <span class="kn">import</span> <span class="n">AlgorithmResult</span>
+
+<span class="c1"># Introduced new type to maintain readability.</span>
+<span class="n">_T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_T&quot;</span><span class="p">)</span>  <span class="c1"># Pylint does not allow single character class names.</span>
+<span class="n">ListOrDict</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">_T</span><span class="p">]],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_T</span><span class="p">]]</span>
 
 
 <div class="viewcode-block" id="MinimumEigensolver"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.MinimumEigensolver.html#qiskit.algorithms.MinimumEigensolver">[문서]</a><span class="k">class</span> <span class="nc">MinimumEigensolver</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
@@ -363,7 +362,7 @@
 
 <div class="viewcode-block" id="MinimumEigensolver.compute_minimum_eigenvalue"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.MinimumEigensolver.compute_minimum_eigenvalue.html#qiskit.algorithms.MinimumEigensolver.compute_minimum_eigenvalue">[문서]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">compute_minimum_eigenvalue</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">OperatorBase</span><span class="p">,</span> <span class="n">aux_operators</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">OperatorBase</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">OperatorBase</span><span class="p">,</span> <span class="n">aux_operators</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ListOrDict</span><span class="p">[</span><span class="n">OperatorBase</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MinimumEigensolverResult&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes minimum eigenvalue. Operator and aux_operators can be supplied here and</span>
@@ -427,12 +426,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_eigenstate</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">aux_operator_eigenvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;return aux operator eigen values&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">aux_operator_eigenvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ListOrDict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]]]:</span>
+        <span class="sd">&quot;&quot;&quot;Return aux operator expectation values.</span>
+
+<span class="sd">        These values are in fact tuples formatted as (mean, standard deviation).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aux_operator_eigenvalues</span>
 
     <span class="nd">@aux_operator_eigenvalues</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">aux_operator_eigenvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">aux_operator_eigenvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">ListOrDict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;set aux operator eigen values&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_aux_operator_eigenvalues</span> <span class="o">=</span> <span class="n">value</span></div>
 </pre></div>
@@ -452,7 +454,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      최종 업데이트: 2021/11/19
+      최종 업데이트: 2021/12/07
 
     </p>
   </div>

@@ -1,4 +1,4 @@
-Play
+﻿Play
 ====
 
 .. currentmodule:: qiskit.pulse.instructions
@@ -14,12 +14,10 @@ Play
       :toctree: ../stubs/
 
       ~Play.append
-      ~Play.assign_parameters
       ~Play.ch_duration
       ~Play.ch_start_time
       ~Play.ch_stop_time
       ~Play.draw
-      ~Play.flatten
       ~Play.insert
       ~Play.is_parameterized
       ~Play.shift

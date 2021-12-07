@@ -43,6 +43,7 @@ ListOp
    .. autoattribute:: INDENTATION
    .. autoattribute:: abelian
    .. autoattribute:: coeff
+   .. autoattribute:: coeffs
    .. autoattribute:: combo_fn
    .. autoattribute:: distributive
    .. autoattribute:: grad_combo_fn

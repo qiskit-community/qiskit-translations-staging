@@ -20,6 +20,7 @@ PauliSumOp
       ~PauliSumOp.eval
       ~PauliSumOp.exp_i
       ~PauliSumOp.from_list
+      ~PauliSumOp.is_hermitian
       ~PauliSumOp.is_zero
       ~PauliSumOp.matrix_iter
       ~PauliSumOp.mul

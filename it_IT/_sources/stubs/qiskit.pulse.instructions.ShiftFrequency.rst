@@ -1,4 +1,4 @@
-ShiftFrequency
+﻿ShiftFrequency
 ==============
 
 .. currentmodule:: qiskit.pulse.instructions
@@ -14,12 +14,10 @@ ShiftFrequency
       :toctree: ../stubs/
 
       ~ShiftFrequency.append
-      ~ShiftFrequency.assign_parameters
       ~ShiftFrequency.ch_duration
       ~ShiftFrequency.ch_start_time
       ~ShiftFrequency.ch_stop_time
       ~ShiftFrequency.draw
-      ~ShiftFrequency.flatten
       ~ShiftFrequency.insert
       ~ShiftFrequency.is_parameterized
       ~ShiftFrequency.shift

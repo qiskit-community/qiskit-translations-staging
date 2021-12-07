@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.algorithms.minimum_eigen_solvers.vqe &mdash; Qiskit 0.32.0 dokumentáció</title>
+  <title>qiskit.algorithms.minimum_eigen_solvers.vqe &mdash; Qiskit 0.33.0 dokumentáció</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Hibaelhárítás</span></p>
 <ul>
@@ -365,8 +360,8 @@
     <span class="n">StateFn</span><span class="p">,</span>
     <span class="n">CircuitStateFn</span><span class="p">,</span>
     <span class="n">ListOp</span><span class="p">,</span>
-    <span class="n">I</span><span class="p">,</span>
     <span class="n">CircuitSampler</span><span class="p">,</span>
+    <span class="n">PauliSumOp</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow.gradients</span> <span class="kn">import</span> <span class="n">GradientBase</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils.validation</span> <span class="kn">import</span> <span class="n">validate_min</span>
@@ -375,13 +370,10 @@
 <span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">QuantumInstance</span><span class="p">,</span> <span class="n">algorithm_globals</span>
 <span class="kn">from</span> <span class="nn">..optimizers</span> <span class="kn">import</span> <span class="n">Optimizer</span><span class="p">,</span> <span class="n">SLSQP</span>
 <span class="kn">from</span> <span class="nn">..variational_algorithm</span> <span class="kn">import</span> <span class="n">VariationalAlgorithm</span><span class="p">,</span> <span class="n">VariationalResult</span>
-<span class="kn">from</span> <span class="nn">.minimum_eigen_solver</span> <span class="kn">import</span> <span class="n">MinimumEigensolver</span><span class="p">,</span> <span class="n">MinimumEigensolverResult</span>
+<span class="kn">from</span> <span class="nn">.minimum_eigen_solver</span> <span class="kn">import</span> <span class="n">MinimumEigensolver</span><span class="p">,</span> <span class="n">MinimumEigensolverResult</span><span class="p">,</span> <span class="n">ListOrDict</span>
 <span class="kn">from</span> <span class="nn">..exceptions</span> <span class="kn">import</span> <span class="n">AlgorithmError</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
-<span class="c1"># disable check for ansatzes, optimizer setter because of pylint bug</span>
-<span class="c1"># pylint: disable=no-member</span>
 
 
 <div class="viewcode-block" id="VQE"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.VQE.html#qiskit.algorithms.VQE">[docs]</a><span class="k">class</span> <span class="nc">VQE</span><span class="p">(</span><span class="n">VariationalAlgorithm</span><span class="p">,</span> <span class="n">MinimumEigensolver</span><span class="p">):</span>
@@ -430,7 +422,6 @@
         <span class="n">max_evals_grouped</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">quantum_instance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">QuantumInstance</span><span class="p">,</span> <span class="n">BaseBackend</span><span class="p">,</span> <span class="n">Backend</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">sort_parameters_by_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 
@@ -466,49 +457,30 @@
 <span class="sd">                These are: the evaluation count, the optimizer parameters for the</span>
 <span class="sd">                ansatz, the evaluated mean and the evaluated standard deviation.`</span>
 <span class="sd">            quantum_instance: Quantum Instance or Backend</span>
-<span class="sd">            sort_parameters_by_name: Deprecated. If True, the initial point is bound to the ansatz</span>
-<span class="sd">                parameters strictly sorted by name instead of the default circuit order. That means</span>
-<span class="sd">                that the ansatz parameters are e.g. sorted as ``x[0] x[1] x[10] x[2] ...`` instead</span>
-<span class="sd">                of ``x[0] x[1] x[2] ... x[10]``. Set this to ``True`` to obtain the behavior prior</span>
-<span class="sd">                to Qiskit Terra 0.18.0.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">validate_min</span><span class="p">(</span><span class="s2">&quot;max_evals_grouped&quot;</span><span class="p">,</span> <span class="n">max_evals_grouped</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">sort_parameters_by_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;The ``sort_parameters_by_name`` attribute is deprecated and will be &quot;</span>
-                <span class="s2">&quot;removed no sooner than 3 months after the release date of Qiskit Terra &quot;</span>
-                <span class="s2">&quot;0.18.0.&quot;</span><span class="p">,</span>
-                <span class="ne">DeprecationWarning</span><span class="p">,</span>
-                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">ansatz</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">ansatz</span> <span class="o">=</span> <span class="n">RealAmplitudes</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="n">optimizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">optimizer</span> <span class="o">=</span> <span class="n">SLSQP</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="n">quantum_instance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">quantum_instance</span><span class="p">,</span> <span class="n">QuantumInstance</span><span class="p">):</span>
-                <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">quantum_instance</span><span class="p">)</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_max_evals_grouped</span> <span class="o">=</span> <span class="n">max_evals_grouped</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit_sampler</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: Optional[CircuitSampler]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_expectation</span> <span class="o">=</span> <span class="n">expectation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expectation</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expectation</span> <span class="o">=</span> <span class="n">expectation</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_include_custom</span> <span class="o">=</span> <span class="n">include_custom</span>
 
         <span class="c1"># set ansatz -- still supporting pre 0.18.0 sorting</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sort_parameters_by_name</span> <span class="o">=</span> <span class="n">sort_parameters_by_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ansatz_params</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ansatz</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ansatz</span> <span class="o">=</span> <span class="n">ansatz</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_initial_point</span> <span class="o">=</span> <span class="n">initial_point</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_gradient</span> <span class="o">=</span> <span class="n">gradient</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initial_point</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_point</span> <span class="o">=</span> <span class="n">initial_point</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gradient</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gradient</span> <span class="o">=</span> <span class="n">gradient</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">quantum_instance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -516,8 +488,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_eval_time</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_eval_count</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span><span class="o">.</span><span class="n">set_max_evals_grouped</span><span class="p">(</span><span class="n">max_evals_grouped</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_callback</span> <span class="o">=</span> <span class="n">callback</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callback</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span> <span class="o">=</span> <span class="n">callback</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">print_settings</span><span class="p">())</span>
 
@@ -525,7 +497,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">ansatz</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">QuantumCircuit</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">ansatz</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuantumCircuit</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns the ansatz.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ansatz</span>
 
@@ -535,14 +507,14 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            ansatz: The parameterized circuit used as an ansatz.</span>
+<span class="sd">            If None is passed, RealAmplitudes is used by default.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ansatz</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ansatz</span> <span class="o">=</span> <span class="n">RealAmplitudes</span><span class="p">()</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_ansatz</span> <span class="o">=</span> <span class="n">ansatz</span>
-        <span class="k">if</span> <span class="n">ansatz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sort_parameters_by_name</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_ansatz_params</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ansatz</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_ansatz_params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ansatz</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ansatz_params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ansatz</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">GradientBase</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]:</span>
@@ -563,9 +535,10 @@
     <span class="k">def</span> <span class="nf">quantum_instance</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">QuantumInstance</span><span class="p">,</span> <span class="n">BaseBackend</span><span class="p">,</span> <span class="n">Backend</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;set quantum_instance&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Sets quantum_instance&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">quantum_instance</span><span class="p">,</span> <span class="n">QuantumInstance</span><span class="p">):</span>
             <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">quantum_instance</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span> <span class="o">=</span> <span class="n">quantum_instance</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit_sampler</span> <span class="o">=</span> <span class="n">CircuitSampler</span><span class="p">(</span>
             <span class="n">quantum_instance</span><span class="p">,</span> <span class="n">param_qobj</span><span class="o">=</span><span class="n">is_aer_provider</span><span class="p">(</span><span class="n">quantum_instance</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span>
@@ -580,6 +553,41 @@
     <span class="k">def</span> <span class="nf">initial_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_point</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sets initial point&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_initial_point</span> <span class="o">=</span> <span class="n">initial_point</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_evals_grouped</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns max_evals_grouped&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_evals_grouped</span>
+
+    <span class="nd">@max_evals_grouped</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">max_evals_grouped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_evals_grouped</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets max_evals_grouped&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_evals_grouped</span> <span class="o">=</span> <span class="n">max_evals_grouped</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">set_max_evals_grouped</span><span class="p">(</span><span class="n">max_evals_grouped</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">include_custom</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns include_custom&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_include_custom</span>
+
+    <span class="nd">@include_custom</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">include_custom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">include_custom</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets include_custom. If set to another value than the one that was previsously set,</span>
+<span class="sd">        the expectation attribute is reset to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">include_custom</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_include_custom</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_include_custom</span> <span class="o">=</span> <span class="n">include_custom</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expectation</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Returns callback&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback</span>
+
+    <span class="nd">@callback</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]):</span>
+        <span class="sd">&quot;&quot;&quot;Sets callback&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callback</span> <span class="o">=</span> <span class="n">callback</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">expectation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ExpectationBase</span><span class="p">]:</span>
@@ -607,16 +615,23 @@
                     <span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">optimizer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Optimizer</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">optimizer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optimizer</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns optimizer&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span>
 
     <span class="nd">@optimizer</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">optimizer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">Optimizer</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Sets optimizer&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">optimizer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Optimizer</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the optimizer attribute.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            optimizer: The optimizer to be used. If None is passed, SLSQP is used by default.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">optimizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">optimizer</span> <span class="o">=</span> <span class="n">SLSQP</span><span class="p">()</span>
+
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">set_max_evals_grouped</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_evals_grouped</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
-        <span class="k">if</span> <span class="n">optimizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">optimizer</span><span class="o">.</span><span class="n">set_max_evals_grouped</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_evals_grouped</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">setting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -744,32 +759,58 @@
     <span class="k">def</span> <span class="nf">_eval_aux_ops</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">parameters</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">aux_operators</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">OperatorBase</span><span class="p">],</span>
+        <span class="n">aux_operators</span><span class="p">:</span> <span class="n">ListOrDict</span><span class="p">[</span><span class="n">OperatorBase</span><span class="p">],</span>
         <span class="n">expectation</span><span class="p">:</span> <span class="n">ExpectationBase</span><span class="p">,</span>
         <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-12</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ListOrDict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]]:</span>
         <span class="c1"># Create new CircuitSampler to avoid breaking existing one&#39;s caches.</span>
         <span class="n">sampler</span> <span class="o">=</span> <span class="n">CircuitSampler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quantum_instance</span><span class="p">)</span>
 
-        <span class="n">aux_op_meas</span> <span class="o">=</span> <span class="n">expectation</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">StateFn</span><span class="p">(</span><span class="n">ListOp</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">),</span> <span class="n">is_measurement</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-        <span class="n">aux_op_expect</span> <span class="o">=</span> <span class="n">aux_op_meas</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">CircuitStateFn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ansatz</span><span class="o">.</span><span class="n">bind_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="p">)))</span>
-        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">aux_op_expect</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">())</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">list_op</span> <span class="o">=</span> <span class="n">ListOp</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">aux_operators</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">list_op</span> <span class="o">=</span> <span class="n">ListOp</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">)</span>
+
+        <span class="n">aux_op_expect</span> <span class="o">=</span> <span class="n">expectation</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+            <span class="n">StateFn</span><span class="p">(</span><span class="n">list_op</span><span class="p">,</span> <span class="n">is_measurement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span>
+                <span class="n">CircuitStateFn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ansatz</span><span class="o">.</span><span class="n">bind_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">aux_op_expect_sampled</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">aux_op_expect</span><span class="p">)</span>
+
+        <span class="c1"># compute means</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">aux_op_expect_sampled</span><span class="o">.</span><span class="n">eval</span><span class="p">())</span>
+
+        <span class="c1"># compute standard deviations</span>
+        <span class="n">variances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">expectation</span><span class="o">.</span><span class="n">compute_variance</span><span class="p">(</span><span class="n">aux_op_expect_sampled</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variances</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">variances</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="c1"># when `variances` is a single value equal to 0., our expectation value is exact and we</span>
+            <span class="c1"># manually ensure the variances to be a list of the correct length</span>
+            <span class="n">variances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">std_devs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variances</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantum_instance</span><span class="o">.</span><span class="n">run_config</span><span class="o">.</span><span class="n">shots</span><span class="p">)</span>
 
         <span class="c1"># Discard values below threshold</span>
-        <span class="n">aux_op_results</span> <span class="o">=</span> <span class="n">values</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">)</span>
-        <span class="c1"># Deal with the aux_op behavior where there can be Nones or Zero qubit Paulis in the list</span>
-        <span class="n">_aux_op_nones</span> <span class="o">=</span> <span class="p">[</span><span class="n">op</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">aux_operators</span><span class="p">]</span>
-        <span class="n">aux_operator_eigenvalues</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="kc">None</span> <span class="k">if</span> <span class="n">is_none</span> <span class="k">else</span> <span class="p">[</span><span class="n">result</span><span class="p">]</span>
-            <span class="k">for</span> <span class="p">(</span><span class="n">is_none</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">_aux_op_nones</span><span class="p">,</span> <span class="n">aux_op_results</span><span class="p">)</span>
-        <span class="p">]</span>
-        <span class="c1"># As this has mixed types, since it can included None, it needs to explicitly pass object</span>
-        <span class="c1"># data type to avoid numpy 1.19 warning message about implicit conversion being deprecated</span>
-        <span class="n">aux_operator_eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">aux_operator_eigenvalues</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+        <span class="n">aux_op_means</span> <span class="o">=</span> <span class="n">values</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">)</span>
+        <span class="c1"># zip means and standard deviations into tuples</span>
+        <span class="n">aux_op_results</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">aux_op_means</span><span class="p">,</span> <span class="n">std_devs</span><span class="p">)</span>
+
+        <span class="c1"># Return None eigenvalues for None operators if aux_operators is a list.</span>
+        <span class="c1"># None operators are already dropped in compute_minimum_eigenvalue if aux_operators is a dict.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">aux_operator_eigenvalues</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">)</span>
+            <span class="n">key_value_iterator</span> <span class="o">=</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">aux_op_results</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">aux_operator_eigenvalues</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">key_value_iterator</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">aux_operators</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">aux_op_results</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">key_value_iterator</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">aux_operators</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">aux_operator_eigenvalues</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
         <span class="k">return</span> <span class="n">aux_operator_eigenvalues</span>
 
 <div class="viewcode-block" id="VQE.compute_minimum_eigenvalue"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.VQE.compute_minimum_eigenvalue.html#qiskit.algorithms.VQE.compute_minimum_eigenvalue">[docs]</a>    <span class="k">def</span> <span class="nf">compute_minimum_eigenvalue</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">OperatorBase</span><span class="p">,</span> <span class="n">aux_operators</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">OperatorBase</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">OperatorBase</span><span class="p">,</span> <span class="n">aux_operators</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ListOrDict</span><span class="p">[</span><span class="n">OperatorBase</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MinimumEigensolverResult</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">compute_minimum_eigenvalue</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">aux_operators</span><span class="p">)</span>
 
@@ -787,19 +828,24 @@
         <span class="n">initial_point</span> <span class="o">=</span> <span class="n">_validate_initial_point</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ansatz</span><span class="p">)</span>
 
         <span class="n">bounds</span> <span class="o">=</span> <span class="n">_validate_bounds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ansatz</span><span class="p">)</span>
-
-        <span class="c1"># We need to handle the array entries being Optional i.e. having value None</span>
+        <span class="c1"># We need to handle the array entries being zero or Optional i.e. having value None</span>
         <span class="k">if</span> <span class="n">aux_operators</span><span class="p">:</span>
-            <span class="n">zero_op</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">tensorpower</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.0</span>
-            <span class="n">converted</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">aux_operators</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">op</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">converted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">zero_op</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">converted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+            <span class="n">zero_op</span> <span class="o">=</span> <span class="n">PauliSumOp</span><span class="o">.</span><span class="n">from_list</span><span class="p">([(</span><span class="s2">&quot;I&quot;</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ansatz</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span>
 
-            <span class="c1"># For some reason Chemistry passes aux_ops with 0 qubits and paulis sometimes.</span>
-            <span class="n">aux_operators</span> <span class="o">=</span> <span class="p">[</span><span class="n">zero_op</span> <span class="k">if</span> <span class="n">op</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">op</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">converted</span><span class="p">]</span>
+            <span class="c1"># Convert the None and zero values when aux_operators is a list.</span>
+            <span class="c1"># Drop None and convert zero values when aux_operators is a dict.</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">key_op_iterator</span> <span class="o">=</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">)</span>
+                <span class="n">converted</span> <span class="o">=</span> <span class="p">[</span><span class="n">zero_op</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">key_op_iterator</span> <span class="o">=</span> <span class="n">aux_operators</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="n">converted</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">key_op_iterator</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">op</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">converted</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">zero_op</span> <span class="k">if</span> <span class="n">op</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">op</span>
+
+            <span class="n">aux_operators</span> <span class="o">=</span> <span class="n">converted</span>
+
         <span class="k">else</span><span class="p">:</span>
             <span class="n">aux_operators</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -820,22 +866,37 @@
         <span class="p">)</span>
 
         <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
-        <span class="n">opt_params</span><span class="p">,</span> <span class="n">opt_value</span><span class="p">,</span> <span class="n">nfev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span>
-            <span class="n">num_vars</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">initial_point</span><span class="p">),</span>
-            <span class="n">objective_function</span><span class="o">=</span><span class="n">energy_evaluation</span><span class="p">,</span>
-            <span class="n">gradient_function</span><span class="o">=</span><span class="n">gradient</span><span class="p">,</span>
-            <span class="n">variable_bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
-            <span class="n">initial_point</span><span class="o">=</span><span class="n">initial_point</span><span class="p">,</span>
-        <span class="p">)</span>
+
+        <span class="c1"># keep this until Optimizer.optimize is removed</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">opt_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span>
+                <span class="n">fun</span><span class="o">=</span><span class="n">energy_evaluation</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">initial_point</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">gradient</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="c1"># self.optimizer is an optimizer with the deprecated interface that uses</span>
+            <span class="c1"># ``optimize`` instead of ``minimize```</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;Using an optimizer that is run with the ``optimize`` method is &quot;</span>
+                <span class="s2">&quot;deprecated as of Qiskit Terra 0.19.0 and will be unsupported no &quot;</span>
+                <span class="s2">&quot;sooner than 3 months after the release date. Instead use an optimizer &quot;</span>
+                <span class="s2">&quot;providing ``minimize`` (see qiskit.algorithms.optimizers.Optimizer).&quot;</span><span class="p">,</span>
+                <span class="ne">DeprecationWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">opt_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">initial_point</span><span class="p">),</span> <span class="n">energy_evaluation</span><span class="p">,</span> <span class="n">gradient</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">initial_point</span>
+            <span class="p">)</span>
+
         <span class="n">eval_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
 
         <span class="n">result</span> <span class="o">=</span> <span class="n">VQEResult</span><span class="p">()</span>
-        <span class="n">result</span><span class="o">.</span><span class="n">optimal_point</span> <span class="o">=</span> <span class="n">opt_params</span>
-        <span class="n">result</span><span class="o">.</span><span class="n">optimal_parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ansatz_params</span><span class="p">,</span> <span class="n">opt_params</span><span class="p">))</span>
-        <span class="n">result</span><span class="o">.</span><span class="n">optimal_value</span> <span class="o">=</span> <span class="n">opt_value</span>
-        <span class="n">result</span><span class="o">.</span><span class="n">cost_function_evals</span> <span class="o">=</span> <span class="n">nfev</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">optimal_point</span> <span class="o">=</span> <span class="n">opt_result</span><span class="o">.</span><span class="n">x</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">optimal_parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ansatz_params</span><span class="p">,</span> <span class="n">opt_result</span><span class="o">.</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">optimal_value</span> <span class="o">=</span> <span class="n">opt_result</span><span class="o">.</span><span class="n">fun</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">cost_function_evals</span> <span class="o">=</span> <span class="n">opt_result</span><span class="o">.</span><span class="n">nfev</span>
         <span class="n">result</span><span class="o">.</span><span class="n">optimizer_time</span> <span class="o">=</span> <span class="n">eval_time</span>
-        <span class="n">result</span><span class="o">.</span><span class="n">eigenvalue</span> <span class="o">=</span> <span class="n">opt_value</span> <span class="o">+</span> <span class="mi">0</span><span class="n">j</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">eigenvalue</span> <span class="o">=</span> <span class="n">opt_result</span><span class="o">.</span><span class="n">fun</span> <span class="o">+</span> <span class="mi">0</span><span class="n">j</span>
         <span class="n">result</span><span class="o">.</span><span class="n">eigenstate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_eigenstate</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">optimal_parameters</span><span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
@@ -849,8 +910,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span> <span class="o">=</span> <span class="n">result</span>
 
         <span class="k">if</span> <span class="n">aux_operators</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">aux_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_aux_ops</span><span class="p">(</span><span class="n">opt_params</span><span class="p">,</span> <span class="n">aux_operators</span><span class="p">,</span> <span class="n">expectation</span><span class="o">=</span><span class="n">expectation</span><span class="p">)</span>
-            <span class="n">result</span><span class="o">.</span><span class="n">aux_operator_eigenvalues</span> <span class="o">=</span> <span class="n">aux_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">aux_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_aux_ops</span><span class="p">(</span><span class="n">opt_result</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">aux_operators</span><span class="p">,</span> <span class="n">expectation</span><span class="o">=</span><span class="n">expectation</span><span class="p">)</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">aux_operator_eigenvalues</span> <span class="o">=</span> <span class="n">aux_values</span>
 
         <span class="k">return</span> <span class="n">result</span></div>
 
@@ -930,7 +991,7 @@
         <span class="sd">&quot;&quot;&quot;Get the minimal cost or energy found by the VQE.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="o">.</span><span class="n">optimal_point</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">AlgorithmError</span><span class="p">(</span>
-                <span class="s2">&quot;Cannot return optimal cost before running the &quot;</span> <span class="s2">&quot;algorithm to find optimal params.&quot;</span>
+                <span class="s2">&quot;Cannot return optimal cost before running the algorithm to find optimal params.&quot;</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="o">.</span><span class="n">optimal_value</span></div>
 
@@ -945,8 +1006,7 @@
         <span class="sd">&quot;&quot;&quot;Get the circuit with the optimal parameters.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="o">.</span><span class="n">optimal_point</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">AlgorithmError</span><span class="p">(</span>
-                <span class="s2">&quot;Cannot find optimal circuit before running the &quot;</span>
-                <span class="s2">&quot;algorithm to find optimal params.&quot;</span>
+                <span class="s2">&quot;Cannot find optimal circuit before running the algorithm to find optimal params.&quot;</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ansatz</span><span class="o">.</span><span class="n">assign_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="o">.</span><span class="n">optimal_parameters</span><span class="p">)</span></div>
 
@@ -961,8 +1021,7 @@
         <span class="sd">&quot;&quot;&quot;Get the simulation outcome of the optimal circuit.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="o">.</span><span class="n">optimal_parameters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">AlgorithmError</span><span class="p">(</span>
-                <span class="s2">&quot;Cannot find optimal circuit before running the &quot;</span>
-                <span class="s2">&quot;algorithm to find optimal vector.&quot;</span>
+                <span class="s2">&quot;Cannot find optimal circuit before running the algorithm to find optimal vector.&quot;</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_eigenstate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="o">.</span><span class="n">optimal_parameters</span><span class="p">)</span></div>
 
@@ -1082,7 +1141,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Utolsó frissítés 2021/11/19.
+      Utolsó frissítés 2021/12/07.
 
     </p>
   </div>

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.pulse.builder &mdash; Qiskit 0.32.0 文档</title>
+  <title>qiskit.pulse.builder &mdash; Qiskit 0.33.0 文档</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
 <ul>
@@ -343,12 +338,47 @@
 <span class="c1"># copyright notice, and modified files need to carry a notice indicating</span>
 <span class="c1"># that they have been altered from the originals.</span>
 
-<span class="sa">r</span><span class="sd">&quot;&quot;&quot;Use the pulse builder DSL to write pulse programs with an imperative syntax.</span>
+<span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">=============</span>
+<span class="sd">Pulse Builder</span>
+<span class="sd">=============</span>
+
+<span class="sd">..</span>
+<span class="sd">    We actually want people to think of these functions as being defined within the ``qiskit.pulse``</span>
+<span class="sd">    namespace, not the submodule ``qiskit.pulse.builder``.</span>
+
+<span class="sd">.. currentmodule: qiskit.pulse</span>
+
+<span class="sd">Use the pulse builder DSL to write pulse programs with an imperative syntax.</span>
 
 <span class="sd">.. warning::</span>
 <span class="sd">    The pulse builder interface is still in active development. It may have</span>
 <span class="sd">    breaking API changes without deprecation warnings in future releases until</span>
 <span class="sd">    otherwise indicated.</span>
+
+
+<span class="sd">The pulse builder provides an imperative API for writing pulse programs</span>
+<span class="sd">with less difficulty than the :class:`~qiskit.pulse.Schedule` API.</span>
+<span class="sd">It contextually constructs a pulse schedule and then emits the schedule for</span>
+<span class="sd">execution. For example, to play a series of pulses on channels is as simple as:</span>
+
+
+<span class="sd">.. jupyter-execute::</span>
+
+<span class="sd">    from qiskit import pulse</span>
+
+<span class="sd">    dc = pulse.DriveChannel</span>
+<span class="sd">    d0, d1, d2, d3, d4 = dc(0), dc(1), dc(2), dc(3), dc(4)</span>
+
+<span class="sd">    with pulse.build(name=&#39;pulse_programming_in&#39;) as pulse_prog:</span>
+<span class="sd">        pulse.play([1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1], d0)</span>
+<span class="sd">        pulse.play([1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0], d1)</span>
+<span class="sd">        pulse.play([1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0], d2)</span>
+<span class="sd">        pulse.play([1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0], d3)</span>
+<span class="sd">        pulse.play([1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0], d4)</span>
+
+<span class="sd">    pulse_prog.draw()</span>
+
 
 <span class="sd">To begin pulse programming we must first initialize our program builder</span>
 <span class="sd">context with :func:`build`, after which we can begin adding program</span>
@@ -366,7 +396,7 @@
 
 <span class="sd">    pulse_prog.draw()</span>
 
-<span class="sd">The builder initializes a :class:`pulse.Schedule`, ``pulse_prog``</span>
+<span class="sd">The builder initializes a :class:`.pulse.Schedule`, ``pulse_prog``</span>
 <span class="sd">and then begins to construct the program within the context. The output pulse</span>
 <span class="sd">schedule will survive after the context is exited and can be executed like a</span>
 <span class="sd">normal Qiskit schedule using ``qiskit.execute(pulse_prog, backend)``.</span>
@@ -521,9 +551,220 @@
 <span class="sd">            with pulse.phase_offset(math.pi, d0):</span>
 <span class="sd">                pulse.play(gaussian_pulse, d0)</span>
 
-<span class="sd">The above is just a small taste of what is possible with the builder. See the</span>
-<span class="sd">rest of the module documentation for more information on its</span>
-<span class="sd">capabilities.</span>
+<span class="sd">The above is just a small taste of what is possible with the builder. See the rest of the module</span>
+<span class="sd">documentation for more information on its capabilities.</span>
+
+<span class="sd">.. autosummary::</span>
+<span class="sd">    :toctree: ../stubs/</span>
+
+<span class="sd">    build</span>
+
+
+<span class="sd">Channels</span>
+<span class="sd">========</span>
+
+<span class="sd">Methods to return the correct channels for the respective qubit indices.</span>
+
+<span class="sd">.. jupyter-execute::</span>
+
+<span class="sd">    from qiskit import pulse</span>
+<span class="sd">    from qiskit.test.mock import FakeArmonk</span>
+
+<span class="sd">    backend = FakeArmonk()</span>
+
+<span class="sd">    with pulse.build(backend) as drive_sched:</span>
+<span class="sd">        d0 = pulse.drive_channel(0)</span>
+<span class="sd">        print(d0)</span>
+
+
+<span class="sd">.. autosummary::</span>
+<span class="sd">    :toctree: ../stubs/</span>
+
+<span class="sd">    acquire_channel</span>
+<span class="sd">    control_channels</span>
+<span class="sd">    drive_channel</span>
+<span class="sd">    measure_channel</span>
+
+
+<span class="sd">Instructions</span>
+<span class="sd">============</span>
+
+<span class="sd">Pulse instructions are available within the builder interface. Here&#39;s an example:</span>
+
+<span class="sd">.. jupyter-execute::</span>
+
+<span class="sd">    from qiskit import pulse</span>
+<span class="sd">    from qiskit.test.mock import FakeArmonk</span>
+
+<span class="sd">    backend = FakeArmonk()</span>
+
+<span class="sd">    with pulse.build(backend) as drive_sched:</span>
+<span class="sd">        d0 = pulse.drive_channel(0)</span>
+<span class="sd">        a0 = pulse.acquire_channel(0)</span>
+
+<span class="sd">        pulse.play(pulse.library.Constant(10, 1.0), d0)</span>
+<span class="sd">        pulse.delay(20, d0)</span>
+<span class="sd">        pulse.shift_phase(3.14/2, d0)</span>
+<span class="sd">        pulse.set_phase(3.14, d0)</span>
+<span class="sd">        pulse.shift_frequency(1e7, d0)</span>
+<span class="sd">        pulse.set_frequency(5e9, d0)</span>
+
+<span class="sd">        with pulse.build() as temp_sched:</span>
+<span class="sd">            pulse.play(pulse.library.Gaussian(20, 1.0, 3.0), d0)</span>
+<span class="sd">            pulse.play(pulse.library.Gaussian(20, -1.0, 3.0), d0)</span>
+
+<span class="sd">        pulse.call(temp_sched)</span>
+<span class="sd">        pulse.acquire(30, a0, pulse.MemorySlot(0))</span>
+
+<span class="sd">    drive_sched.draw()</span>
+
+
+<span class="sd">.. autosummary::</span>
+<span class="sd">    :toctree: ../stubs/</span>
+
+<span class="sd">    acquire</span>
+<span class="sd">    barrier</span>
+<span class="sd">    call</span>
+<span class="sd">    delay</span>
+<span class="sd">    play</span>
+<span class="sd">    set_frequency</span>
+<span class="sd">    set_phase</span>
+<span class="sd">    shift_frequency</span>
+<span class="sd">    shift_phase</span>
+<span class="sd">    snapshot</span>
+
+
+<span class="sd">Contexts</span>
+<span class="sd">========</span>
+
+<span class="sd">Builder aware contexts that modify the construction of a pulse program. For</span>
+<span class="sd">example an alignment context like :func:`align_right` may</span>
+<span class="sd">be used to align all pulses as late as possible in a pulse program.</span>
+
+<span class="sd">.. jupyter-execute::</span>
+
+<span class="sd">    from qiskit import pulse</span>
+
+<span class="sd">    d0 = pulse.DriveChannel(0)</span>
+<span class="sd">    d1 = pulse.DriveChannel(1)</span>
+
+<span class="sd">    with pulse.build() as pulse_prog:</span>
+<span class="sd">        with pulse.align_right():</span>
+<span class="sd">            # this pulse will start at t=0</span>
+<span class="sd">            pulse.play(pulse.Constant(100, 1.0), d0)</span>
+<span class="sd">            # this pulse will start at t=80</span>
+<span class="sd">            pulse.play(pulse.Constant(20, 1.0), d1)</span>
+
+<span class="sd">    pulse_prog.draw()</span>
+
+<span class="sd">.. autosummary::</span>
+<span class="sd">    :toctree: ../stubs/</span>
+
+<span class="sd">    align_equispaced</span>
+<span class="sd">    align_func</span>
+<span class="sd">    align_left</span>
+<span class="sd">    align_right</span>
+<span class="sd">    align_sequential</span>
+<span class="sd">    circuit_scheduler_settings</span>
+<span class="sd">    frequency_offset</span>
+<span class="sd">    inline</span>
+<span class="sd">    pad</span>
+<span class="sd">    phase_offset</span>
+<span class="sd">    transpiler_settings</span>
+
+
+<span class="sd">Macros</span>
+<span class="sd">======</span>
+
+<span class="sd">Macros help you add more complex functionality to your pulse program.</span>
+
+<span class="sd">.. jupyter-execute::</span>
+
+<span class="sd">    from qiskit import pulse</span>
+<span class="sd">    from qiskit.test.mock import FakeArmonk</span>
+
+<span class="sd">    backend = FakeArmonk()</span>
+
+<span class="sd">    with pulse.build(backend) as measure_sched:</span>
+<span class="sd">        mem_slot = pulse.measure(0)</span>
+<span class="sd">        print(mem_slot)</span>
+
+<span class="sd">.. autosummary::</span>
+<span class="sd">    :toctree: ../stubs/</span>
+
+<span class="sd">    measure</span>
+<span class="sd">    measure_all</span>
+<span class="sd">    delay_qubits</span>
+
+
+<span class="sd">Circuit Gates</span>
+<span class="sd">=============</span>
+
+<span class="sd">To use circuit level gates within your pulse program call a circuit</span>
+<span class="sd">with :func:`call`.</span>
+
+<span class="sd">.. warning::</span>
+<span class="sd">    These will be removed in future versions with the release of a circuit</span>
+<span class="sd">    builder interface in which it will be possible to calibrate a gate in</span>
+<span class="sd">    terms of pulses and use that gate in a circuit.</span>
+
+<span class="sd">.. jupyter-execute::</span>
+
+<span class="sd">    import math</span>
+
+<span class="sd">    from qiskit import pulse</span>
+<span class="sd">    from qiskit.test.mock import FakeArmonk</span>
+
+<span class="sd">    backend = FakeArmonk()</span>
+
+<span class="sd">    with pulse.build(backend) as u3_sched:</span>
+<span class="sd">        pulse.u3(math.pi, 0, math.pi, 0)</span>
+
+<span class="sd">.. autosummary::</span>
+<span class="sd">    :toctree: ../stubs/</span>
+
+<span class="sd">    cx</span>
+<span class="sd">    u1</span>
+<span class="sd">    u2</span>
+<span class="sd">    u3</span>
+<span class="sd">    x</span>
+
+
+<span class="sd">Utilities</span>
+<span class="sd">=========</span>
+
+<span class="sd">The utility functions can be used to gather attributes about the backend and modify</span>
+<span class="sd">how the program is built.</span>
+
+<span class="sd">.. jupyter-execute::</span>
+
+<span class="sd">    from qiskit import pulse</span>
+
+<span class="sd">    from qiskit.test.mock import FakeArmonk</span>
+
+<span class="sd">    backend = FakeArmonk()</span>
+
+<span class="sd">    with pulse.build(backend) as u3_sched:</span>
+<span class="sd">        print(&#39;Number of qubits in backend: {}&#39;.format(pulse.num_qubits()))</span>
+
+<span class="sd">        samples = 160</span>
+<span class="sd">        print(&#39;There are {} samples in {} seconds&#39;.format(</span>
+<span class="sd">            samples, pulse.samples_to_seconds(160)))</span>
+
+<span class="sd">        seconds = 1e-6</span>
+<span class="sd">        print(&#39;There are {} seconds in {} samples.&#39;.format(</span>
+<span class="sd">            seconds, pulse.seconds_to_samples(1e-6)))</span>
+
+<span class="sd">.. autosummary::</span>
+<span class="sd">    :toctree: ../stubs/</span>
+
+<span class="sd">    active_backend</span>
+<span class="sd">    active_transpiler_settings</span>
+<span class="sd">    active_circuit_scheduler_settings</span>
+<span class="sd">    num_qubits</span>
+<span class="sd">    qubit_channels</span>
+<span class="sd">    samples_to_seconds</span>
+<span class="sd">    seconds_to_samples</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">collections</span>
 <span class="kn">import</span> <span class="nn">contextvars</span>
@@ -595,7 +836,7 @@
     <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">BackendNotSet</span><span class="p">(</span>
-                <span class="s2">&quot;This function requires the builder to &quot;</span> <span class="s1">&#39;have a &quot;backend&quot; set.&#39;</span>
+                <span class="s1">&#39;This function requires the builder to have a &quot;backend&quot; set.&#39;</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -654,10 +895,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_lazy_circuit</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1">#: Dict[str, Any]: Transpiler setting dictionary.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_transpiler_settings</span> <span class="o">=</span> <span class="n">default_transpiler_settings</span> <span class="ow">or</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transpiler_settings</span> <span class="o">=</span> <span class="n">default_transpiler_settings</span> <span class="ow">or</span> <span class="p">{}</span>
 
         <span class="c1">#: Dict[str, Any]: Scheduler setting dictionary.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_circuit_scheduler_settings</span> <span class="o">=</span> <span class="n">default_circuit_scheduler_settings</span> <span class="ow">or</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_circuit_scheduler_settings</span> <span class="o">=</span> <span class="n">default_circuit_scheduler_settings</span> <span class="ow">or</span> <span class="p">{}</span>
 
         <span class="c1">#: List[ScheduleBlock]: Stack of context.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_context_stack</span> <span class="o">=</span> <span class="p">[]</span>
@@ -795,7 +1036,7 @@
 
     <span class="k">def</span> <span class="nf">_compile_circuit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circ</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Schedule</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Take a QuantumCircuit and output the pulse schedule associated with the circuit.&quot;&quot;&quot;</span>
-        <span class="kn">import</span> <span class="nn">qiskit.compiler</span> <span class="k">as</span> <span class="nn">compiler</span>  <span class="c1"># pylint: disable=cyclic-import</span>
+        <span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">compiler</span>  <span class="c1"># pylint: disable=cyclic-import</span>
 
         <span class="n">transpiled_circuit</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">transpile</span><span class="p">(</span><span class="n">circ</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">transpiler_settings</span><span class="p">)</span>
         <span class="n">sched</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">schedule</span><span class="p">(</span>
@@ -875,7 +1116,7 @@
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">empty_subroutine</span><span class="p">:</span>
-            <span class="n">param_value_map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="n">param_value_map</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">assigned_value</span> <span class="ow">in</span> <span class="n">kw_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">param_objs</span> <span class="o">=</span> <span class="n">subroutine</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">param_objs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -1025,7 +1266,7 @@
     <span class="n">builder</span> <span class="o">=</span> <span class="n">_active_builder</span><span class="p">()</span><span class="o">.</span><span class="n">backend</span>
     <span class="k">if</span> <span class="n">builder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">BackendNotSet</span><span class="p">(</span>
-            <span class="s2">&quot;This function requires the active builder to &quot;</span> <span class="s1">&#39;have a &quot;backend&quot; set.&#39;</span>
+            <span class="s1">&#39;This function requires the active builder to have a &quot;backend&quot; set.&#39;</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">builder</span></div>
 
@@ -1154,7 +1395,7 @@
             <span class="n">channels</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">channel_or_qubit</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">PulseError</span><span class="p">(</span>
-                <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> is not a &quot;Channel&quot; or &#39;</span> <span class="s2">&quot;qubit (integer).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">channel_or_qubit</span><span class="p">)</span>
+                <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">channel_or_qubit</span><span class="si">}</span><span class="s1"> is not a &quot;Channel&quot; or qubit (integer).&#39;</span>
             <span class="p">)</span>
     <span class="k">return</span> <span class="n">channels</span>
 
@@ -1978,87 +2219,6 @@
     <span class="n">append_instruction</span><span class="p">(</span><span class="n">instructions</span><span class="o">.</span><span class="n">Snapshot</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">snapshot_type</span><span class="o">=</span><span class="n">snapshot_type</span><span class="p">))</span></div>
 
 
-<span class="k">def</span> <span class="nf">call_schedule</span><span class="p">(</span><span class="n">schedule</span><span class="p">:</span> <span class="n">Schedule</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Call a pulse ``schedule`` in the builder context.</span>
-
-<span class="sd">    Examples:</span>
-
-<span class="sd">    .. jupyter-execute::</span>
-
-<span class="sd">        from qiskit import pulse</span>
-<span class="sd">        from qiskit.pulse import builder</span>
-
-<span class="sd">        d0 = pulse.DriveChannel(0)</span>
-
-<span class="sd">        sched = pulse.Schedule()</span>
-<span class="sd">        sched += pulse.Play(pulse.Constant(10, 1.0), d0)</span>
-
-<span class="sd">        with pulse.build() as pulse_prog:</span>
-<span class="sd">            builder.call_schedule(sched)</span>
-
-<span class="sd">        assert pulse_prog == sched</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        Schedule to call.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-        <span class="s2">&quot;``call_schedule`` is being deprecated. &quot;</span>
-        <span class="s2">&quot;``call`` function can take both a schedule and a circuit.&quot;</span><span class="p">,</span>
-        <span class="ne">DeprecationWarning</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">call</span><span class="p">(</span><span class="n">schedule</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">call_circuit</span><span class="p">(</span><span class="n">circ</span><span class="p">:</span> <span class="n">circuit</span><span class="o">.</span><span class="n">QuantumCircuit</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Call a quantum ``circuit`` within the active builder context.</span>
-
-<span class="sd">    .. note::</span>
-<span class="sd">        Calling gates directly within the pulse builder namespace will be</span>
-<span class="sd">        deprecated in the future in favor of tight integration with a circuit</span>
-<span class="sd">        builder interface which is under development.</span>
-
-<span class="sd">    Examples:</span>
-
-<span class="sd">    .. jupyter-execute::</span>
-
-<span class="sd">        from qiskit import circuit, pulse, schedule, transpile</span>
-<span class="sd">        from qiskit.pulse import builder</span>
-<span class="sd">        from qiskit.test.mock import FakeOpenPulse2Q</span>
-
-<span class="sd">        backend = FakeOpenPulse2Q()</span>
-
-<span class="sd">        d0 = pulse.DriveChannel(0)</span>
-
-<span class="sd">        qc = circuit.QuantumCircuit(2)</span>
-<span class="sd">        qc.cx(0, 1)</span>
-<span class="sd">        qc_transpiled = transpile(qc, optimization_level=3)</span>
-<span class="sd">        sched = schedule(qc_transpiled, backend)</span>
-
-<span class="sd">        with pulse.build(backend) as pulse_prog:</span>
-<span class="sd">            # with default settings</span>
-<span class="sd">            builder.call_circuit(qc)</span>
-
-<span class="sd">        with pulse.build(backend) as pulse_prog:</span>
-<span class="sd">            with pulse.transpiler_settings(optimization_level=3):</span>
-<span class="sd">                builder.call_circuit(qc)</span>
-
-<span class="sd">        assert pulse_prog == sched</span>
-
-<span class="sd">    .. note:: Requires the active builder context to have a backend set.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        Circuit to call.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-        <span class="s2">&quot;``call_circuit`` is being deprecated. &quot;</span>
-        <span class="s2">&quot;``call`` function can take both a schedule and a circuit.&quot;</span><span class="p">,</span>
-        <span class="ne">DeprecationWarning</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">call</span><span class="p">(</span><span class="n">circ</span><span class="p">)</span>
-
-
 <div class="viewcode-block" id="call"><a class="viewcode-back" href="../../../stubs/qiskit.pulse.builder.call.html#qiskit.pulse.builder.call">[文档]</a><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
     <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">circuit</span><span class="o">.</span><span class="n">QuantumCircuit</span><span class="p">,</span> <span class="n">Schedule</span><span class="p">,</span> <span class="n">ScheduleBlock</span><span class="p">],</span>
     <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2435,7 +2595,7 @@
 <span class="sd">            the channels returned by :func:`pulse.qubit_channels`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">qubit_chans</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">qubit_channels</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span> <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="n">qubits</span><span class="p">))</span>
-    <span class="k">with</span> <span class="n">align_left</span><span class="p">():</span>  <span class="c1"># pylint: disable=not-context-manager</span>
+    <span class="k">with</span> <span class="n">align_left</span><span class="p">():</span>
         <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="n">qubit_chans</span><span class="p">:</span>
             <span class="n">delay</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="n">chan</span><span class="p">)</span></div>
 
@@ -2643,7 +2803,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      最后更新于 2021/11/19.
+      最后更新于 2021/12/07.
 
     </p>
   </div>

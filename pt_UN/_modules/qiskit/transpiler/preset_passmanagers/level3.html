@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.preset_passmanagers.level3 &mdash; Documentação Qiskit 0.32.0</title>
+  <title>qiskit.transpiler.preset_passmanagers.level3 &mdash; Documentação Qiskit 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (depreciado)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aqua.html">Qiskit Aqua (depreciado)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Provedor Quântico IBM Qiskit</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Guias de Migração Qiskit Aqua</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../aqua_migration.html">Guias de Migração Qiskit Aqua</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Solução de problemas</span></p>
 <ul>
@@ -391,7 +386,9 @@
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.passes</span> <span class="kn">import</span> <span class="n">ASAPSchedule</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.passes</span> <span class="kn">import</span> <span class="n">AlignMeasures</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.passes</span> <span class="kn">import</span> <span class="n">ValidatePulseGates</span>
+<span class="kn">from</span> <span class="nn">qiskit.transpiler.passes</span> <span class="kn">import</span> <span class="n">PulseGates</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.passes</span> <span class="kn">import</span> <span class="n">Error</span>
+<span class="kn">from</span> <span class="nn">qiskit.transpiler.passes</span> <span class="kn">import</span> <span class="n">ContainsInstruction</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.transpiler</span> <span class="kn">import</span> <span class="n">TranspilerError</span>
 
@@ -424,20 +421,34 @@
 <span class="sd">        TranspilerError: if the passmanager config is invalid.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">basis_gates</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">basis_gates</span>
+    <span class="n">inst_map</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">inst_map</span>
     <span class="n">coupling_map</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">coupling_map</span>
     <span class="n">initial_layout</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">initial_layout</span>
-    <span class="n">layout_method</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">layout_method</span> <span class="ow">or</span> <span class="s2">&quot;dense&quot;</span>
-    <span class="n">routing_method</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">routing_method</span> <span class="ow">or</span> <span class="s2">&quot;stochastic&quot;</span>
+    <span class="n">layout_method</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">layout_method</span> <span class="ow">or</span> <span class="s2">&quot;sabre&quot;</span>
+    <span class="n">routing_method</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">routing_method</span> <span class="ow">or</span> <span class="s2">&quot;sabre&quot;</span>
     <span class="n">translation_method</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">translation_method</span> <span class="ow">or</span> <span class="s2">&quot;translator&quot;</span>
     <span class="n">scheduling_method</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">scheduling_method</span>
     <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">instruction_durations</span>
     <span class="n">seed_transpiler</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">seed_transpiler</span>
     <span class="n">backend_properties</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">backend_properties</span>
     <span class="n">approximation_degree</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">approximation_degree</span>
+    <span class="n">unitary_synthesis_method</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">unitary_synthesis_method</span>
     <span class="n">timing_constraints</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">timing_constraints</span> <span class="ow">or</span> <span class="n">TimingConstraints</span><span class="p">()</span>
+    <span class="n">unitary_synthesis_plugin_config</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">unitary_synthesis_plugin_config</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">pass_manager_config</span><span class="o">.</span><span class="n">target</span>
 
     <span class="c1"># 1. Unroll to 1q or 2q gates</span>
-    <span class="n">_unroll3q</span> <span class="o">=</span> <span class="n">Unroll3qOrMore</span><span class="p">()</span>
+    <span class="n">_unroll3q</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="c1"># Use unitary synthesis for basis aware decomposition of UnitaryGates</span>
+        <span class="n">UnitarySynthesis</span><span class="p">(</span>
+            <span class="n">basis_gates</span><span class="p">,</span>
+            <span class="n">approximation_degree</span><span class="o">=</span><span class="n">approximation_degree</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="n">unitary_synthesis_method</span><span class="p">,</span>
+            <span class="n">plugin_config</span><span class="o">=</span><span class="n">unitary_synthesis_plugin_config</span><span class="p">,</span>
+            <span class="n">min_qubits</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">Unroll3qOrMore</span><span class="p">(),</span>
+    <span class="p">]</span>
 
     <span class="c1"># 2. Layout on good qubits if calibration info available, otherwise on dense links</span>
     <span class="n">_given_layout</span> <span class="o">=</span> <span class="n">SetLayout</span><span class="p">(</span><span class="n">initial_layout</span><span class="p">)</span>
@@ -482,7 +493,6 @@
         <span class="c1"># set by trivial layout so we clear that before running CSP</span>
         <span class="k">if</span> <span class="n">property_set</span><span class="p">[</span><span class="s2">&quot;trivial_layout_score&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">property_set</span><span class="p">[</span><span class="s2">&quot;trivial_layout_score&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">property_set</span><span class="p">[</span><span class="s2">&quot;layout&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">_wrapped</span> <span class="o">=</span> <span class="kc">None</span>
                 <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="kc">False</span>
 
@@ -519,8 +529,10 @@
     <span class="k">elif</span> <span class="n">routing_method</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
         <span class="n">_swap</span> <span class="o">+=</span> <span class="p">[</span>
             <span class="n">Error</span><span class="p">(</span>
-                <span class="n">msg</span><span class="o">=</span><span class="s2">&quot;No routing method selected, but circuit is not routed to device. &quot;</span>
-                <span class="s2">&quot;CheckMap Error: </span><span class="si">{check_map_msg}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">msg</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">&quot;No routing method selected, but circuit is not routed to device. &quot;</span>
+                    <span class="s2">&quot;CheckMap Error: </span><span class="si">{check_map_msg}</span><span class="s2">&quot;</span>
+                <span class="p">),</span>
                 <span class="n">action</span><span class="o">=</span><span class="s2">&quot;raise&quot;</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">]</span>
@@ -533,9 +545,29 @@
     <span class="k">elif</span> <span class="n">translation_method</span> <span class="o">==</span> <span class="s2">&quot;translator&quot;</span><span class="p">:</span>
         <span class="kn">from</span> <span class="nn">qiskit.circuit.equivalence_library</span> <span class="kn">import</span> <span class="n">SessionEquivalenceLibrary</span> <span class="k">as</span> <span class="n">sel</span>
 
-        <span class="n">_unroll</span> <span class="o">=</span> <span class="p">[</span><span class="n">UnrollCustomDefinitions</span><span class="p">(</span><span class="n">sel</span><span class="p">,</span> <span class="n">basis_gates</span><span class="p">),</span> <span class="n">BasisTranslator</span><span class="p">(</span><span class="n">sel</span><span class="p">,</span> <span class="n">basis_gates</span><span class="p">)]</span>
+        <span class="n">_unroll</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">UnitarySynthesis</span><span class="p">(</span>
+                <span class="n">basis_gates</span><span class="p">,</span>
+                <span class="n">approximation_degree</span><span class="o">=</span><span class="n">approximation_degree</span><span class="p">,</span>
+                <span class="n">coupling_map</span><span class="o">=</span><span class="n">coupling_map</span><span class="p">,</span>
+                <span class="n">backend_props</span><span class="o">=</span><span class="n">backend_properties</span><span class="p">,</span>
+                <span class="n">plugin_config</span><span class="o">=</span><span class="n">unitary_synthesis_plugin_config</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="n">unitary_synthesis_method</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">UnrollCustomDefinitions</span><span class="p">(</span><span class="n">sel</span><span class="p">,</span> <span class="n">basis_gates</span><span class="p">),</span>
+            <span class="n">BasisTranslator</span><span class="p">(</span><span class="n">sel</span><span class="p">,</span> <span class="n">basis_gates</span><span class="p">,</span> <span class="n">target</span><span class="p">),</span>
+        <span class="p">]</span>
     <span class="k">elif</span> <span class="n">translation_method</span> <span class="o">==</span> <span class="s2">&quot;synthesis&quot;</span><span class="p">:</span>
         <span class="n">_unroll</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">UnitarySynthesis</span><span class="p">(</span>
+                <span class="n">basis_gates</span><span class="p">,</span>
+                <span class="n">approximation_degree</span><span class="o">=</span><span class="n">approximation_degree</span><span class="p">,</span>
+                <span class="n">coupling_map</span><span class="o">=</span><span class="n">coupling_map</span><span class="p">,</span>
+                <span class="n">backend_props</span><span class="o">=</span><span class="n">backend_properties</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="n">unitary_synthesis_method</span><span class="p">,</span>
+                <span class="n">plugin_config</span><span class="o">=</span><span class="n">unitary_synthesis_plugin_config</span><span class="p">,</span>
+                <span class="n">min_qubits</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="p">),</span>
             <span class="n">Unroll3qOrMore</span><span class="p">(),</span>
             <span class="n">Collect2qBlocks</span><span class="p">(),</span>
             <span class="n">ConsolidateBlocks</span><span class="p">(</span><span class="n">basis_gates</span><span class="o">=</span><span class="n">basis_gates</span><span class="p">),</span>
@@ -544,18 +576,20 @@
                 <span class="n">approximation_degree</span><span class="o">=</span><span class="n">approximation_degree</span><span class="p">,</span>
                 <span class="n">coupling_map</span><span class="o">=</span><span class="n">coupling_map</span><span class="p">,</span>
                 <span class="n">backend_props</span><span class="o">=</span><span class="n">backend_properties</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="n">unitary_synthesis_method</span><span class="p">,</span>
+                <span class="n">plugin_config</span><span class="o">=</span><span class="n">unitary_synthesis_plugin_config</span><span class="p">,</span>
             <span class="p">),</span>
         <span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span><span class="s2">&quot;Invalid translation method </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">translation_method</span><span class="p">)</span>
 
     <span class="c1"># 6. Fix any CX direction mismatch</span>
-    <span class="n">_direction_check</span> <span class="o">=</span> <span class="p">[</span><span class="n">CheckGateDirection</span><span class="p">(</span><span class="n">coupling_map</span><span class="p">)]</span>
+    <span class="n">_direction_check</span> <span class="o">=</span> <span class="p">[</span><span class="n">CheckGateDirection</span><span class="p">(</span><span class="n">coupling_map</span><span class="p">,</span> <span class="n">target</span><span class="p">)]</span>
 
     <span class="k">def</span> <span class="nf">_direction_condition</span><span class="p">(</span><span class="n">property_set</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="n">property_set</span><span class="p">[</span><span class="s2">&quot;is_direction_mapped&quot;</span><span class="p">]</span>
 
-    <span class="n">_direction</span> <span class="o">=</span> <span class="p">[</span><span class="n">GateDirection</span><span class="p">(</span><span class="n">coupling_map</span><span class="p">)]</span>
+    <span class="n">_direction</span> <span class="o">=</span> <span class="p">[</span><span class="n">GateDirection</span><span class="p">(</span><span class="n">coupling_map</span><span class="p">,</span> <span class="n">target</span><span class="p">)]</span>
 
     <span class="c1"># 8. Optimize iteratively until no more change in depth. Removes useless gates</span>
     <span class="c1"># after reset and before measure, commutes gates and optimizes contiguous blocks.</span>
@@ -576,6 +610,8 @@
             <span class="n">approximation_degree</span><span class="o">=</span><span class="n">approximation_degree</span><span class="p">,</span>
             <span class="n">coupling_map</span><span class="o">=</span><span class="n">coupling_map</span><span class="p">,</span>
             <span class="n">backend_props</span><span class="o">=</span><span class="n">backend_properties</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="n">unitary_synthesis_method</span><span class="p">,</span>
+            <span class="n">plugin_config</span><span class="o">=</span><span class="n">unitary_synthesis_plugin_config</span><span class="p">,</span>
         <span class="p">),</span>
         <span class="n">Optimize1qGatesDecomposition</span><span class="p">(</span><span class="n">basis_gates</span><span class="p">),</span>
         <span class="n">CommutativeCancellation</span><span class="p">(),</span>
@@ -583,8 +619,15 @@
 
     <span class="c1"># 9. Unify all durations (either SI, or convert to dt if known)</span>
     <span class="c1"># Schedule the circuit only when scheduling_method is supplied</span>
-    <span class="n">_scheduling</span> <span class="o">=</span> <span class="p">[</span><span class="n">TimeUnitConversion</span><span class="p">(</span><span class="n">instruction_durations</span><span class="p">)]</span>
+    <span class="n">_time_unit_setup</span> <span class="o">=</span> <span class="p">[</span><span class="n">ContainsInstruction</span><span class="p">(</span><span class="s2">&quot;delay&quot;</span><span class="p">)]</span>
+    <span class="n">_time_unit_conversion</span> <span class="o">=</span> <span class="p">[</span><span class="n">TimeUnitConversion</span><span class="p">(</span><span class="n">instruction_durations</span><span class="p">)]</span>
+
+    <span class="k">def</span> <span class="nf">_contains_delay</span><span class="p">(</span><span class="n">property_set</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">property_set</span><span class="p">[</span><span class="s2">&quot;contains_delay&quot;</span><span class="p">]</span>
+
+    <span class="n">_scheduling</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">scheduling_method</span><span class="p">:</span>
+        <span class="n">_scheduling</span> <span class="o">+=</span> <span class="n">_time_unit_conversion</span>
         <span class="k">if</span> <span class="n">scheduling_method</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;alap&quot;</span><span class="p">,</span> <span class="s2">&quot;as_late_as_possible&quot;</span><span class="p">}:</span>
             <span class="n">_scheduling</span> <span class="o">+=</span> <span class="p">[</span><span class="n">ALAPSchedule</span><span class="p">(</span><span class="n">instruction_durations</span><span class="p">)]</span>
         <span class="k">elif</span> <span class="n">scheduling_method</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;asap&quot;</span><span class="p">,</span> <span class="s2">&quot;as_soon_as_possible&quot;</span><span class="p">}:</span>
@@ -593,12 +636,19 @@
             <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span><span class="s2">&quot;Invalid scheduling method </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">scheduling_method</span><span class="p">)</span>
 
     <span class="c1"># 10. Call measure alignment. Should come after scheduling.</span>
-    <span class="n">_alignments</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">ValidatePulseGates</span><span class="p">(</span>
-            <span class="n">granularity</span><span class="o">=</span><span class="n">timing_constraints</span><span class="o">.</span><span class="n">granularity</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="n">timing_constraints</span><span class="o">.</span><span class="n">min_length</span>
-        <span class="p">),</span>
-        <span class="n">AlignMeasures</span><span class="p">(</span><span class="n">alignment</span><span class="o">=</span><span class="n">timing_constraints</span><span class="o">.</span><span class="n">acquire_alignment</span><span class="p">),</span>
-    <span class="p">]</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">timing_constraints</span><span class="o">.</span><span class="n">granularity</span> <span class="o">!=</span> <span class="mi">1</span>
+        <span class="ow">or</span> <span class="n">timing_constraints</span><span class="o">.</span><span class="n">min_length</span> <span class="o">!=</span> <span class="mi">1</span>
+        <span class="ow">or</span> <span class="n">timing_constraints</span><span class="o">.</span><span class="n">acquire_alignment</span> <span class="o">!=</span> <span class="mi">1</span>
+    <span class="p">):</span>
+        <span class="n">_alignments</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">ValidatePulseGates</span><span class="p">(</span>
+                <span class="n">granularity</span><span class="o">=</span><span class="n">timing_constraints</span><span class="o">.</span><span class="n">granularity</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="n">timing_constraints</span><span class="o">.</span><span class="n">min_length</span>
+            <span class="p">),</span>
+            <span class="n">AlignMeasures</span><span class="p">(</span><span class="n">alignment</span><span class="o">=</span><span class="n">timing_constraints</span><span class="o">.</span><span class="n">acquire_alignment</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_alignments</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="c1"># Build pass manager</span>
     <span class="n">pm3</span> <span class="o">=</span> <span class="n">PassManager</span><span class="p">()</span>
@@ -613,12 +663,30 @@
         <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_swap_check</span><span class="p">)</span>
         <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_swap</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="n">_swap_condition</span><span class="p">)</span>
     <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_unroll</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">coupling_map</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">coupling_map</span><span class="o">.</span><span class="n">is_symmetric</span><span class="p">:</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">coupling_map</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">coupling_map</span><span class="o">.</span><span class="n">is_symmetric</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+        <span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target</span><span class="o">.</span><span class="n">get_non_global_operation_names</span><span class="p">(</span><span class="n">strict_direction</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="p">):</span>
         <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_direction_check</span><span class="p">)</span>
         <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_direction</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="n">_direction_condition</span><span class="p">)</span>
-    <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_reset</span><span class="p">)</span>
-    <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_depth_check</span> <span class="o">+</span> <span class="n">_opt</span> <span class="o">+</span> <span class="n">_unroll</span><span class="p">,</span> <span class="n">do_while</span><span class="o">=</span><span class="n">_opt_control</span><span class="p">)</span>
-    <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_scheduling</span><span class="p">)</span>
+        <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_reset</span><span class="p">)</span>
+        <span class="c1"># For transpiling to a target we need to run GateDirection in the</span>
+        <span class="c1"># optimization loop to correct for incorrect directions that might be</span>
+        <span class="c1"># inserted by UnitarySynthesis which is direction aware but only via</span>
+        <span class="c1"># the coupling map which with a target doesn&#39;t give a full picture</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_depth_check</span> <span class="o">+</span> <span class="n">_opt</span> <span class="o">+</span> <span class="n">_unroll</span> <span class="o">+</span> <span class="n">_direction</span><span class="p">,</span> <span class="n">do_while</span><span class="o">=</span><span class="n">_opt_control</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_depth_check</span> <span class="o">+</span> <span class="n">_opt</span> <span class="o">+</span> <span class="n">_unroll</span><span class="p">,</span> <span class="n">do_while</span><span class="o">=</span><span class="n">_opt_control</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_reset</span><span class="p">)</span>
+        <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_depth_check</span> <span class="o">+</span> <span class="n">_opt</span> <span class="o">+</span> <span class="n">_unroll</span><span class="p">,</span> <span class="n">do_while</span><span class="o">=</span><span class="n">_opt_control</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">inst_map</span> <span class="ow">and</span> <span class="n">inst_map</span><span class="o">.</span><span class="n">has_custom_gate</span><span class="p">():</span>
+        <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PulseGates</span><span class="p">(</span><span class="n">inst_map</span><span class="o">=</span><span class="n">inst_map</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">scheduling_method</span><span class="p">:</span>
+        <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_scheduling</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">instruction_durations</span><span class="p">:</span>
+        <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_time_unit_setup</span><span class="p">)</span>
+        <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_time_unit_conversion</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="n">_contains_delay</span><span class="p">)</span>
     <span class="n">pm3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_alignments</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">pm3</span></div>
@@ -639,7 +707,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Última actualização em 2021/11/19.
+      Última actualização em 2021/12/07.
 
     </p>
   </div>

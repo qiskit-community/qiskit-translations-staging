@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.algorithms.amplitude_amplifiers.grover &mdash; Qiskit 0.32.0 Dokumentation</title>
+  <title>qiskit.algorithms.amplitude_amplifiers.grover &mdash; Qiskit 0.33.0 Dokumentation</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
 <ul>
@@ -362,7 +357,7 @@
 <div class="viewcode-block" id="Grover"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.Grover.html#qiskit.algorithms.Grover">[Doku]</a><span class="k">class</span> <span class="nc">Grover</span><span class="p">(</span><span class="n">AmplitudeAmplifier</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Grover&#39;s Search algorithm.</span>
 
-<span class="sd">    Grover&#39;s Search [1, 2] is a well known quantum algorithm for that can be used for</span>
+<span class="sd">    Grover&#39;s Search [1, 2] is a well known quantum algorithm that can be used for</span>
 <span class="sd">    searching through unstructured collections of records for particular targets</span>
 <span class="sd">    with quadratic speedup compared to classical algorithms.</span>
 
@@ -391,10 +386,10 @@
 <span class="sd">    The details of how :math:`S_f` works are unimportant to the algorithm; Grover&#39;s</span>
 <span class="sd">    search algorithm treats the oracle as a black box.</span>
 
-<span class="sd">    This class supports oracles in form of :class:`~qiskit.QuantumCircuit`</span>
+<span class="sd">    This class supports oracles in form of a :class:`~qiskit.circuit.QuantumCircuit`.</span>
 
-<span class="sd">    With oracle at hand, Grover&#39;s Search constructs the Grover operator to amplify the amplitudes</span>
-<span class="sd">    of the good states:</span>
+<span class="sd">    With the given oracle, Grover&#39;s Search constructs the Grover operator to amplify the</span>
+<span class="sd">    amplitudes of the good states:</span>
 
 <span class="sd">    .. math::</span>
 
@@ -411,7 +406,7 @@
 <span class="sd">    powers of Grover&#39;s operator, see the `iterations` argument, and after each iteration checks</span>
 <span class="sd">    if a good state has been measured using `good_state`.</span>
 
-<span class="sd">    The generalization of Grover&#39;s Search, Quantum Amplitude Amplification [3] uses a modified</span>
+<span class="sd">    The generalization of Grover&#39;s Search, Quantum Amplitude Amplification [3], uses a modified</span>
 <span class="sd">    version of :math:`\mathcal{Q}` where the diffusion operator does not reflect about the</span>
 <span class="sd">    equal superposition state, but another state specified via an operator :math:`\mathcal{A}`:</span>
 
@@ -444,11 +439,13 @@
 <span class="sd">        Args:</span>
 <span class="sd">            iterations: Specify the number of iterations/power of Grover&#39;s operator to be checked.</span>
 <span class="sd">                * If an int, only one circuit is run with that power of the Grover operator.</span>
-<span class="sd">                If the number of solutions is known, this is option should be used with the optimal</span>
+<span class="sd">                If the number of solutions is known, this option should be used with the optimal</span>
 <span class="sd">                power. The optimal power can be computed with ``Grover.optimal_num_iterations``.</span>
 <span class="sd">                * If a list, all the powers in the list are run in the specified order.</span>
 <span class="sd">                * If an iterator, the powers yielded by the iterator are checked, until a maximum</span>
 <span class="sd">                number of iterations or maximum power is reached.</span>
+<span class="sd">                * If ``None``, the :obj:`AmplificationProblem` provided must have an ``is_good_state``,</span>
+<span class="sd">                and circuits are run until that good state is reached.</span>
 <span class="sd">            growth_rate: If specified, the iterator is set to increasing powers of ``growth_rate``,</span>
 <span class="sd">                i.e. to ``int(growth_rate ** 1), int(growth_rate ** 2), ...`` until a maximum</span>
 <span class="sd">                number of iterations is reached.</span>
@@ -485,6 +482,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">quantum_instance</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_sample_from_iterations</span> <span class="o">=</span> <span class="n">sample_from_iterations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_iterations_arg</span> <span class="o">=</span> <span class="n">iterations</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">quantum_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">QuantumInstance</span><span class="p">]:</span>
@@ -515,6 +513,10 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            The result as a ``GroverResult``, where e.g. the most likely state can be queried</span>
 <span class="sd">            as ``result.top_measurement``.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError: If ``is_good_state`` is not provided and is required (i.e. when iterations</span>
+<span class="sd">            is ``None`` or a ``list``)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iterations</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">max_iterations</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iterations</span><span class="p">)</span>
@@ -579,7 +581,22 @@
                 <span class="p">)</span>
 
             <span class="n">all_circuit_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">circuit_results</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iterations_arg</span><span class="p">,</span> <span class="nb">int</span><span class="p">))</span> <span class="ow">and</span> <span class="p">(</span>
+                <span class="n">amplification_problem</span><span class="o">.</span><span class="n">is_good_state</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="p">):</span>
+                <span class="n">oracle_evaluation</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># cannot check for good state without is_good_state arg</span>
+                <span class="k">break</span>
+
+            <span class="c1"># is_good_state arg must be provided if iterations arg is not an integer</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_iterations_arg</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iterations_arg</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+            <span class="p">)</span> <span class="ow">and</span> <span class="n">amplification_problem</span><span class="o">.</span><span class="n">is_good_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;An is_good_state function is required with the provided oracle&quot;</span><span class="p">)</span>
+
+            <span class="c1"># only check if top measurement is a good state if an is_good_state arg is provided</span>
             <span class="n">oracle_evaluation</span> <span class="o">=</span> <span class="n">amplification_problem</span><span class="o">.</span><span class="n">is_good_state</span><span class="p">(</span><span class="n">top_measurement</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="n">oracle_evaluation</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
                 <span class="k">break</span>  <span class="c1"># we found a solution</span>
 
@@ -684,7 +701,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Zuletzt aktualisiert am 2021/11/19.
+      Zuletzt aktualisiert am 2021/12/07.
 
     </p>
   </div>

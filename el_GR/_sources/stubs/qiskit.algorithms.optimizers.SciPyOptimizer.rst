@@ -15,6 +15,7 @@ SciPyOptimizer
 
       ~SciPyOptimizer.get_support_level
       ~SciPyOptimizer.gradient_num_diff
+      ~SciPyOptimizer.minimize
       ~SciPyOptimizer.optimize
       ~SciPyOptimizer.print_options
       ~SciPyOptimizer.set_max_evals_grouped

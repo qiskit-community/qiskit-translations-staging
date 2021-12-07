@@ -1,4 +1,4 @@
-Snapshot
+﻿Snapshot
 ========
 
 .. currentmodule:: qiskit.pulse.instructions
@@ -14,12 +14,10 @@ Snapshot
       :toctree: ../stubs/
 
       ~Snapshot.append
-      ~Snapshot.assign_parameters
       ~Snapshot.ch_duration
       ~Snapshot.ch_start_time
       ~Snapshot.ch_stop_time
       ~Snapshot.draw
-      ~Snapshot.flatten
       ~Snapshot.insert
       ~Snapshot.is_parameterized
       ~Snapshot.shift

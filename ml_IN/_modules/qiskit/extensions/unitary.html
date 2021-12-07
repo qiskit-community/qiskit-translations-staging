@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.extensions.unitary &mdash; Qiskit 0.32.0 documentation</title>
+  <title>qiskit.extensions.unitary &mdash; Qiskit 0.33.0 documentation</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">ക്വിസ്കിറ്റ് ടെറ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">ക്വിസ്കിറ്റ് എഇർ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">ക്വിസ്കിറ്റ് ഇഗ്നിസ് (നിർതലാക്കി)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aqua.html">ക്വിസ്കിറ്റ് അക്വാ (നിർതലാക്കി)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">ക്വിസ്കിറ്റ് ഐബിഎം ക്വാണ്ടം പ്രൊവയ്ഡെർ</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">ക്വിസ്കിറ്റ് അക്വായിൽ നിന്നു മാറുനതിനുള്ള ഗൈഡ്</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../aqua_migration.html">ക്വിസ്കിറ്റ് അക്വായിൽ നിന്നു മാറുനതിനുള്ള ഗൈഡ്</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
 <ul>
@@ -355,6 +350,7 @@
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">QuantumRegister</span><span class="p">,</span> <span class="n">Qubit</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.exceptions</span> <span class="kn">import</span> <span class="n">CircuitError</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit._utils</span> <span class="kn">import</span> <span class="n">_compute_control_matrix</span>
+<span class="kn">from</span> <span class="nn">qiskit.circuit.quantumcircuit</span> <span class="kn">import</span> <span class="n">_qasm_escape_gate_name</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library.standard_gates</span> <span class="kn">import</span> <span class="n">U3Gate</span>
 <span class="kn">from</span> <span class="nn">qiskit.extensions.quantum_initializer</span> <span class="kn">import</span> <span class="n">isometry</span>
 <span class="kn">from</span> <span class="nn">qiskit.quantum_info.operators.predicates</span> <span class="kn">import</span> <span class="n">matrix_equal</span>
@@ -500,7 +496,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># give this unitary a name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_qasm_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="k">else</span> <span class="s2">&quot;unitary&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_qasm_name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">_qasm_escape_gate_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="k">else</span> <span class="s2">&quot;unitary&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="p">)</span>
 
         <span class="c1"># map from gates in the definition to params in the method</span>
         <span class="n">reg_to_qasm</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
@@ -541,9 +539,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">parameter</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">CircuitError</span><span class="p">(</span>
-                <span class="s2">&quot;invalid param type </span><span class="si">{}</span><span class="s2"> in gate &quot;</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">parameter</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-            <span class="p">)</span></div></div>
+            <span class="k">raise</span> <span class="n">CircuitError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;invalid param type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span><span class="si">}</span><span class="s2"> in gate </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div></div>
 
 
 <span class="k">def</span> <span class="nf">unitary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -576,7 +572,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Last updated on 2021/11/19.
+      Last updated on 2021/12/07.
 
     </p>
   </div>

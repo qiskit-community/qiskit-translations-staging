@@ -17,6 +17,7 @@ GSLS
       ~GSLS.gradient_approximation
       ~GSLS.gradient_num_diff
       ~GSLS.ls_optimize
+      ~GSLS.minimize
       ~GSLS.optimize
       ~GSLS.print_options
       ~GSLS.sample_points

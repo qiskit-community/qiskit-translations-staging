@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.visualization.circuit_visualization &mdash; документация Qiskit 0.32.0</title>
+  <title>qiskit.visualization.circuit_visualization &mdash; документация Qiskit 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">Qiskit Ignis (устарело)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum (Провайдер)</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Руководство по миграции Qiskit Aqua</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../aqua_migration.html">Руководство по миграции Qiskit Aqua</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Устранение неполадок</span></p>
 <ul>
@@ -358,7 +353,6 @@
 <span class="sd">any of the backends.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">errno</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
@@ -379,7 +373,54 @@
 <span class="kn">from</span> <span class="nn">qiskit.visualization</span> <span class="kn">import</span> <span class="n">utils</span>
 <span class="kn">from</span> <span class="nn">qiskit.visualization</span> <span class="kn">import</span> <span class="n">matplotlib</span> <span class="k">as</span> <span class="n">_matplotlib</span>
 
+
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_HasPdfLatexWrapper</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Wrapper to lazily detect presence of the ``pdflatex`` command.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">has_pdflatex</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_pdflatex</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                    <span class="p">[</span><span class="s2">&quot;pdflatex&quot;</span><span class="p">,</span> <span class="s2">&quot;-version&quot;</span><span class="p">],</span>
+                    <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+                    <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">has_pdflatex</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">SubprocessError</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">has_pdflatex</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_pdflatex</span>
+
+
+<span class="k">class</span> <span class="nc">_HasPdfToCairoWrapper</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Lazily detect the presence of the ``pdftocairo`` command.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">has_pdftocairo</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_pdftocairo</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                    <span class="p">[</span><span class="s2">&quot;pdftocairo&quot;</span><span class="p">,</span> <span class="s2">&quot;-v&quot;</span><span class="p">],</span>
+                    <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+                    <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">has_pdftocairo</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">SubprocessError</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">has_pdftocairo</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_pdftocairo</span>
+
+
+<span class="n">HAS_PDFLATEX</span> <span class="o">=</span> <span class="n">_HasPdfLatexWrapper</span><span class="p">()</span>
+<span class="n">HAS_PDFTOCAIRO</span> <span class="o">=</span> <span class="n">_HasPdfToCairoWrapper</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="circuit_drawer"><a class="viewcode-back" href="../../../stubs/qiskit.visualization.circuit_drawer.html#qiskit.visualization.circuit_drawer">[документация]</a><span class="k">def</span> <span class="nf">circuit_drawer</span><span class="p">(</span>
@@ -640,6 +681,9 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        TextDrawing: An instance that, when printed, draws the circuit in ascii art.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        VisualizationError: When the filename extenstion is not .txt.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">qubits</span><span class="p">,</span> <span class="n">clbits</span><span class="p">,</span> <span class="n">nodes</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">_get_layered_instructions</span><span class="p">(</span>
         <span class="n">circuit</span><span class="p">,</span> <span class="n">reverse_bits</span><span class="o">=</span><span class="n">reverse_bits</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="n">justify</span><span class="p">,</span> <span class="n">idle_wires</span><span class="o">=</span><span class="n">idle_wires</span>
@@ -717,10 +761,9 @@
 <span class="sd">        PIL.Image: an in-memory representation of the circuit diagram</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        OSError: usually indicates that ```pdflatex``` or ```pdftocairo``` is</span>
-<span class="sd">                 missing.</span>
-<span class="sd">        CalledProcessError: usually points to errors during diagram creation.</span>
-<span class="sd">        MissingOptionalLibraryError: if pillow is not installed</span>
+<span class="sd">        MissingOptionalLibraryError: if pillow, pdflatex, or poppler are not installed</span>
+<span class="sd">        VisualizationError: if one of the conversion utilities failed for some internal or</span>
+<span class="sd">            file-access reason.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">tmpfilename</span> <span class="o">=</span> <span class="s2">&quot;circuit&quot;</span>
     <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdirname</span><span class="p">:</span>
@@ -738,8 +781,25 @@
             <span class="n">initial_state</span><span class="o">=</span><span class="n">initial_state</span><span class="p">,</span>
             <span class="n">cregbundle</span><span class="o">=</span><span class="n">cregbundle</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">HAS_PDFLATEX</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
+                <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;pdflatex&quot;</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;LaTeX circuit drawing&quot;</span><span class="p">,</span>
+                <span class="n">msg</span><span class="o">=</span><span class="s2">&quot;You will likely need to install a full LaTeX distribution for your system&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">HAS_PDFTOCAIRO</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
+                <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;pdftocairo&quot;</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;LaTeX circuit drawing&quot;</span><span class="p">,</span>
+                <span class="n">msg</span><span class="o">=</span><span class="s2">&quot;This is part of the &#39;poppler&#39; set of PDF utilities&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">HAS_PIL</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
+                <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;pillow&quot;</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;LaTeX circuit drawing&quot;</span><span class="p">,</span>
+                <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install pillow&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-
             <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
                 <span class="p">[</span>
                     <span class="s2">&quot;pdflatex&quot;</span><span class="p">,</span>
@@ -751,50 +811,42 @@
                 <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
                 <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">ex</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">ENOENT</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="s2">&quot;WARNING: Unable to compile latex. &quot;</span>
-                    <span class="s2">&quot;Is `pdflatex` installed? &quot;</span>
-                    <span class="s2">&quot;Skipping latex circuit drawing...&quot;</span>
-                <span class="p">)</span>
-            <span class="k">raise</span>
-        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="c1"># OSError should generally not occur, because it&#39;s usually only triggered if `pdflatex`</span>
+            <span class="c1"># doesn&#39;t exist as a command, but we&#39;ve already checked that.</span>
+            <span class="k">raise</span> <span class="n">VisualizationError</span><span class="p">(</span><span class="s2">&quot;`pdflatex` command could not be run.&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;latex_error.log&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">error_file</span><span class="p">:</span>
-                <span class="n">error_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ex</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+                <span class="n">error_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;WARNING Unable to compile latex. &quot;</span>
-                <span class="s2">&quot;The output from the pdflatex command can &quot;</span>
-                <span class="s2">&quot;be found in latex_error.log&quot;</span>
+                <span class="s2">&quot;Unable to compile LaTeX. Perhaps you are missing the `qcircuit` package.&quot;</span>
+                <span class="s2">&quot; The output from the `pdflatex` command is in `latex_error.log`.&quot;</span>
             <span class="p">)</span>
-            <span class="k">raise</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">HAS_PIL</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-                    <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;pillow&quot;</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;latex drawer&quot;</span><span class="p">,</span>
-                    <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install pillow&quot;</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">base</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdirname</span><span class="p">,</span> <span class="n">tmpfilename</span><span class="p">)</span>
-                <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                    <span class="p">[</span><span class="s2">&quot;pdftocairo&quot;</span><span class="p">,</span> <span class="s2">&quot;-singlefile&quot;</span><span class="p">,</span> <span class="s2">&quot;-png&quot;</span><span class="p">,</span> <span class="s2">&quot;-q&quot;</span><span class="p">,</span> <span class="n">base</span> <span class="o">+</span> <span class="s2">&quot;.pdf&quot;</span><span class="p">,</span> <span class="n">base</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
-                <span class="p">)</span>
-                <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">base</span> <span class="o">+</span> <span class="s2">&quot;.png&quot;</span><span class="p">)</span>
-                <span class="n">image</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">_trim</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">base</span> <span class="o">+</span> <span class="s2">&quot;.png&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.pdf&quot;</span><span class="p">):</span>
-                        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">base</span> <span class="o">+</span> <span class="s2">&quot;.pdf&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">image</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;PNG&quot;</span><span class="p">)</span>
-            <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="s2">&quot;WARNING: Unable to convert pdf to image. &quot;</span>
-                    <span class="s2">&quot;Is `poppler` installed? &quot;</span>
-                    <span class="s2">&quot;Skipping circuit drawing...&quot;</span>
-                <span class="p">)</span>
-                <span class="k">raise</span>
+            <span class="k">raise</span> <span class="n">VisualizationError</span><span class="p">(</span>
+                <span class="s2">&quot;`pdflatex` call did not succeed: see `latex_error.log`.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdirname</span><span class="p">,</span> <span class="n">tmpfilename</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="p">[</span><span class="s2">&quot;pdftocairo&quot;</span><span class="p">,</span> <span class="s2">&quot;-singlefile&quot;</span><span class="p">,</span> <span class="s2">&quot;-png&quot;</span><span class="p">,</span> <span class="s2">&quot;-q&quot;</span><span class="p">,</span> <span class="n">base</span> <span class="o">+</span> <span class="s2">&quot;.pdf&quot;</span><span class="p">,</span> <span class="n">base</span><span class="p">],</span>
+                <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;`pdftocairo` failed to produce an image.&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">VisualizationError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">base</span> <span class="o">+</span> <span class="s2">&quot;.png&quot;</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">_trim</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.pdf&quot;</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">base</span> <span class="o">+</span> <span class="s2">&quot;.pdf&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">image</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">VisualizationError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Pillow could not write the image file &#39;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+                    <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
         <span class="k">return</span> <span class="n">image</span>
 
 
@@ -949,6 +1001,7 @@
         <span class="n">global_phase</span><span class="o">=</span><span class="n">global_phase</span><span class="p">,</span>
         <span class="n">qregs</span><span class="o">=</span><span class="n">circuit</span><span class="o">.</span><span class="n">qregs</span><span class="p">,</span>
         <span class="n">cregs</span><span class="o">=</span><span class="n">circuit</span><span class="o">.</span><span class="n">cregs</span><span class="p">,</span>
+        <span class="n">calibrations</span><span class="o">=</span><span class="n">circuit</span><span class="o">.</span><span class="n">calibrations</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">qcd</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
 </pre></div>
@@ -968,7 +1021,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Обновлено: 2021/11/19.
+      Обновлено: 2021/12/07.
 
     </p>
   </div>

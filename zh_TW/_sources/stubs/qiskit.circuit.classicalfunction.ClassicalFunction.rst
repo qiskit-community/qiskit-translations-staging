@@ -39,6 +39,7 @@
    .. rubric:: Attributes
 
    .. autoattribute:: args
+   .. autoattribute:: condition_bits
    .. autoattribute:: decompositions
    .. autoattribute:: definition
    .. autoattribute:: duration

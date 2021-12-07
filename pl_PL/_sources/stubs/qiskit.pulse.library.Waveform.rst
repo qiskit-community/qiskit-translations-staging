@@ -1,4 +1,4 @@
-Waveform
+﻿Waveform
 ========
 
 .. currentmodule:: qiskit.pulse.library
@@ -13,7 +13,6 @@ Waveform
       :nosignatures:
       :toctree: ../stubs/
 
-      ~Waveform.assign_parameters
       ~Waveform.draw
       ~Waveform.is_parameterized
 

@@ -39,4 +39,3 @@
    .. autoattribute:: num_qubits
    .. autoattribute:: qargs
    .. autoattribute:: rtol
-   .. autoattribute:: settings

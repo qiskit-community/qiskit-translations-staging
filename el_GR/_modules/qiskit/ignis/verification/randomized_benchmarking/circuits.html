@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.ignis.verification.randomized_benchmarking.circuits &mdash; Τεκμηρίωση του Qiskit - 0.32.0</title>
+  <title>qiskit.ignis.verification.randomized_benchmarking.circuits &mdash; Τεκμηρίωση του Qiskit - 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Αντιμετώπιση προβλημάτων</span></p>
 <ul>
@@ -359,10 +354,9 @@
 <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">RandomState</span>
 <span class="kn">import</span> <span class="nn">qiskit</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span><span class="p">,</span> <span class="n">Instruction</span>
-
+<span class="kn">from</span> <span class="nn">qiskit.quantum_info</span> <span class="kn">import</span> <span class="n">Clifford</span><span class="p">,</span> <span class="n">CNOTDihedral</span>
 
 <span class="kn">from</span> <span class="nn">.rb_groups</span> <span class="kn">import</span> <span class="n">RBgroup</span>
-<span class="kn">from</span> <span class="nn">.dihedral</span> <span class="kn">import</span> <span class="n">CNOTDihedral</span>
 
 
 <span class="k">def</span> <span class="nf">handle_length_multiplier</span><span class="p">(</span><span class="n">length_multiplier</span><span class="p">,</span> <span class="n">len_pattern</span><span class="p">,</span>
@@ -484,18 +478,17 @@
 
     <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">interleaved_elem</span><span class="p">:</span>
         <span class="n">group_elem</span> <span class="o">=</span> <span class="n">elem</span>
+        <span class="n">group_gates_type</span> <span class="o">=</span> <span class="n">rb_group</span><span class="o">.</span><span class="n">group_gates_type</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="p">(</span><span class="n">QuantumCircuit</span><span class="p">,</span> <span class="n">Instruction</span><span class="p">)):</span>
-            <span class="n">num_qubits</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">num_qubits</span>
-            <span class="n">group_elem</span> <span class="o">=</span> <span class="n">rb_group</span><span class="o">.</span><span class="n">iden</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">)</span>
-            <span class="n">group_elem</span> <span class="o">=</span> <span class="n">group_elem</span><span class="o">.</span><span class="n">from_circuit</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">group_elem</span><span class="p">,</span> <span class="n">qiskit</span><span class="o">.</span><span class="n">quantum_info</span><span class="o">.</span><span class="n">operators</span><span class="o">.</span><span class="n">symplectic</span><span class="o">.</span><span class="n">clifford</span><span class="o">.</span><span class="n">Clifford</span><span class="p">)</span>
+            <span class="n">group_elem</span> <span class="o">=</span> <span class="n">rb_group</span><span class="o">.</span><span class="n">_rb_group</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">group_elem</span><span class="p">,</span> <span class="n">Clifford</span><span class="p">)</span>
                 <span class="ow">and</span> <span class="n">group_gates_type</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> \
                 <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">group_elem</span><span class="p">,</span> <span class="n">CNOTDihedral</span><span class="p">)</span> <span class="ow">and</span> <span class="n">group_gates_type</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid interleaved element type.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">group_elem</span><span class="p">,</span> <span class="n">QuantumCircuit</span><span class="p">)</span> <span class="ow">and</span> \
                 <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">group_elem</span><span class="p">,</span>
-                               <span class="n">qiskit</span><span class="o">.</span><span class="n">quantum_info</span><span class="o">.</span><span class="n">operators</span><span class="o">.</span><span class="n">symplectic</span><span class="o">.</span><span class="n">clifford</span><span class="o">.</span><span class="n">Clifford</span><span class="p">)</span> \
+                               <span class="n">Clifford</span><span class="p">)</span> \
                 <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">group_elem</span><span class="p">,</span> <span class="n">CNOTDihedral</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid interleaved element type. &quot;</span>
                              <span class="s2">&quot;interleaved_elem should be a list of QuantumCircuit,&quot;</span>
@@ -543,7 +536,7 @@
                                 <span class="n">interleaved_elem</span><span class="p">:</span>
                                 <span class="n">Optional</span><span class="p">[</span>
                                     <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">QuantumCircuit</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Instruction</span><span class="p">],</span>
-                                          <span class="n">List</span><span class="p">[</span><span class="n">qiskit</span><span class="o">.</span><span class="n">quantum_info</span><span class="o">.</span><span class="n">operators</span><span class="o">.</span><span class="n">symplectic</span><span class="o">.</span><span class="n">Clifford</span><span class="p">],</span>
+                                          <span class="n">List</span><span class="p">[</span><span class="n">Clifford</span><span class="p">],</span>
                                           <span class="n">List</span><span class="p">[</span><span class="n">CNOTDihedral</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                                 <span class="n">keep_original_interleaved_elem</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                                 <span class="n">is_purity</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -612,8 +605,8 @@
 <span class="sd">            lists in ``rb_pattern``.</span>
 
 <span class="sd">        keep_original_interleaved_elem: whether to keep the original interleaved</span>
-<span class="sd">        element as it is when adding it to the RB circuits or to transform</span>
-<span class="sd">        it to a standard representation via group elements</span>
+<span class="sd">            element as it is when adding it to the RB circuits or to transform</span>
+<span class="sd">            it to a standard representation via group elements</span>
 
 <span class="sd">        is_purity: ``True`` only for purity randomized benchmarking</span>
 <span class="sd">            (default is ``False``).</span>
@@ -1023,7 +1016,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Τελευταία ενημέρωση στις 2021/11/19.
+      Τελευταία ενημέρωση στις 2021/12/07.
 
     </p>
   </div>

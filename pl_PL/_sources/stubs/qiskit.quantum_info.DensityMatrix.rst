@@ -48,3 +48,4 @@
    .. autoattribute:: dim
    .. autoattribute:: num_qubits
    .. autoattribute:: rtol
+   .. autoattribute:: settings

@@ -17,6 +17,7 @@ SPSA
       ~SPSA.estimate_stddev
       ~SPSA.get_support_level
       ~SPSA.gradient_num_diff
+      ~SPSA.minimize
       ~SPSA.optimize
       ~SPSA.print_options
       ~SPSA.set_max_evals_grouped

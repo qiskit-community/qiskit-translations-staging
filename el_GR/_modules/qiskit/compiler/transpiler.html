@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.compiler.transpiler &mdash; Τεκμηρίωση του Qiskit - 0.32.0</title>
+  <title>qiskit.compiler.transpiler &mdash; Τεκμηρίωση του Qiskit - 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Αντιμετώπιση προβλημάτων</span></p>
 <ul>
@@ -344,10 +339,11 @@
 <span class="c1"># that they have been altered from the originals.</span>
 
 <span class="sd">&quot;&quot;&quot;Circuit transpile function&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterable</span>
 
 <span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">user_config</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.quantumcircuit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
@@ -358,7 +354,7 @@
 <span class="kn">from</span> <span class="nn">qiskit.providers.backend</span> <span class="kn">import</span> <span class="n">Backend</span>
 <span class="kn">from</span> <span class="nn">qiskit.providers.models</span> <span class="kn">import</span> <span class="n">BackendProperties</span>
 <span class="kn">from</span> <span class="nn">qiskit.providers.models.backendproperties</span> <span class="kn">import</span> <span class="n">Gate</span>
-<span class="kn">from</span> <span class="nn">qiskit.pulse</span> <span class="kn">import</span> <span class="n">Schedule</span>
+<span class="kn">from</span> <span class="nn">qiskit.pulse</span> <span class="kn">import</span> <span class="n">Schedule</span><span class="p">,</span> <span class="n">InstructionScheduleMap</span>
 <span class="kn">from</span> <span class="nn">qiskit.tools.parallel</span> <span class="kn">import</span> <span class="n">parallel_map</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler</span> <span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">CouplingMap</span><span class="p">,</span> <span class="n">PropertySet</span><span class="p">,</span> <span class="n">PassManager</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.basepasses</span> <span class="kn">import</span> <span class="n">BasePass</span>
@@ -366,13 +362,14 @@
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.instruction_durations</span> <span class="kn">import</span> <span class="n">InstructionDurations</span><span class="p">,</span> <span class="n">InstructionDurationsType</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.passes</span> <span class="kn">import</span> <span class="n">ApplyLayout</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.passmanager_config</span> <span class="kn">import</span> <span class="n">PassManagerConfig</span>
-<span class="kn">from</span> <span class="nn">qiskit.transpiler.timing_constraints</span> <span class="kn">import</span> <span class="n">TimingConstraints</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.preset_passmanagers</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">level_0_pass_manager</span><span class="p">,</span>
     <span class="n">level_1_pass_manager</span><span class="p">,</span>
     <span class="n">level_2_pass_manager</span><span class="p">,</span>
     <span class="n">level_3_pass_manager</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">qiskit.transpiler.timing_constraints</span> <span class="kn">import</span> <span class="n">TimingConstraints</span>
+<span class="kn">from</span> <span class="nn">qiskit.transpiler.target</span> <span class="kn">import</span> <span class="n">Target</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -381,6 +378,7 @@
     <span class="n">circuits</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">QuantumCircuit</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">QuantumCircuit</span><span class="p">]],</span>
     <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Backend</span><span class="p">,</span> <span class="n">BaseBackend</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">basis_gates</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">inst_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">InstructionScheduleMap</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">coupling_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">CouplingMap</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">backend_properties</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BackendProperties</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">initial_layout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Layout</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -397,6 +395,9 @@
     <span class="n">pass_manager</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PassManager</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">BasePass</span><span class="p">,</span> <span class="n">DAGCircuit</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">PropertySet</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">output_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">unitary_synthesis_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+    <span class="n">unitary_synthesis_plugin_config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">Target</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">QuantumCircuit</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">QuantumCircuit</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot;Transpile one or more circuits, according to some desired transpilation targets.</span>
 
@@ -418,6 +419,12 @@
 <span class="sd">                circuit may be run on any backend as long as it is compatible.</span>
 <span class="sd">        basis_gates: List of basis gate names to unroll to</span>
 <span class="sd">            (e.g: ``[&#39;u1&#39;, &#39;u2&#39;, &#39;u3&#39;, &#39;cx&#39;]``). If ``None``, do not unroll.</span>
+<span class="sd">        inst_map: Mapping of unrolled gates to pulse schedules. If this is not provided,</span>
+<span class="sd">            transpiler tries to get from the backend. If any user defined calibration</span>
+<span class="sd">            is found in the map and this is used in a circuit, transpiler attaches</span>
+<span class="sd">            the custom gate definition to the circuit. This enables one to flexibly</span>
+<span class="sd">            override the low-level instruction implementation. This feature is available</span>
+<span class="sd">            iff the backend supports the pulse gate experiment.</span>
 <span class="sd">        coupling_map: Coupling map (perhaps custom) to target in mapping.</span>
 <span class="sd">            Multiple formats are supported:</span>
 
@@ -469,6 +476,7 @@
 <span class="sd">            in the ground state when possible. (alias: ``&#39;alap&#39;``)</span>
 <span class="sd">            If ``None``, no scheduling will be done.</span>
 <span class="sd">        instruction_durations: Durations of instructions.</span>
+<span class="sd">            Applicable only if scheduling_method is specified.</span>
 <span class="sd">            The gate lengths defined in ``backend.properties`` are used as default.</span>
 <span class="sd">            They are overwritten if this ``instruction_durations`` is specified.</span>
 <span class="sd">            The format of ``instruction_durations`` must be as follows.</span>
@@ -540,7 +548,22 @@
 
 <span class="sd">        output_name: A list with strings to identify the output circuits. The length of</span>
 <span class="sd">            the list should be exactly the length of the ``circuits`` parameter.</span>
-
+<span class="sd">        unitary_synthesis_method (str): The name of the unitary synthesis</span>
+<span class="sd">            method to use. By default &#39;default&#39; is used, which is the only</span>
+<span class="sd">            method included with qiskit. If you have installed any unitary</span>
+<span class="sd">            synthesis plugins you can use the name exported by the plugin.</span>
+<span class="sd">        unitary_synthesis_plugin_config: An optional configuration dictionary</span>
+<span class="sd">            that will be passed directly to the unitary synthesis plugin. By</span>
+<span class="sd">            default this setting will have no effect as the default unitary</span>
+<span class="sd">            synthesis method does not take custom configuration. This should</span>
+<span class="sd">            only be necessary when a unitary synthesis plugin is specified with</span>
+<span class="sd">            the ``unitary_synthesis`` argument. As this is custom for each</span>
+<span class="sd">            unitary synthesis plugin refer to the plugin documentation for how</span>
+<span class="sd">            to use this option.</span>
+<span class="sd">        target: A backend transpiler target. Normally this is specified as part of</span>
+<span class="sd">            the ``backend`` argument, but if you have manually constructed a</span>
+<span class="sd">            :class:`~qiskit.transpiler.Target` object you can specify it manually here.</span>
+<span class="sd">            This will override the target from ``backend``.</span>
 <span class="sd">    Returns:</span>
 <span class="sd">        The transpiled circuit(s).</span>
 
@@ -550,6 +573,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">arg_circuits_list</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuits</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
     <span class="n">circuits</span> <span class="o">=</span> <span class="n">circuits</span> <span class="k">if</span> <span class="n">arg_circuits_list</span> <span class="k">else</span> <span class="p">[</span><span class="n">circuits</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">circuits</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
 
     <span class="c1"># transpiling schedules is not supported yet.</span>
     <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
@@ -574,7 +600,9 @@
             <span class="n">routing_method</span><span class="o">=</span><span class="n">routing_method</span><span class="p">,</span>
             <span class="n">translation_method</span><span class="o">=</span><span class="n">translation_method</span><span class="p">,</span>
             <span class="n">approximation_degree</span><span class="o">=</span><span class="n">approximation_degree</span><span class="p">,</span>
+            <span class="n">unitary_synthesis_method</span><span class="o">=</span><span class="n">unitary_synthesis_method</span><span class="p">,</span>
             <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -591,7 +619,12 @@
         <span class="n">config</span> <span class="o">=</span> <span class="n">user_config</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
         <span class="n">optimization_level</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;transpile_optimization_level&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">scheduling_method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">backend</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">instruction_durations</span><span class="p">:</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">scheduling_method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="n">backend</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="ow">not</span> <span class="n">instruction_durations</span>
+    <span class="p">):</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
             <span class="s2">&quot;When scheduling circuits without backend,&quot;</span>
             <span class="s2">&quot; &#39;instruction_durations&#39; should be usually provided.&quot;</span><span class="p">,</span>
@@ -603,6 +636,7 @@
         <span class="n">circuits</span><span class="p">,</span>
         <span class="n">backend</span><span class="p">,</span>
         <span class="n">basis_gates</span><span class="p">,</span>
+        <span class="n">inst_map</span><span class="p">,</span>
         <span class="n">coupling_map</span><span class="p">,</span>
         <span class="n">backend_properties</span><span class="p">,</span>
         <span class="n">initial_layout</span><span class="p">,</span>
@@ -618,6 +652,9 @@
         <span class="n">callback</span><span class="p">,</span>
         <span class="n">output_name</span><span class="p">,</span>
         <span class="n">timing_constraints</span><span class="p">,</span>
+        <span class="n">unitary_synthesis_method</span><span class="p">,</span>
+        <span class="n">unitary_synthesis_plugin_config</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">_check_circuits_coupling_map</span><span class="p">(</span><span class="n">circuits</span><span class="p">,</span> <span class="n">transpile_args</span><span class="p">,</span> <span class="n">backend</span><span class="p">)</span>
@@ -656,8 +693,15 @@
             <span class="n">max_qubits</span> <span class="o">=</span> <span class="n">parsed_coupling_map</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
 
         <span class="c1"># If coupling_map is None, the limit might be in the backend (like in 1Q devices)</span>
-        <span class="k">elif</span> <span class="n">backend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span><span class="o">.</span><span class="n">simulator</span><span class="p">:</span>
-            <span class="n">max_qubits</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span><span class="o">.</span><span class="n">n_qubits</span>
+        <span class="k">elif</span> <span class="n">backend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">backend_version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend_version</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">backend_version</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">backend_version</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span><span class="o">.</span><span class="n">simulator</span><span class="p">:</span>
+                    <span class="n">max_qubits</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span><span class="o">.</span><span class="n">n_qubits</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">max_qubits</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">num_qubits</span>
 
         <span class="k">if</span> <span class="n">max_qubits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">num_qubits</span> <span class="o">&gt;</span> <span class="n">max_qubits</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
@@ -774,7 +818,7 @@
     <span class="k">for</span> <span class="n">virtual</span><span class="p">,</span> <span class="n">physical</span> <span class="ow">in</span> <span class="n">layout</span><span class="o">.</span><span class="n">get_virtual_bits</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">faulty_qubits_map</span><span class="p">[</span><span class="n">physical</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
-                <span class="s2">&quot;The initial_layout parameter refers to faulty&quot;</span> <span class="s2">&quot; or disconnected qubits&quot;</span>
+                <span class="s2">&quot;The initial_layout parameter refers to faulty or disconnected qubits&quot;</span>
             <span class="p">)</span>
         <span class="n">new_layout</span><span class="p">[</span><span class="n">virtual</span><span class="p">]</span> <span class="o">=</span> <span class="n">faulty_qubits_map</span><span class="p">[</span><span class="n">physical</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">new_layout</span>
@@ -784,6 +828,7 @@
     <span class="n">circuits</span><span class="p">,</span>
     <span class="n">backend</span><span class="p">,</span>
     <span class="n">basis_gates</span><span class="p">,</span>
+    <span class="n">inst_map</span><span class="p">,</span>
     <span class="n">coupling_map</span><span class="p">,</span>
     <span class="n">backend_properties</span><span class="p">,</span>
     <span class="n">initial_layout</span><span class="p">,</span>
@@ -799,6 +844,9 @@
     <span class="n">callback</span><span class="p">,</span>
     <span class="n">output_name</span><span class="p">,</span>
     <span class="n">timing_constraints</span><span class="p">,</span>
+    <span class="n">unitary_synthesis_method</span><span class="p">,</span>
+    <span class="n">unitary_synthesis_plugin_config</span><span class="p">,</span>
+    <span class="n">target</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Resolve the various types of args allowed to the transpile() function through</span>
 <span class="sd">    duck typing, overriding args, etc. Refer to the transpile() docstring for details on</span>
@@ -820,7 +868,26 @@
     <span class="c1"># number of circuits. If single, duplicate to create a list of that size.</span>
     <span class="n">num_circuits</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">circuits</span><span class="p">)</span>
 
+    <span class="c1"># If a target is specified have it override any implicit selections from a backend</span>
+    <span class="c1"># but if an argument is explicitly passed use that instead of the target version</span>
+    <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">coupling_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">coupling_map</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">coupling_map</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">basis_gates</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">basis_gates</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">operation_names</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">instruction_durations</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">instruction_durations</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">durations</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">inst_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">inst_map</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">instruction_schedule_map</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">dt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">dt</span>
+        <span class="k">if</span> <span class="n">timing_constraints</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">timing_constraints</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">timing_constraints</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">backend_properties</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">backend_properties</span> <span class="o">=</span> <span class="n">_target_to_backend_properties</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+
     <span class="n">basis_gates</span> <span class="o">=</span> <span class="n">_parse_basis_gates</span><span class="p">(</span><span class="n">basis_gates</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span> <span class="n">circuits</span><span class="p">)</span>
+    <span class="n">inst_map</span> <span class="o">=</span> <span class="n">_parse_inst_map</span><span class="p">(</span><span class="n">inst_map</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">)</span>
     <span class="n">faulty_qubits_map</span> <span class="o">=</span> <span class="n">_parse_faulty_qubits_map</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">)</span>
     <span class="n">coupling_map</span> <span class="o">=</span> <span class="n">_parse_coupling_map</span><span class="p">(</span><span class="n">coupling_map</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">)</span>
     <span class="n">backend_properties</span> <span class="o">=</span> <span class="n">_parse_backend_properties</span><span class="p">(</span><span class="n">backend_properties</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">)</span>
@@ -830,6 +897,12 @@
     <span class="n">routing_method</span> <span class="o">=</span> <span class="n">_parse_routing_method</span><span class="p">(</span><span class="n">routing_method</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">)</span>
     <span class="n">translation_method</span> <span class="o">=</span> <span class="n">_parse_translation_method</span><span class="p">(</span><span class="n">translation_method</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">)</span>
     <span class="n">approximation_degree</span> <span class="o">=</span> <span class="n">_parse_approximation_degree</span><span class="p">(</span><span class="n">approximation_degree</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">)</span>
+    <span class="n">unitary_synthesis_method</span> <span class="o">=</span> <span class="n">_parse_unitary_synthesis_method</span><span class="p">(</span>
+        <span class="n">unitary_synthesis_method</span><span class="p">,</span> <span class="n">num_circuits</span>
+    <span class="p">)</span>
+    <span class="n">unitary_synthesis_plugin_config</span> <span class="o">=</span> <span class="n">_parse_unitary_plugin_config</span><span class="p">(</span>
+        <span class="n">unitary_synthesis_plugin_config</span><span class="p">,</span> <span class="n">num_circuits</span>
+    <span class="p">)</span>
     <span class="n">seed_transpiler</span> <span class="o">=</span> <span class="n">_parse_seed_transpiler</span><span class="p">(</span><span class="n">seed_transpiler</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">)</span>
     <span class="n">optimization_level</span> <span class="o">=</span> <span class="n">_parse_optimization_level</span><span class="p">(</span><span class="n">optimization_level</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">)</span>
     <span class="n">output_name</span> <span class="o">=</span> <span class="n">_parse_output_name</span><span class="p">(</span><span class="n">output_name</span><span class="p">,</span> <span class="n">circuits</span><span class="p">)</span>
@@ -837,6 +910,7 @@
     <span class="n">durations</span> <span class="o">=</span> <span class="n">_parse_instruction_durations</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">instruction_durations</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">circuits</span><span class="p">)</span>
     <span class="n">scheduling_method</span> <span class="o">=</span> <span class="n">_parse_scheduling_method</span><span class="p">(</span><span class="n">scheduling_method</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">)</span>
     <span class="n">timing_constraints</span> <span class="o">=</span> <span class="n">_parse_timing_constraints</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">timing_constraints</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">)</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">_parse_target</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">scheduling_method</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">d</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">durations</span><span class="p">):</span>
         <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
             <span class="s2">&quot;Transpiling a circuit with a scheduling method&quot;</span>
@@ -844,45 +918,55 @@
         <span class="p">)</span>
 
     <span class="n">list_transpile_args</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">args</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-        <span class="n">basis_gates</span><span class="p">,</span>
-        <span class="n">coupling_map</span><span class="p">,</span>
-        <span class="n">backend_properties</span><span class="p">,</span>
-        <span class="n">initial_layout</span><span class="p">,</span>
-        <span class="n">layout_method</span><span class="p">,</span>
-        <span class="n">routing_method</span><span class="p">,</span>
-        <span class="n">translation_method</span><span class="p">,</span>
-        <span class="n">scheduling_method</span><span class="p">,</span>
-        <span class="n">durations</span><span class="p">,</span>
-        <span class="n">approximation_degree</span><span class="p">,</span>
-        <span class="n">timing_constraints</span><span class="p">,</span>
-        <span class="n">seed_transpiler</span><span class="p">,</span>
-        <span class="n">optimization_level</span><span class="p">,</span>
-        <span class="n">output_name</span><span class="p">,</span>
-        <span class="n">callback</span><span class="p">,</span>
-        <span class="n">backend_num_qubits</span><span class="p">,</span>
-        <span class="n">faulty_qubits_map</span><span class="p">,</span>
+    <span class="k">for</span> <span class="n">kwargs</span> <span class="ow">in</span> <span class="n">_zip_dict</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;basis_gates&quot;</span><span class="p">:</span> <span class="n">basis_gates</span><span class="p">,</span>
+            <span class="s2">&quot;inst_map&quot;</span><span class="p">:</span> <span class="n">inst_map</span><span class="p">,</span>
+            <span class="s2">&quot;coupling_map&quot;</span><span class="p">:</span> <span class="n">coupling_map</span><span class="p">,</span>
+            <span class="s2">&quot;backend_properties&quot;</span><span class="p">:</span> <span class="n">backend_properties</span><span class="p">,</span>
+            <span class="s2">&quot;initial_layout&quot;</span><span class="p">:</span> <span class="n">initial_layout</span><span class="p">,</span>
+            <span class="s2">&quot;layout_method&quot;</span><span class="p">:</span> <span class="n">layout_method</span><span class="p">,</span>
+            <span class="s2">&quot;routing_method&quot;</span><span class="p">:</span> <span class="n">routing_method</span><span class="p">,</span>
+            <span class="s2">&quot;translation_method&quot;</span><span class="p">:</span> <span class="n">translation_method</span><span class="p">,</span>
+            <span class="s2">&quot;scheduling_method&quot;</span><span class="p">:</span> <span class="n">scheduling_method</span><span class="p">,</span>
+            <span class="s2">&quot;durations&quot;</span><span class="p">:</span> <span class="n">durations</span><span class="p">,</span>
+            <span class="s2">&quot;approximation_degree&quot;</span><span class="p">:</span> <span class="n">approximation_degree</span><span class="p">,</span>
+            <span class="s2">&quot;timing_constraints&quot;</span><span class="p">:</span> <span class="n">timing_constraints</span><span class="p">,</span>
+            <span class="s2">&quot;seed_transpiler&quot;</span><span class="p">:</span> <span class="n">seed_transpiler</span><span class="p">,</span>
+            <span class="s2">&quot;optimization_level&quot;</span><span class="p">:</span> <span class="n">optimization_level</span><span class="p">,</span>
+            <span class="s2">&quot;output_name&quot;</span><span class="p">:</span> <span class="n">output_name</span><span class="p">,</span>
+            <span class="s2">&quot;callback&quot;</span><span class="p">:</span> <span class="n">callback</span><span class="p">,</span>
+            <span class="s2">&quot;backend_num_qubits&quot;</span><span class="p">:</span> <span class="n">backend_num_qubits</span><span class="p">,</span>
+            <span class="s2">&quot;faulty_qubits_map&quot;</span><span class="p">:</span> <span class="n">faulty_qubits_map</span><span class="p">,</span>
+            <span class="s2">&quot;unitary_synthesis_method&quot;</span><span class="p">:</span> <span class="n">unitary_synthesis_method</span><span class="p">,</span>
+            <span class="s2">&quot;unitary_synthesis_plugin_config&quot;</span><span class="p">:</span> <span class="n">unitary_synthesis_plugin_config</span><span class="p">,</span>
+            <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">target</span><span class="p">,</span>
+        <span class="p">}</span>
     <span class="p">):</span>
         <span class="n">transpile_args</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;pass_manager_config&quot;</span><span class="p">:</span> <span class="n">PassManagerConfig</span><span class="p">(</span>
-                <span class="n">basis_gates</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                <span class="n">coupling_map</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                <span class="n">backend_properties</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
-                <span class="n">initial_layout</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
-                <span class="n">layout_method</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
-                <span class="n">routing_method</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span>
-                <span class="n">translation_method</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span>
-                <span class="n">scheduling_method</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span>
-                <span class="n">instruction_durations</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span>
-                <span class="n">approximation_degree</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span>
-                <span class="n">timing_constraints</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span>
-                <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">11</span><span class="p">],</span>
+                <span class="n">basis_gates</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;basis_gates&quot;</span><span class="p">],</span>
+                <span class="n">inst_map</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;inst_map&quot;</span><span class="p">],</span>
+                <span class="n">coupling_map</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;coupling_map&quot;</span><span class="p">],</span>
+                <span class="n">backend_properties</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;backend_properties&quot;</span><span class="p">],</span>
+                <span class="n">initial_layout</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;initial_layout&quot;</span><span class="p">],</span>
+                <span class="n">layout_method</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;layout_method&quot;</span><span class="p">],</span>
+                <span class="n">routing_method</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;routing_method&quot;</span><span class="p">],</span>
+                <span class="n">translation_method</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;translation_method&quot;</span><span class="p">],</span>
+                <span class="n">scheduling_method</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;scheduling_method&quot;</span><span class="p">],</span>
+                <span class="n">instruction_durations</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;durations&quot;</span><span class="p">],</span>
+                <span class="n">approximation_degree</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;approximation_degree&quot;</span><span class="p">],</span>
+                <span class="n">timing_constraints</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;timing_constraints&quot;</span><span class="p">],</span>
+                <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;seed_transpiler&quot;</span><span class="p">],</span>
+                <span class="n">unitary_synthesis_method</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;unitary_synthesis_method&quot;</span><span class="p">],</span>
+                <span class="n">unitary_synthesis_plugin_config</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;unitary_synthesis_plugin_config&quot;</span><span class="p">],</span>
+                <span class="n">target</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">],</span>
             <span class="p">),</span>
-            <span class="s2">&quot;optimization_level&quot;</span><span class="p">:</span> <span class="n">args</span><span class="p">[</span><span class="mi">12</span><span class="p">],</span>
-            <span class="s2">&quot;output_name&quot;</span><span class="p">:</span> <span class="n">args</span><span class="p">[</span><span class="mi">13</span><span class="p">],</span>
-            <span class="s2">&quot;callback&quot;</span><span class="p">:</span> <span class="n">args</span><span class="p">[</span><span class="mi">14</span><span class="p">],</span>
-            <span class="s2">&quot;backend_num_qubits&quot;</span><span class="p">:</span> <span class="n">args</span><span class="p">[</span><span class="mi">15</span><span class="p">],</span>
-            <span class="s2">&quot;faulty_qubits_map&quot;</span><span class="p">:</span> <span class="n">args</span><span class="p">[</span><span class="mi">16</span><span class="p">],</span>
+            <span class="s2">&quot;optimization_level&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;optimization_level&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;output_name&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;output_name&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;callback&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;callback&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;backend_num_qubits&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;backend_num_qubits&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;faulty_qubits_map&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;faulty_qubits_map&quot;</span><span class="p">],</span>
         <span class="p">}</span>
         <span class="n">list_transpile_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transpile_args</span><span class="p">)</span>
 
@@ -894,6 +978,11 @@
 <span class="sd">    from working qubit in the backend to dummy qubits that are consecutive and connected.&quot;&quot;&quot;</span>
     <span class="n">faulty_qubits_map</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">backend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">backend_version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend_version</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">backend_version</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">backend_version</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">backend</span><span class="o">.</span><span class="n">properties</span><span class="p">():</span>
             <span class="n">faulty_qubits</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">properties</span><span class="p">()</span><span class="o">.</span><span class="n">faulty_qubits</span><span class="p">()</span>
             <span class="n">faulty_edges</span> <span class="o">=</span> <span class="p">[</span><span class="n">gates</span><span class="o">.</span><span class="n">qubits</span> <span class="k">for</span> <span class="n">gates</span> <span class="ow">in</span> <span class="n">backend</span><span class="o">.</span><span class="n">properties</span><span class="p">()</span><span class="o">.</span><span class="n">faulty_gates</span><span class="p">()]</span>
@@ -925,8 +1014,14 @@
 <span class="k">def</span> <span class="nf">_parse_basis_gates</span><span class="p">(</span><span class="n">basis_gates</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span> <span class="n">circuits</span><span class="p">):</span>
     <span class="c1"># try getting basis_gates from user, else backend</span>
     <span class="k">if</span> <span class="n">basis_gates</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;configuration&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="n">basis_gates</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">(),</span> <span class="s2">&quot;basis_gates&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">backend_version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend_version</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">backend_version</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">backend_version</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;configuration&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="n">basis_gates</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">(),</span> <span class="s2">&quot;basis_gates&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">basis_gates</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">operation_names</span>
     <span class="c1"># basis_gates could be None, or a list of basis, e.g. [&#39;u3&#39;, &#39;cx&#39;]</span>
     <span class="k">if</span> <span class="n">basis_gates</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span>
         <span class="nb">isinstance</span><span class="p">(</span><span class="n">basis_gates</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">basis_gates</span><span class="p">)</span>
@@ -936,31 +1031,50 @@
     <span class="k">return</span> <span class="n">basis_gates</span>
 
 
+<span class="k">def</span> <span class="nf">_parse_inst_map</span><span class="p">(</span><span class="n">inst_map</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">):</span>
+    <span class="c1"># try getting inst_map from user, else backend</span>
+    <span class="k">if</span> <span class="n">inst_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;defaults&quot;</span><span class="p">):</span>
+            <span class="n">inst_map</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="o">.</span><span class="n">defaults</span><span class="p">(),</span> <span class="s2">&quot;instruction_schedule_map&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="c1"># inst_maps could be None, or single entry</span>
+    <span class="k">if</span> <span class="n">inst_map</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inst_map</span><span class="p">,</span> <span class="n">InstructionScheduleMap</span><span class="p">):</span>
+        <span class="n">inst_map</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst_map</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_circuits</span>
+
+    <span class="k">return</span> <span class="n">inst_map</span>
+
+
 <span class="k">def</span> <span class="nf">_parse_coupling_map</span><span class="p">(</span><span class="n">coupling_map</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">):</span>
     <span class="c1"># try getting coupling_map from user, else backend</span>
     <span class="k">if</span> <span class="n">coupling_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;configuration&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="n">configuration</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="s2">&quot;coupling_map&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">configuration</span><span class="o">.</span><span class="n">coupling_map</span><span class="p">:</span>
-                <span class="n">faulty_map</span> <span class="o">=</span> <span class="n">_create_faulty_qubits_map</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">faulty_map</span><span class="p">:</span>
-                    <span class="n">faulty_edges</span> <span class="o">=</span> <span class="p">[</span><span class="n">gate</span><span class="o">.</span><span class="n">qubits</span> <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">backend</span><span class="o">.</span><span class="n">properties</span><span class="p">()</span><span class="o">.</span><span class="n">faulty_gates</span><span class="p">()]</span>
-                    <span class="n">functional_gates</span> <span class="o">=</span> <span class="p">[</span>
-                        <span class="n">edge</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">configuration</span><span class="o">.</span><span class="n">coupling_map</span> <span class="k">if</span> <span class="n">edge</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">faulty_edges</span>
-                    <span class="p">]</span>
-                    <span class="n">coupling_map</span> <span class="o">=</span> <span class="n">CouplingMap</span><span class="p">()</span>
-                    <span class="k">for</span> <span class="n">qubit1</span><span class="p">,</span> <span class="n">qubit2</span> <span class="ow">in</span> <span class="n">functional_gates</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">faulty_map</span><span class="p">[</span><span class="n">qubit1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">faulty_map</span><span class="p">[</span><span class="n">qubit2</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                            <span class="n">coupling_map</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">faulty_map</span><span class="p">[</span><span class="n">qubit1</span><span class="p">],</span> <span class="n">faulty_map</span><span class="p">[</span><span class="n">qubit2</span><span class="p">])</span>
-                    <span class="k">if</span> <span class="n">configuration</span><span class="o">.</span><span class="n">n_qubits</span> <span class="o">!=</span> <span class="n">coupling_map</span><span class="o">.</span><span class="n">size</span><span class="p">():</span>
-                        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                            <span class="s2">&quot;The backend has currently some qubits/edges out of service.&quot;</span>
-                            <span class="s2">&quot; This temporarily reduces the backend size from &quot;</span>
-                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">configuration</span><span class="o">.</span><span class="n">n_qubits</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                            <span class="ne">UserWarning</span><span class="p">,</span>
-                        <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">coupling_map</span> <span class="o">=</span> <span class="n">CouplingMap</span><span class="p">(</span><span class="n">configuration</span><span class="o">.</span><span class="n">coupling_map</span><span class="p">)</span>
+        <span class="n">backend_version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend_version</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">backend_version</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">backend_version</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;configuration&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="n">configuration</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="s2">&quot;coupling_map&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">configuration</span><span class="o">.</span><span class="n">coupling_map</span><span class="p">:</span>
+                    <span class="n">faulty_map</span> <span class="o">=</span> <span class="n">_create_faulty_qubits_map</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">faulty_map</span><span class="p">:</span>
+                        <span class="n">faulty_edges</span> <span class="o">=</span> <span class="p">[</span><span class="n">gate</span><span class="o">.</span><span class="n">qubits</span> <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">backend</span><span class="o">.</span><span class="n">properties</span><span class="p">()</span><span class="o">.</span><span class="n">faulty_gates</span><span class="p">()]</span>
+                        <span class="n">functional_gates</span> <span class="o">=</span> <span class="p">[</span>
+                            <span class="n">edge</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">configuration</span><span class="o">.</span><span class="n">coupling_map</span> <span class="k">if</span> <span class="n">edge</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">faulty_edges</span>
+                        <span class="p">]</span>
+                        <span class="n">coupling_map</span> <span class="o">=</span> <span class="n">CouplingMap</span><span class="p">()</span>
+                        <span class="k">for</span> <span class="n">qubit1</span><span class="p">,</span> <span class="n">qubit2</span> <span class="ow">in</span> <span class="n">functional_gates</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">faulty_map</span><span class="p">[</span><span class="n">qubit1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">faulty_map</span><span class="p">[</span><span class="n">qubit2</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                                <span class="n">coupling_map</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">faulty_map</span><span class="p">[</span><span class="n">qubit1</span><span class="p">],</span> <span class="n">faulty_map</span><span class="p">[</span><span class="n">qubit2</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="n">configuration</span><span class="o">.</span><span class="n">n_qubits</span> <span class="o">!=</span> <span class="n">coupling_map</span><span class="o">.</span><span class="n">size</span><span class="p">():</span>
+                            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                                <span class="s2">&quot;The backend has currently some qubits/edges out of service.&quot;</span>
+                                <span class="s2">&quot; This temporarily reduces the backend size from &quot;</span>
+                                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">configuration</span><span class="o">.</span><span class="n">n_qubits</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                                <span class="ne">UserWarning</span><span class="p">,</span>
+                            <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">coupling_map</span> <span class="o">=</span> <span class="n">CouplingMap</span><span class="p">(</span><span class="n">configuration</span><span class="o">.</span><span class="n">coupling_map</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">coupling_map</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">coupling_map</span>
 
     <span class="c1"># coupling_map could be None, or a list of lists, e.g. [[0, 1], [2, 1]]</span>
     <span class="k">if</span> <span class="n">coupling_map</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coupling_map</span><span class="p">,</span> <span class="n">CouplingMap</span><span class="p">):</span>
@@ -975,38 +1089,122 @@
     <span class="k">return</span> <span class="n">coupling_map</span>
 
 
+<span class="k">def</span> <span class="nf">_target_to_backend_properties</span><span class="p">(</span><span class="n">target</span><span class="p">:</span> <span class="n">Target</span><span class="p">):</span>
+    <span class="n">properties_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;backend_name&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;backend_version&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;last_update_date&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;general&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">}</span>
+    <span class="n">gates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">qubits</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">gate</span><span class="p">,</span> <span class="n">qargs_list</span> <span class="ow">in</span> <span class="n">target</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">gate</span> <span class="o">!=</span> <span class="s2">&quot;measure&quot;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">qargs</span><span class="p">,</span> <span class="n">props</span> <span class="ow">in</span> <span class="n">qargs_list</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">property_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="n">props</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">props</span><span class="o">.</span><span class="n">duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">property_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="p">{</span>
+                                <span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
+                                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;gate_length&quot;</span><span class="p">,</span>
+                                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span>
+                                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">props</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                            <span class="p">}</span>
+                        <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">props</span><span class="o">.</span><span class="n">error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">property_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="p">{</span>
+                                <span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
+                                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;gate_error&quot;</span><span class="p">,</span>
+                                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">props</span><span class="o">.</span><span class="n">error</span><span class="p">,</span>
+                            <span class="p">}</span>
+                        <span class="p">)</span>
+                <span class="k">if</span> <span class="n">property_list</span><span class="p">:</span>
+                    <span class="n">gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;gate&quot;</span><span class="p">:</span> <span class="n">gate</span><span class="p">,</span>
+                            <span class="s2">&quot;qubits&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">qargs</span><span class="p">),</span>
+                            <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="n">property_list</span><span class="p">,</span>
+                            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">gate</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">qargs</span><span class="p">]),</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">qubit_props</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)}</span>
+            <span class="k">for</span> <span class="n">qargs</span><span class="p">,</span> <span class="n">props</span> <span class="ow">in</span> <span class="n">qargs_list</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">qubit</span> <span class="o">=</span> <span class="n">qargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">props_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="n">props</span><span class="o">.</span><span class="n">error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">props_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
+                            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;readout_error&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">props</span><span class="o">.</span><span class="n">error</span><span class="p">,</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="n">props</span><span class="o">.</span><span class="n">duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">props_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
+                            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;readout_length&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">props</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">props_list</span><span class="p">:</span>
+                    <span class="n">qubit_props</span> <span class="o">=</span> <span class="p">{}</span>
+                    <span class="k">break</span>
+                <span class="n">qubit_props</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="o">=</span> <span class="n">props_list</span>
+            <span class="k">if</span> <span class="n">qubit_props</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">qubit_props</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+                <span class="n">qubits</span> <span class="o">=</span> <span class="p">[</span><span class="n">qubit_props</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">gates</span> <span class="ow">or</span> <span class="n">qubits</span><span class="p">:</span>
+        <span class="n">properties_dict</span><span class="p">[</span><span class="s2">&quot;gates&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gates</span>
+        <span class="n">properties_dict</span><span class="p">[</span><span class="s2">&quot;qubits&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">qubits</span>
+        <span class="k">return</span> <span class="n">BackendProperties</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">properties_dict</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
 <span class="k">def</span> <span class="nf">_parse_backend_properties</span><span class="p">(</span><span class="n">backend_properties</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">):</span>
     <span class="c1"># try getting backend_properties from user, else backend</span>
     <span class="k">if</span> <span class="n">backend_properties</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;properties&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="n">backend_properties</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">properties</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">backend_properties</span> <span class="ow">and</span> <span class="p">(</span>
-                <span class="n">backend_properties</span><span class="o">.</span><span class="n">faulty_qubits</span><span class="p">()</span> <span class="ow">or</span> <span class="n">backend_properties</span><span class="o">.</span><span class="n">faulty_gates</span><span class="p">()</span>
-            <span class="p">):</span>
-                <span class="n">faulty_qubits</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">backend_properties</span><span class="o">.</span><span class="n">faulty_qubits</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                <span class="n">faulty_edges</span> <span class="o">=</span> <span class="p">[</span><span class="n">gates</span><span class="o">.</span><span class="n">qubits</span> <span class="k">for</span> <span class="n">gates</span> <span class="ow">in</span> <span class="n">backend_properties</span><span class="o">.</span><span class="n">faulty_gates</span><span class="p">()]</span>
-                <span class="c1"># remove faulty qubits in backend_properties.qubits</span>
-                <span class="k">for</span> <span class="n">faulty_qubit</span> <span class="ow">in</span> <span class="n">faulty_qubits</span><span class="p">:</span>
-                    <span class="k">del</span> <span class="n">backend_properties</span><span class="o">.</span><span class="n">qubits</span><span class="p">[</span><span class="n">faulty_qubit</span><span class="p">]</span>
+        <span class="n">backend_version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend_version</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">backend_version</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">backend_version</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;properties&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="n">backend_properties</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">properties</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">backend_properties</span> <span class="ow">and</span> <span class="p">(</span>
+                    <span class="n">backend_properties</span><span class="o">.</span><span class="n">faulty_qubits</span><span class="p">()</span> <span class="ow">or</span> <span class="n">backend_properties</span><span class="o">.</span><span class="n">faulty_gates</span><span class="p">()</span>
+                <span class="p">):</span>
+                    <span class="n">faulty_qubits</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">backend_properties</span><span class="o">.</span><span class="n">faulty_qubits</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">faulty_edges</span> <span class="o">=</span> <span class="p">[</span><span class="n">gates</span><span class="o">.</span><span class="n">qubits</span> <span class="k">for</span> <span class="n">gates</span> <span class="ow">in</span> <span class="n">backend_properties</span><span class="o">.</span><span class="n">faulty_gates</span><span class="p">()]</span>
+                    <span class="c1"># remove faulty qubits in backend_properties.qubits</span>
+                    <span class="k">for</span> <span class="n">faulty_qubit</span> <span class="ow">in</span> <span class="n">faulty_qubits</span><span class="p">:</span>
+                        <span class="k">del</span> <span class="n">backend_properties</span><span class="o">.</span><span class="n">qubits</span><span class="p">[</span><span class="n">faulty_qubit</span><span class="p">]</span>
 
-                <span class="n">gates</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">backend_properties</span><span class="o">.</span><span class="n">gates</span><span class="p">:</span>
-                    <span class="c1"># remove gates using faulty edges or with faulty qubits (and remap the</span>
-                    <span class="c1"># gates in terms of faulty_qubits_map)</span>
-                    <span class="n">faulty_qubits_map</span> <span class="o">=</span> <span class="n">_create_faulty_qubits_map</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="p">(</span>
-                        <span class="nb">any</span><span class="p">(</span><span class="n">faulty_qubits_map</span><span class="p">[</span><span class="n">qubits</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">qubits</span> <span class="ow">in</span> <span class="n">gate</span><span class="o">.</span><span class="n">qubits</span><span class="p">)</span>
-                        <span class="ow">or</span> <span class="n">gate</span><span class="o">.</span><span class="n">qubits</span> <span class="ow">in</span> <span class="n">faulty_edges</span>
-                    <span class="p">):</span>
-                        <span class="k">continue</span>
-                    <span class="n">gate_dict</span> <span class="o">=</span> <span class="n">gate</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-                    <span class="n">replacement_gate</span> <span class="o">=</span> <span class="n">Gate</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">gate_dict</span><span class="p">)</span>
-                    <span class="n">gate_dict</span><span class="p">[</span><span class="s2">&quot;qubits&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">faulty_qubits_map</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="n">gate</span><span class="o">.</span><span class="n">qubits</span><span class="p">]</span>
-                    <span class="n">args</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span> <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="n">gate_dict</span><span class="p">[</span><span class="s2">&quot;qubits&quot;</span><span class="p">]])</span>
-                    <span class="n">gate_dict</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gate_dict</span><span class="p">[</span><span class="s2">&quot;gate&quot;</span><span class="p">],</span> <span class="n">args</span><span class="p">)</span>
-                    <span class="n">gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">replacement_gate</span><span class="p">)</span>
+                    <span class="n">gates</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">backend_properties</span><span class="o">.</span><span class="n">gates</span><span class="p">:</span>
+                        <span class="c1"># remove gates using faulty edges or with faulty qubits (and remap the</span>
+                        <span class="c1"># gates in terms of faulty_qubits_map)</span>
+                        <span class="n">faulty_qubits_map</span> <span class="o">=</span> <span class="n">_create_faulty_qubits_map</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="p">(</span>
+                            <span class="nb">any</span><span class="p">(</span><span class="n">faulty_qubits_map</span><span class="p">[</span><span class="n">qubits</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">qubits</span> <span class="ow">in</span> <span class="n">gate</span><span class="o">.</span><span class="n">qubits</span><span class="p">)</span>
+                            <span class="ow">or</span> <span class="n">gate</span><span class="o">.</span><span class="n">qubits</span> <span class="ow">in</span> <span class="n">faulty_edges</span>
+                        <span class="p">):</span>
+                            <span class="k">continue</span>
+                        <span class="n">gate_dict</span> <span class="o">=</span> <span class="n">gate</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+                        <span class="n">replacement_gate</span> <span class="o">=</span> <span class="n">Gate</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">gate_dict</span><span class="p">)</span>
+                        <span class="n">gate_dict</span><span class="p">[</span><span class="s2">&quot;qubits&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">faulty_qubits_map</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="n">gate</span><span class="o">.</span><span class="n">qubits</span><span class="p">]</span>
+                        <span class="n">args</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span> <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="n">gate_dict</span><span class="p">[</span><span class="s2">&quot;qubits&quot;</span><span class="p">]])</span>
+                        <span class="n">gate_dict</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gate_dict</span><span class="p">[</span><span class="s2">&quot;gate&quot;</span><span class="p">],</span> <span class="n">args</span><span class="p">)</span>
+                        <span class="n">gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">replacement_gate</span><span class="p">)</span>
 
-                <span class="n">backend_properties</span><span class="o">.</span><span class="n">gates</span> <span class="o">=</span> <span class="n">gates</span>
+                    <span class="n">backend_properties</span><span class="o">.</span><span class="n">gates</span> <span class="o">=</span> <span class="n">gates</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">backend_properties</span> <span class="o">=</span> <span class="n">_target_to_backend_properties</span><span class="p">(</span><span class="n">backend</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend_properties</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">backend_properties</span> <span class="o">=</span> <span class="p">[</span><span class="n">backend_properties</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_circuits</span>
     <span class="k">return</span> <span class="n">backend_properties</span>
@@ -1016,10 +1214,22 @@
     <span class="k">if</span> <span class="n">backend</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_circuits</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span><span class="o">.</span><span class="n">n_qubits</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_circuits</span>
+        <span class="n">backend_version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend_version</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">backend_version</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">backend_version</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span><span class="o">.</span><span class="n">n_qubits</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_circuits</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">backend</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_circuits</span>
     <span class="n">backend_num_qubits</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">a_backend</span> <span class="ow">in</span> <span class="n">backend</span><span class="p">:</span>
-        <span class="n">backend_num_qubits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a_backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span><span class="o">.</span><span class="n">n_qubits</span><span class="p">)</span>
+        <span class="n">backend_version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend_version</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">backend_version</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">backend_version</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">backend_num_qubits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a_backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span><span class="o">.</span><span class="n">n_qubits</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">backend_num_qubits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a_backend</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">backend_num_qubits</span>
 
 
@@ -1123,6 +1333,27 @@
     <span class="k">return</span> <span class="n">approximation_degree</span>
 
 
+<span class="k">def</span> <span class="nf">_parse_unitary_synthesis_method</span><span class="p">(</span><span class="n">unitary_synthesis_method</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">unitary_synthesis_method</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">unitary_synthesis_method</span> <span class="o">=</span> <span class="p">[</span><span class="n">unitary_synthesis_method</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_circuits</span>
+    <span class="k">return</span> <span class="n">unitary_synthesis_method</span>
+
+
+<span class="k">def</span> <span class="nf">_parse_unitary_plugin_config</span><span class="p">(</span><span class="n">unitary_synthesis_plugin_config</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">unitary_synthesis_plugin_config</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">unitary_synthesis_plugin_config</span> <span class="o">=</span> <span class="p">[</span><span class="n">unitary_synthesis_plugin_config</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_circuits</span>
+    <span class="k">return</span> <span class="n">unitary_synthesis_plugin_config</span>
+
+
+<span class="k">def</span> <span class="nf">_parse_target</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">):</span>
+    <span class="n">backend_target</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">backend_target</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_circuits</span>
+    <span class="k">return</span> <span class="n">target</span>
+
+
 <span class="k">def</span> <span class="nf">_parse_seed_transpiler</span><span class="p">(</span><span class="n">seed_transpiler</span><span class="p">,</span> <span class="n">num_circuits</span><span class="p">):</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seed_transpiler</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">seed_transpiler</span> <span class="o">=</span> <span class="p">[</span><span class="n">seed_transpiler</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_circuits</span>
@@ -1199,12 +1430,25 @@
     <span class="k">if</span> <span class="n">backend</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">timing_constraints</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">timing_constraints</span> <span class="o">=</span> <span class="n">TimingConstraints</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">timing_constraints</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># get constraints from backend</span>
-            <span class="n">timing_constraints</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">(),</span> <span class="s2">&quot;timing_constraints&quot;</span><span class="p">,</span> <span class="p">{})</span>
-        <span class="n">timing_constraints</span> <span class="o">=</span> <span class="n">TimingConstraints</span><span class="p">(</span><span class="o">**</span><span class="n">timing_constraints</span><span class="p">)</span>
-
+        <span class="n">backend_version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend_version</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">backend_version</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">backend_version</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">timing_constraints</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># get constraints from backend</span>
+                <span class="n">timing_constraints</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">(),</span> <span class="s2">&quot;timing_constraints&quot;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">timing_constraints</span> <span class="o">=</span> <span class="n">TimingConstraints</span><span class="p">(</span><span class="o">**</span><span class="n">timing_constraints</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">timing_constraints</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">timing_constraints</span><span class="p">()</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">timing_constraints</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_circuits</span>
+
+
+<span class="k">def</span> <span class="nf">_zip_dict</span><span class="p">(</span><span class="n">mapping</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Zip a dictionary where all the values are iterables of the same length into an iterable of</span>
+<span class="sd">    dictionaries with the same keys.  This has the same semantics as zip with regard to laziness</span>
+<span class="sd">    (over the iterables; there must be a finite number of keys!) and unequal lengths.&quot;&quot;&quot;</span>
+    <span class="n">keys</span><span class="p">,</span> <span class="n">iterables</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">mapping</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">))</span> <span class="k">for</span> <span class="n">values</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">iterables</span><span class="p">))</span>
 </pre></div>
 
              </article>
@@ -1222,7 +1466,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Τελευταία ενημέρωση στις 2021/11/19.
+      Τελευταία ενημέρωση στις 2021/12/07.
 
     </p>
   </div>

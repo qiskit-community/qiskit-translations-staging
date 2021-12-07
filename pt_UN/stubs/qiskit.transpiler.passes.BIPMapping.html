@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>BIPMapping &mdash; Documentação Qiskit 0.32.0</title>
+  <title>BIPMapping &mdash; Documentação Qiskit 0.33.0</title>
   
 
   
@@ -254,12 +254,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../apidoc/ignis.html">Qiskit Ignis (depreciado)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../apidoc/aqua.html">Qiskit Aqua (depreciado)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../apidoc/ibmq-provider.html">Provedor Quântico IBM Qiskit</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Guias de Migração Qiskit Aqua</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../aqua_migration.html">Guias de Migração Qiskit Aqua</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Solução de problemas</span></p>
 <ul>
@@ -357,14 +352,15 @@ to solve it. Those packages can be installed with <code class="docutils literal 
 Since the free version of CPLEX can solve only small BIP problems, i.e. mapping of circuits
 with less than about 5 qubits, the paid version of CPLEX may be needed to map larger circuits.</p>
 <p>If you want to fix physical qubits to be used in the mapping (e.g. running Quantum Volume
-circuits), you need to supply <code class="docutils literal notranslate"><span class="pre">coupling_map</span></code> which contains only the qubits to be used.
+circuits), you need to supply <code class="docutils literal notranslate"><span class="pre">qubit_subset</span></code>, i.e. list of physical qubits to be used
+within the <code class="docutils literal notranslate"><span class="pre">coupling_map</span></code>.
 Please do not use <code class="docutils literal notranslate"><span class="pre">initial_layout</span></code> for that purpose because the BIP mapper gracefully
 ignores <code class="docutils literal notranslate"><span class="pre">initial_layout</span></code> (and tries to determines its best layout).</p>
 <div class="admonition warning">
 <p class="admonition-title">Aviso</p>
 <p>The BIP mapper does not scale very well with respect to the number of qubits or gates.
-For example, it would not work with <code class="docutils literal notranslate"><span class="pre">coupling_map</span></code> beyond 10 qubits because
-the BIP solver (CPLEX) could not find any solution within the default time limit.</p>
+For example, it may not work with <code class="docutils literal notranslate"><span class="pre">qubit_subset</span></code> beyond 10 qubits because
+the BIP solver (CPLEX) may not find any solution within the default time limit.</p>
 </div>
 <p><strong>References:</strong></p>
 <p>[1] G. Nannicini et al. «Optimal qubit assignment and routing via integer programming.»
@@ -374,23 +370,40 @@ the BIP solver (CPLEX) could not find any solution within the default time limit
 <dt class="field-odd">Parâmetros</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>coupling_map</strong> (<a class="reference internal" href="qiskit.transpiler.CouplingMap.html#qiskit.transpiler.CouplingMap" title="qiskit.transpiler.CouplingMap"><em>CouplingMap</em></a>) – Directed graph represented a coupling map.</p></li>
-<li><p><strong>objective</strong> (<em>str</em>) – <p>Type of objective function:</p>
+<li><p><strong>qubit_subset</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – Sublist of physical qubits to be used in the mapping.
+If None, all qubits in the coupling_map will be considered.</p></li>
+<li><p><strong>objective</strong> (<em>str</em>) – <p>Type of objective function to be minimized:</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">'error_rate'</span></code>: [NotImplemented] Predicted error rate of the circuit</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'depth'</span></code>: [Default] Depth (number of time-steps) of the circuit</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'balanced'</span></code>: [NotImplemented] Weighted sum of <code class="docutils literal notranslate"><span class="pre">'error_rate'</span></code> and <code class="docutils literal notranslate"><span class="pre">'depth'</span></code></p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">'gate_error'</span></code>: Approximate gate error of the circuit, which is given as the sum of</dt><dd><p>negative logarithm of 2q-gate fidelities in the circuit. It takes into account only
+the 2q-gate (CNOT) errors reported in <code class="docutils literal notranslate"><span class="pre">backend_prop</span></code> and ignores the other errors
+in such as 1q-gates, SPAMs and idle times.</p>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'depth'</span></code>: Depth (number of 2q-gate layers) of the circuit.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'balanced'</span></code>: [Default] Weighted sum of <code class="docutils literal notranslate"><span class="pre">'gate_error'</span></code> and <code class="docutils literal notranslate"><span class="pre">'depth'</span></code></p></li>
 </ul>
 </p></li>
-<li><p><strong>backend_prop</strong> (<a class="reference internal" href="qiskit.providers.models.BackendProperties.html#qiskit.providers.models.BackendProperties" title="qiskit.providers.models.BackendProperties"><em>BackendProperties</em></a>) – Backend properties object</p></li>
+<li><p><strong>backend_prop</strong> (<a class="reference internal" href="qiskit.providers.models.BackendProperties.html#qiskit.providers.models.BackendProperties" title="qiskit.providers.models.BackendProperties"><em>BackendProperties</em></a>) – Backend properties object containing 2q-gate gate errors,
+which are required in computing certain types of objective function
+such as <code class="docutils literal notranslate"><span class="pre">'gate_error'</span></code> or <code class="docutils literal notranslate"><span class="pre">'balanced'</span></code>. If this is not available,
+default_cx_error_rate is used instead.</p></li>
 <li><p><strong>time_limit</strong> (<em>float</em>) – Time limit for solving BIP in seconds</p></li>
 <li><p><strong>threads</strong> (<em>int</em>) – Number of threads to be allowed for CPLEX to solve BIP</p></li>
 <li><p><strong>max_swaps_inbetween_layers</strong> (<em>int</em>) – Number of swaps allowed in between layers. If None, automatically set.
 Large value could decrease the probability to build infeasible BIP problem but also
 could reduce the chance of finding a feasible solution within the <code class="docutils literal notranslate"><span class="pre">time_limit</span></code>.</p></li>
+<li><p><strong>depth_obj_weight</strong> (<em>float</em>) – Weight of depth objective in <code class="docutils literal notranslate"><span class="pre">'balanced'</span></code> objective. The balanced objective is the
+sum of error_rate + depth_obj_weight * depth.</p></li>
+<li><p><strong>default_cx_error_rate</strong> (<em>float</em>) – Default CX error rate to be used if backend_prop is not available.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Levanta</dt>
-<dd class="field-even"><p><a class="reference internal" href="qiskit.aqua.MissingOptionalLibraryError.html#qiskit.aqua.MissingOptionalLibraryError" title="qiskit.aqua.MissingOptionalLibraryError"><strong>MissingOptionalLibraryError</strong></a> – if cplex or docplex are not installed.</p>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>MissingOptionalLibraryError</strong> – if cplex or docplex are not installed.</p></li>
+<li><p><a class="reference internal" href="qiskit.transpiler.TranspilerError.html#qiskit.transpiler.TranspilerError" title="qiskit.transpiler.TranspilerError"><strong>TranspilerError</strong></a> – if invalid options are specified.</p></li>
+</ul>
 </dd>
 </dl>
 <p class="rubric">Methods</p>
@@ -455,7 +468,7 @@ but cannot modify the property set (but it can be read).</p>
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Última actualização em 2021/11/19.
+      Última actualização em 2021/12/07.
 
     </p>
   </div>

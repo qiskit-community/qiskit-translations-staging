@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.algorithms.optimizers.p_bfgs &mdash; documentación de Qiskit - 0.32.0</title>
+  <title>qiskit.algorithms.optimizers.p_bfgs &mdash; documentación de Qiskit - 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (obsoleto)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aqua.html">Qiskit Aqua (obsoleto)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Proveedor Qiskit IBM Quantum</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Guía de Migración de Qiskit Aqua</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../aqua_migration.html">Guía de Migración de Qiskit Aqua</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Solución de Problemas</span></p>
 <ul>
@@ -349,13 +344,14 @@
 <span class="kn">import</span> <span class="nn">multiprocessing</span>
 <span class="kn">import</span> <span class="nn">platform</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Callable</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">algorithm_globals</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils.validation</span> <span class="kn">import</span> <span class="n">validate_min</span>
 
+<span class="kn">from</span> <span class="nn">.optimizer</span> <span class="kn">import</span> <span class="n">OptimizerResult</span><span class="p">,</span> <span class="n">POINT</span>
 <span class="kn">from</span> <span class="nn">.scipy_optimizer</span> <span class="kn">import</span> <span class="n">SciPyOptimizer</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -443,6 +439,28 @@
         <span class="n">variable_bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">initial_point</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;The P_BFGS.optimize method is deprecated as of Qiskit Terra &quot;</span>
+            <span class="s2">&quot;0.19.0 and will be removed no sooner than 3 months after the release date. &quot;</span>
+            <span class="s2">&quot;Instead, use the P_BFGS.minimize method, which mimics the &quot;</span>
+            <span class="s2">&quot;signature of scipy.optimize.minimize.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span>
+            <span class="n">objective_function</span><span class="p">,</span> <span class="n">initial_point</span><span class="p">,</span> <span class="n">gradient_function</span><span class="p">,</span> <span class="n">variable_bounds</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">nfev</span></div>
+
+<div class="viewcode-block" id="P_BFGS.minimize"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.optimizers.P_BFGS.minimize.html#qiskit.algorithms.optimizers.P_BFGS.minimize">[documentos]</a>    <span class="k">def</span> <span class="nf">minimize</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">fun</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">POINT</span><span class="p">],</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">x0</span><span class="p">:</span> <span class="n">POINT</span><span class="p">,</span>
+        <span class="n">jac</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">POINT</span><span class="p">],</span> <span class="n">POINT</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">bounds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizerResult</span><span class="p">:</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+
         <span class="n">num_procs</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="n">num_procs</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">num_procs</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_processes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="n">num_procs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_processes</span><span class="p">)</span>
@@ -464,21 +482,23 @@
         <span class="k">elif</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Windows&quot;</span><span class="p">:</span>
             <span class="n">num_procs</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;For Windows, using only current process. &quot;</span> <span class="s2">&quot;Multiple core use not supported.&quot;</span>
+                <span class="s2">&quot;For Windows, using only current process. Multiple core use not supported.&quot;</span>
             <span class="p">)</span>
 
         <span class="n">queue</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+
+        <span class="c1"># TODO: are automatic bounds a good idea? What if the circuit parameters are not</span>
+        <span class="c1"># just from plain Pauli rotations but have a coefficient?</span>
+
         <span class="c1"># bounds for additional initial points in case bounds has any None values</span>
         <span class="n">threshold</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
-        <span class="k">if</span> <span class="n">variable_bounds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">variable_bounds</span> <span class="o">=</span> <span class="p">[(</span><span class="o">-</span><span class="n">threshold</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)]</span> <span class="o">*</span> <span class="n">num_vars</span>
-        <span class="n">low</span> <span class="o">=</span> <span class="p">[(</span><span class="n">l</span> <span class="k">if</span> <span class="n">l</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-</span><span class="n">threshold</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span> <span class="ow">in</span> <span class="n">variable_bounds</span><span class="p">]</span>
-        <span class="n">high</span> <span class="o">=</span> <span class="p">[(</span><span class="n">u</span> <span class="k">if</span> <span class="n">u</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">threshold</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span> <span class="ow">in</span> <span class="n">variable_bounds</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bounds</span> <span class="o">=</span> <span class="p">[(</span><span class="o">-</span><span class="n">threshold</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)]</span> <span class="o">*</span> <span class="n">x0</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">low</span> <span class="o">=</span> <span class="p">[(</span><span class="n">l</span> <span class="k">if</span> <span class="n">l</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-</span><span class="n">threshold</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span> <span class="ow">in</span> <span class="n">bounds</span><span class="p">]</span>
+        <span class="n">high</span> <span class="o">=</span> <span class="p">[(</span><span class="n">u</span> <span class="k">if</span> <span class="n">u</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">threshold</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span> <span class="ow">in</span> <span class="n">bounds</span><span class="p">]</span>
 
         <span class="k">def</span> <span class="nf">optimize_runner</span><span class="p">(</span><span class="n">_queue</span><span class="p">,</span> <span class="n">_i_pt</span><span class="p">):</span>  <span class="c1"># Multi-process sampling</span>
-            <span class="n">_sol</span><span class="p">,</span> <span class="n">_opt</span><span class="p">,</span> <span class="n">_nfev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimize</span><span class="p">(</span>
-                <span class="n">num_vars</span><span class="p">,</span> <span class="n">objective_function</span><span class="p">,</span> <span class="n">gradient_function</span><span class="p">,</span> <span class="n">variable_bounds</span><span class="p">,</span> <span class="n">_i_pt</span>
-            <span class="p">)</span>
+            <span class="n">_sol</span><span class="p">,</span> <span class="n">_opt</span><span class="p">,</span> <span class="n">_nfev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimize</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="n">_i_pt</span><span class="p">,</span> <span class="n">jac</span><span class="p">,</span> <span class="n">bounds</span><span class="p">)</span>
             <span class="n">_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">_sol</span><span class="p">,</span> <span class="n">_opt</span><span class="p">,</span> <span class="n">_nfev</span><span class="p">))</span>
 
         <span class="c1"># Start off as many other processes running the optimize (can be 0)</span>
@@ -492,9 +512,7 @@
         <span class="c1"># While the one optimize in this process below runs the other processes will</span>
         <span class="c1"># be running too. This one runs</span>
         <span class="c1"># with the supplied initial point. The process ones have their own random one</span>
-        <span class="n">sol</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">nfev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimize</span><span class="p">(</span>
-            <span class="n">num_vars</span><span class="p">,</span> <span class="n">objective_function</span><span class="p">,</span> <span class="n">gradient_function</span><span class="p">,</span> <span class="n">variable_bounds</span><span class="p">,</span> <span class="n">initial_point</span>
-        <span class="p">)</span>
+        <span class="n">sol</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">nfev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimize</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">jac</span><span class="p">,</span> <span class="n">bounds</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">proc</span> <span class="ow">in</span> <span class="n">processes</span><span class="p">:</span>
             <span class="c1"># For each other process we wait now for it to finish and see if it has</span>
@@ -505,19 +523,24 @@
                 <span class="n">sol</span><span class="p">,</span> <span class="n">opt</span> <span class="o">=</span> <span class="n">p_sol</span><span class="p">,</span> <span class="n">p_opt</span>
             <span class="n">nfev</span> <span class="o">+=</span> <span class="n">p_nfev</span>
 
-        <span class="k">return</span> <span class="n">sol</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">nfev</span></div>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">OptimizerResult</span><span class="p">()</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">sol</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">fun</span> <span class="o">=</span> <span class="n">opt</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">nfev</span> <span class="o">=</span> <span class="n">nfev</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
 
     <span class="k">def</span> <span class="nf">_optimize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">num_vars</span><span class="p">,</span>
         <span class="n">objective_function</span><span class="p">,</span>
+        <span class="n">initial_point</span><span class="p">,</span>
         <span class="n">gradient_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">variable_bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">initial_point</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span>
-            <span class="n">num_vars</span><span class="p">,</span> <span class="n">objective_function</span><span class="p">,</span> <span class="n">gradient_function</span><span class="p">,</span> <span class="n">variable_bounds</span><span class="p">,</span> <span class="n">initial_point</span>
-        <span class="p">)</span></div>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span>
+            <span class="n">objective_function</span><span class="p">,</span> <span class="n">initial_point</span><span class="p">,</span> <span class="n">gradient_function</span><span class="p">,</span> <span class="n">variable_bounds</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">nfev</span></div>
 </pre></div>
 
              </article>
@@ -535,7 +558,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Actualizado por última vez en 2021/11/19.
+      Actualizado por última vez en 2021/12/07.
 
     </p>
   </div>

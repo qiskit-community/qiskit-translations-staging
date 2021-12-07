@@ -16,6 +16,7 @@ CRS
       ~CRS.get_nlopt_optimizer
       ~CRS.get_support_level
       ~CRS.gradient_num_diff
+      ~CRS.minimize
       ~CRS.optimize
       ~CRS.print_options
       ~CRS.set_max_evals_grouped

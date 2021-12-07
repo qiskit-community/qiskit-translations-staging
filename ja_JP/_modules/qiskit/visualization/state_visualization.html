@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.visualization.state_visualization &mdash; Qiskit 0.32.0 ドキュメント</title>
+  <title>qiskit.visualization.state_visualization &mdash; Qiskit 0.33.0 ドキュメント</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">Qiskit Ignis (非推奨)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aqua.html">Qiskit Aqua (非推奨)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">Qiskit IBM Quantumプロバイダー</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua 移行ガイド</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../aqua_migration.html">Qiskit Aqua 移行ガイド</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">トラブルシューティング</span></p>
 <ul>
@@ -344,19 +339,20 @@
 <span class="c1"># that they have been altered from the originals.</span>
 
 <span class="c1"># pylint: disable=invalid-name</span>
-<span class="c1"># pylint: disable=inconsistent-return-statements</span>
 <span class="c1"># pylint: disable=missing-param-doc,missing-type-doc,unused-argument</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Visualization functions for quantum states.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
 <span class="kn">import</span> <span class="nn">colorsys</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span>
 <span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">user_config</span>
 <span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">MissingOptionalLibraryError</span>
+<span class="kn">from</span> <span class="nn">qiskit.quantum_info.states.statevector</span> <span class="kn">import</span> <span class="n">Statevector</span>
 <span class="kn">from</span> <span class="nn">qiskit.quantum_info.states.densitymatrix</span> <span class="kn">import</span> <span class="n">DensityMatrix</span>
 <span class="kn">from</span> <span class="nn">qiskit.visualization.array</span> <span class="kn">import</span> <span class="n">array_to_latex</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils.deprecation</span> <span class="kn">import</span> <span class="n">deprecate_arguments</span>
@@ -371,13 +367,16 @@
 
 
 <div class="viewcode-block" id="plot_state_hinton"><a class="viewcode-back" href="../../../stubs/qiskit.visualization.plot_state_hinton.html#qiskit.visualization.plot_state_hinton">[ドキュメント]</a><span class="nd">@deprecate_arguments</span><span class="p">({</span><span class="s2">&quot;rho&quot;</span><span class="p">:</span> <span class="s2">&quot;state&quot;</span><span class="p">})</span>
-<span class="k">def</span> <span class="nf">plot_state_hinton</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax_real</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax_imag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">plot_state_hinton</span><span class="p">(</span>
+    <span class="n">state</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax_real</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax_imag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Plot a hinton diagram for the density matrix of a quantum state.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        state (Statevector or DensityMatrix or ndarray): An N-qubit quantum state.</span>
 <span class="sd">        title (str): a string that represents the plot title</span>
 <span class="sd">        figsize (tuple): Figure size in inches.</span>
+<span class="sd">        filename (str): file path to save image to.</span>
 <span class="sd">        ax_real (matplotlib.axes.Axes): An optional Axes object to be used for</span>
 <span class="sd">            the visualization output. If none is specified a new matplotlib</span>
 <span class="sd">            Figure will be created and used. If this is specified without an</span>
@@ -504,7 +503,10 @@
         <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">ax_real</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ax_imag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">matplotlib_close_if_inline</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">fig</span></div>
+    <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fig</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="plot_bloch_vector"><a class="viewcode-back" href="../../../stubs/qiskit.visualization.plot_bloch_vector.html#qiskit.visualization.plot_bloch_vector">[ドキュメント]</a><span class="k">def</span> <span class="nf">plot_bloch_vector</span><span class="p">(</span><span class="n">bloch</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coord_type</span><span class="o">=</span><span class="s2">&quot;cartesian&quot;</span><span class="p">):</span>
@@ -565,7 +567,9 @@
 
 
 <div class="viewcode-block" id="plot_bloch_multivector"><a class="viewcode-back" href="../../../stubs/qiskit.visualization.plot_bloch_multivector.html#qiskit.visualization.plot_bloch_multivector">[ドキュメント]</a><span class="nd">@deprecate_arguments</span><span class="p">({</span><span class="s2">&quot;rho&quot;</span><span class="p">:</span> <span class="s2">&quot;state&quot;</span><span class="p">})</span>
-<span class="k">def</span> <span class="nf">plot_bloch_multivector</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reverse_bits</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">plot_bloch_multivector</span><span class="p">(</span>
+    <span class="n">state</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reverse_bits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Plot the Bloch sphere.</span>
 
 <span class="sd">    Plot a sphere, axes, the Bloch vector, and its projections onto each axis.</span>
@@ -618,14 +622,26 @@
         <span class="n">pos</span> <span class="o">=</span> <span class="n">num</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">i</span> <span class="k">if</span> <span class="n">reverse_bits</span> <span class="k">else</span> <span class="n">i</span>
         <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
         <span class="n">plot_bloch_vector</span><span class="p">(</span><span class="n">bloch_data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s2">&quot;qubit &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pos</span><span class="p">),</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
-    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.01</span><span class="p">)</span>
     <span class="n">matplotlib_close_if_inline</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">fig</span></div>
+    <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fig</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="plot_state_city"><a class="viewcode-back" href="../../../stubs/qiskit.visualization.plot_state_city.html#qiskit.visualization.plot_state_city">[ドキュメント]</a><span class="nd">@deprecate_arguments</span><span class="p">({</span><span class="s2">&quot;rho&quot;</span><span class="p">:</span> <span class="s2">&quot;state&quot;</span><span class="p">})</span>
 <span class="k">def</span> <span class="nf">plot_state_city</span><span class="p">(</span>
-    <span class="n">state</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ax_real</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax_imag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">state</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">ax_real</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">ax_imag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rho</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Plot the cityscape of quantum state.</span>
 
@@ -785,13 +801,11 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">ax1</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">set_zlim3d</span><span class="p">(</span><span class="n">auto</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">get_autoscalez_on</span><span class="p">()</span>
-        <span class="n">ax1</span><span class="o">.</span><span class="n">w_xaxis</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">(</span><span class="n">row_names</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">)</span>
-        <span class="n">ax1</span><span class="o">.</span><span class="n">w_yaxis</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">(</span>
-            <span class="n">column_names</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=-</span><span class="mf">22.5</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span>
-        <span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">(</span><span class="n">row_names</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">(</span><span class="n">column_names</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=-</span><span class="mf">22.5</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">)</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s2">&quot;Re[$</span><span class="se">\\</span><span class="s2">rho$]&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">tick</span> <span class="ow">in</span> <span class="n">ax1</span><span class="o">.</span><span class="n">zaxis</span><span class="o">.</span><span class="n">get_major_ticks</span><span class="p">():</span>
-            <span class="n">tick</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">set_fontsize</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>
+            <span class="n">tick</span><span class="o">.</span><span class="n">label1</span><span class="o">.</span><span class="n">set_fontsize</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">ax2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">fc2</span> <span class="o">=</span> <span class="n">generate_facecolors</span><span class="p">(</span><span class="n">xpos</span><span class="p">,</span> <span class="n">ypos</span><span class="p">,</span> <span class="n">zpos</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dzi</span><span class="p">,</span> <span class="n">color</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
@@ -835,23 +849,26 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">ax2</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">set_zlim3d</span><span class="p">(</span><span class="n">auto</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="n">ax2</span><span class="o">.</span><span class="n">w_xaxis</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">(</span><span class="n">row_names</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">)</span>
-        <span class="n">ax2</span><span class="o">.</span><span class="n">w_yaxis</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">(</span>
-            <span class="n">column_names</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=-</span><span class="mf">22.5</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span>
-        <span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">(</span><span class="n">row_names</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">(</span><span class="n">column_names</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=-</span><span class="mf">22.5</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">)</span>
         <span class="n">ax2</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s2">&quot;Im[$</span><span class="se">\\</span><span class="s2">rho$]&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">tick</span> <span class="ow">in</span> <span class="n">ax2</span><span class="o">.</span><span class="n">zaxis</span><span class="o">.</span><span class="n">get_major_ticks</span><span class="p">():</span>
-            <span class="n">tick</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">set_fontsize</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>
+            <span class="n">tick</span><span class="o">.</span><span class="n">label1</span><span class="o">.</span><span class="n">set_fontsize</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>
         <span class="n">ax2</span><span class="o">.</span><span class="n">get_autoscalez_on</span><span class="p">()</span>
 
     <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">ax_real</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ax_imag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">matplotlib_close_if_inline</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">fig</span></div>
+    <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fig</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="plot_state_paulivec"><a class="viewcode-back" href="../../../stubs/qiskit.visualization.plot_state_paulivec.html#qiskit.visualization.plot_state_paulivec">[ドキュメント]</a><span class="nd">@deprecate_arguments</span><span class="p">({</span><span class="s2">&quot;rho&quot;</span><span class="p">:</span> <span class="s2">&quot;state&quot;</span><span class="p">})</span>
-<span class="k">def</span> <span class="nf">plot_state_paulivec</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">plot_state_paulivec</span><span class="p">(</span>
+    <span class="n">state</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Plot the paulivec representation of a quantum state.</span>
 
 <span class="sd">    Plot a bargraph of the mixed state rho over the pauli matrices</span>
@@ -927,11 +944,14 @@
     <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="s2">&quot;#eeeeee&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">tick</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">get_major_ticks</span><span class="p">()</span> <span class="o">+</span> <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">get_major_ticks</span><span class="p">():</span>
-        <span class="n">tick</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">set_fontsize</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>
+        <span class="n">tick</span><span class="o">.</span><span class="n">label1</span><span class="o">.</span><span class="n">set_fontsize</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">return_fig</span><span class="p">:</span>
         <span class="n">matplotlib_close_if_inline</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">fig</span></div>
+    <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fig</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">n_choose_k</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
@@ -1001,6 +1021,7 @@
     <span class="n">use_degrees</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">rho</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Plot the qsphere representation of a quantum state.</span>
 <span class="sd">    Here, the size of the points is proportional to the probability</span>
@@ -1052,7 +1073,7 @@
             <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install matplotlib&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="kn">import</span> <span class="nn">matplotlib.gridspec</span> <span class="k">as</span> <span class="nn">gridspec</span>
+    <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">gridspec</span>
     <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
     <span class="kn">from</span> <span class="nn">matplotlib.patches</span> <span class="kn">import</span> <span class="n">Circle</span>
     <span class="kn">from</span> <span class="nn">qiskit.visualization.bloch</span> <span class="kn">import</span> <span class="n">Arrow3D</span>
@@ -1108,14 +1129,14 @@
     <span class="p">)</span>
 
     <span class="c1"># Get rid of the panes</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">w_xaxis</span><span class="o">.</span><span class="n">set_pane_color</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">w_yaxis</span><span class="o">.</span><span class="n">set_pane_color</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">w_zaxis</span><span class="o">.</span><span class="n">set_pane_color</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_pane_color</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_pane_color</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">zaxis</span><span class="o">.</span><span class="n">set_pane_color</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
 
     <span class="c1"># Get rid of the spines</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">w_xaxis</span><span class="o">.</span><span class="n">line</span><span class="o">.</span><span class="n">set_color</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">w_yaxis</span><span class="o">.</span><span class="n">line</span><span class="o">.</span><span class="n">set_color</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">w_zaxis</span><span class="o">.</span><span class="n">line</span><span class="o">.</span><span class="n">set_color</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">line</span><span class="o">.</span><span class="n">set_color</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">line</span><span class="o">.</span><span class="n">set_color</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">zaxis</span><span class="o">.</span><span class="n">line</span><span class="o">.</span><span class="n">set_color</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
 
     <span class="c1"># Get rid of the ticks</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
@@ -1262,7 +1283,10 @@
 
     <span class="k">if</span> <span class="n">return_fig</span><span class="p">:</span>
         <span class="n">matplotlib_close_if_inline</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">fig</span></div>
+    <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fig</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">generate_facecolors</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
@@ -1448,18 +1472,23 @@
     <span class="k">return</span> <span class="n">colors</span>
 
 
-<span class="k">def</span> <span class="nf">state_to_latex</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">state_to_latex</span><span class="p">(</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Statevector</span><span class="p">,</span> <span class="n">DensityMatrix</span><span class="p">],</span> <span class="n">dims</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">convention</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ket&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Return a Latex representation of a state. Wrapper function</span>
-<span class="sd">    for `qiskit.visualization.array_to_latex` to add dims if necessary.</span>
+<span class="sd">    for `qiskit.visualization.array_to_latex` for convention &#39;vector&#39;.</span>
+<span class="sd">    Adds dims if necessary.</span>
 <span class="sd">    Intended for use within `state_drawer`.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        state (`Statevector` or `DensityMatrix`): State to be drawn</span>
+<span class="sd">        state: State to be drawn</span>
 <span class="sd">        dims (bool): Whether to display the state&#39;s `dims`</span>
-<span class="sd">        *args: Arguments to be passed directly to `array_to_latex`</span>
+<span class="sd">        convention (str): Either &#39;vector&#39; or &#39;ket&#39;. For &#39;ket&#39; plot the state in the ket-notation.</span>
+<span class="sd">                Otherwise plot as a vector</span>
+<span class="sd">        **args: Arguments to be passed directly to `array_to_latex` for convention &#39;ket&#39;</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        `str`: Latex representation of the state</span>
+<span class="sd">        Latex representation of the state</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">dims</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># show dims if state is not only qubits</span>
         <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">dims</span><span class="p">())</span> <span class="o">==</span> <span class="p">{</span><span class="mi">2</span><span class="p">}:</span>
@@ -1473,8 +1502,142 @@
         <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">begin</span><span class="si">{align}</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="n">dims_str</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_op_shape</span><span class="o">.</span><span class="n">dims_l</span><span class="p">()</span>
         <span class="n">suffix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\\\\\n\\</span><span class="s2">text</span><span class="se">{{</span><span class="s2">dims=</span><span class="si">{</span><span class="n">dims_str</span><span class="si">}</span><span class="se">}}\n\\</span><span class="s2">end</span><span class="se">{{</span><span class="s2">align</span><span class="se">}}</span><span class="s2">&quot;</span>
-    <span class="n">latex_str</span> <span class="o">=</span> <span class="n">array_to_latex</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="n">operator_shape</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_op_shape</span>
+    <span class="c1"># we only use the ket convetion for qubit statevectors</span>
+    <span class="c1"># this means the operator shape should hve no input dimensions and all output dimensions equal to 2</span>
+    <span class="n">is_qubit_statevector</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">operator_shape</span><span class="o">.</span><span class="n">dims_r</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">operator_shape</span><span class="o">.</span><span class="n">dims_l</span><span class="p">())</span> <span class="o">==</span> <span class="p">{</span><span class="mi">2</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">convention</span> <span class="o">==</span> <span class="s2">&quot;ket&quot;</span> <span class="ow">and</span> <span class="n">is_qubit_statevector</span><span class="p">:</span>
+        <span class="n">latex_str</span> <span class="o">=</span> <span class="n">_state_to_latex_ket</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">latex_str</span> <span class="o">=</span> <span class="n">array_to_latex</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">prefix</span> <span class="o">+</span> <span class="n">latex_str</span> <span class="o">+</span> <span class="n">suffix</span>
+
+
+<span class="k">def</span> <span class="nf">_round_if_close</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Round real and imaginary parts of complex number of close to zero&quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">data</span> <span class="o">*</span> <span class="mi">1</span><span class="n">j</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="k">def</span> <span class="nf">num_to_latex_ket</span><span class="p">(</span><span class="n">raw_value</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span> <span class="n">first_term</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Convert a complex number to latex code suitable for a ket expression</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        raw_value: Value to convert</span>
+<span class="sd">        first_term: If True then generate latex code for the first term in an expression</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        String with latex code or None if no term is required</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">sympy</span>  <span class="c1"># runtime import</span>
+
+    <span class="k">if</span> <span class="n">raw_value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">real_value</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">imag_value</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">raw_value</span> <span class="o">=</span> <span class="n">_round_if_close</span><span class="p">(</span><span class="n">raw_value</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">sympy</span><span class="o">.</span><span class="n">nsimplify</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="n">constants</span><span class="o">=</span><span class="p">(</span><span class="n">sympy</span><span class="o">.</span><span class="n">pi</span><span class="p">,),</span> <span class="n">rational</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">real_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sympy</span><span class="o">.</span><span class="n">re</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="n">imag_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sympy</span><span class="o">.</span><span class="n">im</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+    <span class="n">element</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">latex_element</span> <span class="o">=</span> <span class="n">sympy</span><span class="o">.</span><span class="n">latex</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">full_prec</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">two_term</span> <span class="o">=</span> <span class="n">real_value</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">imag_value</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">sympy</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Add</span><span class="p">):</span>
+            <span class="c1"># can happen for expressions like 1 + sqrt(2)</span>
+            <span class="n">two_term</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">two_term</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">first_term</span><span class="p">:</span>
+                <span class="n">element</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">latex_element</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">element</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;+ (</span><span class="si">{</span><span class="n">latex_element</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">first_term</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isreal</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">value</span><span class="p">))</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">element</span> <span class="o">=</span> <span class="n">latex_element</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">element</span> <span class="o">=</span> <span class="n">latex_element</span>
+                <span class="k">if</span> <span class="n">element</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span><span class="p">:</span>
+                    <span class="n">element</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                <span class="k">elif</span> <span class="n">element</span> <span class="o">==</span> <span class="s2">&quot;-1&quot;</span><span class="p">:</span>
+                    <span class="n">element</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="k">if</span> <span class="n">imag_value</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">real_value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">element</span> <span class="o">=</span> <span class="s2">&quot;+&quot;</span> <span class="o">+</span> <span class="n">latex_element</span>
+                <span class="k">elif</span> <span class="n">real_value</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">imag_value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">element</span> <span class="o">=</span> <span class="s2">&quot;+&quot;</span> <span class="o">+</span> <span class="n">latex_element</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">element</span> <span class="o">=</span> <span class="n">latex_element</span>
+                <span class="k">if</span> <span class="n">element</span> <span class="o">==</span> <span class="s2">&quot;+1&quot;</span><span class="p">:</span>
+                    <span class="n">element</span> <span class="o">=</span> <span class="s2">&quot;+&quot;</span>
+                <span class="k">elif</span> <span class="n">element</span> <span class="o">==</span> <span class="s2">&quot;-1&quot;</span><span class="p">:</span>
+                    <span class="n">element</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span>
+
+        <span class="k">return</span> <span class="n">element</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">numbers_to_latex_terms</span><span class="p">(</span><span class="n">numbers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">complex</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Convert a list of numbers to latex formatted terms</span>
+
+<span class="sd">    The first non-zero term is treated differently. For this term a leading + is suppressed.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        numbers: List of numbers to format</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        List of formatted terms</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">first_term</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">terms</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">number</span> <span class="ow">in</span> <span class="n">numbers</span><span class="p">:</span>
+        <span class="n">term</span> <span class="o">=</span> <span class="n">num_to_latex_ket</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">first_term</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">term</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">first_term</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">terms</span>
+
+
+<span class="k">def</span> <span class="nf">_state_to_latex_ket</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">complex</span><span class="p">],</span> <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Convert state vector to latex representation</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data: State vector</span>
+<span class="sd">        max_size: Maximum number of non-zero terms in the expression. If the number of</span>
+<span class="sd">                 non-zero terms is larger than the max_size, then the representation is truncated.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        String with LaTeX representation of the state vector</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">ket_name</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">bin</span><span class="p">(</span><span class="n">i</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">_round_if_close</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">nonzero_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">data</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nonzero_indices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_size</span><span class="p">:</span>
+        <span class="n">nonzero_indices</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">nonzero_indices</span><span class="p">[:</span> <span class="n">max_size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">nonzero_indices</span><span class="p">[</span><span class="o">-</span><span class="n">max_size</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+        <span class="p">)</span>
+        <span class="n">latex_terms</span> <span class="o">=</span> <span class="n">numbers_to_latex_terms</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">nonzero_indices</span><span class="p">])</span>
+        <span class="n">nonzero_indices</span><span class="p">[</span><span class="n">max_size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">latex_terms</span> <span class="o">=</span> <span class="n">numbers_to_latex_terms</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">nonzero_indices</span><span class="p">])</span>
+
+    <span class="n">latex_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">ket_idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nonzero_indices</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ket_idx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">latex_str</span> <span class="o">+=</span> <span class="sa">r</span><span class="s2">&quot; + \ldots &quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">term</span> <span class="o">=</span> <span class="n">latex_terms</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">ket</span> <span class="o">=</span> <span class="n">ket_name</span><span class="p">(</span><span class="n">ket_idx</span><span class="p">)</span>
+            <span class="n">latex_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">term</span><span class="si">}</span><span class="s2"> |</span><span class="si">{</span><span class="n">ket</span><span class="si">}</span><span class="se">\\</span><span class="s2">rangle&quot;</span>
+    <span class="k">return</span> <span class="n">latex_str</span>
 
 
 <span class="k">class</span> <span class="nc">TextMatrix</span><span class="p">:</span>
@@ -1581,8 +1744,10 @@
             <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
                 <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;IPython&quot;</span><span class="p">,</span>
                 <span class="n">name</span><span class="o">=</span><span class="s2">&quot;state_drawer&quot;</span><span class="p">,</span>
-                <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">pip install ipython</span><span class="se">\&quot;</span><span class="s2">, or set output=&#39;latex_source&#39; &quot;</span>
-                <span class="s2">&quot;instead for an ASCII string.&quot;</span><span class="p">,</span>
+                <span class="n">pip_install</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">pip install ipython</span><span class="se">\&quot;</span><span class="s2">, or set output=&#39;latex_source&#39; &quot;</span>
+                    <span class="s2">&quot;instead for an ASCII string.&quot;</span>
+                <span class="p">),</span>
             <span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">draw_func</span> <span class="o">=</span> <span class="n">drawers</span><span class="p">[</span><span class="s2">&quot;latex_source&quot;</span><span class="p">]</span>
@@ -1619,7 +1784,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      最終更新: 2021/11/19
+      最終更新: 2021/12/07
 
     </p>
   </div>

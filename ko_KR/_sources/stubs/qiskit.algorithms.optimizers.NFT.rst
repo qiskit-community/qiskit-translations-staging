@@ -15,6 +15,7 @@ NFT
 
       ~NFT.get_support_level
       ~NFT.gradient_num_diff
+      ~NFT.minimize
       ~NFT.optimize
       ~NFT.print_options
       ~NFT.set_max_evals_grouped

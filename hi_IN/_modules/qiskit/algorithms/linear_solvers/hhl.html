@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.algorithms.linear_solvers.hhl &mdash; Qiskit 0.32.0 दिग्दर्शिका</title>
+  <title>qiskit.algorithms.linear_solvers.hhl &mdash; Qiskit 0.33.0 दिग्दर्शिका</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
 <ul>
@@ -455,10 +450,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_scaling</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># scaling of the solution</span>
 
-        <span class="k">if</span> <span class="n">quantum_instance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span> <span class="o">=</span> <span class="n">CircuitSampler</span><span class="p">(</span><span class="n">quantum_instance</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">quantum_instance</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_expectation</span> <span class="o">=</span> <span class="n">expectation</span>
 
@@ -474,18 +467,22 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            The quantum instance used to run this algorithm.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="o">.</span><span class="n">quantum_instance</span>
+        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="o">.</span><span class="n">quantum_instance</span>
 
     <span class="nd">@quantum_instance</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">quantum_instance</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">QuantumInstance</span><span class="p">,</span> <span class="n">BaseBackend</span><span class="p">,</span> <span class="n">Backend</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">QuantumInstance</span><span class="p">,</span> <span class="n">BaseBackend</span><span class="p">,</span> <span class="n">Backend</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Set quantum instance.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            quantum_instance: The quantum instance used to run this algorithm.</span>
+<span class="sd">                If None, a Statevector calculation is done.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="o">.</span><span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">quantum_instance</span>
+        <span class="k">if</span> <span class="n">quantum_instance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span> <span class="o">=</span> <span class="n">CircuitSampler</span><span class="p">(</span><span class="n">quantum_instance</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">scaling</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -643,12 +640,15 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">matrix</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">QuantumCircuit</span><span class="p">],</span>
         <span class="n">vector</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">QuantumCircuit</span><span class="p">],</span>
+        <span class="n">neg_vals</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuantumCircuit</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Construct the HHL circuit.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            matrix: The matrix specifying the system, i.e. A in Ax=b.</span>
 <span class="sd">            vector: The vector specifying the right hand side of the equation in Ax=b.</span>
+<span class="sd">            neg_vals: States whether the matrix has negative eigenvalues. If False the</span>
+<span class="sd">            computation becomes cheaper.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The HHL circuit.</span>
@@ -709,16 +709,18 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">kappa</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="c1"># Update the number of qubits required to represent the eigenvalues</span>
-        <span class="n">nl</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">nb</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">kappa</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># The +neg_vals is to register negative eigenvalues because</span>
+        <span class="c1"># e^{-2 \pi i \lambda} = e^{2 \pi i (1 - \lambda)}</span>
+        <span class="n">nl</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">nb</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">kappa</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">neg_vals</span>
 
         <span class="c1"># check if the matrix can calculate bounds for the eigenvalues</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">matrix_circuit</span><span class="p">,</span> <span class="s2">&quot;eigs_bounds&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">matrix_circuit</span><span class="o">.</span><span class="n">eigs_bounds</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">lambda_min</span><span class="p">,</span> <span class="n">lambda_max</span> <span class="o">=</span> <span class="n">matrix_circuit</span><span class="o">.</span><span class="n">eigs_bounds</span><span class="p">()</span>
             <span class="c1"># Constant so that the minimum eigenvalue is represented exactly, since it contributes</span>
-            <span class="c1"># the most to the solution of the system</span>
-            <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_delta</span><span class="p">(</span><span class="n">nl</span><span class="p">,</span> <span class="n">lambda_min</span><span class="p">,</span> <span class="n">lambda_max</span><span class="p">)</span>
+            <span class="c1"># the most to the solution of the system. -1 to take into account the sign qubit</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_delta</span><span class="p">(</span><span class="n">nl</span> <span class="o">-</span> <span class="n">neg_vals</span><span class="p">,</span> <span class="n">lambda_min</span><span class="p">,</span> <span class="n">lambda_max</span><span class="p">)</span>
             <span class="c1"># Update evolution time</span>
-            <span class="n">matrix_circuit</span><span class="o">.</span><span class="n">evolution_time</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">delta</span> <span class="o">/</span> <span class="n">lambda_min</span>
+            <span class="n">matrix_circuit</span><span class="o">.</span><span class="n">evolution_time</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">delta</span> <span class="o">/</span> <span class="n">lambda_min</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">neg_vals</span><span class="p">)</span>
             <span class="c1"># Update the scaling of the solution</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">scaling</span> <span class="o">=</span> <span class="n">lambda_min</span>
         <span class="k">else</span><span class="p">:</span>
@@ -726,14 +728,14 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The solution will be calculated up to a scaling factor.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exact_reciprocal</span><span class="p">:</span>
-            <span class="n">reciprocal_circuit</span> <span class="o">=</span> <span class="n">ExactReciprocal</span><span class="p">(</span><span class="n">nl</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span>
+            <span class="n">reciprocal_circuit</span> <span class="o">=</span> <span class="n">ExactReciprocal</span><span class="p">(</span><span class="n">nl</span><span class="p">,</span> <span class="n">delta</span><span class="p">,</span> <span class="n">neg_vals</span><span class="o">=</span><span class="n">neg_vals</span><span class="p">)</span>
             <span class="c1"># Update number of ancilla qubits</span>
             <span class="n">na</span> <span class="o">=</span> <span class="n">matrix_circuit</span><span class="o">.</span><span class="n">num_ancillas</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Calculate breakpoints for the reciprocal approximation</span>
             <span class="n">num_values</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">nl</span>
             <span class="n">constant</span> <span class="o">=</span> <span class="n">delta</span>
-            <span class="n">a</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">num_values</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)))</span>  <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">num_values</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)))</span>
 
             <span class="c1"># Calculate the degree of the polynomial and the number of intervals</span>
             <span class="n">r</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">constant</span> <span class="o">/</span> <span class="n">a</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">constant</span> <span class="o">/</span> <span class="n">a</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
@@ -845,8 +847,7 @@
         <span class="k">if</span> <span class="n">observable</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">observable_circuit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">post_processing</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;If observable is passed, observable_circuit and post_processing &quot;</span>
-                    <span class="s2">&quot;cannot be set.&quot;</span>
+                    <span class="s2">&quot;If observable is passed, observable_circuit and post_processing cannot be set.&quot;</span>
                 <span class="p">)</span>
 
         <span class="n">solution</span> <span class="o">=</span> <span class="n">LinearSolverResult</span><span class="p">()</span>
@@ -876,7 +877,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      अंतिम बार सम्पादित 2021/11/19.
+      अंतिम बार सम्पादित 2021/12/07.
 
     </p>
   </div>

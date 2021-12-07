@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.utils.gate_direction &mdash; Qiskit 0.32.0 documentation</title>
+  <title>qiskit.transpiler.passes.utils.gate_direction &mdash; Qiskit 0.33.0 documentation</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
 <ul>
@@ -353,7 +348,7 @@
 
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">QuantumRegister</span>
 <span class="kn">from</span> <span class="nn">qiskit.dagcircuit</span> <span class="kn">import</span> <span class="n">DAGCircuit</span>
-<span class="kn">from</span> <span class="nn">qiskit.circuit.library.standard_gates</span> <span class="kn">import</span> <span class="n">RYGate</span><span class="p">,</span> <span class="n">HGate</span><span class="p">,</span> <span class="n">CXGate</span><span class="p">,</span> <span class="n">ECRGate</span>
+<span class="kn">from</span> <span class="nn">qiskit.circuit.library.standard_gates</span> <span class="kn">import</span> <span class="n">RYGate</span><span class="p">,</span> <span class="n">HGate</span><span class="p">,</span> <span class="n">CXGate</span><span class="p">,</span> <span class="n">ECRGate</span><span class="p">,</span> <span class="n">RZXGate</span>
 
 
 <div class="viewcode-block" id="GateDirection"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.GateDirection.html#qiskit.transpiler.passes.GateDirection">[docs]</a><span class="k">class</span> <span class="nc">GateDirection</span><span class="p">(</span><span class="n">TransformationPass</span><span class="p">):</span>
@@ -372,16 +367,25 @@
 <span class="sd">             │  ECR │  =       └┬──────────┤│  ECR │├───┤</span>
 <span class="sd">        q_1: ┤1     ├     q_1: ─┤ RY(pi/2) ├┤0     ├┤ H ├</span>
 <span class="sd">             └──────┘           └──────────┘└──────┘└───┘</span>
+
+<span class="sd">             ┌──────┐          ┌───┐┌──────┐┌───┐</span>
+<span class="sd">        q_0: ┤0     ├     q_0: ┤ H ├┤1     ├┤ H ├</span>
+<span class="sd">             │  RZX │  =       ├───┤│  RZX │├───┤</span>
+<span class="sd">        q_1: ┤1     ├     q_1: ┤ H ├┤0     ├┤ H ├</span>
+<span class="sd">             └──────┘          └───┘└──────┘└───┘</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coupling_map</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coupling_map</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;GateDirection pass.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            coupling_map (CouplingMap): Directed graph represented a coupling map.</span>
+<span class="sd">            target (Target): The backend target to use for this pass. If this is specified</span>
+<span class="sd">                it will be used instead of the coupling map</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span> <span class="o">=</span> <span class="n">coupling_map</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">target</span>
 
         <span class="c1"># Create the replacement dag and associated register.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cx_dag</span> <span class="o">=</span> <span class="n">DAGCircuit</span><span class="p">()</span>
@@ -402,6 +406,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_ecr_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">qr</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ecr_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">qr</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="p">[])</span>
 
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_rzx_dag</span><span class="p">(</span><span class="n">parameter</span><span class="p">):</span>
+        <span class="n">_rzx_dag</span> <span class="o">=</span> <span class="n">DAGCircuit</span><span class="p">()</span>
+        <span class="n">qr</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">_rzx_dag</span><span class="o">.</span><span class="n">add_qreg</span><span class="p">(</span><span class="n">qr</span><span class="p">)</span>
+        <span class="n">_rzx_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">qr</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[])</span>
+        <span class="n">_rzx_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">qr</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="p">[])</span>
+        <span class="n">_rzx_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">RZXGate</span><span class="p">(</span><span class="n">parameter</span><span class="p">),</span> <span class="p">[</span><span class="n">qr</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">qr</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[])</span>
+        <span class="n">_rzx_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">qr</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[])</span>
+        <span class="n">_rzx_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">qr</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="p">[])</span>
+        <span class="k">return</span> <span class="n">_rzx_dag</span>
+
 <div class="viewcode-block" id="GateDirection.run"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.GateDirection.run.html#qiskit.transpiler.passes.GateDirection.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run the GateDirection pass on `dag`.</span>
 
@@ -418,40 +434,94 @@
 <span class="sd">            TranspilerError: If the circuit cannot be mapped just by flipping the</span>
 <span class="sd">                cx nodes.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">cmap_edges</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">get_edges</span><span class="p">())</span>
-
+        <span class="n">trivial_layout</span> <span class="o">=</span> <span class="n">Layout</span><span class="o">.</span><span class="n">generate_trivial_layout</span><span class="p">(</span><span class="o">*</span><span class="n">dag</span><span class="o">.</span><span class="n">qregs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">layout_map</span> <span class="o">=</span> <span class="n">trivial_layout</span><span class="o">.</span><span class="n">get_virtual_bits</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">qregs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
                 <span class="s2">&quot;GateDirection expects a single qreg input DAG,&quot;</span>
                 <span class="s2">&quot;but input DAG had qregs: </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">qregs</span><span class="p">)</span>
             <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmap_edges</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">get_edges</span><span class="p">())</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">cmap_edges</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">dag</span>
 
-        <span class="n">trivial_layout</span> <span class="o">=</span> <span class="n">Layout</span><span class="o">.</span><span class="n">generate_trivial_layout</span><span class="p">(</span><span class="o">*</span><span class="n">dag</span><span class="o">.</span><span class="n">qregs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">compute_distance_matrix</span><span class="p">()</span>
 
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">two_qubit_ops</span><span class="p">():</span>
-            <span class="n">control</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">target</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">dist_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">distance_matrix</span>
 
-            <span class="n">physical_q0</span> <span class="o">=</span> <span class="n">trivial_layout</span><span class="p">[</span><span class="n">control</span><span class="p">]</span>
-            <span class="n">physical_q1</span> <span class="o">=</span> <span class="n">trivial_layout</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">two_qubit_ops</span><span class="p">():</span>
+                <span class="n">control</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">physical_q0</span><span class="p">,</span> <span class="n">physical_q1</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
-                    <span class="s2">&quot;The circuit requires a connection between physical &quot;</span>
-                    <span class="s2">&quot;qubits </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">physical_q0</span><span class="p">,</span> <span class="n">physical_q1</span><span class="p">)</span>
-                <span class="p">)</span>
+                <span class="n">physical_q0</span> <span class="o">=</span> <span class="n">layout_map</span><span class="p">[</span><span class="n">control</span><span class="p">]</span>
+                <span class="n">physical_q1</span> <span class="o">=</span> <span class="n">layout_map</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
 
-            <span class="k">if</span> <span class="p">(</span><span class="n">physical_q0</span><span class="p">,</span> <span class="n">physical_q1</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cmap_edges</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;cx&quot;</span><span class="p">:</span>
-                    <span class="n">dag</span><span class="o">.</span><span class="n">substitute_node_with_dag</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cx_dag</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;ecr&quot;</span><span class="p">:</span>
-                    <span class="n">dag</span><span class="o">.</span><span class="n">substitute_node_with_dag</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ecr_dag</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">dist_matrix</span><span class="p">[</span><span class="n">physical_q0</span><span class="p">,</span> <span class="n">physical_q1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
-                        <span class="s2">&quot;Flipping of gate direction is only supported &quot;</span>
-                        <span class="s2">&quot;for CX and ECR at this time.&quot;</span>
+                        <span class="s2">&quot;The circuit requires a connection between physical &quot;</span>
+                        <span class="s2">&quot;qubits </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">physical_q0</span><span class="p">,</span> <span class="n">physical_q1</span><span class="p">)</span>
                     <span class="p">)</span>
 
+                <span class="k">if</span> <span class="p">(</span><span class="n">physical_q0</span><span class="p">,</span> <span class="n">physical_q1</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cmap_edges</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;cx&quot;</span><span class="p">:</span>
+                        <span class="n">dag</span><span class="o">.</span><span class="n">substitute_node_with_dag</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cx_dag</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;ecr&quot;</span><span class="p">:</span>
+                        <span class="n">dag</span><span class="o">.</span><span class="n">substitute_node_with_dag</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ecr_dag</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;rzx&quot;</span><span class="p">:</span>
+                        <span class="n">dag</span><span class="o">.</span><span class="n">substitute_node_with_dag</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rzx_dag</span><span class="p">(</span><span class="o">*</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">params</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Flipping of gate direction is only supported &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;for CX, ECR, and RZX at this time, not </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span>
+                        <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># TODO: Work with the gate instances and only use names as look up keys.</span>
+            <span class="c1"># This will require iterating over the target names to build a mapping</span>
+            <span class="c1"># of names to gates that implement CXGate, ECRGate, RZXGate (including</span>
+            <span class="c1"># fixed angle variants)</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">two_qubit_ops</span><span class="p">():</span>
+                <span class="n">control</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+                <span class="n">physical_q0</span> <span class="o">=</span> <span class="n">layout_map</span><span class="p">[</span><span class="n">control</span><span class="p">]</span>
+                <span class="n">physical_q1</span> <span class="o">=</span> <span class="n">layout_map</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;cx&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">physical_q0</span><span class="p">,</span> <span class="n">physical_q1</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="s2">&quot;cx&quot;</span><span class="p">]:</span>
+                        <span class="k">continue</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">physical_q1</span><span class="p">,</span> <span class="n">physical_q0</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="s2">&quot;cx&quot;</span><span class="p">]:</span>
+                        <span class="n">dag</span><span class="o">.</span><span class="n">substitute_node_with_dag</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cx_dag</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
+                            <span class="s2">&quot;The circuit requires a connection between physical &quot;</span>
+                            <span class="s2">&quot;qubits </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2"> for cx&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">physical_q0</span><span class="p">,</span> <span class="n">physical_q1</span><span class="p">)</span>
+                        <span class="p">)</span>
+                <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;ecr&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">physical_q0</span><span class="p">,</span> <span class="n">physical_q1</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="s2">&quot;ecr&quot;</span><span class="p">]:</span>
+                        <span class="k">continue</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">physical_q1</span><span class="p">,</span> <span class="n">physical_q0</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="s2">&quot;ecr&quot;</span><span class="p">]:</span>
+                        <span class="n">dag</span><span class="o">.</span><span class="n">substitute_node_with_dag</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ecr_dag</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
+                            <span class="s2">&quot;The circuit requires a connection between physical &quot;</span>
+                            <span class="s2">&quot;qubits </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2"> for ecr&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">physical_q0</span><span class="p">,</span> <span class="n">physical_q1</span><span class="p">)</span>
+                        <span class="p">)</span>
+                <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;rzx&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">physical_q0</span><span class="p">,</span> <span class="n">physical_q1</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="s2">&quot;rzx&quot;</span><span class="p">]:</span>
+                        <span class="k">continue</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">physical_q1</span><span class="p">,</span> <span class="n">physical_q0</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="s2">&quot;rzx&quot;</span><span class="p">]:</span>
+                        <span class="n">dag</span><span class="o">.</span><span class="n">substitute_node_with_dag</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rzx_dag</span><span class="p">(</span><span class="o">*</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">params</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
+                            <span class="s2">&quot;The circuit requires a connection between physical &quot;</span>
+                            <span class="s2">&quot;qubits </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2"> for rzx&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">physical_q0</span><span class="p">,</span> <span class="n">physical_q1</span><span class="p">)</span>
+                        <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Flipping of gate direction is only supported &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;for CX, ECR, and RZX at this time, not </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="p">)</span>
         <span class="k">return</span> <span class="n">dag</span></div></div>
 </pre></div>
 
@@ -470,7 +540,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Last updated on 2021/11/19.
+      Last updated on 2021/12/07.
 
     </p>
   </div>

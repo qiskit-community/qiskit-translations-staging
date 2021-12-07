@@ -32,10 +32,13 @@
    .. rubric:: Attributes
 
    .. autoattribute:: ansatz
+   .. autoattribute:: callback
    .. autoattribute:: expectation
    .. autoattribute:: gradient
+   .. autoattribute:: include_custom
    .. autoattribute:: initial_point
    .. autoattribute:: initial_state
+   .. autoattribute:: max_evals_grouped
    .. autoattribute:: mixer
    .. autoattribute:: optimal_params
    .. autoattribute:: optimizer

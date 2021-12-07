@@ -20,6 +20,7 @@
 
    .. rubric:: Attributes
 
+   .. autoattribute:: condition_bits
    .. autoattribute:: ctrl_state
    .. autoattribute:: decompositions
    .. autoattribute:: definition

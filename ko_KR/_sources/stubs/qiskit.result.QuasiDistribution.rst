@@ -29,3 +29,7 @@
       ~QuasiDistribution.values
 
 
+
+   .. rubric:: Attributes
+
+   .. autoattribute:: stddev_upper_bound

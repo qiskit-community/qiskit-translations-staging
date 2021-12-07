@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.circuit.library.evolved_operator_ansatz &mdash; Qiskit 0.32.0 documentation</title>
+  <title>qiskit.circuit.library.evolved_operator_ansatz &mdash; Qiskit 0.33.0 documentation</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (imekataliwa)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aqua.html">Qiskit Aqua (imekataliwa)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Mwongozo wa Uhamiaji wa Qiskit Aqua</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../aqua_migration.html">Mwongozo wa Uhamiaji wa Qiskit Aqua</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Kutafuta Suluhu</span></p>
 <ul>
@@ -345,24 +340,16 @@
 
 <span class="sd">&quot;&quot;&quot;The evolved operator ansatz.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">Parameter</span><span class="p">,</span>
-    <span class="n">ParameterVector</span><span class="p">,</span>
-    <span class="n">QuantumRegister</span><span class="p">,</span>
-    <span class="n">QuantumCircuit</span><span class="p">,</span>
-    <span class="n">ParameterExpression</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span> <span class="nn">qiskit.circuit.exceptions</span> <span class="kn">import</span> <span class="n">CircuitError</span>
-<span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">QiskitError</span>
+<span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Parameter</span><span class="p">,</span> <span class="n">QuantumRegister</span><span class="p">,</span> <span class="n">QuantumCircuit</span>
 
-<span class="kn">from</span> <span class="nn">.blueprintcircuit</span> <span class="kn">import</span> <span class="n">BlueprintCircuit</span>
+<span class="kn">from</span> <span class="nn">.n_local.n_local</span> <span class="kn">import</span> <span class="n">NLocal</span>
 
 
-<div class="viewcode-block" id="EvolvedOperatorAnsatz"><a class="viewcode-back" href="../../../../stubs/qiskit.circuit.library.EvolvedOperatorAnsatz.html#qiskit.circuit.library.EvolvedOperatorAnsatz">[docs]</a><span class="k">class</span> <span class="nc">EvolvedOperatorAnsatz</span><span class="p">(</span><span class="n">BlueprintCircuit</span><span class="p">):</span>
+<div class="viewcode-block" id="EvolvedOperatorAnsatz"><a class="viewcode-back" href="../../../../stubs/qiskit.circuit.library.EvolvedOperatorAnsatz.html#qiskit.circuit.library.EvolvedOperatorAnsatz">[docs]</a><span class="k">class</span> <span class="nc">EvolvedOperatorAnsatz</span><span class="p">(</span><span class="n">NLocal</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The evolved operator ansatz.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -372,6 +359,7 @@
         <span class="n">evolution</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">insert_barriers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;EvolvedOps&quot;</span><span class="p">,</span>
+        <span class="n">parameter_prefix</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="s2">&quot;t&quot;</span><span class="p">,</span>
         <span class="n">initial_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">QuantumCircuit</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -385,6 +373,9 @@
 <span class="sd">                Defaults to Trotterization.</span>
 <span class="sd">            insert_barriers: Whether to insert barriers in between each evolution.</span>
 <span class="sd">            name: The name of the circuit.</span>
+<span class="sd">            parameter_prefix: Set the names of the circuit parameters. If a string, the same prefix</span>
+<span class="sd">                will be used for each parameters. Can also be a list to specify a prefix per</span>
+<span class="sd">                operator.</span>
 <span class="sd">            initial_state: A `QuantumCircuit` object to prepend to the circuit.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">evolution</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -393,39 +384,42 @@
 
             <span class="n">evolution</span> <span class="o">=</span> <span class="n">PauliTrotterEvolution</span><span class="p">()</span>
 
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">initial_state</span><span class="o">=</span><span class="n">initial_state</span><span class="p">,</span>
+            <span class="n">parameter_prefix</span><span class="o">=</span><span class="n">parameter_prefix</span><span class="p">,</span>
+            <span class="n">reps</span><span class="o">=</span><span class="n">reps</span><span class="p">,</span>
+            <span class="n">insert_barriers</span><span class="o">=</span><span class="n">insert_barriers</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_operators</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">operators</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">operators</span> <span class="o">=</span> <span class="n">_validate_operators</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">operators</span> <span class="o">=</span> <span class="n">operators</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_operators</span> <span class="o">=</span> <span class="n">operators</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_evolution</span> <span class="o">=</span> <span class="n">evolution</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_reps</span> <span class="o">=</span> <span class="n">reps</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_insert_barriers</span> <span class="o">=</span> <span class="n">insert_barriers</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_initial_state</span> <span class="o">=</span> <span class="n">initial_state</span>
+
+        <span class="c1"># a list of which operators are parameterized, used for internal settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ops_are_parameterized</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_check_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raise_on_failure</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_check_configuration</span><span class="p">(</span><span class="n">raise_on_failure</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">operators</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">raise_on_failure</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The operators are not set.&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reps</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">raise_on_failure</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The reps cannot be smaller than 1.&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">reps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;The number of times the evolved operators are repeated.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reps</span>
+    <span class="k">def</span> <span class="nf">num_qubits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">operators</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
 
-    <span class="nd">@reps</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">reps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Sets the number of times the evolved operators are repeated.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_reps</span> <span class="o">=</span> <span class="n">r</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_qubits</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="o">.</span><span class="n">num_qubits</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">evolution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -445,17 +439,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_evolution</span> <span class="o">=</span> <span class="n">evol</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">initial_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuantumCircuit</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;The initial state.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initial_state</span>
-
-    <span class="nd">@initial_state</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">initial_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_state</span><span class="p">:</span> <span class="n">QuantumCircuit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Sets the initial state.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_initial_state</span> <span class="o">=</span> <span class="n">initial_state</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">operators</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -478,20 +461,7 @@
         <span class="n">operators</span> <span class="o">=</span> <span class="n">_validate_operators</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_operators</span> <span class="o">=</span> <span class="n">operators</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">qregs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A list of the quantum registers associated with the circuit.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_build</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qregs</span>
-
-    <span class="nd">@qregs</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">qregs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qregs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set the quantum registers associated with the circuit.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_qregs</span> <span class="o">=</span> <span class="n">qregs</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_qubits</span> <span class="o">=</span> <span class="p">[</span><span class="n">qbit</span> <span class="k">for</span> <span class="n">qreg</span> <span class="ow">in</span> <span class="n">qregs</span> <span class="k">for</span> <span class="n">qbit</span> <span class="ow">in</span> <span class="n">qreg</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qregs</span> <span class="o">=</span> <span class="p">[</span><span class="n">QuantumRegister</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;q&quot;</span><span class="p">)]</span>
 
     <span class="c1"># TODO: the `preferred_init_points`-implementation can (and should!) be improved!</span>
     <span class="nd">@property</span>
@@ -513,80 +483,28 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
 
+        <span class="c1"># need to check configuration here to ensure the operators are not None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_configuration</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="c1"># get the evolved operators as circuits</span>
-        <span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">PauliOp</span>
 
         <span class="n">coeff</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;c&quot;</span><span class="p">)</span>
         <span class="n">circuits</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">is_evolved_operator</span> <span class="o">=</span> <span class="p">[]</span>
+
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">:</span>
             <span class="c1"># if the operator is already the evolved circuit just append it</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">QuantumCircuit</span><span class="p">):</span>
                 <span class="n">circuits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
-                <span class="n">is_evolved_operator</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># has no time coeff</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># check if the operator is just the identity, if yes, skip it</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">PauliOp</span><span class="p">):</span>
-                    <span class="n">sig_qubits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">sig_qubits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">_is_pauli_identity</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+                    <span class="k">continue</span>
 
                 <span class="n">evolved_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evolution</span><span class="o">.</span><span class="n">convert</span><span class="p">((</span><span class="n">coeff</span> <span class="o">*</span> <span class="n">op</span><span class="p">)</span><span class="o">.</span><span class="n">exp_i</span><span class="p">())</span><span class="o">.</span><span class="n">reduce</span><span class="p">()</span>
                 <span class="n">circuits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evolved_op</span><span class="o">.</span><span class="n">to_circuit</span><span class="p">())</span>
-                <span class="n">is_evolved_operator</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># has time coeff</span>
 
-        <span class="c1"># set the registers</span>
-        <span class="n">num_qubits</span> <span class="o">=</span> <span class="n">circuits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_qubits</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">qr</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="s2">&quot;q&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">add_register</span><span class="p">(</span><span class="n">qr</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">CircuitError</span><span class="p">:</span>
-            <span class="c1"># the register already exists, probably because of a previous composition</span>
-            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rotation_blocks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">entanglement_blocks</span> <span class="o">=</span> <span class="n">circuits</span>
 
-        <span class="c1"># build the circuit</span>
-        <span class="n">times</span> <span class="o">=</span> <span class="n">ParameterVector</span><span class="p">(</span><span class="s2">&quot;t&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reps</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">is_evolved_operator</span><span class="p">))</span>
-        <span class="n">times_it</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
-
-        <span class="n">evolution</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">qregs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-
-        <span class="n">first</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reps</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">is_evolved</span><span class="p">,</span> <span class="n">circuit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">is_evolved_operator</span><span class="p">,</span> <span class="n">circuits</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">first</span><span class="p">:</span>
-                    <span class="n">first</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_insert_barriers</span><span class="p">:</span>
-                        <span class="n">evolution</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
-
-                <span class="k">if</span> <span class="n">is_evolved</span><span class="p">:</span>
-                    <span class="n">bound</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">assign_parameters</span><span class="p">({</span><span class="n">coeff</span><span class="p">:</span> <span class="nb">next</span><span class="p">(</span><span class="n">times_it</span><span class="p">)})</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">bound</span> <span class="o">=</span> <span class="n">circuit</span>
-
-                <span class="n">evolution</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">bound</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_state</span><span class="p">:</span>
-            <span class="n">evolution</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_state</span><span class="p">,</span> <span class="n">front</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="c1"># cast global phase to float if it has no free parameters</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">evolution</span><span class="o">.</span><span class="n">global_phase</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">):</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">evolution</span><span class="o">.</span><span class="n">global_phase</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">evolution</span><span class="o">.</span><span class="n">global_phase</span><span class="o">.</span><span class="n">_symbol_expr</span><span class="p">)</span>
-            <span class="c1"># RuntimeError is raised if symengine is used, for SymPy it is a TypeError</span>
-            <span class="k">except</span> <span class="p">(</span><span class="ne">RuntimeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
-                <span class="c1"># expression contains free parameters</span>
-                <span class="k">pass</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">instr</span> <span class="o">=</span> <span class="n">evolution</span><span class="o">.</span><span class="n">to_gate</span><span class="p">()</span>
-        <span class="k">except</span> <span class="n">QiskitError</span><span class="p">:</span>
-            <span class="n">instr</span> <span class="o">=</span> <span class="n">evolution</span><span class="o">.</span><span class="n">to_instruction</span><span class="p">()</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">instr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">qubits</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_build</span><span class="p">()</span></div>
 
 
 <span class="k">def</span> <span class="nf">_validate_operators</span><span class="p">(</span><span class="n">operators</span><span class="p">):</span>
@@ -599,6 +517,25 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All operators must act on the same number of qubits.&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">operators</span>
+
+
+<span class="k">def</span> <span class="nf">_validate_prefix</span><span class="p">(</span><span class="n">parameter_prefix</span><span class="p">,</span> <span class="n">operators</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameter_prefix</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="n">parameter_prefix</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameter_prefix</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">operators</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The number of parameter prefixes must match the operators.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">parameter_prefix</span>
+
+
+<span class="k">def</span> <span class="nf">_is_pauli_identity</span><span class="p">(</span><span class="n">operator</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">PauliOp</span><span class="p">,</span> <span class="n">PauliSumOp</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">PauliSumOp</span><span class="p">):</span>
+        <span class="n">operator</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">to_pauli_op</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">PauliOp</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">z</span><span class="p">))</span>
+    <span class="k">return</span> <span class="kc">False</span>
 </pre></div>
 
              </article>
@@ -616,7 +553,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Last updated on 2021/11/19.
+      Last updated on 2021/12/07.
 
     </p>
   </div>

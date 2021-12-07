@@ -1,4 +1,4 @@
-SetPhase
+﻿SetPhase
 ========
 
 .. currentmodule:: qiskit.pulse.instructions
@@ -14,12 +14,10 @@ SetPhase
       :toctree: ../stubs/
 
       ~SetPhase.append
-      ~SetPhase.assign_parameters
       ~SetPhase.ch_duration
       ~SetPhase.ch_start_time
       ~SetPhase.ch_stop_time
       ~SetPhase.draw
-      ~SetPhase.flatten
       ~SetPhase.insert
       ~SetPhase.is_parameterized
       ~SetPhase.shift

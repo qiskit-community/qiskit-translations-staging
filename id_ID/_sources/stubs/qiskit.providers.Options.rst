@@ -14,6 +14,11 @@
       :toctree: ../stubs/
 
       ~Options.get
+      ~Options.set_validator
       ~Options.update_options
 
 
+
+   .. rubric:: Attributes
+
+   .. autoattribute:: validator

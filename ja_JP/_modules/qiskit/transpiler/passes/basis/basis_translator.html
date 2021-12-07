@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.basis.basis_translator &mdash; Qiskit 0.32.0 ドキュメント</title>
+  <title>qiskit.transpiler.passes.basis.basis_translator &mdash; Qiskit 0.33.0 ドキュメント</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ignis.html">Qiskit Ignis (非推奨)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aqua.html">Qiskit Aqua (非推奨)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantumプロバイダー</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua 移行ガイド</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../aqua_migration.html">Qiskit Aqua 移行ガイド</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">トラブルシューティング</span></p>
 <ul>
@@ -381,9 +376,36 @@
 <span class="sd">    * The composed replacement rules are applied in-place to each op node which</span>
 <span class="sd">      is not already in the target_basis.</span>
 
+<span class="sd">    If the target keyword argument is specified and that</span>
+<span class="sd">    :class:`~qiskit.transpiler.Target` objects contains operations</span>
+<span class="sd">    which are non-global (i.e. they are defined only for a subset of qubits),</span>
+<span class="sd">    as calculated by :meth:`~qiskit.transpiler.Target.get_non_global_operation_names`,</span>
+<span class="sd">    this pass will attempt to match the output translation to those constraints.</span>
+<span class="sd">    For 1 qubit operations this is straightforward, the pass will perform a</span>
+<span class="sd">    search using the union of the set of global operations with the set of operations</span>
+<span class="sd">    defined solely on that qubit. For multi-qubit gates this is a bit more involved,</span>
+<span class="sd">    while the behavior is initially similar to the single qubit case, just using all</span>
+<span class="sd">    the qubits the operation is run on (where order is not significant) isn&#39;t sufficient.</span>
+<span class="sd">    We also need to consider any potential local qubits defined on subsets of the</span>
+<span class="sd">    quantum arguments for the multi-qubit operation. This means the target used for the</span>
+<span class="sd">    search of a non-global multi-qubit gate is the union of global operations, non-global</span>
+<span class="sd">    multi-qubit gates sharing the same qubits, and any non-global gates defined on</span>
+<span class="sd">    any subset of the qubits used.</span>
+
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        In the case of non-global operations it is possible for a single</span>
+<span class="sd">        execution of this pass to output an incomplete translation if any</span>
+<span class="sd">        non-global gates are defined on qubits that are a subset of a larger</span>
+<span class="sd">        multi-qubit gate. For example, if you have a ``u`` gate only defined on</span>
+<span class="sd">        qubit 0 and an ``x`` gate only on qubit 1 it is possible when</span>
+<span class="sd">        translating a 2 qubit operation on qubit 0 and 1 that the output might</span>
+<span class="sd">        have ``u`` on qubit 1 and ``x`` on qubit 0. Typically running this pass</span>
+<span class="sd">        a second time will correct these issues.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">equivalence_library</span><span class="p">,</span> <span class="n">target_basis</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">equivalence_library</span><span class="p">,</span> <span class="n">target_basis</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize a BasisTranslator instance.</span>
 
 <span class="sd">        Args:</span>
@@ -391,12 +413,21 @@
 <span class="sd">                which will be used by the BasisTranslator pass. (Instructions in</span>
 <span class="sd">                this library will not be unrolled by this pass.)</span>
 <span class="sd">            target_basis (list[str]): Target basis names to unroll to, e.g. `[&#39;u3&#39;, &#39;cx&#39;]`.</span>
+<span class="sd">            target (Target): The backend compilation target</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_equiv_lib</span> <span class="o">=</span> <span class="n">equivalence_library</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_target_basis</span> <span class="o">=</span> <span class="n">target_basis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_non_global_operations</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_qargs_with_non_global_operation</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># pylint: disable=invalid-name</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_non_global_operations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span><span class="o">.</span><span class="n">get_non_global_operation_names</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_qargs_with_non_global_operation</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_non_global_operations</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">qarg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span><span class="p">[</span><span class="n">gate</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_qargs_with_non_global_operation</span><span class="p">[</span><span class="n">qarg</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">gate</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BasisTranslator.run"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.BasisTranslator.run.html#qiskit.transpiler.passes.BasisTranslator.run">[ドキュメント]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Translate an input DAGCircuit to the target basis.</span>
@@ -410,32 +441,82 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            DAGCircuit: translated circuit.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_basis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_basis</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">dag</span>
 
+        <span class="n">qarg_indices</span> <span class="o">=</span> <span class="p">{</span><span class="n">qubit</span><span class="p">:</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">qubits</span><span class="p">)}</span>
         <span class="c1"># Names of instructions assumed to supported by any backend.</span>
-        <span class="n">basic_instrs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;measure&quot;</span><span class="p">,</span> <span class="s2">&quot;reset&quot;</span><span class="p">,</span> <span class="s2">&quot;barrier&quot;</span><span class="p">,</span> <span class="s2">&quot;snapshot&quot;</span><span class="p">,</span> <span class="s2">&quot;delay&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">basic_instrs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;measure&quot;</span><span class="p">,</span> <span class="s2">&quot;reset&quot;</span><span class="p">,</span> <span class="s2">&quot;barrier&quot;</span><span class="p">,</span> <span class="s2">&quot;snapshot&quot;</span><span class="p">,</span> <span class="s2">&quot;delay&quot;</span><span class="p">]</span>
+            <span class="n">target_basis</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_basis</span><span class="p">)</span>
+            <span class="n">source_basis</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">op_nodes</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">dag</span><span class="o">.</span><span class="n">has_calibration_for</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+                    <span class="n">source_basis</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">))</span>
+            <span class="n">qargs_local_source_basis</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">basic_instrs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;barrier&quot;</span><span class="p">,</span> <span class="s2">&quot;snapshot&quot;</span><span class="p">]</span>
+            <span class="n">source_basis</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="n">target_basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_non_global_operations</span><span class="p">)</span>
+            <span class="n">qargs_local_source_basis</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">op_nodes</span><span class="p">():</span>
+                <span class="n">qargs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">qarg_indices</span><span class="p">[</span><span class="n">bit</span><span class="p">]</span> <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">dag</span><span class="o">.</span><span class="n">has_calibration_for</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="c1"># Treat the instruction as on an incomplete basis if the qargs are in the</span>
+                <span class="c1"># qargs_with_non_global_operation dictionary or if any of the qubits in qargs</span>
+                <span class="c1"># are a superset for a non-local operation. For example, if the qargs</span>
+                <span class="c1"># are (0, 1) and that&#39;s a global (ie no non-local operations on (0, 1)</span>
+                <span class="c1"># operation but there is a non-local operation on (1,) we need to</span>
+                <span class="c1"># do an extra non-local search for this op to ensure we include any</span>
+                <span class="c1"># single qubit operation for (1,) as valid. This pattern also holds</span>
+                <span class="c1"># true for &gt; 2q ops too (so for 4q operations we need to check for 3q, 2q,</span>
+                <span class="c1"># and 1q opertaions in the same manner)</span>
+                <span class="k">if</span> <span class="n">qargs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qargs_with_non_global_operation</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span>
+                    <span class="nb">frozenset</span><span class="p">(</span><span class="n">qargs</span><span class="p">)</span><span class="o">.</span><span class="n">issuperset</span><span class="p">(</span><span class="n">incomplete_qargs</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">incomplete_qargs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qargs_with_non_global_operation</span>
+                <span class="p">):</span>
+                    <span class="n">qargs_local_source_basis</span><span class="p">[</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">qargs</span><span class="p">)]</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">source_basis</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">))</span>
 
-        <span class="n">target_basis</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_basis</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">basic_instrs</span><span class="p">)</span>
-
-        <span class="n">source_basis</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">op_nodes</span><span class="p">():</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">dag</span><span class="o">.</span><span class="n">has_calibration_for</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
-                <span class="n">source_basis</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">))</span>
+        <span class="n">target_basis</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">target_basis</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">basic_instrs</span><span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;Begin BasisTranslator from source basis </span><span class="si">%s</span><span class="s2"> to target &quot;</span> <span class="s2">&quot;basis </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Begin BasisTranslator from source basis </span><span class="si">%s</span><span class="s2"> to target basis </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span>
             <span class="n">source_basis</span><span class="p">,</span>
             <span class="n">target_basis</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="c1"># Search for a path from source to target basis.</span>
-
         <span class="n">search_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="n">basis_transforms</span> <span class="o">=</span> <span class="n">_basis_search</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_equiv_lib</span><span class="p">,</span> <span class="n">source_basis</span><span class="p">,</span> <span class="n">target_basis</span><span class="p">,</span> <span class="n">_basis_heuristic</span>
         <span class="p">)</span>
+
+        <span class="n">qarg_local_basis_transforms</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">qarg</span><span class="p">,</span> <span class="n">local_source_basis</span> <span class="ow">in</span> <span class="n">qargs_local_source_basis</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">expanded_target</span> <span class="o">=</span> <span class="n">target_basis</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qargs_with_non_global_operation</span><span class="p">[</span><span class="n">qarg</span><span class="p">]</span>
+            <span class="c1"># For any multiqubit operation that contains a subset of qubits that</span>
+            <span class="c1"># has a non-local operation, include that non-local operation in the</span>
+            <span class="c1"># search. This matches with the check we did above to include those</span>
+            <span class="c1"># subset non-local operations in the check here.</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">qarg</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">non_local_qarg</span><span class="p">,</span> <span class="n">local_basis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qargs_with_non_global_operation</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">qarg</span><span class="o">.</span><span class="n">issuperset</span><span class="p">(</span><span class="n">non_local_qarg</span><span class="p">):</span>
+                        <span class="n">expanded_target</span> <span class="o">|=</span> <span class="n">local_basis</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Performing BasisTranslator search from source basis </span><span class="si">%s</span><span class="s2"> to target &quot;</span>
+                <span class="s2">&quot;basis </span><span class="si">%s</span><span class="s2"> on qarg </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span>
+                <span class="n">local_source_basis</span><span class="p">,</span>
+                <span class="n">expanded_target</span><span class="p">,</span>
+                <span class="n">qarg</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">qarg_local_basis_transforms</span><span class="p">[</span><span class="n">qarg</span><span class="p">]</span> <span class="o">=</span> <span class="n">_basis_search</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_equiv_lib</span><span class="p">,</span> <span class="n">local_source_basis</span><span class="p">,</span> <span class="n">expanded_target</span><span class="p">,</span> <span class="n">_basis_heuristic</span>
+            <span class="p">)</span>
+
         <span class="n">search_end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="s2">&quot;Basis translation path search completed in </span><span class="si">%.3f</span><span class="s2">s.&quot;</span><span class="p">,</span> <span class="n">search_end_time</span> <span class="o">-</span> <span class="n">search_start_time</span>
@@ -451,6 +532,10 @@
 
         <span class="n">compose_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="n">instr_map</span> <span class="o">=</span> <span class="n">_compose_transforms</span><span class="p">(</span><span class="n">basis_transforms</span><span class="p">,</span> <span class="n">source_basis</span><span class="p">,</span> <span class="n">dag</span><span class="p">)</span>
+        <span class="n">extra_instr_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">qarg</span><span class="p">:</span> <span class="n">_compose_transforms</span><span class="p">(</span><span class="n">transforms</span><span class="p">,</span> <span class="n">qargs_local_source_basis</span><span class="p">[</span><span class="n">qarg</span><span class="p">],</span> <span class="n">dag</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">qarg</span><span class="p">,</span> <span class="n">transforms</span> <span class="ow">in</span> <span class="n">qarg_local_basis_transforms</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
 
         <span class="n">compose_end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
@@ -461,15 +546,22 @@
 
         <span class="n">replace_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">op_nodes</span><span class="p">():</span>
+            <span class="n">node_qargs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">qarg_indices</span><span class="p">[</span><span class="n">bit</span><span class="p">]</span> <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span>
+            <span class="n">qubit_set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">node_qargs</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">target_basis</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">node_qargs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qargs_with_non_global_operation</span>
+                <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qargs_with_non_global_operation</span><span class="p">[</span><span class="n">node_qargs</span><span class="p">]</span>
+            <span class="p">):</span>
                 <span class="k">continue</span>
 
             <span class="k">if</span> <span class="n">dag</span><span class="o">.</span><span class="n">has_calibration_for</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
                 <span class="k">continue</span>
 
-            <span class="k">if</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)</span> <span class="ow">in</span> <span class="n">instr_map</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">replace_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">instr_map</span><span class="p">):</span>
                 <span class="n">target_params</span><span class="p">,</span> <span class="n">target_dag</span> <span class="o">=</span> <span class="n">instr_map</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">]</span>
-
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">params</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_params</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
                         <span class="s2">&quot;Translation num_params not equal to op num_params.&quot;</span>
@@ -507,6 +599,11 @@
                         <span class="n">dag</span><span class="o">.</span><span class="n">global_phase</span> <span class="o">+=</span> <span class="n">bound_target_dag</span><span class="o">.</span><span class="n">global_phase</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">dag</span><span class="o">.</span><span class="n">substitute_node_with_dag</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">bound_target_dag</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">qubit_set</span> <span class="ow">in</span> <span class="n">extra_instr_map</span><span class="p">:</span>
+                <span class="n">replace_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">extra_instr_map</span><span class="p">[</span><span class="n">qubit_set</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)</span> <span class="ow">in</span> <span class="n">instr_map</span><span class="p">:</span>
+                <span class="n">replace_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">instr_map</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;BasisTranslator did not map </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
@@ -741,7 +838,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      最終更新: 2021/11/19
+      最終更新: 2021/12/07
 
     </p>
   </div>

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.circuit.library.n_local.n_local &mdash; Qiskit 0.32.0 dokumentáció</title>
+  <title>qiskit.circuit.library.n_local.n_local &mdash; Qiskit 0.33.0 dokumentáció</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Hibaelhárítás</span></p>
 <ul>
@@ -355,7 +350,6 @@
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Instruction</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">,</span> <span class="n">ParameterVector</span><span class="p">,</span> <span class="n">ParameterExpression</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.parametertable</span> <span class="kn">import</span> <span class="n">ParameterTable</span>
 <span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">QiskitError</span>
-<span class="kn">from</span> <span class="nn">qiskit.utils.deprecation</span> <span class="kn">import</span> <span class="n">deprecate_arguments</span>
 
 <span class="kn">from</span> <span class="nn">..blueprintcircuit</span> <span class="kn">import</span> <span class="n">BlueprintCircuit</span>
 
@@ -1006,16 +1000,12 @@
 <span class="sd">            ValueError: If the number of qubits has been set before and the initial state</span>
 <span class="sd">                does not match the number of qubits.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initial_state</span> <span class="o">=</span> <span class="n">initial_state</span>
+
         <span class="c1"># If there is an initial state object, check that the number of qubits is compatible</span>
         <span class="c1"># construct the circuit immediately. If the InitialState could modify the number of qubits</span>
         <span class="c1"># we could also do this later at circuit construction.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_initial_state</span> <span class="o">=</span> <span class="n">initial_state</span>
-
-        <span class="c1"># construct the circuit of the initial state</span>
-        <span class="c1"># if initial state is an instance of QuantumCircuit do not call construct circuit</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_initial_state</span><span class="p">,</span> <span class="n">QuantumCircuit</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_initial_state_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initial_state</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_initial_state</span><span class="p">,</span> <span class="n">QuantumCircuit</span><span class="p">):</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                 <span class="s2">&quot;The initial_state argument of the NLocal class &quot;</span>
                 <span class="s2">&quot;should be a QuantumCircuit. Passing any other type is &quot;</span>
@@ -1025,15 +1015,14 @@
                 <span class="ne">DeprecationWarning</span><span class="p">,</span>
                 <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_initial_state_circuit</span> <span class="o">=</span> <span class="n">initial_state</span><span class="o">.</span><span class="n">construct_circuit</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;circuit&quot;</span><span class="p">)</span>
+            <span class="n">initial_state_circuit</span> <span class="o">=</span> <span class="n">initial_state</span><span class="o">.</span><span class="n">construct_circuit</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;circuit&quot;</span><span class="p">)</span>
 
-        <span class="c1"># the initial state dictates the number of qubits since we do not have information</span>
-        <span class="c1"># about on which qubits the initial state acts</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_num_qubits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initial_state_circuit</span><span class="o">.</span><span class="n">num_qubits</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_qubits</span>
-        <span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Mismatching number of qubits in initial state and n-local circuit.&quot;</span><span class="p">)</span>
+            <span class="c1"># the initial state dictates the number of qubits since we do not have information</span>
+            <span class="c1"># about on which qubits the initial state acts</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_qubits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">initial_state_circuit</span><span class="o">.</span><span class="n">num_qubits</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Mismatching number of qubits in initial state and n-local circuit.&quot;</span>
+                <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate</span><span class="p">()</span>
 
@@ -1118,7 +1107,7 @@
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">entangler_map</span><span class="p">:</span>
                 <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ordered_parameters</span><span class="p">[</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">get_parameters</span><span class="p">(</span><span class="n">block</span><span class="p">))</span> <span class="p">:]</span>
                 <span class="n">parameterized_block</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameterize_block</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
-                <span class="n">layer</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">parameterized_block</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">layer</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">parameterized_block</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1127,12 +1116,10 @@
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="NLocal.assign_parameters"><a class="viewcode-back" href="../../../../../stubs/qiskit.circuit.library.NLocal.assign_parameters.html#qiskit.circuit.library.NLocal.assign_parameters">[docs]</a>    <span class="nd">@deprecate_arguments</span><span class="p">({</span><span class="s2">&quot;param_dict&quot;</span><span class="p">:</span> <span class="s2">&quot;parameters&quot;</span><span class="p">})</span>
-    <span class="k">def</span> <span class="nf">assign_parameters</span><span class="p">(</span>
+<div class="viewcode-block" id="NLocal.assign_parameters"><a class="viewcode-back" href="../../../../../stubs/qiskit.circuit.library.NLocal.assign_parameters.html#qiskit.circuit.library.NLocal.assign_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">assign_parameters</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">parameters</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Parameter</span><span class="p">],</span> <span class="n">ParameterVector</span><span class="p">],</span>
         <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">param_dict</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">QuantumCircuit</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Assign parameters to the n-local circuit.</span>
 
@@ -1150,35 +1137,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_build</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_parameters</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
-                    <span class="s2">&quot;If the parameters are provided as list, the size must match &quot;</span>
-                    <span class="s2">&quot;the number of parameters (</span><span class="si">{}</span><span class="s2">), but </span><span class="si">{}</span><span class="s2"> are given.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">num_parameters</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-            <span class="n">unbound_parameters</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">param</span>
-                <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ordered_parameters</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">)</span>
-            <span class="p">]</span>
-
-            <span class="c1"># to get a sorted list of unique parameters, keep track of the already used parameters</span>
-            <span class="c1"># in a set and add the parameters to the unique list only if not existing in the set</span>
-            <span class="n">used</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-            <span class="n">unbound_unique_parameters</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">unbound_parameters</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">param</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">used</span><span class="p">:</span>
-                    <span class="n">unbound_unique_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
-                    <span class="n">used</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
-
-            <span class="n">parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">unbound_unique_parameters</span><span class="p">,</span> <span class="n">parameters</span><span class="p">))</span>
-
-        <span class="k">if</span> <span class="n">inplace</span><span class="p">:</span>
-            <span class="n">new</span> <span class="o">=</span> <span class="p">[</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ordered_parameters</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_ordered_parameters</span> <span class="o">=</span> <span class="n">new</span>
 
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">assign_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="n">inplace</span><span class="p">)</span></div>
 
@@ -1284,11 +1242,11 @@
         <span class="n">circuit</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">qregs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
         <span class="c1"># use the initial state as starting circuit, if it is set</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initial_state</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_initial_state</span><span class="p">,</span> <span class="n">QuantumCircuit</span><span class="p">):</span>
-                <span class="n">initial</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initial_state</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_state</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_state</span><span class="p">,</span> <span class="n">QuantumCircuit</span><span class="p">):</span>
+                <span class="n">initial</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_state</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">initial</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initial_state</span><span class="o">.</span><span class="n">construct_circuit</span><span class="p">(</span><span class="s2">&quot;circuit&quot;</span><span class="p">,</span> <span class="n">register</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">qregs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">initial</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_state</span><span class="o">.</span><span class="n">construct_circuit</span><span class="p">(</span><span class="s2">&quot;circuit&quot;</span><span class="p">,</span> <span class="n">register</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">qregs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="n">circuit</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">initial</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">param_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ordered_parameters</span><span class="p">)</span>
@@ -1321,6 +1279,14 @@
         <span class="c1"># add the appended layers</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_build_additional_layers</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="s2">&quot;appended&quot;</span><span class="p">)</span>
 
+        <span class="c1"># cast global phase to float if it has no free parameters</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">global_phase</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">circuit</span><span class="o">.</span><span class="n">global_phase</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">global_phase</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="c1"># expression contains free parameters</span>
+                <span class="k">pass</span>
+
         <span class="k">try</span><span class="p">:</span>
             <span class="n">block</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">to_gate</span><span class="p">()</span>
         <span class="k">except</span> <span class="n">QiskitError</span><span class="p">:</span>
@@ -1331,52 +1297,7 @@
     <span class="c1"># pylint: disable=unused-argument</span>
     <span class="k">def</span> <span class="nf">_parameter_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rep</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Parameter</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;If certain blocks should use certain parameters this method can be overriden.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="kc">None</span>
-
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Draw this NLocal in circuit format using the standard gates.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            A single string representing this NLocal.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">qiskit.compiler</span> <span class="kn">import</span> <span class="n">transpile</span>
-
-        <span class="n">basis_gates</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s2">&quot;id&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;x&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;y&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;z&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;h&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;s&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;t&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;sdg&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;tdg&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;rx&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ry&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;rz&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;rxx&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ryy&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;cx&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;cy&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;cz&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ch&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;crx&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;cry&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;crz&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;swap&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;cswap&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ccx&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;cu1&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;cu3&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;u1&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;u2&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;u3&quot;</span><span class="p">,</span>
-        <span class="p">]</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">transpile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basis_gates</span><span class="o">=</span><span class="n">basis_gates</span><span class="p">,</span> <span class="n">optimization_level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s2">&quot;text&quot;</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">single_string</span><span class="p">()</span>
-        <span class="p">)</span></div>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
 
 <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">QuantumCircuit</span><span class="p">,</span> <span class="n">Instruction</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Parameter</span><span class="p">]:</span>
@@ -1468,7 +1389,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Utolsó frissítés 2021/11/19.
+      Utolsó frissítés 2021/12/07.
 
     </p>
   </div>

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.algorithms.amplitude_amplifiers.amplification_problem &mdash; Qiskit 0.32.0 dokumentáció</title>
+  <title>qiskit.algorithms.amplitude_amplifiers.amplification_problem &mdash; Qiskit 0.33.0 dokumentáció</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Hibaelhárítás</span></p>
 <ul>
@@ -387,9 +382,6 @@
 <span class="sd">                if the ``oracle`` argument has an ``evaluate_bitstring`` method (currently only</span>
 <span class="sd">                provided by the :class:`~qiskit.circuit.library.PhaseOracle` class) this will be</span>
 <span class="sd">                used, otherwise this kwarg is required and **must** be specified.</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            TypeError: if ``is_good_state`` is not provided and is required</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_oracle</span> <span class="o">=</span> <span class="n">oracle</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_state_preparation</span> <span class="o">=</span> <span class="n">state_preparation</span>
@@ -401,7 +393,7 @@
         <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">oracle</span><span class="p">,</span> <span class="s2">&quot;evaluate_bitstring&quot;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_good_state</span> <span class="o">=</span> <span class="n">oracle</span><span class="o">.</span><span class="n">evaluate_bitstring</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;A is_good_state function is required with the &quot;</span> <span class="s2">&quot;provided oracle&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_good_state</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">oracle</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">QuantumCircuit</span><span class="p">,</span> <span class="n">Statevector</span><span class="p">]:</span>
@@ -499,8 +491,8 @@
 <span class="sd">            A callable that takes in a bitstring and returns True if the measurement is a good</span>
 <span class="sd">            state, False otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_is_good_state</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_good_state</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_is_good_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_is_good_state</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_good_state</span>  <span class="c1"># returns None if no is_good_state arg has been set</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_is_good_state</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">good_bitstr</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">good_bitstr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_good_state</span><span class="p">):</span>
                 <span class="k">return</span> <span class="k">lambda</span> <span class="n">bitstr</span><span class="p">:</span> <span class="n">bitstr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_good_state</span>
@@ -565,7 +557,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Utolsó frissítés 2021/11/19.
+      Utolsó frissítés 2021/12/07.
 
     </p>
   </div>

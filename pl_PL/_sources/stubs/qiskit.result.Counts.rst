@@ -25,6 +25,7 @@
       ~Counts.pop
       ~Counts.popitem
       ~Counts.setdefault
+      ~Counts.shots
       ~Counts.update
       ~Counts.values
 

@@ -15,6 +15,7 @@ P\_BFGS
 
       ~P_BFGS.get_support_level
       ~P_BFGS.gradient_num_diff
+      ~P_BFGS.minimize
       ~P_BFGS.optimize
       ~P_BFGS.print_options
       ~P_BFGS.set_max_evals_grouped

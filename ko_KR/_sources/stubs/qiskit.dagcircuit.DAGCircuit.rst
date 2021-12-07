@@ -23,16 +23,15 @@
       ~DAGCircuit.apply_operation_front
       ~DAGCircuit.bfs_successors
       ~DAGCircuit.collect_1q_runs
+      ~DAGCircuit.collect_2q_runs
       ~DAGCircuit.collect_runs
       ~DAGCircuit.compose
-      ~DAGCircuit.compose_back
       ~DAGCircuit.count_ops
       ~DAGCircuit.count_ops_longest_path
       ~DAGCircuit.depth
       ~DAGCircuit.descendants
       ~DAGCircuit.draw
       ~DAGCircuit.edges
-      ~DAGCircuit.extend_back
       ~DAGCircuit.from_networkx
       ~DAGCircuit.front_layer
       ~DAGCircuit.gate_nodes
@@ -58,21 +57,22 @@
       ~DAGCircuit.quantum_successors
       ~DAGCircuit.remove_all_ops_named
       ~DAGCircuit.remove_ancestors_of
+      ~DAGCircuit.remove_clbits
+      ~DAGCircuit.remove_cregs
       ~DAGCircuit.remove_descendants_of
       ~DAGCircuit.remove_nonancestors_of
       ~DAGCircuit.remove_nondescendants_of
       ~DAGCircuit.remove_op_node
+      ~DAGCircuit.replace_block_with_op
       ~DAGCircuit.reverse_ops
       ~DAGCircuit.serial_layers
       ~DAGCircuit.size
       ~DAGCircuit.substitute_node
       ~DAGCircuit.substitute_node_with_dag
       ~DAGCircuit.successors
-      ~DAGCircuit.threeQ_or_more_gates
       ~DAGCircuit.to_networkx
       ~DAGCircuit.topological_nodes
       ~DAGCircuit.topological_op_nodes
-      ~DAGCircuit.twoQ_gates
       ~DAGCircuit.two_qubit_ops
       ~DAGCircuit.width
 

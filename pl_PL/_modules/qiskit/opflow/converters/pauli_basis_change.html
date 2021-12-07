@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.opflow.converters.pauli_basis_change &mdash; Qiskit 0.32.0 - dokumentacja</title>
+  <title>qiskit.opflow.converters.pauli_basis_change &mdash; Qiskit 0.33.0 - dokumentacja</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
 <ul>
@@ -442,7 +437,7 @@
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">PauliOp</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s2">&quot;PauliBasisChange can only convert into Pauli bases, &quot;</span> <span class="s2">&quot;not </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">dest</span><span class="p">))</span>
+                <span class="sa">f</span><span class="s2">&quot;PauliBasisChange can only convert into Pauli bases, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_destination</span> <span class="o">=</span> <span class="n">dest</span>
 
@@ -471,12 +466,16 @@
             <span class="ow">and</span> <span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">grouping_type</span> <span class="o">==</span> <span class="s2">&quot;TPB&quot;</span>
         <span class="p">):</span>
             <span class="n">primitive</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="n">origin_x</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">,</span> <span class="n">primitive</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
-            <span class="n">origin_z</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">,</span> <span class="n">primitive</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">Z</span><span class="p">)</span>
+            <span class="n">origin_x</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">,</span> <span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">origin_z</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">,</span> <span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
             <span class="n">origin_pauli</span> <span class="o">=</span> <span class="n">Pauli</span><span class="p">((</span><span class="n">origin_z</span><span class="p">,</span> <span class="n">origin_x</span><span class="p">))</span>
             <span class="n">cob_instr_op</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_cob_circuit</span><span class="p">(</span><span class="n">origin_pauli</span><span class="p">)</span>
-            <span class="n">primitive</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">primitive</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">primitive</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">Z</span><span class="p">)</span>
-            <span class="n">primitive</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+            <span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="c1"># The following line is because the deprecated PauliTable did not have a phase</span>
+            <span class="c1"># and did not track it, so phase=0 was always guaranteed.</span>
+            <span class="c1"># But the new PauliList may change phase.</span>
+            <span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">phase</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">dest_pauli_sum_op</span> <span class="o">=</span> <span class="n">PauliSumOp</span><span class="p">(</span><span class="n">primitive</span><span class="p">,</span> <span class="n">coeff</span><span class="o">=</span><span class="n">operator</span><span class="o">.</span><span class="n">coeff</span><span class="p">,</span> <span class="n">grouping_type</span><span class="o">=</span><span class="s2">&quot;TPB&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replacement_fn</span><span class="p">(</span><span class="n">cob_instr_op</span><span class="p">,</span> <span class="n">dest_pauli_sum_op</span><span class="p">)</span>
 
@@ -890,7 +889,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Ostatnia modyfikacja 2021/11/19.
+      Ostatnia modyfikacja 2021/12/07.
 
     </p>
   </div>

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.execute_function &mdash; Tài liệu Qiskit 0.32.0</title>
+  <title>qiskit.execute_function &mdash; Tài liệu Qiskit 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../apidoc/ignis.html">Qiskit Ignis (không khuyên dùng)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../apidoc/aqua.html">Qiskit Aqua (không khuyên dùng)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../apidoc/ibmq-provider.html">Trình cung cấp Lượng tử IBM Qiskit</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Hướng dẫn Qiskit Aqua Migration</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../aqua_migration.html">Hướng dẫn Qiskit Aqua Migration</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Xử lý sự cố</span></p>
 <ul>
@@ -382,7 +377,7 @@
     <span class="n">qobj_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">qobj_header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">shots</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># common run options</span>
-    <span class="n">memory</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">memory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">max_credits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">seed_simulator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">default_qubit_los</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -648,6 +643,8 @@
         <span class="c1"># assembling the circuits into a qobj to be run on the backend</span>
         <span class="k">if</span> <span class="n">shots</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">shots</span> <span class="o">=</span> <span class="mi">1024</span>
+        <span class="k">if</span> <span class="n">memory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">memory</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="n">max_credits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">max_credits</span> <span class="o">=</span> <span class="mi">10</span>
         <span class="k">if</span> <span class="n">meas_level</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -710,24 +707,16 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">run_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                        <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> backend doesn&#39;t support option </span><span class="si">%s</span><span class="s2"> so not &quot;</span>
-                        <span class="s2">&quot;passing that kwarg to run()&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> backend doesn&#39;t support option </span><span class="si">%s</span><span class="s2"> so not passing that kwarg to run()&quot;</span><span class="p">,</span>
                         <span class="n">backend</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                         <span class="n">key</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="k">del</span> <span class="n">run_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;shots&quot;</span> <span class="ow">and</span> <span class="n">run_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">run_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1024</span>
-            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;max_credits&quot;</span> <span class="ow">and</span> <span class="n">run_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">run_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
-            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;meas_level&quot;</span> <span class="ow">and</span> <span class="n">run_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">run_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">MeasLevel</span><span class="o">.</span><span class="n">CLASSIFIED</span>
-            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;meas_return&quot;</span> <span class="ow">and</span> <span class="n">run_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">run_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">MeasReturnType</span><span class="o">.</span><span class="n">AVERAGE</span>
-            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;memory_slot_size&quot;</span> <span class="ow">and</span> <span class="n">run_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">run_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+            <span class="k">elif</span> <span class="n">run_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">run_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
-        <span class="n">run_kwargs</span><span class="p">[</span><span class="s2">&quot;parameter_binds&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter_binds</span>
+        <span class="k">if</span> <span class="n">parameter_binds</span><span class="p">:</span>
+            <span class="n">run_kwargs</span><span class="p">[</span><span class="s2">&quot;parameter_binds&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter_binds</span>
         <span class="n">run_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">run_config</span><span class="p">)</span>
         <span class="n">job</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">experiments</span><span class="p">,</span> <span class="o">**</span><span class="n">run_kwargs</span><span class="p">)</span>
         <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
@@ -761,7 +750,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Cập nhật mới nhất vào 2021/11/19.
+      Cập nhật mới nhất vào 2021/12/07.
 
     </p>
   </div>

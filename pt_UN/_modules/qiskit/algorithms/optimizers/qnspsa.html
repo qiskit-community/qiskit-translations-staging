@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.algorithms.optimizers.qnspsa &mdash; Documentação Qiskit 0.32.0</title>
+  <title>qiskit.algorithms.optimizers.qnspsa &mdash; Documentação Qiskit 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (depreciado)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aqua.html">Qiskit Aqua (depreciado)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Provedor Quântico IBM Qiskit</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Guias de Migração Qiskit Aqua</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../aqua_migration.html">Guias de Migração Qiskit Aqua</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Solução de problemas</span></p>
 <ul>
@@ -353,13 +348,10 @@
 <span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">StateFn</span><span class="p">,</span> <span class="n">CircuitSampler</span><span class="p">,</span> <span class="n">ExpectationBase</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">QuantumInstance</span>
 
-<span class="kn">from</span> <span class="nn">.spsa</span> <span class="kn">import</span> <span class="n">SPSA</span><span class="p">,</span> <span class="n">_batch_evaluate</span>
+<span class="kn">from</span> <span class="nn">.spsa</span> <span class="kn">import</span> <span class="n">SPSA</span><span class="p">,</span> <span class="n">CALLBACK</span><span class="p">,</span> <span class="n">TERMINATIONCHECKER</span><span class="p">,</span> <span class="n">_batch_evaluate</span>
 
 <span class="c1"># the function to compute the fidelity</span>
 <span class="n">FIDELITY</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span>
-
-<span class="c1"># parameters, loss, stepsize, number of function evaluations, accepted</span>
-<span class="n">CALLBACK</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="QNSPSA"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.optimizers.QNSPSA.html#qiskit.algorithms.optimizers.QNSPSA">[documentos]</a><span class="k">class</span> <span class="nc">QNSPSA</span><span class="p">(</span><span class="n">SPSA</span><span class="p">):</span>
@@ -434,6 +426,7 @@
         <span class="n">lse_solver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">initial_hessian</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CALLBACK</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">termination_checker</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TERMINATIONCHECKER</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -480,6 +473,15 @@
 <span class="sd">            callback: A callback function passed information in each iteration step. The</span>
 <span class="sd">                information is, in this order: the parameters, the function value, the number</span>
 <span class="sd">                of function evaluations, the stepsize, whether the step was accepted.</span>
+<span class="sd">            termination_checker: A callback function executed at the end of each iteration step. The</span>
+<span class="sd">                arguments are, in this order: the parameters, the function value, the number</span>
+<span class="sd">                of function evaluations, the stepsize, whether the step was accepted. If the callback</span>
+<span class="sd">                returns True, the optimization is terminated.</span>
+<span class="sd">                To prevent additional evaluations of the objective method, if the objective has not yet</span>
+<span class="sd">                been evaluated, the objective is estimated by taking the mean of the objective</span>
+<span class="sd">                evaluations used in the estimate of the gradient.</span>
+
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">maxiter</span><span class="p">,</span>
@@ -497,6 +499,7 @@
             <span class="n">regularization</span><span class="o">=</span><span class="n">regularization</span><span class="p">,</span>
             <span class="n">perturbation_dims</span><span class="o">=</span><span class="n">perturbation_dims</span><span class="p">,</span>
             <span class="n">initial_hessian</span><span class="o">=</span><span class="n">initial_hessian</span><span class="p">,</span>
+            <span class="n">termination_checker</span><span class="o">=</span><span class="n">termination_checker</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">fidelity</span> <span class="o">=</span> <span class="n">fidelity</span>
@@ -526,7 +529,7 @@
         <span class="c1"># -0.5 factor comes from the fact that we need -0.5 * fidelity</span>
         <span class="n">hessian_estimate</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">diff</span> <span class="o">*</span> <span class="p">(</span><span class="n">rank_one</span> <span class="o">+</span> <span class="n">rank_one</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
 
-        <span class="k">return</span> <span class="n">gradient_estimate</span><span class="p">,</span> <span class="n">hessian_estimate</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">loss_values</span><span class="p">),</span> <span class="n">gradient_estimate</span><span class="p">,</span> <span class="n">hessian_estimate</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">settings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
@@ -592,10 +595,20 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">sampler</span> <span class="o">=</span> <span class="n">CircuitSampler</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
 
-            <span class="k">def</span> <span class="nf">fidelity</span><span class="p">(</span><span class="n">values_x</span><span class="p">,</span> <span class="n">values_y</span><span class="p">):</span>
-                <span class="n">value_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-                    <span class="nb">zip</span><span class="p">(</span><span class="n">params_x</span><span class="p">[:]</span> <span class="o">+</span> <span class="n">params_y</span><span class="p">[:],</span> <span class="n">values_x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">+</span> <span class="n">values_y</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
-                <span class="p">)</span>
+            <span class="k">def</span> <span class="nf">fidelity</span><span class="p">(</span><span class="n">values_x</span><span class="p">,</span> <span class="n">values_y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">values_y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># no batches</span>
+                    <span class="n">value_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                        <span class="nb">zip</span><span class="p">(</span><span class="n">params_x</span><span class="p">[:]</span> <span class="o">+</span> <span class="n">params_y</span><span class="p">[:],</span> <span class="n">values_x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">+</span> <span class="n">values_y</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">value_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params_x</span><span class="p">[:]</span> <span class="o">+</span> <span class="n">params_y</span><span class="p">[:]}</span>
+                    <span class="k">for</span> <span class="n">values_xy</span> <span class="ow">in</span> <span class="n">values_x</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">value_x</span><span class="p">,</span> <span class="n">param_x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">values_xy</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">params_x</span><span class="p">):</span>
+                            <span class="n">value_dict</span><span class="p">[</span><span class="n">param_x</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value_x</span><span class="p">)</span>
+
+                        <span class="k">for</span> <span class="n">value_y</span><span class="p">,</span> <span class="n">param_y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">values_xy</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:],</span> <span class="n">params_y</span><span class="p">):</span>
+                            <span class="n">value_dict</span><span class="p">[</span><span class="n">param_y</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value_y</span><span class="p">)</span>
+
                 <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">value_dict</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">())</span> <span class="o">**</span> <span class="mi">2</span>
 
         <span class="k">return</span> <span class="n">fidelity</span></div></div>
@@ -616,7 +629,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Última actualização em 2021/11/19.
+      Última actualização em 2021/12/07.
 
     </p>
   </div>

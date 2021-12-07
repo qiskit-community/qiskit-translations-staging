@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.layout.full_ancilla_allocation &mdash; Tài liệu Qiskit 0.32.0</title>
+  <title>qiskit.transpiler.passes.layout.full_ancilla_allocation &mdash; Tài liệu Qiskit 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ignis.html">Qiskit Ignis (không khuyên dùng)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aqua.html">Qiskit Aqua (không khuyên dùng)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ibmq-provider.html">Trình cung cấp Lượng tử IBM Qiskit</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Hướng dẫn Qiskit Aqua Migration</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../aqua_migration.html">Hướng dẫn Qiskit Aqua Migration</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Xử lý sự cố</span></p>
 <ul>
@@ -398,19 +393,19 @@
         <span class="k">if</span> <span class="n">layout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span><span class="s1">&#39;FullAncillaAllocation pass requires property_set[&quot;layout&quot;].&#39;</span><span class="p">)</span>
 
+        <span class="n">virtual_bits</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">get_virtual_bits</span><span class="p">()</span>
+        <span class="n">physical_bits</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">get_physical_bits</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">layout</span><span class="p">:</span>
-            <span class="n">FullAncillaAllocation</span><span class="o">.</span><span class="n">validate_layout</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">get_virtual_bits</span><span class="p">(),</span> <span class="nb">set</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">qubits</span><span class="p">))</span>
-            <span class="n">layout_physical_qubits</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">get_physical_bits</span><span class="p">())</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">FullAncillaAllocation</span><span class="o">.</span><span class="n">validate_layout</span><span class="p">(</span><span class="n">virtual_bits</span><span class="p">,</span> <span class="nb">set</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">qubits</span><span class="p">))</span>
+            <span class="n">layout_physical_qubits</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">physical_bits</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">layout_physical_qubits</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="n">idle_physical_qubits</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">q</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">layout_physical_qubits</span> <span class="k">if</span> <span class="n">q</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">layout</span><span class="o">.</span><span class="n">get_physical_bits</span><span class="p">()</span>
-        <span class="p">]</span>
+        <span class="n">idle_physical_qubits</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">layout_physical_qubits</span> <span class="k">if</span> <span class="n">q</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">physical_bits</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="p">:</span>
             <span class="n">idle_physical_qubits</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">q</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">physical_qubits</span> <span class="k">if</span> <span class="n">q</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">layout</span><span class="o">.</span><span class="n">get_physical_bits</span><span class="p">()</span>
+                <span class="n">q</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">physical_qubits</span> <span class="k">if</span> <span class="n">q</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">physical_bits</span>
             <span class="p">]</span>
 
         <span class="k">if</span> <span class="n">idle_physical_qubits</span><span class="p">:</span>
@@ -455,7 +450,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Cập nhật mới nhất vào 2021/11/19.
+      Cập nhật mới nhất vào 2021/12/07.
 
     </p>
   </div>

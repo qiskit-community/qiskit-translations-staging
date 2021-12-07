@@ -18,3 +18,9 @@
       ~InstructionSet.inverse
 
 
+
+   .. rubric:: Attributes
+
+   .. autoattribute:: instructions
+   .. autoattribute:: qargs
+   .. autoattribute:: cargs

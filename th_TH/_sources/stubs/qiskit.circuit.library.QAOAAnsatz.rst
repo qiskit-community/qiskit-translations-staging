@@ -16,19 +16,25 @@
    .. autoattribute:: clbits
    .. autoattribute:: cost_operator
    .. autoattribute:: data
+   .. autoattribute:: entanglement
+   .. autoattribute:: entanglement_blocks
    .. autoattribute:: evolution
    .. autoattribute:: extension_lib
    .. autoattribute:: global_phase
    .. autoattribute:: header
    .. autoattribute:: initial_state
+   .. autoattribute:: insert_barriers
    .. autoattribute:: instances
    .. autoattribute:: metadata
    .. autoattribute:: mixer_operator
    .. autoattribute:: num_ancillas
    .. autoattribute:: num_clbits
+   .. autoattribute:: num_layers
    .. autoattribute:: num_parameters
+   .. autoattribute:: num_parameters_settable
    .. autoattribute:: num_qubits
    .. autoattribute:: operators
+   .. autoattribute:: ordered_parameters
    .. autoattribute:: parameter_bounds
    .. autoattribute:: parameters
    .. autoattribute:: preferred_init_points
@@ -36,3 +42,4 @@
    .. autoattribute:: qregs
    .. autoattribute:: qubits
    .. autoattribute:: reps
+   .. autoattribute:: rotation_blocks

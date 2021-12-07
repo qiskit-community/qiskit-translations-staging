@@ -13,6 +13,7 @@
       :nosignatures:
       :toctree: ../stubs/
 
+      ~QuantumRegister.index
       ~QuantumRegister.qasm
 
 

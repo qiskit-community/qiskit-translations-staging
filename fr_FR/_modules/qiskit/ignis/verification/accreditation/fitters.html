@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.ignis.verification.accreditation.fitters &mdash; Documentation Qiskit 0.32.0</title>
+  <title>qiskit.ignis.verification.accreditation.fitters &mdash; Documentation Qiskit 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ignis.html">Qiskit Ignis (obsolète)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aqua.html">Qiskit Aqua (obsolète)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum (Fournisseur)</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Guide de migration Qiskit Aqua</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../aqua_migration.html">Guide de migration Qiskit Aqua</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Déboggage</span></p>
 <ul>
@@ -348,61 +343,238 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Class for accreditation protocol</span>
-
-<span class="sd">Implementation follows the methods from</span>
-<span class="sd">Samuele Ferracin, Theodoros Kapourniotis and Animesh Datta</span>
-<span class="sd">New Journal of Physics, Volume 21, November 2019</span>
-<span class="sd">https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QiskitError</span>
-<span class="kn">from</span> <span class="nn">.qotp</span> <span class="kn">import</span> <span class="n">QOTPCorrectCounts</span>
+<span class="kn">from</span> <span class="nn">qiskit.utils.deprecation</span> <span class="kn">import</span> <span class="n">deprecate_function</span>
+<span class="kn">from</span> <span class="nn">.qotp</span> <span class="kn">import</span> <span class="n">QOTPCorrectString</span><span class="p">,</span> <span class="n">QOTPCorrectCounts</span>
 
 
 <div class="viewcode-block" id="AccreditationFitter"><a class="viewcode-back" href="../../../../../stubs/qiskit.ignis.verification.AccreditationFitter.html#qiskit.ignis.verification.AccreditationFitter">[docs]</a><span class="k">class</span> <span class="nc">AccreditationFitter</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class for fitters for accreditation</span>
 
-<span class="sd">    Implementation follows the methods from</span>
-<span class="sd">    Samuele Ferracin, Theodoros Kapourniotis and Animesh Datta</span>
-<span class="sd">    New Journal of Physics, Volume 21, November 2019</span>
-<span class="sd">    https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6</span>
+<span class="sd">    Implementation follows the methods from [1] FullAccreditation</span>
+<span class="sd">    and [2] MeanAccreditation.</span>
+
+<span class="sd">    Data can be input either as qiskit result objects, or as</span>
+<span class="sd">    lists of bitstrings (the latter is useful for batch jobs).</span>
+
+<span class="sd">    References:</span>
+<span class="sd">        1. S. Ferracin, T. Kapourniotis, A. Datta.</span>
+<span class="sd">           *Accrediting outputs of noisy intermediate-scale quantum computing devices*,</span>
+<span class="sd">           New Journal of Physics, Volume 21, 113038. (2019).</span>
+<span class="sd">           `NJP 113038 &lt;https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6&gt;`_</span>
+<span class="sd">        2. S. Ferracin, S. Merkel, D. McKay, A. Datta.</span>
+<span class="sd">           *Experimental accreditation of outputs of noisy quantum computers*,</span>
+<span class="sd">           arxiv:2103.06603 (2021).</span>
+<span class="sd">           `arXiv:quant-ph/2103.06603 &lt;https://arxiv.org/abs/2103.06603&gt;`_</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">bound</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">confidence</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">N_acc</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">num_runs</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">flag</span> <span class="o">=</span> <span class="s1">&#39;accepted&#39;</span>
-    <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">num_runs</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">num_traps</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">g_num</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_counts_all</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_counts_accepted</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Ntraps</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Nrejects</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Nacc</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_g</span> <span class="o">=</span> <span class="mf">1.0</span>
 
-<div class="viewcode-block" id="AccreditationFitter.single_protocol_run"><a class="viewcode-back" href="../../../../../stubs/qiskit.ignis.verification.AccreditationFitter.single_protocol_run.html#qiskit.ignis.verification.AccreditationFitter.single_protocol_run">[docs]</a>    <span class="k">def</span> <span class="nf">single_protocol_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">postp_list</span><span class="p">,</span> <span class="n">v_zero</span><span class="p">):</span>
+        <span class="c1"># all to be deprecated</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_runs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N_acc</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="AccreditationFitter.Reset"><a class="viewcode-back" href="../../../../../stubs/qiskit.ignis.verification.AccreditationFitter.Reset.html#qiskit.ignis.verification.AccreditationFitter.Reset">[docs]</a>    <span class="k">def</span> <span class="nf">Reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Single protocol run of accreditation protocol on simul backend</span>
+<span class="sd">        Reset the accreditation class object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_counts_all</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_counts_accepted</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Ntraps</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Nrejects</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Nacc</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_g</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="c1"># all to be deprecated</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_runs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N_acc</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="AccreditationFitter.AppendResults"><a class="viewcode-back" href="../../../../../stubs/qiskit.ignis.verification.AccreditationFitter.AppendResults.html#qiskit.ignis.verification.AccreditationFitter.AppendResults">[docs]</a>    <span class="k">def</span> <span class="nf">AppendResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">postp_list</span><span class="p">,</span> <span class="n">v_zero</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Single run of accreditation protocol, data input as</span>
+<span class="sd">        qiskit result object assumed to be single shot</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            results (Result): results of the quantum job</span>
 <span class="sd">            postp_list (list): list of strings used to post-process outputs</span>
 <span class="sd">            v_zero (int): position of target</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            QiskitError: If the data is not single shot</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_runs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_runs</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">strings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">postp_list</span><span class="p">):</span>
+            <span class="c1"># Classical postprocessing</span>
+            <span class="c1"># check single shot and extract string</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_counts</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span>
+            <span class="n">shots</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">countstring</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">countstring</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">shots</span> <span class="o">+=</span> <span class="n">val</span>
+            <span class="k">if</span> <span class="n">shots</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">countstring</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;ERROR: not single shot data&quot;</span><span class="p">)</span>
+            <span class="n">strings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">countstring</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_AppendData</span><span class="p">(</span><span class="n">strings</span><span class="p">,</span> <span class="n">postp_list</span><span class="p">,</span> <span class="n">v_zero</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccreditationFitter.AppendStrings"><a class="viewcode-back" href="../../../../../stubs/qiskit.ignis.verification.AccreditationFitter.AppendStrings.html#qiskit.ignis.verification.AccreditationFitter.AppendStrings">[docs]</a>    <span class="k">def</span> <span class="nf">AppendStrings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">strings</span><span class="p">,</span> <span class="n">postp_list</span><span class="p">,</span> <span class="n">v_zero</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Single run of accreditation protocol, data input as</span>
+<span class="sd">        a list of output strings</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            strings (list): stringlist of outputs</span>
+<span class="sd">            postp_list (list): list of strings used to post-process outputs</span>
+<span class="sd">            v_zero (int): position of target</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_AppendData</span><span class="p">(</span><span class="n">strings</span><span class="p">,</span> <span class="n">postp_list</span><span class="p">,</span> <span class="n">v_zero</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccreditationFitter.FullAccreditation"><a class="viewcode-back" href="../../../../../stubs/qiskit.ignis.verification.AccreditationFitter.FullAccreditation.html#qiskit.ignis.verification.AccreditationFitter.FullAccreditation">[docs]</a>    <span class="k">def</span> <span class="nf">FullAccreditation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">confidence</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function computes the bound on variation distance based and</span>
+<span class="sd">        the confidence interval desired.  This protocol is from [1]</span>
+<span class="sd">        and fully treats non-Markovian errors</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            confidence (float): number between 0 and 1</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: dict of postselected target counts</span>
+<span class="sd">            float: 1-norm bound from noiseless samples</span>
+<span class="sd">            float: confidence</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            QiskitError: If no runs are accepted</span>
+<span class="sd">                         or confidence is outside of 0,1</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nacc</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;ERROR: Variation distance requires&quot;</span>
+                              <span class="s2">&quot;at least one accepted run&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">confidence</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">confidence</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;ERROR: Confidence must be&quot;</span>
+                              <span class="s2">&quot;between 0 and 1&quot;</span><span class="p">)</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">confidence</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nacc</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span> <span class="o">&gt;</span> <span class="n">theta</span><span class="p">:</span>
+            <span class="n">bound</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g</span><span class="o">*</span><span class="mf">1.7</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Ntraps</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">bound</span> <span class="o">=</span> <span class="n">bound</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Nacc</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span><span class="o">-</span><span class="n">theta</span><span class="p">)</span>
+            <span class="n">bound</span> <span class="o">=</span> <span class="n">bound</span><span class="o">+</span><span class="mi">1</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_g</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bound</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">bound</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">bound</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_counts_accepted</span><span class="p">,</span> <span class="n">bound</span><span class="p">,</span> <span class="n">confidence</span></div>
+
+<div class="viewcode-block" id="AccreditationFitter.MeanAccreditation"><a class="viewcode-back" href="../../../../../stubs/qiskit.ignis.verification.AccreditationFitter.MeanAccreditation.html#qiskit.ignis.verification.AccreditationFitter.MeanAccreditation">[docs]</a>    <span class="k">def</span> <span class="nf">MeanAccreditation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">confidence</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function computes the bound on variation distance based and</span>
+<span class="sd">        the confidence interval desired.  This protocol is from [2]</span>
+<span class="sd">        and assumes Markovianity but gives an improved bound</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            confidence (float): number between 0 and 1</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: dict of corrected target counts</span>
+<span class="sd">            float: 1-norm bound from noiseless samples</span>
+<span class="sd">            float: confidence</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">confidence</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span><span class="p">))</span>
+        <span class="n">bound</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Nrejects</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_Ntraps</span> <span class="o">+</span> <span class="n">theta</span>
+        <span class="n">bound</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">bound</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_counts_all</span><span class="p">,</span> <span class="n">bound</span><span class="p">,</span> <span class="n">confidence</span></div>
+
+    <span class="k">def</span> <span class="nf">_AppendData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">strings</span><span class="p">,</span> <span class="n">postp_list</span><span class="p">,</span> <span class="n">v_zero</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Single protocol run of accreditation protocol</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            strings (list): bit string results</span>
+<span class="sd">            postp_list (list): list of strings used to post-process outputs</span>
+<span class="sd">            v_zero (int): position of target</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            QiskitError: If the number of circuits is inconsistent or</span>
+<span class="sd">                         if there are not at least 3 traps</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check that correct number of traps is input</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Ntraps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Ntraps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">postp_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">postp_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Ntraps</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;ERROR: Run protocol with the&quot;</span>
+                                  <span class="s2">&quot;same number of traps&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Ntraps</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;ERROR: run the protocol with at least 3 traps&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Nrejects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">strings</span><span class="p">,</span> <span class="n">postp_list</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">ind</span> <span class="o">!=</span> <span class="n">v_zero</span><span class="p">:</span>
+                <span class="c1"># Check if trap returns correct output</span>
+                <span class="n">meas</span> <span class="o">=</span> <span class="n">QOTPCorrectString</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">meas</span> <span class="o">!=</span> <span class="s1">&#39;0&#39;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">meas</span><span class="p">):</span>
+                    <span class="n">flag</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_Nrejects</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">target_count</span> <span class="o">=</span> <span class="n">QOTPCorrectString</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">target_count</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_counts_all</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_counts_all</span><span class="p">[</span><span class="n">target_count</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_counts_all</span><span class="p">[</span><span class="n">target_count</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Nacc</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">target_count</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_counts_accepted</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_counts_accepted</span><span class="p">[</span><span class="n">target_count</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_counts_accepted</span><span class="p">[</span><span class="n">target_count</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="AccreditationFitter.single_protocol_run"><a class="viewcode-back" href="../../../../../stubs/qiskit.ignis.verification.AccreditationFitter.single_protocol_run.html#qiskit.ignis.verification.AccreditationFitter.single_protocol_run">[docs]</a>    <span class="nd">@deprecate_function</span><span class="p">(</span><span class="s1">&#39;single_protocol_run is being deprecated. &#39;</span>
+                        <span class="s1">&#39;Use AppendResult or AppendString&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">single_protocol_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">postp_list</span><span class="p">,</span> <span class="n">v_zero</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        DEPRECATED-Single protocol run of accreditation protocol</span>
+<span class="sd">        Args:</span>
+<span class="sd">            results (Result): results of the quantum job</span>
+<span class="sd">            postp_list (list): list of strings used to post-process outputs</span>
+<span class="sd">            v_zero (int): position of target</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            QiskitError: If the number of circuits is inconsistent or</span>
+<span class="sd">                         if there are not at least 3 traps or</span>
+<span class="sd">                         if the data is not single shot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="o">=</span> <span class="s1">&#39;accepted&#39;</span>
 
         <span class="c1"># Check that correct number of traps is input</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_runs</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">num_traps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">postp_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Ntraps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">postp_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">postp_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_traps</span><span class="p">:</span>
-                <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;ERROR: Run protocol with the&quot;</span>
-                            <span class="s2">&quot;same number of traps&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">postp_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Ntraps</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;ERROR: Run protocol with the&quot;</span>
+                                  <span class="s2">&quot;same number of traps&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_traps</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
-            <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;ERROR: run the protocol with at least 3 traps&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Ntraps</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;ERROR: run the protocol with at least 3 traps&quot;</span><span class="p">)</span>
         <span class="n">allcounts</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">postp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">postp_list</span><span class="p">):</span>
 
@@ -415,7 +587,7 @@
             <span class="k">for</span> <span class="n">countstring</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">shots</span> <span class="o">+=</span> <span class="n">val</span>
             <span class="k">if</span> <span class="n">shots</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">countstring</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;ERROR: not single shot data&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;ERROR: not single shot data&quot;</span><span class="p">)</span>
             <span class="n">allcounts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">countstring</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">allcounts</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="n">v_zero</span><span class="p">:</span>
@@ -425,27 +597,36 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">output_target</span> <span class="o">=</span> <span class="n">count</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="o">==</span> <span class="s1">&#39;accepted&#39;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">N_acc</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_target</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Nacc</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">output_target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_counts_accepted</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_counts_accepted</span><span class="p">[</span><span class="n">output_target</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_counts_accepted</span><span class="p">[</span><span class="n">output_target</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_counts_accepted</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_runs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N_acc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nacc</span></div>
 
-<div class="viewcode-block" id="AccreditationFitter.bound_variation_distance"><a class="viewcode-back" href="../../../../../stubs/qiskit.ignis.verification.AccreditationFitter.bound_variation_distance.html#qiskit.ignis.verification.AccreditationFitter.bound_variation_distance">[docs]</a>    <span class="k">def</span> <span class="nf">bound_variation_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+<div class="viewcode-block" id="AccreditationFitter.bound_variation_distance"><a class="viewcode-back" href="../../../../../stubs/qiskit.ignis.verification.AccreditationFitter.bound_variation_distance.html#qiskit.ignis.verification.AccreditationFitter.bound_variation_distance">[docs]</a>    <span class="nd">@deprecate_function</span><span class="p">(</span><span class="s1">&#39;bound_variation_distance is being deprecated. &#39;</span>
+                        <span class="s1">&#39;Use FullAccreditation or MeanAccreditation&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">bound_variation_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        This function computes the bound on variation distance based and</span>
+<span class="sd">        DEPRECATED-This function computes the bound on variation distance based and</span>
 <span class="sd">        the confidence</span>
-
 <span class="sd">        Args:</span>
 <span class="sd">            theta (float): number between 0 and 1</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            QiskitError: If there is not an accepted run</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_acc</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;ERROR: Variation distance requires&quot;</span>
-                        <span class="s2">&quot;at least one accepted run&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_acc</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">num_runs</span> <span class="o">&gt;</span> <span class="n">theta</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">g_num</span><span class="o">*</span><span class="mf">1.7</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_traps</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bound</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N_acc</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">num_runs</span><span class="o">-</span><span class="n">theta</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bound</span><span class="o">+</span><span class="mi">1</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">g_num</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">theta</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">num_runs</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">num_runs</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="mi">1</span></div></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nacc</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;ERROR: Variation distance requires&quot;</span>
+                              <span class="s2">&quot;at least one accepted run&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Nacc</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span> <span class="o">&gt;</span> <span class="n">theta</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g</span><span class="o">*</span><span class="mf">1.7</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Ntraps</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bound</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Nacc</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span><span class="o">-</span><span class="n">theta</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bound</span><span class="o">+</span><span class="mi">1</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_g</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">theta</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_Nruns</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bound</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div></div>
 </pre></div>
 
              </article>
@@ -463,7 +644,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Mis à jour le 2021/11/19.
+      Mis à jour le 2021/12/07.
 
     </p>
   </div>

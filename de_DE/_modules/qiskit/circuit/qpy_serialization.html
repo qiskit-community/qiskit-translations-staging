@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.circuit.qpy_serialization &mdash; Qiskit 0.32.0 Dokumentation</title>
+  <title>qiskit.circuit.qpy_serialization &mdash; Qiskit 0.33.0 Dokumentation</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
 <ul>
@@ -343,17 +338,18 @@
 <span class="c1"># copyright notice, and modified files need to carry a notice indicating</span>
 <span class="c1"># that they have been altered from the originals.</span>
 
-<span class="c1"># pylint: disable=invalid-name,too-many-boolean-expressions,redundant-keyword-arg</span>
+<span class="c1"># pylint: disable=invalid-name,too-many-boolean-expressions</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">===========================================================</span>
+<span class="sd">###########################################################</span>
 <span class="sd">QPY serialization (:mod:`qiskit.circuit.qpy_serialization`)</span>
-<span class="sd">===========================================================</span>
+<span class="sd">###########################################################</span>
 
 <span class="sd">.. currentmodule:: qiskit.circuit.qpy_serialization</span>
 
+<span class="sd">*********</span>
 <span class="sd">Using QPY</span>
-<span class="sd">=========</span>
+<span class="sd">*********</span>
 
 <span class="sd">Using QPY is defined to be straightforward and mirror the user API of the</span>
 <span class="sd">serializers in Python&#39;s standard library, ``pickle`` and ``json``. There are</span>
@@ -377,7 +373,7 @@
 <span class="sd">        new_qc = qpy_serialization.load(fd)[0]</span>
 
 <span class="sd">API documentation</span>
-<span class="sd">-----------------</span>
+<span class="sd">=================</span>
 
 <span class="sd">.. autosummary::</span>
 <span class="sd">   :toctree: ../stubs/</span>
@@ -386,7 +382,7 @@
 <span class="sd">   dump</span>
 
 <span class="sd">QPY Compatibility</span>
-<span class="sd">-----------------</span>
+<span class="sd">=================</span>
 
 <span class="sd">The QPY format is designed to be backwards compatible moving forward. This means</span>
 <span class="sd">you should be able to load a QPY with any newer Qiskit version than the one</span>
@@ -398,8 +394,9 @@
 <span class="sd">0.29.0. However, loading that QPY file with 0.18.0 is not supported and may not</span>
 <span class="sd">work.</span>
 
+<span class="sd">**********</span>
 <span class="sd">QPY Format</span>
-<span class="sd">==========</span>
+<span class="sd">**********</span>
 
 <span class="sd">The QPY serialization format is a portable cross-platform binary</span>
 <span class="sd">serialization format for :class:`~qiskit.circuit.QuantumCircuit` objects in Qiskit. The basic</span>
@@ -430,6 +427,49 @@
 <span class="sd">There is a circuit payload for each circuit (where the total number is dictated</span>
 <span class="sd">by ``num_circuits`` in the file header). There is no padding between the</span>
 <span class="sd">circuits in the data.</span>
+
+<span class="sd">.. _version_2:</span>
+
+<span class="sd">Version 2</span>
+<span class="sd">=========</span>
+
+<span class="sd">Version 2 of the QPY format is identical to version 1 except for the HEADER</span>
+<span class="sd">section is slightly different. You can refer to the :ref:`version_1` section</span>
+<span class="sd">for the details on the rest of the payload format.</span>
+
+<span class="sd">HEADER</span>
+<span class="sd">------</span>
+
+<span class="sd">The contents of HEADER are defined as a C struct are:</span>
+
+<span class="sd">.. code-block:: c</span>
+
+<span class="sd">    struct {</span>
+<span class="sd">        uint16_t name_size;</span>
+<span class="sd">        char global_phase_type;</span>
+<span class="sd">        uint16_t global_phase_size;</span>
+<span class="sd">        uint32_t num_qubits;</span>
+<span class="sd">        uint32_t num_clbits;</span>
+<span class="sd">        uint64_t metadata_size;</span>
+<span class="sd">        uint32_t num_registers;</span>
+<span class="sd">        uint64_t num_instructions;</span>
+<span class="sd">        uint64_t num_custom_gates;</span>
+<span class="sd">    }</span>
+
+<span class="sd">This is immediately followed by ``name_size`` bytes of utf8 data for the name</span>
+<span class="sd">of the circuit. Following this is immediately ``global_phase_size`` bytes</span>
+<span class="sd">representing the global phase. The content of that data is dictated by the</span>
+<span class="sd">value of ``global_phase_type``. If it&#39;s ``&#39;f&#39;`` the data is a float and is the</span>
+<span class="sd">size of a ``double``. If it&#39;s ``&#39;p&#39;`` defines a :class:`~qiskit.circuit.Parameter`</span>
+<span class="sd">object  which is represented by a PARAM struct (see below), ``e`` defines a</span>
+<span class="sd">:class:`~qiskit.circuit.ParameterExpression` object (that&#39;s not a</span>
+<span class="sd">:class:`~qiskit.circuit.Parameter`) which is represented by a PARAM_EXPR struct</span>
+<span class="sd">(see below).</span>
+
+<span class="sd">.. _version_1:</span>
+
+<span class="sd">Version 1</span>
+<span class="sd">=========</span>
 
 <span class="sd">HEADER</span>
 <span class="sd">------</span>
@@ -715,6 +755,22 @@
 <span class="n">FILE_HEADER_SIZE</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">FILE_HEADER_PACK</span><span class="p">)</span>
 
 <span class="c1"># HEADER binary format</span>
+<span class="n">HEADER_V2</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span>
+    <span class="s2">&quot;HEADER&quot;</span><span class="p">,</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;name_size&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;global_phase_type&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;global_phase_size&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_qubits&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_clbits&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;metadata_size&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_registers&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_instructions&quot;</span><span class="p">,</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+<span class="n">HEADER_V2_PACK</span> <span class="o">=</span> <span class="s2">&quot;!H1cHIIQIQ&quot;</span>
+<span class="n">HEADER_V2_SIZE</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">HEADER_V2_PACK</span><span class="p">)</span>
+
 <span class="n">HEADER</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span>
     <span class="s2">&quot;HEADER&quot;</span><span class="p">,</span>
     <span class="p">[</span>
@@ -792,11 +848,48 @@
 <span class="n">COMPLEX_SIZE</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">COMPLEX_PACK</span><span class="p">)</span>
 
 
+<span class="k">def</span> <span class="nf">_read_header_v2</span><span class="p">(</span><span class="n">file_obj</span><span class="p">):</span>
+    <span class="n">header_raw</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">HEADER_V2_PACK</span><span class="p">,</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">HEADER_V2_SIZE</span><span class="p">))</span>
+    <span class="n">header_tuple</span> <span class="o">=</span> <span class="n">HEADER_V2</span><span class="o">.</span><span class="n">_make</span><span class="p">(</span><span class="n">header_raw</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">header_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
+    <span class="n">global_phase_type_str</span> <span class="o">=</span> <span class="n">header_tuple</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">header_tuple</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">global_phase_type_str</span> <span class="o">==</span> <span class="s2">&quot;f&quot;</span><span class="p">:</span>
+        <span class="n">global_phase</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;!d&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">global_phase_type_str</span> <span class="o">==</span> <span class="s2">&quot;i&quot;</span><span class="p">:</span>
+        <span class="n">global_phase</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;!q&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">global_phase_type_str</span> <span class="o">==</span> <span class="s2">&quot;p&quot;</span><span class="p">:</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">global_phase</span> <span class="o">=</span> <span class="n">_read_parameter</span><span class="p">(</span><span class="n">container</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">global_phase_type_str</span> <span class="o">==</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">global_phase</span> <span class="o">=</span> <span class="n">_read_parameter_expression</span><span class="p">(</span><span class="n">container</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid global phase type: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">global_phase_type_str</span><span class="p">)</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;global_phase&quot;</span><span class="p">:</span> <span class="n">global_phase</span><span class="p">,</span>
+        <span class="s2">&quot;num_qubits&quot;</span><span class="p">:</span> <span class="n">header_tuple</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+        <span class="s2">&quot;num_clbits&quot;</span><span class="p">:</span> <span class="n">header_tuple</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
+        <span class="s2">&quot;num_registers&quot;</span><span class="p">:</span> <span class="n">header_tuple</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span>
+        <span class="s2">&quot;num_instructions&quot;</span><span class="p">:</span> <span class="n">header_tuple</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span>
+    <span class="p">}</span>
+    <span class="n">metadata_raw</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">header_tuple</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">metadata_raw</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">header</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">metadata</span>
+
+
 <span class="k">def</span> <span class="nf">_read_header</span><span class="p">(</span><span class="n">file_obj</span><span class="p">):</span>
     <span class="n">header_raw</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">HEADER_PACK</span><span class="p">,</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">HEADER_SIZE</span><span class="p">))</span>
-    <span class="n">header</span> <span class="o">=</span> <span class="n">HEADER</span><span class="o">.</span><span class="n">_make</span><span class="p">(</span><span class="n">header_raw</span><span class="p">)</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
-    <span class="n">metadata_raw</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+    <span class="n">header_tuple</span> <span class="o">=</span> <span class="n">HEADER</span><span class="o">.</span><span class="n">_make</span><span class="p">(</span><span class="n">header_raw</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">header_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;global_phase&quot;</span><span class="p">:</span> <span class="n">header_tuple</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="s2">&quot;num_qubits&quot;</span><span class="p">:</span> <span class="n">header_tuple</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+        <span class="s2">&quot;num_clbits&quot;</span><span class="p">:</span> <span class="n">header_tuple</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+        <span class="s2">&quot;num_registers&quot;</span><span class="p">:</span> <span class="n">header_tuple</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span>
+        <span class="s2">&quot;num_instructions&quot;</span><span class="p">:</span> <span class="n">header_tuple</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span>
+    <span class="p">}</span>
+    <span class="n">metadata_raw</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">header_tuple</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
     <span class="n">metadata</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">metadata_raw</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">header</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">metadata</span>
 
@@ -991,7 +1084,7 @@
     <span class="k">return</span> <span class="n">inst_obj</span>
 
 
-<span class="k">def</span> <span class="nf">_read_custom_instructions</span><span class="p">(</span><span class="n">file_obj</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_read_custom_instructions</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">version</span><span class="p">):</span>
     <span class="n">custom_instructions</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">custom_definition_header_raw</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">CUSTOM_DEFINITION_HEADER_SIZE</span><span class="p">)</span>
     <span class="n">custom_definition_header</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span>
@@ -1014,7 +1107,7 @@
             <span class="n">definition_circuit</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">has_custom_definition</span><span class="p">:</span>
                 <span class="n">definition_buffer</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
-                <span class="n">definition_circuit</span> <span class="o">=</span> <span class="n">_read_circuit</span><span class="p">(</span><span class="n">definition_buffer</span><span class="p">)</span>
+                <span class="n">definition_circuit</span> <span class="o">=</span> <span class="n">_read_circuit</span><span class="p">(</span><span class="n">definition_buffer</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
             <span class="n">custom_instructions</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">type_str</span><span class="p">,</span> <span class="n">num_qubits</span><span class="p">,</span> <span class="n">num_clbits</span><span class="p">,</span> <span class="n">definition_circuit</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">custom_instructions</span>
 
@@ -1077,7 +1170,7 @@
         <span class="p">)</span>
         <span class="ow">or</span> <span class="n">gate_class_name</span> <span class="o">==</span> <span class="s2">&quot;Gate&quot;</span>
         <span class="ow">or</span> <span class="n">gate_class_name</span> <span class="o">==</span> <span class="s2">&quot;Instruction&quot;</span>
-        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">library</span><span class="o">.</span><span class="n">BlueprintCircuit</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">library</span><span class="o">.</span><span class="n">BlueprintCircuit</span><span class="p">,</span> <span class="n">library</span><span class="o">.</span><span class="n">PauliEvolutionGate</span><span class="p">))</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">instruction_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">custom_instructions</span><span class="p">:</span>
             <span class="n">custom_instructions</span><span class="p">[</span><span class="n">instruction_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">instruction_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -1254,7 +1347,7 @@
     <span class="n">header</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span>
         <span class="n">FILE_HEADER_PACK</span><span class="p">,</span>
         <span class="sa">b</span><span class="s2">&quot;QISKIT&quot;</span><span class="p">,</span>
-        <span class="mi">1</span><span class="p">,</span>
+        <span class="mi">2</span><span class="p">,</span>
         <span class="n">version_parts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
         <span class="n">version_parts</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
         <span class="n">version_parts</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
@@ -1271,18 +1364,40 @@
     <span class="n">num_registers</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">qregs</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">cregs</span><span class="p">)</span>
     <span class="n">num_instructions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
     <span class="n">circuit_name</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
-    <span class="n">header_raw</span> <span class="o">=</span> <span class="n">HEADER</span><span class="p">(</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">global_phase</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">global_phase_type</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;f&quot;</span>
+        <span class="n">global_phase_data</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;!d&quot;</span><span class="p">,</span> <span class="n">circuit</span><span class="o">.</span><span class="n">global_phase</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">global_phase</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">global_phase_type</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;i&quot;</span>
+        <span class="n">global_phase_data</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;!q&quot;</span><span class="p">,</span> <span class="n">circuit</span><span class="o">.</span><span class="n">global_phase</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">global_phase</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">):</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
+        <span class="n">global_phase_type</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;p&quot;</span>
+        <span class="n">_write_parameter</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">circuit</span><span class="o">.</span><span class="n">global_phase</span><span class="p">)</span>
+        <span class="n">container</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">global_phase_data</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">global_phase</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">):</span>
+        <span class="n">global_phase_type</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;e&quot;</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
+        <span class="n">_write_parameter_expression</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">circuit</span><span class="o">.</span><span class="n">global_phase</span><span class="p">)</span>
+        <span class="n">container</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">global_phase_data</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;unsupported global phase type </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">global_phase</span><span class="p">))</span>
+    <span class="n">header_raw</span> <span class="o">=</span> <span class="n">HEADER_V2</span><span class="p">(</span>
         <span class="n">name_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">circuit_name</span><span class="p">),</span>
-        <span class="n">global_phase</span><span class="o">=</span><span class="n">circuit</span><span class="o">.</span><span class="n">global_phase</span><span class="p">,</span>
+        <span class="n">global_phase_type</span><span class="o">=</span><span class="n">global_phase_type</span><span class="p">,</span>
+        <span class="n">global_phase_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">global_phase_data</span><span class="p">),</span>
         <span class="n">num_qubits</span><span class="o">=</span><span class="n">circuit</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">,</span>
         <span class="n">num_clbits</span><span class="o">=</span><span class="n">circuit</span><span class="o">.</span><span class="n">num_clbits</span><span class="p">,</span>
         <span class="n">metadata_size</span><span class="o">=</span><span class="n">metadata_size</span><span class="p">,</span>
         <span class="n">num_registers</span><span class="o">=</span><span class="n">num_registers</span><span class="p">,</span>
         <span class="n">num_instructions</span><span class="o">=</span><span class="n">num_instructions</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">header</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">HEADER_PACK</span><span class="p">,</span> <span class="o">*</span><span class="n">header_raw</span><span class="p">)</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">HEADER_V2_PACK</span><span class="p">,</span> <span class="o">*</span><span class="n">header_raw</span><span class="p">)</span>
     <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
     <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">circuit_name</span><span class="p">)</span>
+    <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">global_phase_data</span><span class="p">)</span>
     <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">metadata_raw</span><span class="p">)</span>
     <span class="n">qubit_indices</span> <span class="o">=</span> <span class="p">{</span><span class="n">bit</span><span class="p">:</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">bit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">qubits</span><span class="p">)}</span>
     <span class="n">clbit_indices</span> <span class="o">=</span> <span class="p">{</span><span class="n">bit</span><span class="p">:</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">bit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">clbits</span><span class="p">)}</span>
@@ -1360,6 +1475,7 @@
     <span class="n">file_header</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">FILE_HEADER_PACK</span><span class="p">,</span> <span class="n">file_header_raw</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">file_header</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;QISKIT&quot;</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;Input file is not a valid QPY file&quot;</span><span class="p">)</span>
+    <span class="n">qpy_version</span> <span class="o">=</span> <span class="n">file_header</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">version_parts</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">__version__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]]</span>
     <span class="n">header_version_parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">file_header</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">file_header</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">file_header</span><span class="p">[</span><span class="mi">4</span><span class="p">]]</span>
     <span class="k">if</span> <span class="p">(</span>
@@ -1383,21 +1499,20 @@
         <span class="p">)</span>
     <span class="n">circuits</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">file_header</span><span class="p">[</span><span class="mi">5</span><span class="p">]):</span>
-        <span class="n">circuits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_read_circuit</span><span class="p">(</span><span class="n">file_obj</span><span class="p">))</span>
+        <span class="n">circuits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_read_circuit</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">qpy_version</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">circuits</span></div>
 
 
-<span class="k">def</span> <span class="nf">_read_circuit</span><span class="p">(</span><span class="n">file_obj</span><span class="p">):</span>
-    <span class="n">header</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">_read_header</span><span class="p">(</span><span class="n">file_obj</span><span class="p">)</span>
-    <span class="p">(</span>
-        <span class="n">name_size</span><span class="p">,</span>  <span class="c1"># pylint: disable=unused-variable</span>
-        <span class="n">global_phase</span><span class="p">,</span>
-        <span class="n">num_qubits</span><span class="p">,</span>
-        <span class="n">num_clbits</span><span class="p">,</span>
-        <span class="n">metadata_size</span><span class="p">,</span>  <span class="c1"># pylint: disable=unused-variable</span>
-        <span class="n">num_registers</span><span class="p">,</span>
-        <span class="n">num_instructions</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">=</span> <span class="n">header</span>
+<span class="k">def</span> <span class="nf">_read_circuit</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">version</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">header</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">_read_header</span><span class="p">(</span><span class="n">file_obj</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">header</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">_read_header_v2</span><span class="p">(</span><span class="n">file_obj</span><span class="p">)</span>
+    <span class="n">global_phase</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;global_phase&quot;</span><span class="p">]</span>
+    <span class="n">num_qubits</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;num_qubits&quot;</span><span class="p">]</span>
+    <span class="n">num_clbits</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;num_clbits&quot;</span><span class="p">]</span>
+    <span class="n">num_registers</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;num_registers&quot;</span><span class="p">]</span>
+    <span class="n">num_instructions</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;num_instructions&quot;</span><span class="p">]</span>
     <span class="n">out_registers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;q&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="p">{}}</span>
     <span class="k">if</span> <span class="n">num_registers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">circ</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">global_phase</span><span class="o">=</span><span class="n">global_phase</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
@@ -1491,7 +1606,7 @@
             <span class="n">global_phase</span><span class="o">=</span><span class="n">global_phase</span><span class="p">,</span>
             <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
         <span class="p">)</span>
-    <span class="n">custom_instructions</span> <span class="o">=</span> <span class="n">_read_custom_instructions</span><span class="p">(</span><span class="n">file_obj</span><span class="p">)</span>
+    <span class="n">custom_instructions</span> <span class="o">=</span> <span class="n">_read_custom_instructions</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">_instruction</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_instructions</span><span class="p">):</span>
         <span class="n">_read_instruction</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">circ</span><span class="p">,</span> <span class="n">out_registers</span><span class="p">,</span> <span class="n">custom_instructions</span><span class="p">)</span>
 
@@ -1513,7 +1628,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Zuletzt aktualisiert am 2021/11/19.
+      Zuletzt aktualisiert am 2021/12/07.
 
     </p>
   </div>

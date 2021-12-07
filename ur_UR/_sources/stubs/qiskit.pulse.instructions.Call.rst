@@ -1,4 +1,4 @@
-Call
+﻿Call
 ====
 
 .. currentmodule:: qiskit.pulse.instructions
@@ -14,13 +14,11 @@ Call
       :toctree: ../stubs/
 
       ~Call.append
-      ~Call.assign_parameters
       ~Call.assigned_subroutine
       ~Call.ch_duration
       ~Call.ch_start_time
       ~Call.ch_stop_time
       ~Call.draw
-      ~Call.flatten
       ~Call.insert
       ~Call.is_parameterized
       ~Call.shift

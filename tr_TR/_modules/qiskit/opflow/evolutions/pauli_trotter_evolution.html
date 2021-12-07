@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.opflow.evolutions.pauli_trotter_evolution &mdash; Qiskit 0.32.0 belgelendirmesi</title>
+  <title>qiskit.opflow.evolutions.pauli_trotter_evolution &mdash; Qiskit 0.33.0 belgelendirmesi</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (kullanımdan kaldırıldı)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aqua.html">Qiskit Aqua (kullanımdan kaldırıldı)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Hata Giderme</span></p>
 <ul>
@@ -350,6 +345,8 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+<span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">PauliEvolutionGate</span>
+<span class="kn">from</span> <span class="nn">qiskit.synthesis</span> <span class="kn">import</span> <span class="n">LieTrotter</span><span class="p">,</span> <span class="n">SuzukiTrotter</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow.converters.pauli_basis_change</span> <span class="kn">import</span> <span class="n">PauliBasisChange</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow.evolutions.evolution_base</span> <span class="kn">import</span> <span class="n">EvolutionBase</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow.evolutions.evolved_op</span> <span class="kn">import</span> <span class="n">EvolvedOp</span>
@@ -360,6 +357,7 @@
 <span class="kn">from</span> <span class="nn">qiskit.opflow.operator_base</span> <span class="kn">import</span> <span class="n">OperatorBase</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow.operator_globals</span> <span class="kn">import</span> <span class="n">I</span><span class="p">,</span> <span class="n">Z</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow.primitive_ops.pauli_op</span> <span class="kn">import</span> <span class="n">PauliOp</span>
+<span class="kn">from</span> <span class="nn">qiskit.opflow.primitive_ops.circuit_op</span> <span class="kn">import</span> <span class="n">CircuitOp</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow.primitive_ops.pauli_sum_op</span> <span class="kn">import</span> <span class="n">PauliSumOp</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow.primitive_ops.primitive_op</span> <span class="kn">import</span> <span class="n">PrimitiveOp</span>
 
@@ -435,10 +433,22 @@
         <span class="c1">#     operator = self._grouper.convert(operator).reduce()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recursive_convert</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span></div>
 
+    <span class="k">def</span> <span class="nf">_get_evolution_synthesis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the ``EvolutionSynthesis`` corresponding to this Trotterization.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trotter</span><span class="o">.</span><span class="n">order</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">LieTrotter</span><span class="p">(</span><span class="n">reps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">trotter</span><span class="o">.</span><span class="n">reps</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">SuzukiTrotter</span><span class="p">(</span><span class="n">reps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">trotter</span><span class="o">.</span><span class="n">reps</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">trotter</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">_recursive_convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">OperatorBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OperatorBase</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">EvolvedOp</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="p">,</span> <span class="n">PauliSumOp</span><span class="p">):</span>
-                <span class="n">operator</span> <span class="o">=</span> <span class="n">EvolvedOp</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">to_pauli_op</span><span class="p">(),</span> <span class="n">coeff</span><span class="o">=</span><span class="n">operator</span><span class="o">.</span><span class="n">coeff</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="p">,</span> <span class="p">(</span><span class="n">PauliOp</span><span class="p">,</span> <span class="n">PauliSumOp</span><span class="p">)):</span>
+                <span class="n">pauli</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">primitive</span>
+                <span class="n">time</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">coeff</span> <span class="o">*</span> <span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">coeff</span>
+                <span class="n">evo</span> <span class="o">=</span> <span class="n">PauliEvolutionGate</span><span class="p">(</span>
+                    <span class="n">pauli</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span> <span class="n">synthesis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_evolution_synthesis</span><span class="p">()</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="n">CircuitOp</span><span class="p">(</span><span class="n">evo</span><span class="o">.</span><span class="n">definition</span><span class="p">)</span>
+                <span class="c1"># operator = EvolvedOp(operator.primitive.to_pauli_op(), coeff=operator.coeff)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="p">{</span><span class="s2">&quot;Pauli&quot;</span><span class="p">}</span> <span class="o">==</span> <span class="n">operator</span><span class="o">.</span><span class="n">primitive_strings</span><span class="p">():</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                     <span class="s2">&quot;Evolved Hamiltonian is not composed of only Paulis, converting to &quot;</span>
@@ -476,8 +486,6 @@
                 <span class="n">global_phase</span> <span class="o">=</span> <span class="o">-</span><span class="nb">sum</span><span class="p">(</span><span class="n">identity_phases</span><span class="p">)</span> <span class="o">*</span> <span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">coeff</span>
                 <span class="n">circuit_no_identities</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">global_phase</span> <span class="o">=</span> <span class="n">global_phase</span>
                 <span class="k">return</span> <span class="n">circuit_no_identities</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="p">,</span> <span class="n">PauliOp</span><span class="p">):</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evolution_for_pauli</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="p">)</span>
             <span class="c1"># Covers ListOp, ComposedOp, TensoredOp</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="p">,</span> <span class="n">ListOp</span><span class="p">):</span>
                 <span class="n">converted_ops</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_recursive_convert</span><span class="p">(</span><span class="n">op</span><span class="p">)</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">oplist</span><span class="p">]</span>
@@ -533,7 +541,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Son güncelleme: 2021/11/19.
+      Son güncelleme: 2021/12/07.
 
     </p>
   </div>

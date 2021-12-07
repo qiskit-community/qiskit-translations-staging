@@ -29,6 +29,7 @@
       ~SparsePauliOp.power
       ~SparsePauliOp.reshape
       ~SparsePauliOp.simplify
+      ~SparsePauliOp.sum
       ~SparsePauliOp.tensor
       ~SparsePauliOp.to_list
       ~SparsePauliOp.to_matrix
@@ -43,6 +44,7 @@
    .. autoattribute:: coeffs
    .. autoattribute:: dim
    .. autoattribute:: num_qubits
+   .. autoattribute:: paulis
    .. autoattribute:: qargs
    .. autoattribute:: rtol
    .. autoattribute:: settings

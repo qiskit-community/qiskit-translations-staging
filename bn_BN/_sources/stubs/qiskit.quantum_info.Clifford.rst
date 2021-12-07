@@ -43,6 +43,5 @@
    .. autoattribute:: dim
    .. autoattribute:: num_qubits
    .. autoattribute:: qargs
-   .. autoattribute:: settings
    .. autoattribute:: stabilizer
    .. autoattribute:: table

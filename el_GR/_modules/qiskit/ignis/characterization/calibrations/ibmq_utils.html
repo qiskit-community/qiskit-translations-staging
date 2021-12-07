@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.ignis.characterization.calibrations.ibmq_utils &mdash; Τεκμηρίωση του Qiskit - 0.32.0</title>
+  <title>qiskit.ignis.characterization.calibrations.ibmq_utils &mdash; Τεκμηρίωση του Qiskit - 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Αντιμετώπιση προβλημάτων</span></p>
 <ul>
@@ -351,10 +346,11 @@
 
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">least_squares</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">pulse</span>
+<span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Parameter</span>
 <span class="kn">from</span> <span class="nn">qiskit.pulse</span> <span class="kn">import</span> <span class="n">library</span> <span class="k">as</span> <span class="n">pulse_lib</span><span class="p">,</span> <span class="n">Schedule</span><span class="p">,</span> <span class="n">Play</span><span class="p">,</span> <span class="n">ShiftPhase</span>
-<span class="kn">from</span> <span class="nn">qiskit.pulse.schedule</span> <span class="kn">import</span> <span class="n">ParameterizedSchedule</span>
 
 
 <span class="k">def</span> <span class="nf">_fit_drag_func</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">exp_samples</span><span class="p">):</span>
@@ -442,14 +438,10 @@
 <span class="sd">            circuit instruction to schedule definitions.</span>
 <span class="sd">        drives (list): List of drive chs</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># pylint: disable = invalid-name</span>
 
     <span class="c1"># U2 is -P1.Y90p.-P0</span>
     <span class="c1"># U3 is -P2.X90p.-P0.X90m.-P1</span>
-
-    <span class="k">def</span> <span class="nf">parametrized_fc</span><span class="p">(</span><span class="n">kw_name</span><span class="p">,</span> <span class="n">phi0</span><span class="p">,</span> <span class="n">chan</span><span class="p">,</span> <span class="n">t_offset</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">_parametrized_fc</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">ShiftPhase</span><span class="p">(</span><span class="n">phase</span><span class="o">=-</span><span class="n">kwargs</span><span class="p">[</span><span class="n">kw_name</span><span class="p">]</span><span class="o">+</span><span class="n">phi0</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="n">chan</span><span class="p">)</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">t_offset</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_parametrized_fc</span>
 
     <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="n">qubits</span><span class="p">:</span>
 
@@ -462,17 +454,12 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">x90_sched</span> <span class="o">=</span> <span class="n">pi2_pulse_schedules</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span>
 
-        <span class="n">pulse_dur</span> <span class="o">=</span> <span class="n">x90_sched</span><span class="o">.</span><span class="n">duration</span>
-
         <span class="c1"># find channel dependency for u2</span>
         <span class="k">for</span> <span class="n">_u2_group</span> <span class="ow">in</span> <span class="n">_find_channel_groups</span><span class="p">(</span><span class="s1">&#39;u2&#39;</span><span class="p">,</span> <span class="n">qubits</span><span class="o">=</span><span class="n">qubit</span><span class="p">,</span> <span class="n">inst_map</span><span class="o">=</span><span class="n">inst_map</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">drive_ch</span> <span class="ow">in</span> <span class="n">_u2_group</span><span class="p">:</span>
                 <span class="k">break</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">_u2_group</span> <span class="o">=</span> <span class="p">(</span><span class="n">drive_ch</span><span class="p">,</span> <span class="p">)</span>
-
-        <span class="n">u2_fc1s</span> <span class="o">=</span> <span class="p">[</span><span class="n">parametrized_fc</span><span class="p">(</span><span class="s1">&#39;P1&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">ch</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">_u2_group</span><span class="p">]</span>
-        <span class="n">u2_fc2s</span> <span class="o">=</span> <span class="p">[</span><span class="n">parametrized_fc</span><span class="p">(</span><span class="s1">&#39;P0&#39;</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">ch</span><span class="p">,</span> <span class="n">pulse_dur</span><span class="p">)</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">_u2_group</span><span class="p">]</span>
 
         <span class="c1"># find channel dependency for u3</span>
         <span class="k">for</span> <span class="n">_u3_group</span> <span class="ow">in</span> <span class="n">_find_channel_groups</span><span class="p">(</span><span class="s1">&#39;u3&#39;</span><span class="p">,</span> <span class="n">qubits</span><span class="o">=</span><span class="n">qubit</span><span class="p">,</span> <span class="n">inst_map</span><span class="o">=</span><span class="n">inst_map</span><span class="p">):</span>
@@ -481,23 +468,34 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">_u3_group</span> <span class="o">=</span> <span class="p">(</span><span class="n">drive_ch</span><span class="p">,</span> <span class="p">)</span>
 
-        <span class="n">u3_fc1s</span> <span class="o">=</span> <span class="p">[</span><span class="n">parametrized_fc</span><span class="p">(</span><span class="s1">&#39;P2&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ch</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">_u3_group</span><span class="p">]</span>
-        <span class="n">u3_fc2s</span> <span class="o">=</span> <span class="p">[</span><span class="n">parametrized_fc</span><span class="p">(</span><span class="s1">&#39;P0&#39;</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">ch</span><span class="p">,</span> <span class="n">pulse_dur</span><span class="p">)</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">_u3_group</span><span class="p">]</span>
-        <span class="n">u3_fc3s</span> <span class="o">=</span> <span class="p">[</span><span class="n">parametrized_fc</span><span class="p">(</span><span class="s1">&#39;P1&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">ch</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">pulse_dur</span><span class="p">)</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">_u3_group</span><span class="p">]</span>
-
         <span class="c1"># add commands to schedule</span>
+
         <span class="c1"># u2</span>
-        <span class="n">sched_components</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">u2_fc1s</span><span class="p">,</span> <span class="n">x90_sched</span><span class="p">,</span> <span class="o">*</span><span class="n">u2_fc2s</span><span class="p">]</span>
-        <span class="n">schedule1</span> <span class="o">=</span> <span class="n">ParameterizedSchedule</span><span class="p">(</span><span class="o">*</span><span class="n">sched_components</span><span class="p">,</span>
-                                          <span class="n">parameters</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;P0&#39;</span><span class="p">,</span> <span class="s1">&#39;P1&#39;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;u2_</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">qubit</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">pulse</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;u2_</span><span class="si">{</span><span class="n">qubit</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">default_alignment</span><span class="o">=</span><span class="s2">&quot;sequential&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">u2_sched</span><span class="p">:</span>
+            <span class="n">P0</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;P0&quot;</span><span class="p">)</span>
+            <span class="n">P1</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;P1&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">_u2_group</span><span class="p">:</span>
+                <span class="n">pulse</span><span class="o">.</span><span class="n">shift_phase</span><span class="p">(</span><span class="o">-</span><span class="n">P1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">ch</span><span class="p">)</span>
+            <span class="n">pulse</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">x90_sched</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">_u2_group</span><span class="p">:</span>
+                <span class="n">pulse</span><span class="o">.</span><span class="n">shift_phase</span><span class="p">(</span><span class="o">-</span><span class="n">P0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">ch</span><span class="p">)</span>
 
         <span class="c1"># u3</span>
-        <span class="n">sched_components</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">u3_fc1s</span><span class="p">,</span> <span class="n">x90_sched</span><span class="p">,</span> <span class="o">*</span><span class="n">u3_fc2s</span><span class="p">,</span> <span class="n">x90_sched</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">pulse_dur</span><span class="p">),</span> <span class="o">*</span><span class="n">u3_fc3s</span><span class="p">]</span>
-        <span class="n">schedule2</span> <span class="o">=</span> <span class="n">ParameterizedSchedule</span><span class="p">(</span><span class="o">*</span><span class="n">sched_components</span><span class="p">,</span>
-                                          <span class="n">parameters</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;P0&#39;</span><span class="p">,</span> <span class="s1">&#39;P1&#39;</span><span class="p">,</span> <span class="s1">&#39;P2&#39;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;u3_</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">qubit</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">pulse</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;u3_</span><span class="si">{</span><span class="n">qubit</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">default_alignment</span><span class="o">=</span><span class="s2">&quot;sequential&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">u3_sched</span><span class="p">:</span>
+            <span class="n">P0</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;P0&quot;</span><span class="p">)</span>
+            <span class="n">P1</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;P1&quot;</span><span class="p">)</span>
+            <span class="n">P2</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;P2&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">_u3_group</span><span class="p">:</span>
+                <span class="n">pulse</span><span class="o">.</span><span class="n">shift_phase</span><span class="p">(</span><span class="o">-</span><span class="n">P2</span><span class="p">,</span> <span class="n">ch</span><span class="p">)</span>
+            <span class="n">pulse</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">x90_sched</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">_u3_group</span><span class="p">:</span>
+                <span class="n">pulse</span><span class="o">.</span><span class="n">shift_phase</span><span class="p">(</span><span class="o">-</span><span class="n">P0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">ch</span><span class="p">)</span>
+            <span class="n">pulse</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">x90_sched</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">_u3_group</span><span class="p">:</span>
+                <span class="n">pulse</span><span class="o">.</span><span class="n">shift_phase</span><span class="p">(</span><span class="o">-</span><span class="n">P1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">ch</span><span class="p">)</span>
 
-        <span class="n">inst_map</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;u2&#39;</span><span class="p">,</span> <span class="n">qubits</span><span class="o">=</span><span class="n">qubit</span><span class="p">,</span> <span class="n">schedule</span><span class="o">=</span><span class="n">schedule1</span><span class="p">)</span>
-        <span class="n">inst_map</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;u3&#39;</span><span class="p">,</span> <span class="n">qubits</span><span class="o">=</span><span class="n">qubit</span><span class="p">,</span> <span class="n">schedule</span><span class="o">=</span><span class="n">schedule2</span><span class="p">)</span></div>
+        <span class="n">inst_map</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;u2&#39;</span><span class="p">,</span> <span class="n">qubits</span><span class="o">=</span><span class="n">qubit</span><span class="p">,</span> <span class="n">schedule</span><span class="o">=</span><span class="n">u2_sched</span><span class="p">)</span>
+        <span class="n">inst_map</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;u3&#39;</span><span class="p">,</span> <span class="n">qubits</span><span class="o">=</span><span class="n">qubit</span><span class="p">,</span> <span class="n">schedule</span><span class="o">=</span><span class="n">u3_sched</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">_find_channel_groups</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="n">inst_map</span><span class="p">):</span>
@@ -543,7 +541,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Τελευταία ενημέρωση στις 2021/11/19.
+      Τελευταία ενημέρωση στις 2021/12/07.
 
     </p>
   </div>

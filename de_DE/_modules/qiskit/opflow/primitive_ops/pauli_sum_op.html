@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.opflow.primitive_ops.pauli_sum_op &mdash; Qiskit 0.32.0 Dokumentation</title>
+  <title>qiskit.opflow.primitive_ops.pauli_sum_op &mdash; Qiskit 0.33.0 Dokumentation</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
 <ul>
@@ -360,7 +355,6 @@
 <span class="kn">from</span> <span class="nn">qiskit.opflow.primitive_ops.primitive_op</span> <span class="kn">import</span> <span class="n">PrimitiveOp</span>
 <span class="kn">from</span> <span class="nn">qiskit.quantum_info</span> <span class="kn">import</span> <span class="n">Pauli</span><span class="p">,</span> <span class="n">SparsePauliOp</span><span class="p">,</span> <span class="n">Statevector</span>
 <span class="kn">from</span> <span class="nn">qiskit.quantum_info.operators.custom_iterator</span> <span class="kn">import</span> <span class="n">CustomIterator</span>
-<span class="kn">from</span> <span class="nn">qiskit.quantum_info.operators.symplectic.pauli_table</span> <span class="kn">import</span> <span class="n">PauliTable</span>
 
 
 <div class="viewcode-block" id="PauliSumOp"><a class="viewcode-back" href="../../../../stubs/qiskit.opflow.primitive_ops.PauliSumOp.html#qiskit.opflow.primitive_ops.PauliSumOp">[Doku]</a><span class="k">class</span> <span class="nc">PauliSumOp</span><span class="p">(</span><span class="n">PrimitiveOp</span><span class="p">):</span>
@@ -430,7 +424,7 @@
 <span class="sd">                           (Default: False)</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            MatrixIterator: matrix iterator object for the PauliTable.</span>
+<span class="sd">            MatrixIterator: matrix iterator object for the PauliSumOp.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">class</span> <span class="nc">MatrixIterator</span><span class="p">(</span><span class="n">CustomIterator</span><span class="p">):</span>
@@ -441,8 +435,7 @@
 
             <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
                 <span class="n">sumopcoeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">coeff</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-                <span class="n">mat</span> <span class="o">=</span> <span class="n">PauliTable</span><span class="o">.</span><span class="n">_to_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">sparse</span><span class="o">=</span><span class="n">sparse</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">sumopcoeff</span> <span class="o">*</span> <span class="n">mat</span>
+                <span class="k">return</span> <span class="n">sumopcoeff</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">to_matrix</span><span class="p">(</span><span class="n">sparse</span><span class="o">=</span><span class="n">sparse</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">MatrixIterator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
@@ -532,16 +525,25 @@
 <span class="sd">        Raises:</span>
 <span class="sd">            OpflowError: if indices do not define a new index for each qubit.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">set_perm</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">permutation</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">set_perm</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">permutation</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">set_perm</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpflowError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;List </span><span class="si">{</span><span class="n">permutation</span><span class="si">}</span><span class="s2"> is not a permutation.&quot;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">permutation</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">OpflowError</span><span class="p">(</span>
-                <span class="s2">&quot;List of indices to permute must have the &quot;</span> <span class="s2">&quot;same size as Pauli Operator&quot;</span>
+                <span class="s2">&quot;List of indices to permute must have the same size as Pauli Operator&quot;</span>
             <span class="p">)</span>
         <span class="n">length</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">permutation</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="n">spop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">SparsePauliOp</span><span class="p">(</span><span class="n">Pauli</span><span class="p">(</span><span class="s2">&quot;I&quot;</span> <span class="o">*</span> <span class="p">(</span><span class="n">length</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">))))</span>
+
+        <span class="k">if</span> <span class="n">length</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">:</span>
+            <span class="n">spop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">SparsePauliOp</span><span class="p">(</span><span class="n">Pauli</span><span class="p">(</span><span class="s2">&quot;I&quot;</span> <span class="o">*</span> <span class="p">(</span><span class="n">length</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">))))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">spop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primitive</span>
+
         <span class="n">permutation</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">permutation</span><span class="p">]</span> <span class="o">+</span> <span class="n">permutation</span>
         <span class="n">permu_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">length</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">permutation</span><span class="p">)]</span>
-        <span class="n">permu_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">permu_arr</span><span class="p">,</span> <span class="n">permu_arr</span> <span class="o">+</span> <span class="n">length</span><span class="p">])</span>
-        <span class="n">spop</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="n">spop</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">array</span><span class="p">[:,</span> <span class="n">permu_arr</span><span class="p">]</span>
+        <span class="n">spop</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">spop</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">x</span><span class="p">[:,</span> <span class="n">permu_arr</span><span class="p">]</span>
+        <span class="n">spop</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">spop</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">z</span><span class="p">[:,</span> <span class="n">permu_arr</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">PauliSumOp</span><span class="p">(</span><span class="n">spop</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeff</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PauliSumOp.compose"><a class="viewcode-back" href="../../../../stubs/qiskit.opflow.primitive_ops.PauliSumOp.compose.html#qiskit.opflow.primitive_ops.PauliSumOp.compose">[Doku]</a>    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span>
@@ -557,7 +559,7 @@
         <span class="k">if</span> <span class="n">front</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">new_self</span><span class="p">)</span>
         <span class="c1"># If self is identity, just return other.</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">new_self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">array</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">new_self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">new_self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">z</span><span class="p">)):</span>
             <span class="k">return</span> <span class="n">other</span> <span class="o">*</span> <span class="n">new_self</span><span class="o">.</span><span class="n">coeff</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">new_self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)</span>
 
         <span class="c1"># Both PauliSumOps</span>
@@ -646,8 +648,8 @@
 
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">front</span><span class="p">,</span> <span class="n">DictStateFn</span><span class="p">):</span>
                 <span class="n">new_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-                <span class="n">corrected_x_bits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">X</span><span class="p">[::,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-                <span class="n">corrected_z_bits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">Z</span><span class="p">[::,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">corrected_x_bits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">x</span><span class="p">[:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">corrected_z_bits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">z</span><span class="p">[:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
                 <span class="n">coeffs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">coeffs</span>
                 <span class="k">for</span> <span class="n">bstr</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">front</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                     <span class="n">bitstr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">(</span><span class="n">bstr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
@@ -689,18 +691,14 @@
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">PauliOp</span><span class="p">(</span>
-                <span class="n">Pauli</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">Z</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>
+                <span class="n">Pauli</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">z</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>
                 <span class="n">to_native</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeff</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="n">tables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">table</span>
         <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">SummedOp</span><span class="p">(</span>
             <span class="p">[</span>
-                <span class="n">PauliOp</span><span class="p">(</span>
-                    <span class="n">Pauli</span><span class="p">((</span><span class="n">t</span><span class="o">.</span><span class="n">Z</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>
-                    <span class="n">to_native</span><span class="p">(</span><span class="n">c</span><span class="p">),</span>
-                <span class="p">)</span>
-                <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">)</span>
+                <span class="n">PauliOp</span><span class="p">(</span><span class="n">pauli</span><span class="p">,</span> <span class="n">to_native</span><span class="p">(</span><span class="n">coeff</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">pauli</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">)</span>
             <span class="p">],</span>
             <span class="n">coeff</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coeff</span><span class="p">,</span>
         <span class="p">)</span></div>
@@ -778,7 +776,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce</span><span class="p">()</span>
         <span class="n">primitive</span><span class="p">:</span> <span class="n">SparsePauliOp</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">primitive</span>
-        <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">coeff</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">op</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">primitive</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span></div></div>
+        <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">coeff</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">op</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">primitive</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="PauliSumOp.is_hermitian"><a class="viewcode-back" href="../../../../stubs/qiskit.opflow.primitive_ops.PauliSumOp.is_hermitian.html#qiskit.opflow.primitive_ops.PauliSumOp.is_hermitian">[Doku]</a>    <span class="k">def</span> <span class="nf">is_hermitian</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">isreal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">phase</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span></div></div>
 </pre></div>
 
              </article>
@@ -796,7 +797,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Zuletzt aktualisiert am 2021/11/19.
+      Zuletzt aktualisiert am 2021/12/07.
 
     </p>
   </div>

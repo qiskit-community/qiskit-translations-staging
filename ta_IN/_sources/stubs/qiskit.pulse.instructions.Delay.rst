@@ -1,4 +1,4 @@
-Delay
+﻿Delay
 =====
 
 .. currentmodule:: qiskit.pulse.instructions
@@ -14,12 +14,10 @@ Delay
       :toctree: ../stubs/
 
       ~Delay.append
-      ~Delay.assign_parameters
       ~Delay.ch_duration
       ~Delay.ch_start_time
       ~Delay.ch_stop_time
       ~Delay.draw
-      ~Delay.flatten
       ~Delay.insert
       ~Delay.is_parameterized
       ~Delay.shift

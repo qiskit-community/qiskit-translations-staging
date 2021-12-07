@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.converters.circuit_to_instruction &mdash; Qiskit 0.32.0 - dokumentacja</title>
+  <title>qiskit.converters.circuit_to_instruction &mdash; Qiskit 0.33.0 - dokumentacja</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
 <ul>
@@ -348,7 +343,7 @@
 <span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">QiskitError</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.instruction</span> <span class="kn">import</span> <span class="n">Instruction</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.quantumregister</span> <span class="kn">import</span> <span class="n">QuantumRegister</span>
-<span class="kn">from</span> <span class="nn">qiskit.circuit.classicalregister</span> <span class="kn">import</span> <span class="n">ClassicalRegister</span>
+<span class="kn">from</span> <span class="nn">qiskit.circuit.classicalregister</span> <span class="kn">import</span> <span class="n">ClassicalRegister</span><span class="p">,</span> <span class="n">Clbit</span>
 
 
 <div class="viewcode-block" id="circuit_to_instruction"><a class="viewcode-back" href="../../../stubs/qiskit.converters.circuit_to_instruction.html#qiskit.converters.circuit_to_instruction">[dokumentacja]</a><span class="k">def</span> <span class="nf">circuit_to_instruction</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">parameter_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">equivalence_library</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -446,7 +441,16 @@
         <span class="n">condition</span> <span class="o">=</span> <span class="n">rule</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">condition</span>
         <span class="k">if</span> <span class="n">condition</span><span class="p">:</span>
             <span class="n">reg</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">condition</span>
-            <span class="k">if</span> <span class="n">reg</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">c</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reg</span><span class="p">,</span> <span class="n">Clbit</span><span class="p">):</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">creg</span> <span class="ow">in</span> <span class="n">circuit</span><span class="o">.</span><span class="n">cregs</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">reg</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">creg</span><span class="p">:</span>
+                        <span class="n">idx</span> <span class="o">+=</span> <span class="n">creg</span><span class="o">.</span><span class="n">size</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">cond_reg</span> <span class="o">=</span> <span class="n">creg</span>
+                        <span class="k">break</span>
+                <span class="n">rule</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">condition</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">cond_reg</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">reg</span><span class="p">)],</span> <span class="n">val</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">reg</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">c</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
                 <span class="n">rule</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">condition</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span>
@@ -480,7 +484,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Ostatnia modyfikacja 2021/11/19.
+      Ostatnia modyfikacja 2021/12/07.
 
     </p>
   </div>

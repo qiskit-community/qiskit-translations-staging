@@ -13,6 +13,7 @@
       :nosignatures:
       :toctree: ../stubs/
 
+      ~ClassicalRegister.index
       ~ClassicalRegister.qasm
 
 

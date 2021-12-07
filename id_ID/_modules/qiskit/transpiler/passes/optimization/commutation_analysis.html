@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.optimization.commutation_analysis &mdash; Dokumentasi Qiskit 0.32.0</title>
+  <title>qiskit.transpiler.passes.optimization.commutation_analysis &mdash; Dokumentasi Qiskit 0.33.0</title>
   
 
   
@@ -252,12 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aer.html">Qiskit Aer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aqua.html">Qiskit Aqua (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Qiskit Aqua Migration Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../aqua_migration.html">Qiskit Aqua Migration Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
 <ul>
@@ -350,6 +345,7 @@
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.exceptions</span> <span class="kn">import</span> <span class="n">TranspilerError</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.basepasses</span> <span class="kn">import</span> <span class="n">AnalysisPass</span>
 <span class="kn">from</span> <span class="nn">qiskit.quantum_info.operators</span> <span class="kn">import</span> <span class="n">Operator</span>
+<span class="kn">from</span> <span class="nn">qiskit.dagcircuit</span> <span class="kn">import</span> <span class="n">DAGOpNode</span>
 
 <span class="n">_CUTOFF_PRECISION</span> <span class="o">=</span> <span class="mf">1e-10</span>
 
@@ -419,45 +415,90 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">property_set</span><span class="p">[</span><span class="s2">&quot;commutation_set&quot;</span><span class="p">][(</span><span class="n">current_gate</span><span class="p">,</span> <span class="n">wire</span><span class="p">)]</span> <span class="o">=</span> <span class="n">temp_len</span> <span class="o">-</span> <span class="mi">1</span></div></div>
 
 
+<span class="n">_COMMUTE_ID_OP</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<span class="k">def</span> <span class="nf">_hashable_parameters</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert the parameters of a gate into a hashable format for lookup in a dictionary.</span>
+
+<span class="sd">    This aims to be fast in common cases, and is not intended to work outside of the lifetime of a</span>
+<span class="sd">    single commutation pass; it does not handle mutable state correctly if the state is actually</span>
+<span class="sd">    changed.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">hash</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">params</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_hashable_parameters</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">params</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="c1"># We trust that the arrays will not be mutated during the commutation pass, since nothing</span>
+        <span class="c1"># would work if they were anyway. Using the id can potentially cause some additional cache</span>
+        <span class="c1"># misses if two UnitaryGate instances are being compared that have been separately</span>
+        <span class="c1"># constructed to have the same underlying matrix, but in practice the cost of string-ifying</span>
+        <span class="c1"># the matrix to get a cache key is far more expensive than just doing a small matmul.</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">id</span><span class="p">(</span><span class="n">params</span><span class="p">))</span>
+    <span class="c1"># Catch anything else with a slow conversion.</span>
+    <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;fallback&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">params</span><span class="p">))</span>
+
+
 <span class="k">def</span> <span class="nf">_commute</span><span class="p">(</span><span class="n">node1</span><span class="p">,</span> <span class="n">node2</span><span class="p">,</span> <span class="n">cache</span><span class="p">):</span>
-
-    <span class="k">if</span> <span class="n">node1</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">&quot;op&quot;</span> <span class="ow">or</span> <span class="n">node2</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">&quot;op&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node1</span><span class="p">,</span> <span class="n">DAGOpNode</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node2</span><span class="p">,</span> <span class="n">DAGOpNode</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span>
-
     <span class="k">for</span> <span class="n">nd</span> <span class="ow">in</span> <span class="p">[</span><span class="n">node1</span><span class="p">,</span> <span class="n">node2</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">nd</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">_directive</span> <span class="ow">or</span> <span class="n">nd</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;measure&quot;</span><span class="p">,</span> <span class="s2">&quot;reset&quot;</span><span class="p">,</span> <span class="s2">&quot;delay&quot;</span><span class="p">}:</span>
             <span class="k">return</span> <span class="kc">False</span>
-
     <span class="k">if</span> <span class="n">node1</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">condition</span> <span class="ow">or</span> <span class="n">node2</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">condition</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
-
     <span class="k">if</span> <span class="n">node1</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">is_parameterized</span><span class="p">()</span> <span class="ow">or</span> <span class="n">node2</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">is_parameterized</span><span class="p">():</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="n">qarg</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">node1</span><span class="o">.</span><span class="n">qargs</span> <span class="o">+</span> <span class="n">node2</span><span class="o">.</span><span class="n">qargs</span><span class="p">))</span>
-    <span class="n">qbit_num</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">qarg</span><span class="p">)</span>
+    <span class="c1"># Assign indices to each of the qubits such that all `node1`&#39;s qubits come first, followed by</span>
+    <span class="c1"># any _additional_ qubits `node2` addresses.  This helps later when we need to compose one</span>
+    <span class="c1"># operator with the other, since we can easily expand `node1` with a suitable identity.</span>
+    <span class="n">qarg</span> <span class="o">=</span> <span class="p">{</span><span class="n">q</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node1</span><span class="o">.</span><span class="n">qargs</span><span class="p">)}</span>
+    <span class="n">num_qubits</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">qarg</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">node2</span><span class="o">.</span><span class="n">qargs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">q</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">qarg</span><span class="p">:</span>
+            <span class="n">qarg</span><span class="p">[</span><span class="n">q</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_qubits</span>
+            <span class="n">num_qubits</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">qarg1</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">qarg</span><span class="p">[</span><span class="n">q</span><span class="p">]</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">node1</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span>
+    <span class="n">qarg2</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">qarg</span><span class="p">[</span><span class="n">q</span><span class="p">]</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">node2</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span>
 
-    <span class="n">qarg1</span> <span class="o">=</span> <span class="p">[</span><span class="n">qarg</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">node1</span><span class="o">.</span><span class="n">qargs</span><span class="p">]</span>
-    <span class="n">qarg2</span> <span class="o">=</span> <span class="p">[</span><span class="n">qarg</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">node2</span><span class="o">.</span><span class="n">qargs</span><span class="p">]</span>
+    <span class="n">node1_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">node1</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">_hashable_parameters</span><span class="p">(</span><span class="n">node1</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">params</span><span class="p">),</span> <span class="n">qarg1</span><span class="p">)</span>
+    <span class="n">node2_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">node2</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">_hashable_parameters</span><span class="p">(</span><span class="n">node2</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">params</span><span class="p">),</span> <span class="n">qarg2</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># We only need to try one orientation of the keys, since if we&#39;ve seen the compound key</span>
+        <span class="c1"># before, we&#39;ve set it in both orientations.</span>
+        <span class="k">return</span> <span class="n">cache</span><span class="p">[</span><span class="n">node1_key</span><span class="p">,</span> <span class="n">node2_key</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">pass</span>
 
-    <span class="n">id_op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">qbit_num</span><span class="p">))</span>
+    <span class="n">operator_1</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span><span class="n">node1</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">input_dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">qarg1</span><span class="p">),</span> <span class="n">output_dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">qarg1</span><span class="p">))</span>
+    <span class="n">operator_2</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span><span class="n">node2</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">input_dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">qarg2</span><span class="p">),</span> <span class="n">output_dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">qarg2</span><span class="p">))</span>
 
-    <span class="n">node1_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">node1</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">node1</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">params</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">qarg1</span><span class="p">))</span>
-    <span class="n">node2_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">node2</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">node2</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">params</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">qarg2</span><span class="p">))</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">node1_key</span><span class="p">,</span> <span class="n">node2_key</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">:</span>
-        <span class="n">op12</span> <span class="o">=</span> <span class="n">cache</span><span class="p">[(</span><span class="n">node1_key</span><span class="p">,</span> <span class="n">node2_key</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">qarg1</span> <span class="o">==</span> <span class="n">qarg2</span><span class="p">:</span>
+        <span class="c1"># Use full composition if possible to get the fastest matmul paths.</span>
+        <span class="n">op12</span> <span class="o">=</span> <span class="n">operator_1</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">operator_2</span><span class="p">)</span>
+        <span class="n">op21</span> <span class="o">=</span> <span class="n">operator_2</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">operator_1</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">op12</span> <span class="o">=</span> <span class="n">id_op</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">node1</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="n">qarg1</span><span class="p">)</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">node2</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="n">qarg2</span><span class="p">)</span>
-        <span class="n">cache</span><span class="p">[(</span><span class="n">node1_key</span><span class="p">,</span> <span class="n">node2_key</span><span class="p">)]</span> <span class="o">=</span> <span class="n">op12</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">node2_key</span><span class="p">,</span> <span class="n">node1_key</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">:</span>
-        <span class="n">op21</span> <span class="o">=</span> <span class="n">cache</span><span class="p">[(</span><span class="n">node2_key</span><span class="p">,</span> <span class="n">node1_key</span><span class="p">)]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">op21</span> <span class="o">=</span> <span class="n">id_op</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">node2</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="n">qarg2</span><span class="p">)</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">node1</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="n">qarg1</span><span class="p">)</span>
-        <span class="n">cache</span><span class="p">[(</span><span class="n">node2_key</span><span class="p">,</span> <span class="n">node1_key</span><span class="p">)]</span> <span class="o">=</span> <span class="n">op21</span>
-
-    <span class="n">if_commute</span> <span class="o">=</span> <span class="n">op12</span> <span class="o">==</span> <span class="n">op21</span>
-
-    <span class="k">return</span> <span class="n">if_commute</span>
+        <span class="c1"># Expand operator_1 to be large enough to contain operator_2 as well; this relies on qargs1</span>
+        <span class="c1"># being the lowest possible indices so the identity can be tensored before it.</span>
+        <span class="n">extra_qarg2</span> <span class="o">=</span> <span class="n">num_qubits</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">qarg1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">extra_qarg2</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">id_op</span> <span class="o">=</span> <span class="n">_COMMUTE_ID_OP</span><span class="p">[</span><span class="n">extra_qarg2</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">id_op</span> <span class="o">=</span> <span class="n">_COMMUTE_ID_OP</span><span class="p">[</span><span class="n">extra_qarg2</span><span class="p">]</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">extra_qarg2</span><span class="p">),</span>
+                    <span class="n">input_dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,)</span> <span class="o">*</span> <span class="n">extra_qarg2</span><span class="p">,</span>
+                    <span class="n">output_dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,)</span> <span class="o">*</span> <span class="n">extra_qarg2</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">operator_1</span> <span class="o">=</span> <span class="n">id_op</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">operator_1</span><span class="p">)</span>
+        <span class="n">op12</span> <span class="o">=</span> <span class="n">operator_1</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">operator_2</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="n">qarg2</span><span class="p">,</span> <span class="n">front</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">op21</span> <span class="o">=</span> <span class="n">operator_1</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">operator_2</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="n">qarg2</span><span class="p">,</span> <span class="n">front</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">cache</span><span class="p">[</span><span class="n">node1_key</span><span class="p">,</span> <span class="n">node2_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">cache</span><span class="p">[</span><span class="n">node2_key</span><span class="p">,</span> <span class="n">node1_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">op12</span> <span class="o">==</span> <span class="n">op21</span>
+    <span class="k">return</span> <span class="n">ret</span>
 </pre></div>
 
              </article>
@@ -475,7 +516,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Terakhir diperbarui pada 2021/11/19.
+      Terakhir diperbarui pada 2021/12/07.
 
     </p>
   </div>

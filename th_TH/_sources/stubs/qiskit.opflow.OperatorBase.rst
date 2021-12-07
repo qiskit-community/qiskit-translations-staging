@@ -21,6 +21,7 @@
       ~OperatorBase.copy
       ~OperatorBase.equals
       ~OperatorBase.eval
+      ~OperatorBase.is_hermitian
       ~OperatorBase.mul
       ~OperatorBase.neg
       ~OperatorBase.permute
