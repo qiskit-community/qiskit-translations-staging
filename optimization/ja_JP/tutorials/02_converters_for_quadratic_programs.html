@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="ja-JP" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>二次計画法のコンバーター &mdash; Qiskit Optimization 0.2.3 ドキュメント</title>
+  <title>二次計画法のコンバーター &mdash; Qiskit Optimization 0.3.0 ドキュメント</title>
   
 
   
@@ -27,10 +28,12 @@
 
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -173,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.3
+                  0.3.0
                 </div>
               
             
@@ -528,20 +531,20 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">注釈</p>
-<p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.2/docs/tutorials/02_converters_for_quadratic_programs.ipynb">docs/tutorials/02_converters_for_quadratic_programs.ipynb</a> から生成されました。</p>
+<p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/02_converters_for_quadratic_programs.ipynb">docs/tutorials/02_converters_for_quadratic_programs.ipynb</a> から生成されました。</p>
 </div>
-<div class="section" id="二次計画法のコンバーター">
+<section id="二次計画法のコンバーター">
 <h1>二次計画法のコンバーター<a class="headerlink" href="#二次計画法のコンバーター" title="このヘッドラインへのパーマリンク">¶</a></h1>
 <p>Qiskitの最適化モジュールの最適化問題は、 <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> クラスで表されます。これは、最適化問題の一般的で強力な表現です。一般に、最適化アルゴリズムは二次計画法の特定の定式化に対して定義されており、問題を適切なタイプに変換する必要があります。</p>
-<p>たとえば、Qiskitは、Quadratic Unconstrained Binary Optimization (QUBO) 問題を処理できるいくつかの最適化アルゴリズムを提供します。これらは、Qiskitが <code class="docutils literal notranslate"><span class="pre">qiskit.aqua.operators</span></code> モジュールを使用するイジングハミルトニアン(Ising Hamiltonian)にマッピングされ、基底状態が近似されます。この最適化では、VQEやQAOAなどの一般的に知られているアルゴリズムを基礎となるルーチンとして使用できます。詳細については、 <a class="reference internal" href="03_minimum_eigen_optimizer.html"><span class="doc">Minimum Eigen Optimizer</span></a> に関する次のチュートリアルを参照してください。 <code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code> など、動作が異なる他のアルゴリズムも存在することに注意してください。</p>
-<p>To map a problem to the correct input format, the optimization module of Qiskit offers a variety of converters. In this tutorial we’re providing an overview on this functionality. Currently, Qiskit contains the following converters.</p>
+<p>たとえば、Qiskit は、 <a class="reference external" href="https://en.wikipedia.org/wiki/Quadratic_unconstrained_binary_optimization">Quadratic Unconstrained Binary Optimization</a> （QUBO）問題を処理できるいくつかの最適化アルゴリズムを提供します。これらは、Qiskit が <code class="docutils literal notranslate"><span class="pre">qiskit.opflow</span></code> モジュールを使用するイジングハミルトニアンにマッピングされ、基底状態が近似されます。この最適化では、VQE や QAOA などの一般的に知られているアルゴリズムを基礎となるルーチンとして使用できます。詳細については、 <a class="reference internal" href="03_minimum_eigen_optimizer.html"><span class="doc">Minimum Eigen Optimizer</span></a> に関するチュートリアルを参照してください。 <code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code> など、動作が異なる他のアルゴリズムも存在することに注意してください。</p>
+<p>問題を正しい入力形式にマッピングするために、Qiskit の最適化モジュールはさまざまなコンバーターを提供します。当チュートリアルでは、この機能の概要を説明します。現在、Qiskit には次のコンバーターが含まれています。</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">InequalityToEquality</span></code>: converts inequality constraints into equality constraints with additional slack variables.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">IntegerToBinary</span></code>: converts integer variables into binary variables and corresponding coefficients.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">LinearEqualityToPenalty</span></code>: convert equality constraints into additional terms of the object function.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">QuadraticProgramToQubo</span></code>: a wrapper for <code class="docutils literal notranslate"><span class="pre">InequalityToEquality</span></code>, <code class="docutils literal notranslate"><span class="pre">IntegerToBinary</span></code>, and <code class="docutils literal notranslate"><span class="pre">LinearEqualityToPenalty</span></code> for convenience.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">InequalityToEquality</span></code> ：不等式制約を追加のスラック変数を使用した等式制約に変換します。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IntegerToBinary</span></code> ：整数変数をバイナリ変数と対応する係数に変換します。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LinearEqualityToPenalty</span></code> ：等式制約をオブジェクト関数の追加の項に変換します。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">QuadraticProgramToQubo</span></code> ：便宜上、 <code class="docutils literal notranslate"><span class="pre">InequalityToEquality</span></code> 、 <code class="docutils literal notranslate"><span class="pre">IntegerToBinary</span></code> 、 <code class="docutils literal notranslate"><span class="pre">LinearEqualityToPenalty</span></code> のラッパー。</p></li>
 </ul>
-<div class="section" id="InequalityToEquality">
+<section id="InequalityToEquality">
 <h2>InequalityToEquality<a class="headerlink" href="#InequalityToEquality" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">InequalityToEqualityConverter</span></code> は、不等式制約を追加のスラック変数を使用して等式制約に変換し、 <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> から不等式制約を削除します。スラック変数の上限と下限は、制約の左側と右側の差から計算されます。スラック変数の符号は、 <span class="math notranslate nohighlight">\(\leq\)</span> や <span class="math notranslate nohighlight">\(\geq\)</span> などの制約内の記号に依存します。</p>
 <p>以下は、2つの不等式制約がある最大化問題の例です。 変数 <span class="math notranslate nohighlight">\(x\)</span> と <span class="math notranslate nohighlight">\(y\)</span> はバイナリ変数であり、変数 <span class="math notranslate nohighlight">\(z\)</span> は整数変数です。</p>
@@ -561,13 +564,13 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">qp</span> <span class="o">=</span> <span class="n">QuadraticProgram</span><span class="p">()</span>
-<span class="n">qp</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
-<span class="n">qp</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
-<span class="n">qp</span><span class="o">.</span><span class="n">integer_var</span><span class="p">(</span><span class="n">lowerbound</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upperbound</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+<span class="n">qp</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">qp</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
+<span class="n">qp</span><span class="o">.</span><span class="n">integer_var</span><span class="p">(</span><span class="n">lowerbound</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upperbound</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;z&quot;</span><span class="p">)</span>
 
-<span class="n">qp</span><span class="o">.</span><span class="n">maximize</span><span class="p">(</span><span class="n">linear</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
-<span class="n">qp</span><span class="o">.</span><span class="n">linear_constraint</span><span class="p">(</span><span class="n">linear</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;LE&#39;</span><span class="p">,</span> <span class="n">rhs</span><span class="o">=</span><span class="mf">5.5</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;xyz_leq&#39;</span><span class="p">)</span>
-<span class="n">qp</span><span class="o">.</span><span class="n">linear_constraint</span><span class="p">(</span><span class="n">linear</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;GE&#39;</span><span class="p">,</span> <span class="n">rhs</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;xyz_geq&#39;</span><span class="p">)</span>
+<span class="n">qp</span><span class="o">.</span><span class="n">maximize</span><span class="p">(</span><span class="n">linear</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+<span class="n">qp</span><span class="o">.</span><span class="n">linear_constraint</span><span class="p">(</span><span class="n">linear</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="n">sense</span><span class="o">=</span><span class="s2">&quot;LE&quot;</span><span class="p">,</span> <span class="n">rhs</span><span class="o">=</span><span class="mf">5.5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;xyz_leq&quot;</span><span class="p">)</span>
+<span class="n">qp</span><span class="o">.</span><span class="n">linear_constraint</span><span class="p">(</span><span class="n">linear</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="n">sense</span><span class="o">=</span><span class="s2">&quot;GE&quot;</span><span class="p">,</span> <span class="n">rhs</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;xyz_geq&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">qp</span><span class="o">.</span><span class="n">export_as_lp_string</span><span class="p">())</span>
 </pre></div>
 </div>
@@ -653,13 +656,13 @@ End
 
 </pre></div></div>
 </div>
-<p>変換後の問題の定式化は次のようになります。ご覧のとおり、不等式制約は追加の整数スラック変数 <span class="math notranslate nohighlight">\(xyz\_leg\text{&#64;}int\_slack\)</span> および <span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span> を使用した等式制約に置き換えられています。</p>
-<p>変換がどのように機能するかを説明しましょう。たとえば、最初の制約の左側の下限は <span class="math notranslate nohighlight">\(0\)</span> です。これは、 <span class="math notranslate nohighlight">\(x=0\)</span> 、 <span class="math notranslate nohighlight">\(y=0\)</span> 、および <span class="math notranslate nohighlight">\(z=0\)</span> の場合です。したがって、 <span class="math notranslate nohighlight">\(x=0\)</span> 、 <span class="math notranslate nohighlight">\(y=0\)</span> 、および <span class="math notranslate nohighlight">\(z=0\)</span> の場合でも満たすことができるようにするには、追加の整数変数の上限を <span class="math notranslate nohighlight">\(5\)</span> にする必要があります。元の定式化の最初の制約の左辺は整数値のみが許されるので、変換された定式化では小数点以下の部分を切り捨てていることに注意してください。2番目の制約についても、基本的に同じ考え方をします。ただし、2番目の制約の記号は≥であるため、 <span class="math notranslate nohighlight">\(x=1\)</span> 、 <span class="math notranslate nohighlight">\(y=1\)</span> 、<span class="math notranslate nohighlight">\(z=7\)</span> の場合でも満たすことができるように、 <span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span> の前にマイナスをつけます。</p>
-</div>
-<div class="section" id="IntegerToBinary">
+<p>変換後、問題の定式化は上記の出力のようになります。ご覧のとおり、不等式制約は、整数のスラック変数 <span class="math notranslate nohighlight">\(xyz\_leg\text{&#64;}int\_slack\)</span> と <span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span> が追加された等式制約に置き換えられています。</p>
+<p>変換がどのように機能するかを説明しましょう。 たとえば、最初の制約の左側の下限は <span class="math notranslate nohighlight">\(0\)</span> です。これは、 <span class="math notranslate nohighlight">\(x=0\)</span> 、 <span class="math notranslate nohighlight">\(y=0\)</span> 、および <span class="math notranslate nohighlight">\(z=0\)</span> の場合です。 したがって、追加の整数変数の上限は、 <span class="math notranslate nohighlight">\(x=0\)</span> 、 <span class="math notranslate nohighlight">\(y=0\)</span> 、および <span class="math notranslate nohighlight">\(z=0\)</span> の場合でも満たすことができるように <span class="math notranslate nohighlight">\(5\)</span> でなければなりません。 元の定式化の最初の制約の左側は整数値のみである可能性があるため、変換された定式化では小数点以下の部分を切り取ることに注意してください。 2番目の制約については、基本的に同じアプローチを適用します。 ただし、2番目の制約の記号は <span class="math notranslate nohighlight">\(\geq\)</span> であるため、<span class="math notranslate nohighlight">\(x=1, y=1\)</span> 、 <span class="math notranslate nohighlight">\(z=7\)</span> の場合でも満たすことができるように、 <span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span> の前にマイナスを追加します。</p>
+</section>
+<section id="IntegerToBinary">
 <h2>IntegerToBinary<a class="headerlink" href="#IntegerToBinary" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">IntegerToBinary</span></code> は、整数変数をバイナリ変数と係数に変換して、 <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> から整数変数を削除します。 変換には、 <a class="reference external" href="https://arxiv.org/abs/1706.01945">arxiv:1706.01945</a> （式（5））で提案されている有界係数エンコーディングが使用されます。エンコード方法の詳細については、論文を参照してください。</p>
-<p>出発点として <code class="docutils literal notranslate"><span class="pre">InequalityToEquality</span></code> の出力を使用します。変数 <span class="math notranslate nohighlight">\(x\)</span> と <span class="math notranslate nohighlight">\(y\)</span> はバイナリ変数であり、変数 <span class="math notranslate nohighlight">\(z\)</span> とスラック変数 <span class="math notranslate nohighlight">\(xyz\_leq\text{&#64;}int\_slack\)</span> と <span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span> は、整数型変数です。参照のため、問題を再度表示します。</p>
+<p><code class="docutils literal notranslate"><span class="pre">InequalityToEquality</span></code> の出力を開始点として使用します。 変数 <span class="math notranslate nohighlight">\(x\)</span> と <span class="math notranslate nohighlight">\(y\)</span> はバイナリ変数であり、変数 <span class="math notranslate nohighlight">\(z\)</span> とスラック変数 <span class="math notranslate nohighlight">\(xyz\_leq\text{&#64;}int\_slack\)</span> と <span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span> は整数変数です。 参照用に問題を再度印刷します。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -758,15 +761,14 @@ End
 
 </pre></div></div>
 </div>
-<p>変換後、整数変数 <span class="math notranslate nohighlight">\(z\)</span> は、上記のように、それぞれ係数1、2、および4の3つのバイナリ変数 <span class="math notranslate nohighlight">\(z\text{&#64;}0\)</span> 、 <span class="math notranslate nohighlight">\(z\text{&#64;}1\)</span> および <span class="math notranslate nohighlight">\(z\text{&#64;}2\)</span> に置き換えられます。 <code class="docutils literal notranslate"><span class="pre">InequalityToEquality</span></code> によって導入されたスラック変数 <span class="math notranslate nohighlight">\(xyz\_leq\text{&#64;}int\_slack\)</span> と
-<span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span> も、それぞれ係数1、2、2、および1、2、3の3つのバイナリ変数に置き換えられます。</p>
+<p>変換後、整数変数 <span class="math notranslate nohighlight">\(z\)</span> は、上記のように、それぞれ係数1、2、および4の3つのバイナリ変数 <span class="math notranslate nohighlight">\(z\text{&#64;}0\)</span> 、 <span class="math notranslate nohighlight">\(z\text{&#64;}1\)</span> 、および <span class="math notranslate nohighlight">\(z\text{&#64;}2\)</span> に置き換えられます。  <code class="docutils literal notranslate"><span class="pre">InequalityToEquality</span></code> によって導入されたスラック変数 <span class="math notranslate nohighlight">\(xyz\_leq\text{&#64;}int\_slack\)</span> と <span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span> も、それぞれ係数1、2、2、および1、2、3の3つのバイナリ変数に置き換えられます。</p>
 <p>注：ここでの係数は、取り得る値 <span class="math notranslate nohighlight">\(\{0, \ldots, 7\}\)</span>, <span class="math notranslate nohighlight">\(\{0, \ldots, 5\}\)</span>, and <span class="math notranslate nohighlight">\(\{0, \ldots, 6\}\)</span> を表現するために,　係数をもつ各バイナリ変数の和は、元の整数変数の下界と上界に従うようサブセット <span class="math notranslate nohighlight">\(\{1, 2, 4\}\)</span>, <span class="math notranslate nohighlight">\(\{1, 2, 2}\)</span>, と <span class="math notranslate nohighlight">\(\{1, 2, 3\}\)</span> の和をとっています。</p>
 <p><code class="docutils literal notranslate"><span class="pre">IntegerToBinary</span></code> は、与えられたバイナリ結果を元の整数表現に変換する機能である <code class="docutils literal notranslate"><span class="pre">interpret</span></code> メソッドも提供します。</p>
-</div>
-<div class="section" id="LinearEqualityToPenalty">
+</section>
+<section id="LinearEqualityToPenalty">
 <h2>LinearEqualityToPenalty<a class="headerlink" href="#LinearEqualityToPenalty" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">LinearEqualityToPenalty</span></code> は、 <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> を制約なしの形式にマップするために、線形等式制約を目的関数の追加の2次ペナルティ項に変換します。コンバータへの入力は，線形等価制約のみを持つ <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> でなければなりません。これらの等価性制約、例えば <span class="math notranslate nohighlight">\(a_i\)</span> と <span class="math notranslate nohighlight">\(b\)</span> は数値、 <span class="math notranslate nohighlight">\(x_i\)</span> は変数であり、 <span class="math notranslate nohighlight">\(M\)</span> はペナルティファクターとしては大きな数である時、 <span class="math notranslate nohighlight">\(x_i\)</span> は <span class="math notranslate nohighlight">\(M(b - \sum_i a_i x_i)^2\)</span> の形式で目的関数に追加されます。デフォルトでは <span class="math notranslate nohighlight">\(M= 1e5\)</span> です。 項の符号は、問題の種類が最大化か最小化かに依存します。</p>
-<p><code class="docutils literal notranslate"><span class="pre">IntegerToBinary</span></code> の出力は、すべての変数はバイナリ変数であり、すべての不等式制約は等式制約にマップされています。 我々は再び問題を参照のために印刷します。</p>
+<p><code class="docutils literal notranslate"><span class="pre">IntegerToBinary</span></code> の出力を開始点として使用します。ここで、すべての変数はバイナリ変数であり、すべての不等式制約は等式制約にマップされています。 参照用に問題を再度表示します。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -901,6 +903,7 @@ End
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -928,8 +931,8 @@ End
 </pre></div>
 </div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>
@@ -992,6 +995,7 @@ End
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
          <script src="../_static/doctools.js"></script>
@@ -999,8 +1003,8 @@ End
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "tex2jax_ignore|mathjax_ignore|document", "processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
+         <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+         <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
      
 
   

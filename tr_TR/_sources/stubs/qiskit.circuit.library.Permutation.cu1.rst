@@ -1,6 +1,0 @@
-qiskit.circuit.library.Permutation.cu1
-======================================
-
-.. currentmodule:: qiskit.circuit.library
-
-.. automethod:: Permutation.cu1

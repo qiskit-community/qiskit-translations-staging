@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="bn-BN" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>স্থিতি শক্তি তলের নমুনাকরন (স্যাম্পলিং) &mdash; Qiskit Nature 0.2.2 documentation</title>
+  <title>স্থিতি শক্তি তলের নমুনাকরন (স্যাম্পলিং) &mdash; Qiskit Nature 0.3.0 documentation</title>
   
 
   
@@ -31,8 +32,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -175,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.2
+                  0.3.0
                 </div>
               
             
@@ -530,11 +531,11 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">নোট</p>
-<p>এই পৃষ্ঠাটি <a class="reference external" href="https://github.com/Qiskit/qiskit-nature/blob/stable/0.2/docs/tutorials/05_Sampling_potential_energy_surfaces.ipynb">docs/tutorials/05_Sampling_potential_energy_surfaces.ipynb</a> থেকে বানানো হয়েছে।</p>
+<p>এই পৃষ্ঠাটি <a class="reference external" href="https://github.com/Qiskit/qiskit-nature/blob/stable/0.3/docs/tutorials/05_Sampling_potential_energy_surfaces.ipynb">docs/tutorials/05_Sampling_potential_energy_surfaces.ipynb</a> থেকে বানানো হয়েছে।</p>
 </div>
-<div class="section" id="স্থিতি-শক্তি-তলের-নমুনাকরন-(স্যাম্পলিং)">
+<section id="স্থিতি-শক্তি-তলের-নমুনাকরন-(স্যাম্পলিং)">
 <h1>স্থিতি শক্তি তলের নমুনাকরন (স্যাম্পলিং)<a class="headerlink" href="#স্থিতি-শক্তি-তলের-নমুনাকরন-(স্যাম্পলিং)" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h1>
-<div class="section" id="ভূমিকা">
+<section id="ভূমিকা">
 <h2>ভূমিকা<a class="headerlink" href="#ভূমিকা" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
 <p>এই ইন্টারেক্টিভ নোটবুকটি দেখায় যে কীভাবে একটি অণুর বিচ্ছিন্নতা প্রোফাইল তৈরি করতে কিস্কিট নেচারের সম্ভাব্য শক্তি সারফেস (পিইএস) স্যাম্পলার অ্যালগরিদম ব্যবহার করতে হয়। আমরা Born-Oppenheimer Potential Energy Surface (BOPES) ব্যবহার করি এবং ভেরিয়েশনাল কোয়ান্টাম ইজেনসোলভার (VQE) ব্যবহার করে PES গণনার ক্ষেত্রে ফাংশন মূল্যায়নের মোট সংখ্যা কমাতে বুটস্ট্র্যাপিং এবং এক্সট্রোপোলেশনকে কীভাবে কাজে লাগানো যায় তা প্রদর্শন করি।</p>
 <div class="nbinput nblast docutils container">
@@ -564,11 +565,15 @@ div.rendered_html tbody tr:hover {
 <span class="kn">from</span> <span class="nn">qiskit_nature.mappers.second_quantization</span> <span class="kn">import</span> <span class="n">JordanWignerMapper</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.algorithms</span> <span class="kn">import</span> <span class="n">GroundStateEigensolver</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.drivers</span> <span class="kn">import</span> <span class="n">UnitsType</span><span class="p">,</span> <span class="n">Molecule</span>
-<span class="kn">from</span> <span class="nn">qiskit_nature.drivers.second_quantization</span> <span class="kn">import</span> <span class="n">ElectronicStructureDriverType</span><span class="p">,</span> <span class="n">ElectronicStructureMoleculeDriver</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.drivers.second_quantization</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ElectronicStructureDriverType</span><span class="p">,</span>
+    <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.algorithms.pes_samplers</span> <span class="kn">import</span> <span class="n">BOPESSampler</span><span class="p">,</span> <span class="n">Extrapolator</span>
 
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">RankWarning</span><span class="p">)</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">RankWarning</span><span class="p">)</span>
 
 <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">75</span>
 </pre></div>
@@ -581,10 +586,10 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">stretch1</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">Molecule</span><span class="o">.</span><span class="n">absolute_stretching</span><span class="p">,</span> <span class="n">atom_pair</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-<span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">geometry</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]),</span>
-                        <span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])],</span>
-                       <span class="n">degrees_of_freedom</span><span class="o">=</span><span class="p">[</span><span class="n">stretch1</span><span class="p">],</span>
-                       <span class="p">)</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]),</span> <span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])],</span>
+    <span class="n">degrees_of_freedom</span><span class="o">=</span><span class="p">[</span><span class="n">stretch1</span><span class="p">],</span>
+<span class="p">)</span>
 
 <span class="c1"># pass molecule to PSYCF driver</span>
 <span class="n">driver</span> <span class="o">=</span> <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">driver_type</span><span class="o">=</span><span class="n">ElectronicStructureDriverType</span><span class="o">.</span><span class="n">PYSCF</span><span class="p">)</span>
@@ -608,7 +613,7 @@ div.rendered_html tbody tr:hover {
 [(&#39;H&#39;, [0.0, 0.0, 0.0]), (&#39;H&#39;, [0.0, 0.0, 0.3])]
 </pre></div></div>
 </div>
-<div class="section" id="absolute_stretching-dof-বরাবর-অণুতে-একটি-উত্তেজনা-তৈরি-করুন">
+<section id="absolute_stretching-dof-বরাবর-অণুতে-একটি-উত্তেজনা-তৈরি-করুন">
 <h3><cite>absolute_stretching dof</cite> বরাবর অণুতে একটি উত্তেজনা তৈরি করুন<a class="headerlink" href="#absolute_stretching-dof-বরাবর-অণুতে-একটি-উত্তেজনা-তৈরি-করুন" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -632,12 +637,12 @@ div.rendered_html tbody tr:hover {
 [(&#39;H&#39;, [0.0, 0.0, 0.0]), (&#39;H&#39;, [0.0, 0.0, 0.8999999999999999])]
 </pre></div></div>
 </div>
-</div>
-</div>
-<div class="section" id="BOPES-Sampler-ব্যবহার-করে-বন্ড-বিচ্ছেদ-প্রোফাইল-গণনা-করুন">
+</section>
+</section>
+<section id="BOPES-Sampler-ব্যবহার-করে-বন্ড-বিচ্ছেদ-প্রোফাইল-গণনা-করুন">
 <h2>BOPES Sampler ব্যবহার করে বন্ড বিচ্ছেদ প্রোফাইল গণনা করুন<a class="headerlink" href="#BOPES-Sampler-ব্যবহার-করে-বন্ড-বিচ্ছেদ-প্রোফাইল-গণনা-করুন" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
 <p>এখানে, আমরা আণবিক তথ্য এবং VQE BOPES Sampler নামে একটি built-in type এর কাছে প্রেরণ করি। BOPES স্যাম্পলার সম্ভাব্য শক্তির পৃষ্ঠের গণনার অনুমতি দেয় একটি নির্দিষ্ট degrees of freedom/আগ্রহের বিষয়ের জন্য।</p>
-<div class="section" id="প্রথমে-আমরা-no-bootstrapping-বনাম-bootstrapping-এর-তুলনা-করি">
+<section id="প্রথমে-আমরা-no-bootstrapping-বনাম-bootstrapping-এর-তুলনা-করি">
 <h3>প্রথমে আমরা no bootstrapping বনাম bootstrapping এর তুলনা করি<a class="headerlink" href="#প্রথমে-আমরা-no-bootstrapping-বনাম-bootstrapping-এর-তুলনা-করি" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
 <p>BOPES স্যাম্পলারকে বুটস্ট্র্যাপ করা একটি নির্দিষ্ট degree of freedom এর জন্য অনুকূল পরিবর্তনশীল প্যারামিটারগুলি ব্যবহার করা জড়িত, ধরুন r (উদাহরণস্বরূপ আন্তআণবিক দূরত্ব) VQE- এর প্রাথমিক বিন্দু হিসাবে পরবর্তী degree of freedom, r + <span class="math notranslate nohighlight">\(\epsilon\)</span> অনুমান করুন। স্বতঃসিদ্ধ নিয়মানুসারে, যদি বুস্ট্র্যাপিংকে True তে সেট করা হয়, তবে পূর্ববর্তী সমস্ত অনুকূল প্যারামিটারগুলি পরবর্তী রানগুলির জন্য প্রাথমিক পয়েন্ট হিসাবে ব্যবহৃত হয়।</p>
 <div class="nbinput nblast docutils container">
@@ -648,7 +653,7 @@ div.rendered_html tbody tr:hover {
 <span></span><span class="n">es_problem</span> <span class="o">=</span> <span class="n">ElectronicStructureProblem</span><span class="p">(</span><span class="n">driver</span><span class="p">)</span>
 
 <span class="n">qubit_converter</span> <span class="o">=</span> <span class="n">QubitConverter</span><span class="p">(</span><span class="n">JordanWignerMapper</span><span class="p">())</span>
-<span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;aer_simulator_statevector&#39;</span><span class="p">))</span>
+<span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;aer_simulator_statevector&quot;</span><span class="p">))</span>
 <span class="n">solver</span> <span class="o">=</span> <span class="n">VQE</span><span class="p">(</span><span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">)</span>
 
 <span class="n">me_gsc</span> <span class="o">=</span> <span class="n">GroundStateEigensolver</span><span class="p">(</span><span class="n">qubit_converter</span><span class="p">,</span> <span class="n">solver</span><span class="p">)</span>
@@ -661,10 +666,10 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">distance1</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">Molecule</span><span class="o">.</span><span class="n">absolute_distance</span><span class="p">,</span> <span class="n">atom_pair</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-<span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">geometry</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]),</span>
-                        <span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])],</span>
-                       <span class="n">degrees_of_freedom</span><span class="o">=</span><span class="p">[</span><span class="n">distance1</span><span class="p">],</span>
-                       <span class="p">)</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]),</span> <span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])],</span>
+    <span class="n">degrees_of_freedom</span><span class="o">=</span><span class="p">[</span><span class="n">distance1</span><span class="p">],</span>
+<span class="p">)</span>
 
 <span class="c1"># pass molecule to PSYCF driver</span>
 <span class="n">driver</span> <span class="o">=</span> <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">driver_type</span><span class="o">=</span><span class="n">ElectronicStructureDriverType</span><span class="o">.</span><span class="n">PYSCF</span><span class="p">)</span>
@@ -674,29 +679,25 @@ div.rendered_html tbody tr:hover {
 
 <span class="c1"># Specify degree of freedom (points of interest)</span>
 <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
-<span class="n">results_full</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># full dictionary of results for each condition</span>
-<span class="n">results</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># dictionary of (point,energy) results for each condition</span>
-<span class="n">conditions</span> <span class="o">=</span> <span class="p">{</span><span class="kc">False</span><span class="p">:</span> <span class="s1">&#39;no bootstrapping&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">:</span> <span class="s1">&#39;bootstrapping&#39;</span><span class="p">}</span>
+<span class="n">results_full</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># full dictionary of results for each condition</span>
+<span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># dictionary of (point,energy) results for each condition</span>
+<span class="n">conditions</span> <span class="o">=</span> <span class="p">{</span><span class="kc">False</span><span class="p">:</span> <span class="s2">&quot;no bootstrapping&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">:</span> <span class="s2">&quot;bootstrapping&quot;</span><span class="p">}</span>
 
 
 <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">bootstrap</span> <span class="ow">in</span> <span class="n">conditions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="c1"># define instance to sampler</span>
-    <span class="n">bs</span> <span class="o">=</span> <span class="n">BOPESSampler</span><span class="p">(</span>
-        <span class="n">gss</span><span class="o">=</span><span class="n">me_gsc</span>
-        <span class="p">,</span><span class="n">bootstrap</span><span class="o">=</span><span class="n">value</span>
-        <span class="p">,</span><span class="n">num_bootstrap</span><span class="o">=</span><span class="kc">None</span>
-        <span class="p">,</span><span class="n">extrapolator</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">bs</span> <span class="o">=</span> <span class="n">BOPESSampler</span><span class="p">(</span><span class="n">gss</span><span class="o">=</span><span class="n">me_gsc</span><span class="p">,</span> <span class="n">bootstrap</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">num_bootstrap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extrapolator</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="c1"># execute</span>
-    <span class="n">res</span> <span class="o">=</span> <span class="n">bs</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">es_problem</span><span class="p">,</span><span class="n">points</span><span class="p">)</span>
-    <span class="n">results_full</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">res</span><span class="o">.</span><span class="n">raw_results</span>
-    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;points_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">points</span>
-    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;energies_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">energies</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">bs</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">es_problem</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span>
+    <span class="n">results_full</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">raw_results</span>
+    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;points_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">points</span>
+    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;energies_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">energies</span>
 </pre></div>
 </div>
 </div>
-</div>
-</div>
-<div class="section" id="প্রথাগত-(ক্লাসিক্যাল)-eigensolver-এর-সাথে-তুলনা-করুন">
+</section>
+</section>
+<section id="প্রথাগত-(ক্লাসিক্যাল)-eigensolver-এর-সাথে-তুলনা-করুন">
 <h2>প্রথাগত (ক্লাসিক্যাল) eigensolver এর সাথে তুলনা করুন<a class="headerlink" href="#প্রথাগত-(ক্লাসিক্যাল)-eigensolver-এর-সাথে-তুলনা-করুন" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
@@ -707,19 +708,17 @@ div.rendered_html tbody tr:hover {
 <span class="n">solver_numpy</span> <span class="o">=</span> <span class="n">NumPyMinimumEigensolver</span><span class="p">()</span>
 <span class="n">me_gsc_numpy</span> <span class="o">=</span> <span class="n">GroundStateEigensolver</span><span class="p">(</span><span class="n">qubit_converter</span><span class="p">,</span> <span class="n">solver_numpy</span><span class="p">)</span>
 <span class="n">bs_classical</span> <span class="o">=</span> <span class="n">BOPESSampler</span><span class="p">(</span>
-               <span class="n">gss</span><span class="o">=</span><span class="n">me_gsc_numpy</span>
-               <span class="p">,</span><span class="n">bootstrap</span><span class="o">=</span><span class="kc">False</span>
-               <span class="p">,</span><span class="n">num_bootstrap</span><span class="o">=</span><span class="kc">None</span>
-               <span class="p">,</span><span class="n">extrapolator</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">gss</span><span class="o">=</span><span class="n">me_gsc_numpy</span><span class="p">,</span> <span class="n">bootstrap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_bootstrap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extrapolator</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span>
 <span class="c1"># execute</span>
 <span class="n">res_np</span> <span class="o">=</span> <span class="n">bs_classical</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">es_problem</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span>
-<span class="n">results_full</span><span class="p">[</span><span class="s1">&#39;np&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">res_np</span><span class="o">.</span><span class="n">raw_results</span>
-<span class="n">results</span><span class="p">[</span><span class="s1">&#39;points_np&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_np</span><span class="o">.</span><span class="n">points</span>
-<span class="n">results</span><span class="p">[</span><span class="s1">&#39;energies_np&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_np</span><span class="o">.</span><span class="n">energies</span>
+<span class="n">results_full</span><span class="p">[</span><span class="s2">&quot;np&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_np</span><span class="o">.</span><span class="n">raw_results</span>
+<span class="n">results</span><span class="p">[</span><span class="s2">&quot;points_np&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_np</span><span class="o">.</span><span class="n">points</span>
+<span class="n">results</span><span class="p">[</span><span class="s2">&quot;energies_np&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_np</span><span class="o">.</span><span class="n">energies</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="ফলাফলের-খসড়া-করুন">
+<section id="ফলাফলের-খসড়া-করুন">
 <h3>ফলাফলের খসড়া করুন<a class="headerlink" href="#ফলাফলের-খসড়া-করুন" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -728,12 +727,12 @@ div.rendered_html tbody tr:hover {
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">bootstrap</span> <span class="ow">in</span> <span class="n">conditions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;points_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;energies_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">],</span> <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;points_np&#39;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;energies_np&#39;</span><span class="p">],</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;numpy&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;points_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;energies_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;points_np&quot;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;energies_np&quot;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Dissociation profile&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Interatomic distance&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Energy&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Dissociation profile&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Interatomic distance&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Energy&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -753,9 +752,9 @@ Text(0,0.5,&#39;Energy&#39;)
 <img alt="../_images/tutorials_05_Sampling_potential_energy_surfaces_15_1.png" src="../_images/tutorials_05_Sampling_potential_energy_surfaces_15_1.png" />
 </div>
 </div>
-</div>
-</div>
-<div class="section" id="মূল্যায়নের-সংখ্যা-তুলনা-করুন">
+</section>
+</section>
+<section id="মূল্যায়নের-সংখ্যা-তুলনা-করুন">
 <h2>মূল্যায়নের সংখ্যা তুলনা করুন<a class="headerlink" href="#মূল্যায়নের-সংখ্যা-তুলনা-করুন" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
@@ -764,10 +763,10 @@ Text(0,0.5,&#39;Energy&#39;)
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="k">for</span> <span class="n">condition</span><span class="p">,</span> <span class="n">result_full</span> <span class="ow">in</span> <span class="n">results_full</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Total evaluations for &#39;</span> <span class="o">+</span> <span class="n">condition</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total evaluations for &quot;</span> <span class="o">+</span> <span class="n">condition</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
     <span class="nb">sum</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">result_full</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">condition</span> <span class="o">!=</span> <span class="s1">&#39;np&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">condition</span> <span class="o">!=</span> <span class="s2">&quot;np&quot;</span><span class="p">:</span>
             <span class="nb">sum</span> <span class="o">+=</span> <span class="n">result_full</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">raw_result</span><span class="o">.</span><span class="n">cost_function_evals</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">sum</span> <span class="o">=</span> <span class="mi">0</span>
@@ -791,8 +790,8 @@ Total evaluations for np:
 0
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="এক্সট্রাপোলেশন">
+</section>
+<section id="এক্সট্রাপোলেশন">
 <h2>এক্সট্রাপোলেশন<a class="headerlink" href="#এক্সট্রাপোলেশন" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
 <p>এখানে, একটি এক্সট্রাপোল্টর যোগ করা হয়েছে যা নির্দিষ্ট কিছু ফাংশনে সেট করা প্রতিটি (param,point) ফিট করার চেষ্টা করবে এবং পরবর্তী পয়েন্ট (degree of freedom) জন্য একটি প্রাথমিক প্যারামিটার সেট করার পরামর্শ দেবে।</p>
 <ul class="simple">
@@ -807,7 +806,7 @@ Total evaluations for np:
 <li><p>বহুপদী এক্সট্রাপোলেটর: ব্যবহারকারী-নির্দিষ্ট ডিগ্রির একটি বহুপদী ফাংশনে প্রতিটি প্যারামিটার লাগানোর উপর ভিত্তি করে একটি এক্সট্রাপোলেটর।</p></li>
 <li><p>ডিফারেনশিয়াল এক্সট্রাপোলেটর: প্রতিটি param সেটকে স্পেসে পয়েন্ট হিসেবে বিবেচনা করার উপর ভিত্তি করে এক্সট্রাপোলেটর, এবং পরের পয়েন্টের জন্য পরম সেটের পূর্বাভাস দেওয়ার জন্য রিগ্রেশন করা। একটি ব্যবহারকারী-নির্দিষ্ট ডিগ্রী পয়েন্ট ভেক্টরের মানগুলিতে ডেরিভেটিভ যোগ করে যা লিনিয়ার রিগ্রেশনের জন্য প্রশিক্ষণ ডেটাতে বৈশিষ্ট্য হিসাবে কাজ করে।</p></li>
 </ol>
-<div class="section" id="এখানে-আমরা-দুটি-ভিন্ন-এক্সট্রোপোলেশন-কৌশল-পরীক্ষা-করি">
+<section id="এখানে-আমরা-দুটি-ভিন্ন-এক্সট্রোপোলেশন-কৌশল-পরীক্ষা-করি">
 <h3>এখানে আমরা দুটি ভিন্ন এক্সট্রোপোলেশন কৌশল পরীক্ষা করি<a class="headerlink" href="#এখানে-আমরা-দুটি-ভিন্ন-এক্সট্রোপোলেশন-কৌশল-পরীক্ষা-করি" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
@@ -816,32 +815,27 @@ Total evaluations for np:
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># define different extrapolators</span>
 <span class="n">degree</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">extrap_poly</span> <span class="o">=</span> <span class="n">Extrapolator</span><span class="o">.</span><span class="n">factory</span><span class="p">(</span><span class="s2">&quot;poly&quot;</span><span class="p">,</span> <span class="n">degree</span> <span class="o">=</span> <span class="n">degree</span><span class="p">)</span>
-<span class="n">extrap_diff</span> <span class="o">=</span> <span class="n">Extrapolator</span><span class="o">.</span><span class="n">factory</span><span class="p">(</span><span class="s2">&quot;diff_model&quot;</span><span class="p">,</span> <span class="n">degree</span> <span class="o">=</span> <span class="n">degree</span><span class="p">)</span>
-<span class="n">extrapolators</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;poly&#39;</span><span class="p">:</span> <span class="n">extrap_poly</span><span class="p">,</span> <span class="s1">&#39;diff_model&#39;</span><span class="p">:</span> <span class="n">extrap_diff</span><span class="p">}</span>
+<span class="n">extrap_poly</span> <span class="o">=</span> <span class="n">Extrapolator</span><span class="o">.</span><span class="n">factory</span><span class="p">(</span><span class="s2">&quot;poly&quot;</span><span class="p">,</span> <span class="n">degree</span><span class="o">=</span><span class="n">degree</span><span class="p">)</span>
+<span class="n">extrap_diff</span> <span class="o">=</span> <span class="n">Extrapolator</span><span class="o">.</span><span class="n">factory</span><span class="p">(</span><span class="s2">&quot;diff_model&quot;</span><span class="p">,</span> <span class="n">degree</span><span class="o">=</span><span class="n">degree</span><span class="p">)</span>
+<span class="n">extrapolators</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;poly&quot;</span><span class="p">:</span> <span class="n">extrap_poly</span><span class="p">,</span> <span class="s2">&quot;diff_model&quot;</span><span class="p">:</span> <span class="n">extrap_diff</span><span class="p">}</span>
 
 <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">extrapolators</span><span class="p">:</span>
     <span class="n">extrap_internal</span> <span class="o">=</span> <span class="n">extrapolators</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-    <span class="n">extrap</span> <span class="o">=</span> <span class="n">Extrapolator</span><span class="o">.</span><span class="n">factory</span><span class="p">(</span><span class="s2">&quot;window&quot;</span><span class="p">,</span> <span class="n">extrapolator</span> <span class="o">=</span> <span class="n">extrap_internal</span><span class="p">)</span>
+    <span class="n">extrap</span> <span class="o">=</span> <span class="n">Extrapolator</span><span class="o">.</span><span class="n">factory</span><span class="p">(</span><span class="s2">&quot;window&quot;</span><span class="p">,</span> <span class="n">extrapolator</span><span class="o">=</span><span class="n">extrap_internal</span><span class="p">)</span>
     <span class="c1"># define extrapolator</span>
     <span class="c1"># BOPES sampler</span>
-    <span class="n">bs_extr</span> <span class="o">=</span> <span class="n">BOPESSampler</span><span class="p">(</span>
-        <span class="n">gss</span><span class="o">=</span><span class="n">me_gsc</span>
-        <span class="p">,</span><span class="n">bootstrap</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">,</span><span class="n">num_bootstrap</span><span class="o">=</span><span class="kc">None</span>
-        <span class="p">,</span><span class="n">extrapolator</span><span class="o">=</span><span class="n">extrap</span><span class="p">)</span>
+    <span class="n">bs_extr</span> <span class="o">=</span> <span class="n">BOPESSampler</span><span class="p">(</span><span class="n">gss</span><span class="o">=</span><span class="n">me_gsc</span><span class="p">,</span> <span class="n">bootstrap</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_bootstrap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extrapolator</span><span class="o">=</span><span class="n">extrap</span><span class="p">)</span>
     <span class="c1"># execute</span>
     <span class="n">res</span> <span class="o">=</span> <span class="n">bs_extr</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">es_problem</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span>
 
-    <span class="n">results_full</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span><span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">raw_results</span>
-    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;points_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">points</span>
-    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;energies_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">energies</span>
-
+    <span class="n">results_full</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">raw_results</span>
+    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;points_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">points</span>
+    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;energies_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">energies</span>
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="id2">
+</section>
+<section id="id2">
 <h3>ফলাফলের খসড়া করুন<a class="headerlink" href="#id2" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
@@ -850,15 +844,15 @@ Total evaluations for np:
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">bootstrap</span> <span class="ow">in</span> <span class="n">conditions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;points_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;energies_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">],</span> <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;points_np&#39;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;energies_np&#39;</span><span class="p">],</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;numpy&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;points_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;energies_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;points_np&quot;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;energies_np&quot;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">extrapolators</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;points_</span><span class="si">{</span><span class="n">condition</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;energies_</span><span class="si">{</span><span class="n">condition</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">],</span> <span class="n">label</span> <span class="o">=</span> <span class="n">condition</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;points_</span><span class="si">{</span><span class="n">condition</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;energies_</span><span class="si">{</span><span class="n">condition</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">condition</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Dissociation profile&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Interatomic distance&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Energy&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Dissociation profile&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Interatomic distance&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Energy&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -887,9 +881,9 @@ Text(0,0.5,&#39;Energy&#39;)
 <img alt="../_images/tutorials_05_Sampling_potential_energy_surfaces_23_2.png" src="../_images/tutorials_05_Sampling_potential_energy_surfaces_23_2.png" />
 </div>
 </div>
-</div>
-</div>
-<div class="section" id="id3">
+</section>
+</section>
+<section id="id3">
 <h2>মূল্যায়নের সংখ্যা তুলনা করুন<a class="headerlink" href="#id3" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
@@ -898,13 +892,13 @@ Text(0,0.5,&#39;Energy&#39;)
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="k">for</span> <span class="n">condition</span><span class="p">,</span> <span class="n">result_full</span> <span class="ow">in</span> <span class="n">results_full</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Total evaluations for &#39;</span> <span class="o">+</span> <span class="n">condition</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total evaluations for &quot;</span> <span class="o">+</span> <span class="n">condition</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
     <span class="nb">sum</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">results_full</span><span class="p">[</span><span class="n">condition</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">condition</span> <span class="o">!=</span> <span class="s1">&#39;np&#39;</span><span class="p">:</span>
-                <span class="nb">sum</span> <span class="o">+=</span> <span class="n">result_full</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">raw_result</span><span class="o">.</span><span class="n">cost_function_evals</span>
+        <span class="k">if</span> <span class="n">condition</span> <span class="o">!=</span> <span class="s2">&quot;np&quot;</span><span class="p">:</span>
+            <span class="nb">sum</span> <span class="o">+=</span> <span class="n">result_full</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">raw_result</span><span class="o">.</span><span class="n">cost_function_evals</span>
         <span class="k">else</span><span class="p">:</span>
-                <span class="nb">sum</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="nb">sum</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="nb">print</span><span class="p">(</span><span class="nb">sum</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -937,6 +931,7 @@ Total evaluations for diff_model:
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -964,8 +959,8 @@ Total evaluations for diff_model:
 </pre></div>
 </div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

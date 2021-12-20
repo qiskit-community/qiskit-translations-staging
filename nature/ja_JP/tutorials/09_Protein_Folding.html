@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="ja-JP" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>タンパク質の折りたたみ &mdash; Qiskit Nature 0.2.2 ドキュメント</title>
+  <title>タンパク質の折りたたみ &mdash; Qiskit Nature 0.3.0 ドキュメント</title>
   
 
   
@@ -31,15 +32,15 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="検索" href="../search.html" />
-    <link rel="next" title="Release Notes" href="../release_notes.html" />
+    <link rel="next" title="Lattice models" href="10_lattice_models.html" />
     <link rel="prev" title="プロパティ・フレームワーク" href="08_property_framework.html" /> 
 
   
@@ -175,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.2
+                  0.3.0
                 </div>
               
             
@@ -530,11 +531,11 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">注釈</p>
-<p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-nature/blob/stable/0.2/docs/tutorials/09_Protein_Folding.ipynb">docs/tutorials/09_Protein_Folding.ipynb</a> から生成されました。</p>
+<p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-nature/blob/stable/0.3/docs/tutorials/09_Protein_Folding.ipynb">docs/tutorials/09_Protein_Folding.ipynb</a> から生成されました。</p>
 </div>
-<div class="section" id="タンパク質の折りたたみ">
+<section id="タンパク質の折りたたみ">
 <h1>タンパク質の折りたたみ<a class="headerlink" href="#タンパク質の折りたたみ" title="このヘッドラインへのパーマリンク">¶</a></h1>
-<div class="section" id="はじめに">
+<section id="はじめに">
 <h2>はじめに<a class="headerlink" href="#はじめに" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>多くの自然界および人工のタンパク質の構造と機能は、まだほとんど理解されていません。その結果、アルツハイマー病やワクチン開発、農作物改良研究などでみられる、たんぱく質折りたたみに関連する理解に限りがあります。</p>
 <p>展開されたポリペプチドは自由度が非常に高く、このため潜在的な配座が非常に多く存在します。 例えば、 <span class="math notranslate nohighlight">\(100\)</span> のアミノ酸鎖には、 <span class="math notranslate nohighlight">\(10^{47}\)</span> のオーダーの配座があります。しかし現実には、多くのタンパク質は数秒のうちに固有の構造に折りたたまれています。これはレヴィンタールのパラドックス [1] として知られています。</p>
@@ -546,7 +547,7 @@ div.rendered_html tbody tr:hover {
 <li><p>相互作用量子ビット: 異なるアミノ酸の相互作用をエンコードする量子ビット</p></li>
 </ul>
 <p>今回は四面体格子(ダイヤモンド形状格子) を使用し、配置量子ビットで運動をエンコードします。(下図参照)</p>
-<p><img alt="a02dd244e50e4038864648738fce3115" class="no-scaled-link" src="../_images/lattice_protein.png" style="width: 300px;" /></p>
+<p><img alt="54292a04ffb84e4a941f36718e8bd56b" class="no-scaled-link" src="../_images/lattice_protein.png" style="width: 300px;" /></p>
 <p>量子ビットの集合 <span class="math notranslate nohighlight">\(\mathbf{q}=\{\mathbf{q}_{cf}, \mathbf{q}_{in}\}\)</span> の系のハミルトニアンは以下の通りです。</p>
 <div class="math notranslate nohighlight">
 \[H(\mathbf{q}) = H_{gc}(\mathbf{q}_{cf}) + H_{ch}(\mathbf{q}_{cf}) + H_{in}(\mathbf{q}_{cf}, \mathbf{q}_{in})\]</div>
@@ -562,10 +563,16 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">qiskit_nature.problems.sampling.protein_folding.interactions.random_interaction</span> <span class="kn">import</span> <span class="n">RandomInteraction</span>
-<span class="kn">from</span> <span class="nn">qiskit_nature.problems.sampling.protein_folding.interactions.miyazawa_jernigan_interaction</span> <span class="kn">import</span> <span class="n">MiyazawaJerniganInteraction</span>
+<span></span><span class="kn">from</span> <span class="nn">qiskit_nature.problems.sampling.protein_folding.interactions.random_interaction</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">RandomInteraction</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.problems.sampling.protein_folding.interactions.miyazawa_jernigan_interaction</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MiyazawaJerniganInteraction</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.problems.sampling.protein_folding.peptide.peptide</span> <span class="kn">import</span> <span class="n">Peptide</span>
-<span class="kn">from</span> <span class="nn">qiskit_nature.problems.sampling.protein_folding.protein_folding_problem</span> <span class="kn">import</span> <span class="n">ProteinFoldingProblem</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.problems.sampling.protein_folding.protein_folding_problem</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ProteinFoldingProblem</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">qiskit_nature.problems.sampling.protein_folding.penalty_parameters</span> <span class="kn">import</span> <span class="n">PenaltyParameters</span>
 
@@ -575,8 +582,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="タンパク質の主鎖">
+</section>
+<section id="タンパク質の主鎖">
 <h2>タンパク質の主鎖<a class="headerlink" href="#タンパク質の主鎖" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>タンパク質はアミノ酸の線形鎖である主鎖で構成されています。それ以外の残基の命名は [3] で定義されている1文字のコードを使用しました。より詳細なアミノ酸のタイプと命名法は [4] も参照してください。</p>
 <p>この例ではコード APRLRFY を持つ、7 つのアミノ酸で構成された主鎖の神経ペプチドにおける量子演算子の生成をデモンストレーションします([2] 参照)。</p>
@@ -589,8 +596,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="側鎖">
+</section>
+<section id="側鎖">
 <h2>側鎖<a class="headerlink" href="#側鎖" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>タンパク質の主鎖の先に、主鎖の残基に接続したアミノ酸が存在することがあります。我々のモデルは最大長の側鎖を許容します。細長い側鎖は開発中の追加のペナルティ項の導入が必要になります。この例では神経ペプチドの真の構造を保持するための側鎖は考慮しません。</p>
 <div class="nbinput nblast docutils container">
@@ -598,12 +605,12 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">side_chains</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span><span class="o">*</span><span class="mi">7</span>
+<span></span><span class="n">side_chains</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">7</span>
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="アミノ酸間の相互作用">
+</section>
+<section id="アミノ酸間の相互作用">
 <h2>アミノ酸間の相互作用<a class="headerlink" href="#アミノ酸間の相互作用" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>タンパク質の残基間の接触を記述するため、準化学近似により導出された知識ベースの (統計的) ポテンシャルを使用します。ここで使われるポテンシャルは [5] Miyazawa, S. and Jernigan, R. L. によって導入されました。</p>
 <p>このモデルを超えて、ランダム相互作用マップを提供するランダム接続マップ(相互作用)も可能です。タンパク質の特定の配置 (例：αヘリックス、βシート 等) を強化したカスタム相互作用マップを導入することもできます。</p>
@@ -617,8 +624,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="物理的制約">
+</section>
+<section id="物理的制約">
 <h2>物理的制約<a class="headerlink" href="#物理的制約" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>すべての物理制約が遵守されるように、ペナルティー関数を導入します。使用されている異なるペナルティー項は以下の通りです：</p>
 <ul class="simple">
@@ -639,8 +646,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="ペプチドの定義">
+</section>
+<section id="ペプチドの定義">
 <h2>ペプチドの定義<a class="headerlink" href="#ペプチドの定義" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>主鎖と可能な側鎖をベースにして、モデル化した系の全ての構造情報を含むペプチド・オブジェクトを定義します。</p>
 <div class="nbinput nblast docutils container">
@@ -652,8 +659,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="タンパク質の折りたたみ問題">
+</section>
+<section id="タンパク質の折りたたみ問題">
 <h2>タンパク質の折りたたみ問題<a class="headerlink" href="#タンパク質の折りたたみ問題" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>定義されたペプチドに基づき、我々のモデルのために定義した相互作用(コンタクトマップ) とペナルティ項で、量子演算を返すタンパク質折りたたみ問題を定義します。</p>
 <div class="nbinput nblast docutils container">
@@ -759,8 +766,8 @@ div.rendered_html tbody tr:hover {
 - 97.5 * IZIIIIZZZ
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="問題の解決のための-CVaR-期待値での-VQE-の使用">
+</section>
+<section id="問題の解決のための-CVaR-期待値での-VQE-の使用">
 <h2>問題の解決のための CVaR 期待値での VQE の使用<a class="headerlink" href="#問題の解決のための-CVaR-期待値での-VQE-の使用" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>我々が取り組んでいる問題は全ての物理的制約を実装し、そして対角化されたハミルトニアンを持っています。特定のケースでは、(タンパク質の折りたたみ構造に対応する) 最低エネルギーを与える単一のビット列をターゲットにします。こうして、解の期待値の条件付きバリュー・アット・リスク (CVaR) 変分量子固有値ソルバーを使うことができ、最低配置エネルギーを見つけることができます[6]。参考文献 [2] とおなじアプローチをとりましたが、我々はここで古典的最適化に COBYLA を使います。標準的な VQE または QAOA アルゴリズムを使うことも可能ですが、[2] で議論されているように CVaR がより適切です。</p>
 <div class="nbinput docutils container">
@@ -780,27 +787,35 @@ div.rendered_html tbody tr:hover {
 <span class="c1"># set variational ansatz</span>
 <span class="n">ansatz</span> <span class="o">=</span> <span class="n">RealAmplitudes</span><span class="p">(</span><span class="n">reps</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-<span class="c1">#set the backend</span>
-<span class="n">backend_name</span> <span class="o">=</span> <span class="s1">&#39;aer_simulator&#39;</span>
+<span class="c1"># set the backend</span>
+<span class="n">backend_name</span> <span class="o">=</span> <span class="s2">&quot;aer_simulator&quot;</span>
 <span class="n">backend</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span>
     <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="n">backend_name</span><span class="p">),</span>
     <span class="n">shots</span><span class="o">=</span><span class="mi">8192</span><span class="p">,</span>
     <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
-    <span class="n">seed_simulator</span><span class="o">=</span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span>
+    <span class="n">seed_simulator</span><span class="o">=</span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="n">counts</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+
 
 <span class="k">def</span> <span class="nf">store_intermediate_result</span><span class="p">(</span><span class="n">eval_count</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">):</span>
     <span class="n">counts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eval_count</span><span class="p">)</span>
     <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span>
 
+
 <span class="c1"># initialize CVaR_alpha objective with alpha = 0.1</span>
 <span class="n">cvar_exp</span> <span class="o">=</span> <span class="n">CVaRExpectation</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">PauliExpectation</span><span class="p">())</span>
 
 <span class="c1"># initialize VQE using CVaR</span>
-<span class="n">vqe</span> <span class="o">=</span> <span class="n">VQE</span><span class="p">(</span><span class="n">expectation</span><span class="o">=</span><span class="n">cvar_exp</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">ansatz</span><span class="o">=</span><span class="n">ansatz</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
-          <span class="n">callback</span><span class="o">=</span><span class="n">store_intermediate_result</span><span class="p">)</span>
+<span class="n">vqe</span> <span class="o">=</span> <span class="n">VQE</span><span class="p">(</span>
+    <span class="n">expectation</span><span class="o">=</span><span class="n">cvar_exp</span><span class="p">,</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span>
+    <span class="n">ansatz</span><span class="o">=</span><span class="n">ansatz</span><span class="p">,</span>
+    <span class="n">quantum_instance</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
+    <span class="n">callback</span><span class="o">=</span><span class="n">store_intermediate_result</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="n">vqe</span><span class="o">.</span><span class="n">compute_minimum_eigenvalue</span><span class="p">(</span><span class="n">qubit_op</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
@@ -1080,15 +1095,15 @@ div.rendered_html tbody tr:hover {
 
 <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span><span class="n">values</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Conformation Energy&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;VQE Iterations&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Conformation Energy&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;VQE Iterations&quot;</span><span class="p">)</span>
 
-<span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">0.44</span><span class="p">,</span><span class="mf">0.51</span><span class="p">,</span><span class="mf">0.44</span><span class="p">,</span><span class="mf">0.32</span><span class="p">])</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">0.44</span><span class="p">,</span> <span class="mf">0.51</span><span class="p">,</span> <span class="mf">0.44</span><span class="p">,</span> <span class="mf">0.32</span><span class="p">])</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">counts</span><span class="p">[</span><span class="mi">40</span><span class="p">:],</span><span class="n">values</span><span class="p">[</span><span class="mi">40</span><span class="p">:])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Conformation Energy&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;VQE Iterations&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">counts</span><span class="p">[</span><span class="mi">40</span><span class="p">:],</span> <span class="n">values</span><span class="p">[</span><span class="mi">40</span><span class="p">:])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Conformation Energy&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;VQE Iterations&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -1100,8 +1115,8 @@ div.rendered_html tbody tr:hover {
 <img alt="../_images/tutorials_09_Protein_Folding_30_0.png" src="../_images/tutorials_09_Protein_Folding_30_0.png" />
 </div>
 </div>
-</div>
-<div class="section" id="参考文献">
+</section>
+<section id="参考文献">
 <h2>参考文献<a class="headerlink" href="#参考文献" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>[1] <a class="reference external" href="https://en.wikipedia.org/wiki/Levinthal%27s_paradox">https://en.wikipedia.org/wiki/Levinthal%27s_paradox</a></p>
 <p>[2] A.Robert, P.Barkoutsos, S.Woerner and I.Tavernelli, Resource-efficient quantum algorithm for protein folding, NPJ Quantum Information, 2021, <a class="reference external" href="https://doi.org/10.1038/s41534-021-00368-4">https://doi.org/10.1038/s41534-021-00368-4</a></p>
@@ -1115,6 +1130,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -1133,8 +1149,8 @@ div.rendered_html tbody tr:hover {
 <div class="output_area rendered_html docutils container">
 <div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2021.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>
@@ -1144,7 +1160,7 @@ div.rendered_html tbody tr:hover {
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../release_notes.html" class="btn btn-neutral float-right" title="Release Notes" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="10_lattice_models.html" class="btn btn-neutral float-right" title="Lattice models" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
         <a href="08_property_framework.html" class="btn btn-neutral" title="プロパティ・フレームワーク" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>

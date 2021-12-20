@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="vi-VN" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Neural Network Classifier &amp; Regressor &mdash; Tài liệu Qiskit Machine Learning 0.2.1</title>
+  <title>Neural Network Classifier &amp; Regressor &mdash; Tài liệu Qiskit Machine Learning 0.3.0</title>
   
 
   
@@ -31,8 +32,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -199,7 +200,7 @@
               
               
                 <div class="version">
-                  0.2.1
+                  0.3.0
                 </div>
               
             
@@ -554,9 +555,9 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">Ghi chú</p>
-<p>Trang này được tạo từ <a class="reference external" href="https://github.com/Qiskit/qiskit-machine-learning/blob/stable/0.2/docs/tutorials/02_neural_network_classifier_and_regressor.ipynb">docs/tutorials/02_neural_network_classifier_and_regressor.ipynb</a>.</p>
+<p>Trang này được tạo từ <a class="reference external" href="https://github.com/Qiskit/qiskit-machine-learning/blob/stable/0.3/docs/tutorials/02_neural_network_classifier_and_regressor.ipynb">docs/tutorials/02_neural_network_classifier_and_regressor.ipynb</a>.</p>
 </div>
-<div class="section" id="Neural-Network-Classifier-&amp;-Regressor">
+<section id="Neural-Network-Classifier-&amp;-Regressor">
 <h1>Neural Network Classifier &amp; Regressor<a class="headerlink" href="#Neural-Network-Classifier-&-Regressor" title="Permalink to this headline">¶</a></h1>
 <p>In this tutorial we show how the <code class="docutils literal notranslate"><span class="pre">NeuralNetworkClassifier</span></code> and <code class="docutils literal notranslate"><span class="pre">NeuralNetworkRegressor</span></code> are used. Both take as an input a (Quantum) <code class="docutils literal notranslate"><span class="pre">NeuralNetwork</span></code> and leverage it in a specific context. In both cases we also provide a pre-configured variant for convenience, the Variational Quantum Classifier (<code class="docutils literal notranslate"><span class="pre">VQC</span></code>) and Variational Quantum Regressor (<code class="docutils literal notranslate"><span class="pre">VQR</span></code>). The tutorial is structured as follows:</p>
 <ol class="arabic simple">
@@ -584,7 +585,7 @@ div.rendered_html tbody tr:hover {
 
 <span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">Aer</span><span class="p">,</span> <span class="n">QuantumCircuit</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">Z</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">StateFn</span>
-<span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">QuantumInstance</span>
+<span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">QuantumInstance</span><span class="p">,</span> <span class="n">algorithm_globals</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Parameter</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">RealAmplitudes</span><span class="p">,</span> <span class="n">ZZFeatureMap</span>
 <span class="kn">from</span> <span class="nn">qiskit.algorithms.optimizers</span> <span class="kn">import</span> <span class="n">COBYLA</span><span class="p">,</span> <span class="n">L_BFGS_B</span>
@@ -598,6 +599,8 @@ div.rendered_html tbody tr:hover {
 <span class="kn">from</span> <span class="nn">qiskit_machine_learning.exceptions</span> <span class="kn">import</span> <span class="n">QiskitMachineLearningError</span>
 
 <span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">clear_output</span>
+
+<span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">42</span>
 </pre></div>
 </div>
 </div>
@@ -606,11 +609,11 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;aer_simulator&#39;</span><span class="p">),</span> <span class="n">shots</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
+<span></span><span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;aer_simulator&quot;</span><span class="p">),</span> <span class="n">shots</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="Phân-loại">
+<section id="Phân-loại">
 <h2>Phân loại<a class="headerlink" href="#Phân-loại" title="Permalink to this headline">¶</a></h2>
 <p>We prepare a simple classification dataset to illustrate the following algorithms.</p>
 <div class="nbinput docutils container">
@@ -620,19 +623,19 @@ div.rendered_html tbody tr:hover {
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">num_inputs</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="n">num_samples</span> <span class="o">=</span> <span class="mi">20</span>
-<span class="n">X</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">num_inputs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-<span class="n">y01</span> <span class="o">=</span> <span class="mi">1</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># in { 0,  1}</span>
-<span class="n">y</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">y01</span><span class="o">-</span><span class="mi">1</span>                       <span class="c1"># in {-1, +1}</span>
+<span class="n">X</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">([</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">num_inputs</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span>
+<span class="n">y01</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># in { 0,  1}</span>
+<span class="n">y</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">y01</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># in {-1, +1}</span>
 <span class="n">y_one_hot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_samples</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
     <span class="n">y_one_hot</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">y01</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
 
 <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_target</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">y_target</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;bo&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;bo&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;go&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;go&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -644,7 +647,7 @@ div.rendered_html tbody tr:hover {
 <img alt="../_images/tutorials_02_neural_network_classifier_and_regressor_4_0.png" src="../_images/tutorials_02_neural_network_classifier_and_regressor_4_0.png" />
 </div>
 </div>
-<div class="section" id="Classification-with-the-an-OpflowQNN">
+<section id="Classification-with-the-an-OpflowQNN">
 <h3>Classification with the an <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code><a class="headerlink" href="#Classification-with-the-an-OpflowQNN" title="Permalink to this headline">¶</a></h3>
 <p>First we show how an <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> can be used for classification within a <code class="docutils literal notranslate"><span class="pre">NeuralNetworkClassifier</span></code>. In this context, the <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> is expected to return one-dimensional output in <span class="math notranslate nohighlight">\([-1, +1]\)</span>. This only works for binary classification and we assign the two classes to <span class="math notranslate nohighlight">\(\{-1, +1\}\)</span>. For convenience, we use the <code class="docutils literal notranslate"><span class="pre">TwoLayerQNN</span></code>, which is a special type of <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> defined via a feature map and an ansatz.</p>
 <div class="nbinput nblast docutils container">
@@ -663,7 +666,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># QNN maps inputs to [-1, +1]</span>
-<span class="n">opflow_qnn</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">opflow_qnn</span><span class="o">.</span><span class="n">num_weights</span><span class="p">))</span>
+<span class="n">opflow_qnn</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">opflow_qnn</span><span class="o">.</span><span class="n">num_weights</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -673,7 +676,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[0.47265625]])
+array([[0.25]])
 </pre></div></div>
 </div>
 <p>We will add a callback function called <code class="docutils literal notranslate"><span class="pre">callback_graph</span></code>. This will be called for each iteration of the optimizer and will be passed two parameters: the current weights and the value of the objective function at those weights. For our function, we append the value of the objective function to an array so we can plot iteration versus objective function value and update the graph with each iteration. However, you can do whatever you want with a callback function as long as it gets the two
@@ -738,7 +741,7 @@ parameters mentioned passed.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.5
+0.8
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -753,12 +756,12 @@ parameters mentioned passed.</p>
 <span class="c1"># red == wrongly classified</span>
 <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_target</span><span class="p">,</span> <span class="n">y_p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_predict</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">y_target</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;bo&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;bo&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;go&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;go&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">y_target</span> <span class="o">!=</span> <span class="n">y_p</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">facecolors</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">linewidths</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">facecolors</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">linewidths</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -770,8 +773,8 @@ parameters mentioned passed.</p>
 <img alt="../_images/tutorials_02_neural_network_classifier_and_regressor_12_0.png" src="../_images/tutorials_02_neural_network_classifier_and_regressor_12_0.png" />
 </div>
 </div>
-</div>
-<div class="section" id="Phân-loại-với-CircuitQNN">
+</section>
+<section id="Phân-loại-với-CircuitQNN">
 <h3>Phân loại với <code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code><a class="headerlink" href="#Phân-loại-với-CircuitQNN" title="Permalink to this headline">¶</a></h3>
 <p>Next we show how a <code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code> can be used for classification within a <code class="docutils literal notranslate"><span class="pre">NeuralNetworkClassifier</span></code>. In this context, the <code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code> is expected to return <span class="math notranslate nohighlight">\(d\)</span>-dimensional probability vector as output, where <span class="math notranslate nohighlight">\(d\)</span> denotes the number of classes. Sampling from a <code class="docutils literal notranslate"><span class="pre">QuantumCircuit</span></code> automatically results in a probability distribution and we just need to define a mapping from the measured bitstrings to the different classes. For binary classification we use the parity mapping.</p>
 <div class="nbinput docutils container">
@@ -789,7 +792,7 @@ parameters mentioned passed.</p>
 <span class="n">qc</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="n">num_inputs</span><span class="p">)</span>
 <span class="n">qc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feature_map</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_inputs</span><span class="p">))</span>
 <span class="n">qc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ansatz</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_inputs</span><span class="p">))</span>
-<span class="n">qc</span><span class="o">.</span><span class="n">decompose</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;mpl&#39;</span><span class="p">)</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">decompose</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s2">&quot;mpl&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -808,7 +811,9 @@ parameters mentioned passed.</p>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># parity maps bitstrings to 0 or 1</span>
 <span class="k">def</span> <span class="nf">parity</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{:b}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{:b}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span>
+
+
 <span class="n">output_shape</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># corresponds to the number of classes, possible outcomes of the (parity) mapping.</span>
 </pre></div>
 </div>
@@ -819,12 +824,14 @@ parameters mentioned passed.</p>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># construct QNN</span>
-<span class="n">circuit_qnn</span> <span class="o">=</span> <span class="n">CircuitQNN</span><span class="p">(</span><span class="n">circuit</span><span class="o">=</span><span class="n">qc</span><span class="p">,</span>
-                         <span class="n">input_params</span><span class="o">=</span><span class="n">feature_map</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
-                         <span class="n">weight_params</span><span class="o">=</span><span class="n">ansatz</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
-                         <span class="n">interpret</span><span class="o">=</span><span class="n">parity</span><span class="p">,</span>
-                         <span class="n">output_shape</span><span class="o">=</span><span class="n">output_shape</span><span class="p">,</span>
-                         <span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">)</span>
+<span class="n">circuit_qnn</span> <span class="o">=</span> <span class="n">CircuitQNN</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">qc</span><span class="p">,</span>
+    <span class="n">input_params</span><span class="o">=</span><span class="n">feature_map</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+    <span class="n">weight_params</span><span class="o">=</span><span class="n">ansatz</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+    <span class="n">interpret</span><span class="o">=</span><span class="n">parity</span><span class="p">,</span>
+    <span class="n">output_shape</span><span class="o">=</span><span class="n">output_shape</span><span class="p">,</span>
+    <span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -834,9 +841,9 @@ parameters mentioned passed.</p>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># construct classifier</span>
-<span class="n">circuit_classifier</span> <span class="o">=</span> <span class="n">NeuralNetworkClassifier</span><span class="p">(</span><span class="n">neural_network</span><span class="o">=</span><span class="n">circuit_qnn</span><span class="p">,</span>
-                                             <span class="n">optimizer</span><span class="o">=</span><span class="n">COBYLA</span><span class="p">(),</span>
-                                             <span class="n">callback</span><span class="o">=</span><span class="n">callback_graph</span><span class="p">)</span>
+<span class="n">circuit_classifier</span> <span class="o">=</span> <span class="n">NeuralNetworkClassifier</span><span class="p">(</span>
+    <span class="n">neural_network</span><span class="o">=</span><span class="n">circuit_qnn</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="n">COBYLA</span><span class="p">(),</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback_graph</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -873,7 +880,7 @@ parameters mentioned passed.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.65
+0.75
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -888,12 +895,12 @@ parameters mentioned passed.</p>
 <span class="c1"># red == wrongly classified</span>
 <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_target</span><span class="p">,</span> <span class="n">y_p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y01</span><span class="p">,</span> <span class="n">y_predict</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">y_target</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;bo&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;bo&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;go&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;go&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">y_target</span> <span class="o">!=</span> <span class="n">y_p</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">facecolors</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">linewidths</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">facecolors</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">linewidths</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -905,8 +912,8 @@ parameters mentioned passed.</p>
 <img alt="../_images/tutorials_02_neural_network_classifier_and_regressor_19_0.png" src="../_images/tutorials_02_neural_network_classifier_and_regressor_19_0.png" />
 </div>
 </div>
-</div>
-<div class="section" id="Biến-thể-Phân-loại-Lượng-tử-(VQC)">
+</section>
+<section id="Biến-thể-Phân-loại-Lượng-tử-(VQC)">
 <h3>Biến thể Phân loại Lượng tử (<code class="docutils literal notranslate"><span class="pre">VQC</span></code>)<a class="headerlink" href="#Biến-thể-Phân-loại-Lượng-tử-(VQC)" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">VQC</span></code> is a special variant of the <code class="docutils literal notranslate"><span class="pre">NeuralNetworkClassifier</span></code> with a <code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code>. It applies a parity mapping (or extensions to multiple classes) to map from the bitstring to the classification, which results in a probability vector, which is interpreted as a one-hot encoded result. By default, it applies this the <code class="docutils literal notranslate"><span class="pre">CrossEntropyLoss</span></code> function that expects labels given in one-hot encoded format and will return predictions in that format too.</p>
 <div class="nbinput nblast docutils container">
@@ -919,12 +926,14 @@ parameters mentioned passed.</p>
 <span class="n">ansatz</span> <span class="o">=</span> <span class="n">RealAmplitudes</span><span class="p">(</span><span class="n">num_inputs</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># construct variational quantum classifier</span>
-<span class="n">vqc</span> <span class="o">=</span> <span class="n">VQC</span><span class="p">(</span><span class="n">feature_map</span><span class="o">=</span><span class="n">feature_map</span><span class="p">,</span>
-          <span class="n">ansatz</span><span class="o">=</span><span class="n">ansatz</span><span class="p">,</span>
-          <span class="n">loss</span><span class="o">=</span><span class="s1">&#39;cross_entropy&#39;</span><span class="p">,</span>
-          <span class="n">optimizer</span><span class="o">=</span><span class="n">COBYLA</span><span class="p">(),</span>
-          <span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span>
-          <span class="n">callback</span><span class="o">=</span><span class="n">callback_graph</span><span class="p">)</span>
+<span class="n">vqc</span> <span class="o">=</span> <span class="n">VQC</span><span class="p">(</span>
+    <span class="n">feature_map</span><span class="o">=</span><span class="n">feature_map</span><span class="p">,</span>
+    <span class="n">ansatz</span><span class="o">=</span><span class="n">ansatz</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;cross_entropy&quot;</span><span class="p">,</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="n">COBYLA</span><span class="p">(),</span>
+    <span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span>
+    <span class="n">callback</span><span class="o">=</span><span class="n">callback_graph</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -961,7 +970,7 @@ parameters mentioned passed.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.6
+0.5
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -976,12 +985,12 @@ parameters mentioned passed.</p>
 <span class="c1"># red == wrongly classified</span>
 <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_target</span><span class="p">,</span> <span class="n">y_p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y_one_hot</span><span class="p">,</span> <span class="n">y_predict</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">y_target</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;bo&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;bo&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;go&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;go&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">y_target</span> <span class="o">==</span> <span class="n">y_p</span><span class="p">):</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">facecolors</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">linewidths</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">facecolors</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">linewidths</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -993,9 +1002,9 @@ parameters mentioned passed.</p>
 <img alt="../_images/tutorials_02_neural_network_classifier_and_regressor_23_0.png" src="../_images/tutorials_02_neural_network_classifier_and_regressor_23_0.png" />
 </div>
 </div>
-</div>
-</div>
-<div class="section" id="Hồi-quy">
+</section>
+</section>
+<section id="Hồi-quy">
 <h2>Hồi quy<a class="headerlink" href="#Hồi-quy" title="Permalink to this headline">¶</a></h2>
 <p>We prepare a simple regression dataset to illustrate the following algorithms.</p>
 <div class="nbinput docutils container">
@@ -1009,11 +1018,11 @@ parameters mentioned passed.</p>
 <span class="n">X_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">lb</span><span class="p">,</span> <span class="n">ub</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
-<span class="n">X</span> <span class="o">=</span> <span class="p">(</span><span class="n">ub</span> <span class="o">-</span> <span class="n">lb</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">lb</span>
-<span class="n">y</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="n">eps</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">num_samples</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">X</span> <span class="o">=</span> <span class="p">(</span><span class="n">ub</span> <span class="o">-</span> <span class="n">lb</span><span class="p">)</span> <span class="o">*</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">([</span><span class="n">num_samples</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="n">lb</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="n">eps</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">num_samples</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">X_</span><span class="p">),</span> <span class="s1">&#39;r--&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;bo&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">X_</span><span class="p">),</span> <span class="s2">&quot;r--&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;bo&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -1025,7 +1034,7 @@ parameters mentioned passed.</p>
 <img alt="../_images/tutorials_02_neural_network_classifier_and_regressor_25_0.png" src="../_images/tutorials_02_neural_network_classifier_and_regressor_25_0.png" />
 </div>
 </div>
-<div class="section" id="Hồi-quy-với-một-OpflowQNN">
+<section id="Hồi-quy-với-một-OpflowQNN">
 <h3>Hồi quy với một <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code><a class="headerlink" href="#Hồi-quy-với-một-OpflowQNN" title="Permalink to this headline">¶</a></h3>
 <p>Here we restrict to regression with an <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> that returns values in <span class="math notranslate nohighlight">\([-1, +1]\)</span>. More complex and also multi-dimensional models could be constructed, also based on <code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code> but that exceeds the scope of this tutorial.</p>
 <div class="nbinput nblast docutils container">
@@ -1034,13 +1043,13 @@ parameters mentioned passed.</p>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># construct simple feature map</span>
-<span class="n">param_x</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
-<span class="n">feature_map</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fm&#39;</span><span class="p">)</span>
+<span class="n">param_x</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">feature_map</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;fm&quot;</span><span class="p">)</span>
 <span class="n">feature_map</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="n">param_x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
 <span class="c1"># construct simple ansatz</span>
-<span class="n">param_y</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
-<span class="n">ansatz</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;vf&#39;</span><span class="p">)</span>
+<span class="n">param_y</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
+<span class="n">ansatz</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;vf&quot;</span><span class="p">)</span>
 <span class="n">ansatz</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="n">param_y</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
 <span class="c1"># construct QNN</span>
@@ -1054,10 +1063,9 @@ parameters mentioned passed.</p>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># construct the regressor from the neural network</span>
-<span class="n">regressor</span> <span class="o">=</span> <span class="n">NeuralNetworkRegressor</span><span class="p">(</span><span class="n">neural_network</span><span class="o">=</span><span class="n">regression_opflow_qnn</span><span class="p">,</span>
-                                   <span class="n">loss</span><span class="o">=</span><span class="s1">&#39;l2&#39;</span><span class="p">,</span>
-                                   <span class="n">optimizer</span><span class="o">=</span><span class="n">L_BFGS_B</span><span class="p">(),</span>
-                                   <span class="n">callback</span><span class="o">=</span><span class="n">callback_graph</span><span class="p">)</span>
+<span class="n">regressor</span> <span class="o">=</span> <span class="n">NeuralNetworkRegressor</span><span class="p">(</span>
+    <span class="n">neural_network</span><span class="o">=</span><span class="n">regression_opflow_qnn</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;l2&quot;</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="n">L_BFGS_B</span><span class="p">(),</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback_graph</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1094,7 +1102,7 @@ parameters mentioned passed.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.9696567935175576
+0.9763610762801076
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1103,14 +1111,14 @@ parameters mentioned passed.</p>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># plot target function</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">X_</span><span class="p">),</span> <span class="s1">&#39;r--&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">X_</span><span class="p">),</span> <span class="s2">&quot;r--&quot;</span><span class="p">)</span>
 
 <span class="c1"># plot data</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;bo&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;bo&quot;</span><span class="p">)</span>
 
 <span class="c1"># plot fitted line</span>
 <span class="n">y_</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_</span><span class="p">,</span> <span class="n">y_</span><span class="p">,</span> <span class="s1">&#39;g-&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_</span><span class="p">,</span> <span class="n">y_</span><span class="p">,</span> <span class="s2">&quot;g-&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -1122,8 +1130,8 @@ parameters mentioned passed.</p>
 <img alt="../_images/tutorials_02_neural_network_classifier_and_regressor_30_0.png" src="../_images/tutorials_02_neural_network_classifier_and_regressor_30_0.png" />
 </div>
 </div>
-</div>
-<div class="section" id="Regression-with-the-Variational-Quantum-Regressor-(VQR)">
+</section>
+<section id="Regression-with-the-Variational-Quantum-Regressor-(VQR)">
 <h3>Regression with the Variational Quantum Regressor (<code class="docutils literal notranslate"><span class="pre">VQR</span></code>)<a class="headerlink" href="#Regression-with-the-Variational-Quantum-Regressor-(VQR)" title="Permalink to this headline">¶</a></h3>
 <p>Tương tự như <code class="docutils literal notranslate"><span class="pre">VQC</span></code> cho phân loại, <code class="docutils literal notranslate"><span class="pre">VQR</span></code> là một biến thể đặc biệt của <code class="docutils literal notranslate"><span class="pre">NeuralNetworkRegressor</span></code> với một <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code>. Theo mặc định, nó xét hàm <code class="docutils literal notranslate"><span class="pre">L2Loss</span></code> để giảm thiểu lỗi bình phương trung bình giữa các dự đoán và mục tiêu.</p>
 <div class="nbinput nblast docutils container">
@@ -1131,11 +1139,13 @@ parameters mentioned passed.</p>
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vqr</span> <span class="o">=</span> <span class="n">VQR</span><span class="p">(</span><span class="n">feature_map</span><span class="o">=</span><span class="n">feature_map</span><span class="p">,</span>
-          <span class="n">ansatz</span><span class="o">=</span><span class="n">ansatz</span><span class="p">,</span>
-          <span class="n">optimizer</span><span class="o">=</span><span class="n">L_BFGS_B</span><span class="p">(),</span>
-          <span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span>
-          <span class="n">callback</span><span class="o">=</span><span class="n">callback_graph</span><span class="p">)</span>
+<span></span><span class="n">vqr</span> <span class="o">=</span> <span class="n">VQR</span><span class="p">(</span>
+    <span class="n">feature_map</span><span class="o">=</span><span class="n">feature_map</span><span class="p">,</span>
+    <span class="n">ansatz</span><span class="o">=</span><span class="n">ansatz</span><span class="p">,</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="n">L_BFGS_B</span><span class="p">(),</span>
+    <span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span>
+    <span class="n">callback</span><span class="o">=</span><span class="n">callback_graph</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1172,7 +1182,7 @@ parameters mentioned passed.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.9684356876095139
+0.9748043399155905
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1181,14 +1191,14 @@ parameters mentioned passed.</p>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># plot target function</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">X_</span><span class="p">),</span> <span class="s1">&#39;r--&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">X_</span><span class="p">),</span> <span class="s2">&quot;r--&quot;</span><span class="p">)</span>
 
 <span class="c1"># plot data</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;bo&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;bo&quot;</span><span class="p">)</span>
 
 <span class="c1"># plot fitted line</span>
 <span class="n">y_</span> <span class="o">=</span> <span class="n">vqr</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_</span><span class="p">,</span> <span class="n">y_</span><span class="p">,</span> <span class="s1">&#39;g-&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_</span><span class="p">,</span> <span class="n">y_</span><span class="p">,</span> <span class="s2">&quot;g-&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -1201,11 +1211,12 @@ parameters mentioned passed.</p>
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -1215,7 +1226,8 @@ parameters mentioned passed.</p>
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td><code>qiskit-terra</code></td><td>0.19.0.dev0+803bd0d</td></tr><tr><td><code>qiskit-aer</code></td><td>0.8.2</td></tr><tr><td><code>qiskit-machine-learning</code></td><td>0.3.0</td></tr><tr><th>System information</th></tr><tr><td>Python</td><td>3.9.6 (default, Aug 18 2021, 15:44:49) [MSC v.1916 64 bit (AMD64)]</td></tr><tr><td>OS</td><td>Windows</td></tr><tr><td>CPUs</td><td>4</td></tr><tr><td>Memory (Gb)</td><td>11.83804702758789</td></tr><tr><td colspan='2'>Sun Aug 29 01:09:16 2021 Hora de verano romance</td></tr></table></div>
+<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td><code>qiskit-terra</code></td><td>0.19.0</td></tr><tr><td><code>qiskit-aer</code></td><td>0.9.0</td></tr><tr><td><code>qiskit-ignis</code></td><td>0.7.0</td></tr><tr><td><code>qiskit-ibmq-provider</code></td><td>0.17.0</td></tr><tr><td><code>qiskit-aqua</code></td><td>0.10.0</td></tr><tr><td><code>qiskit-machine-learning</code></td><td>0.3.0</td></tr><tr><th>System information</th></tr><tr><td>Python</td><td>3.8.10 (default, Jun  2 2021, 10:49:15)
+[GCC 9.4.0]</td></tr><tr><td>OS</td><td>Linux</td></tr><tr><td>CPUs</td><td>4</td></tr><tr><td>Memory (Gb)</td><td>7.6849517822265625</td></tr><tr><td colspan='2'>Mon Aug 30 16:41:59 2021 IST</td></tr></table></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
@@ -1223,9 +1235,9 @@ parameters mentioned passed.</p>
 <div class="output_area rendered_html docutils container">
 <div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2021.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
              </article>

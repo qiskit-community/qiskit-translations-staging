@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="bn-BN" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qGANs দিয়ে বিকল্প মূল্য নির্ধারণ &mdash; Qiskit Finance 0.2.1 documentation</title>
+  <title>qGANs দিয়ে বিকল্প মূল্য নির্ধারণ &mdash; Qiskit Finance 0.3.0 documentation</title>
   
 
   
@@ -31,15 +32,15 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
     <link rel="index" title="সূচিপত্র" href="../genindex.html" />
     <link rel="search" title="অনুসন্ধান" href="../search.html" />
-    <link rel="next" title="স্টক-মার্কেট টাইম-সিরিজ ডেটা লোডিং এবং প্রসেসিং" href="11_time_series.html" />
+    <link rel="next" title="পুঁজিবাজার কালীন-সারি (টাইম-সিরিজ) সংক্রান্ত তথ্য লোডিং এবং প্রক্রিয়াকরণ" href="11_time_series.html" />
     <link rel="prev" title="ক্রেডিট ঝুঁকি বিশ্লেষণ" href="09_credit_risk_analysis.html" /> 
 
   
@@ -175,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.1
+                  0.3.0
                 </div>
               
             
@@ -530,13 +531,13 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">নোট</p>
-<p>এই পৃষ্ঠাটি <a class="reference external" href="https://github.com/Qiskit/qiskit-finance/blob/stable/0.2/docs/tutorials/10_qgan_option_pricing.ipynb">docs/tutorials/10_qgan_option_pricing.ipynb</a> থেকে নেয়া হয়েছে।</p>
+<p>এই পৃষ্ঠাটি <a class="reference external" href="https://github.com/Qiskit/qiskit-finance/blob/stable/0.3/docs/tutorials/10_qgan_option_pricing.ipynb">docs/tutorials/10_qgan_option_pricing.ipynb</a> থেকে নেয়া হয়েছে।</p>
 </div>
-<div class="section" id="qGANs-দিয়ে-বিকল্প-মূল্য-নির্ধারণ">
+<section id="qGANs-দিয়ে-বিকল্প-মূল্য-নির্ধারণ">
 <h1>qGANs দিয়ে বিকল্প মূল্য নির্ধারণ<a class="headerlink" href="#qGANs-দিয়ে-বিকল্প-মূল্য-নির্ধারণ" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h1>
-<div class="section" id="ভূমিকা">
+<section id="ভূমিকা">
 <h2>ভূমিকা<a class="headerlink" href="#ভূমিকা" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
-<p>এখন আমরা আলোচনা করব কোয়ান্টাম জেনারেটিভ অ্যাডভারসারিয়াল নেটওয়ার্ক (qGAN) নামে একটি কোয়ান্টাম মেশিন লার্নিং অ্যালগরিদম। এর একটি ব্যবহারিক প্রয়োগ দেখানো হবে যেখানে qGAN ব্যবহার করে একটি কোয়ান্টাম সার্কিট মডেল করা হবে যা ইউরোপিয়ান কল অপশনের মূল্য নির্ধারন করতে পারবে। এই মডেলটিকে কোয়ান্টাম বিস্তার এস্টিমেশন এলগোরিদম দ্বারা যাচাই করা যাবে, যা থেকে গড় মূল্যের মান নির্ণয় করা যাবে। বিস্তারিত জানতে <a class="reference internal" href="03_european_call_option_pricing.html"><span class="doc">European Call Option Pricing</span></a> এই নোটবুক ফাইল ব্যবহারের অনুরোধ রইল। একটি qGAN প্রশিক্ষণ দিয়ে দৈব বণ্টন শেখার এবং লোড করার বিষয়ে আরও বিস্তারিত জানার জন্য অনুগ্রহ করে এই সহায়িকা গবেষণাপত্রটি পড়ুন <a class="reference external" href="https://www.nature.com/articles/s41534-019-0223-2">Quantum Generative Adversarial Networks for Learning and Loading Random Distributions. Zoufal, Lucchi, Woerner. 2019.</a></p>
+<p>এখন আমরা আলোচনা করব কোয়ান্টাম জেনারেটিভ অ্যাডভারসারিয়াল নেটওয়ার্ক (qGAN) নামে একটি কোয়ান্টাম মেশিন লার্নিং ধারাক্রম (অ্যালগরিদম)। এর একটি ব্যবহারিক প্রয়োগ দেখানো হবে যেখানে qGAN ব্যবহার করে একটি কোয়ান্টাম সার্কিট মডেল করা হবে যা ইউরোপিয়ান কল অপশনের মূল্য নির্ধারন করতে পারবে। এই মডেলটিকে কোয়ান্টাম বিস্তার এস্টিমেশন এলগোরিদম দ্বারা যাচাই করা যাবে, যা থেকে গড় মূল্যের মান নির্ণয় করা যাবে। বিস্তারিত জানতে <a class="reference internal" href="03_european_call_option_pricing.html"><span class="doc">European Call Option Pricing</span></a> এই নোটবুক ফাইল ব্যবহারের অনুরোধ রইল। একটি qGAN প্রশিক্ষণ দিয়ে দৈব বণ্টন শেখার এবং লোড করার বিষয়ে আরও বিস্তারিত জানার জন্য অনুগ্রহ করে এই সহায়িকা গবেষণাপত্রটি পড়ুন <a class="reference external" href="https://www.nature.com/articles/s41534-019-0223-2">Quantum Generative Adversarial Networks for Learning and Loading Random Distributions. Zoufal, Lucchi, Woerner. 2019.</a></p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -557,7 +558,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="section" id="অনিশ্চয়তা-মডেল">
+<section id="অনিশ্চয়তা-মডেল">
 <h3>অনিশ্চয়তা মডেল<a class="headerlink" href="#অনিশ্চয়তা-মডেল" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
 <p>ব্ল্যাক-স্কোলস মডেল অনুমান করে যে পরিপক্কতার সময় স্পট মূল্য <span class="math notranslate nohighlight">\(S_T\)</span> একটি ইউরোপীয় কল বিকল্পের জন্য log-normally distributed হয়। এইভাবে, আমরা একটি লগ-নরমাল ডিস্ট্রিবিউশন থেকে নমুনার উপর একটি qGAN প্রশিক্ষণ দিতে পারি এবং ফলাফলটিকে একটি অনিশ্চয়তা মডেল হিসেবে ব্যবহার করতে পারি। নিম্নলিখিতগুলিতে, আমরা একটি কোয়ান্টাম সার্কিট তৈরি করি যা অনিশ্চয়তা মডেল লোড করে। সার্কিট আউটপুটটি এইটা পড়ে</p>
 <div class="math notranslate nohighlight">
@@ -569,7 +570,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Set upper and lower data values</span>
-<span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span><span class="mf">7.</span><span class="p">])</span>
+<span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">7.0</span><span class="p">])</span>
 <span class="c1"># Set number of qubits used in the uncertainty model</span>
 <span class="n">num_qubits</span> <span class="o">=</span> <span class="mi">3</span>
 
@@ -577,10 +578,10 @@ div.rendered_html tbody tr:hover {
 <span class="n">g_params</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.29399714</span><span class="p">,</span> <span class="mf">0.38853322</span><span class="p">,</span> <span class="mf">0.9557694</span><span class="p">,</span> <span class="mf">0.07245791</span><span class="p">,</span> <span class="mf">6.02626428</span><span class="p">,</span> <span class="mf">0.13537225</span><span class="p">]</span>
 
 <span class="c1"># Set an initial state for the generator circuit</span>
-<span class="n">init_dist</span> <span class="o">=</span> <span class="n">NormalDistribution</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">)</span>
+<span class="n">init_dist</span> <span class="o">=</span> <span class="n">NormalDistribution</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">)</span>
 
 <span class="c1"># construct the variational form</span>
-<span class="n">var_form</span> <span class="o">=</span> <span class="n">TwoLocal</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="s1">&#39;ry&#39;</span><span class="p">,</span> <span class="s1">&#39;cz&#39;</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s1">&#39;circular&#39;</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">var_form</span> <span class="o">=</span> <span class="n">TwoLocal</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="s2">&quot;ry&quot;</span><span class="p">,</span> <span class="s2">&quot;cz&quot;</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s2">&quot;circular&quot;</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># keep a list of the parameters so we can associate them to the list of numerical values</span>
 <span class="c1"># (otherwise we need a dictionary)</span>
@@ -591,8 +592,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="গড়-বেতন-মূল্য-নির্ধারণ-কর">
+</section>
+<section id="গড়-বেতন-মূল্য-নির্ধারণ-কর">
 <h3>গড় বেতন মূল্য নির্ধারণ কর<a class="headerlink" href="#গড়-বেতন-মূল্য-নির্ধারণ-কর" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
 <p>এখন, প্রশিক্ষিত (ট্রেইনড) অসম্ভাব্যতা মডেলটি কোয়ান্টাম বিস্তার অনুমান (কোয়ান্টাম অ্যামপ্লিটিউড এস্টিমেশন) দিয়ে বিকল্প অন্বয়ের গড় মান বিশ্লেষণ করতে পারে।</p>
 <div class="nbinput nblast docutils container">
@@ -608,8 +609,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="সম্ভাব্যতা-বণ্টনের-লেখচিত্র-অঙ্কন-কর">
+</section>
+<section id="সম্ভাব্যতা-বণ্টনের-লেখচিত্র-অঙ্কন-কর">
 <h3>সম্ভাব্যতা বণ্টনের লেখচিত্র অঙ্কন কর<a class="headerlink" href="#সম্ভাব্যতা-বণ্টনের-লেখচিত্র-অঙ্কন-কর" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
 <p>তারপর, আমরা প্রশিক্ষিত (ট্রেইনড) সম্ভাব্যতা বিস্তারের লেখচিত্র এবং তুলনা করার জন্য লক্ষ্য (টার্গেট) সম্ভাব্যতা বিস্তারের লেখচিত্রটিও অঙ্কন করি।</p>
 <div class="nbinput docutils container">
@@ -618,7 +619,9 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Evaluate trained probability distribution</span>
-<span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">x</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">num_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">num_qubits</span><span class="p">)]</span>
+<span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">x</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">num_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">num_qubits</span><span class="p">)</span>
+<span class="p">]</span>
 <span class="n">uncertainty_model</span> <span class="o">=</span> <span class="n">g_circuit</span><span class="o">.</span><span class="n">assign_parameters</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">g_params</span><span class="p">)))</span>
 <span class="n">amplitudes</span> <span class="o">=</span> <span class="n">Statevector</span><span class="o">.</span><span class="n">from_instruction</span><span class="p">(</span><span class="n">uncertainty_model</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
 
@@ -632,18 +635,25 @@ div.rendered_html tbody tr:hover {
 <span class="n">log_normal</span> <span class="o">=</span> <span class="n">log_normal</span><span class="p">[</span><span class="n">log_normal</span> <span class="o">&lt;=</span> <span class="mi">7</span><span class="p">]</span>
 <span class="n">log_normal_samples</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
-    <span class="n">log_normal_samples</span> <span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">log_normal</span><span class="o">==</span><span class="n">i</span><span class="p">)]</span>
+    <span class="n">log_normal_samples</span> <span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">log_normal</span> <span class="o">==</span> <span class="n">i</span><span class="p">)]</span>
 <span class="n">log_normal_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">log_normal_samples</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">log_normal_samples</span><span class="p">))</span>
 
 <span class="c1"># Plot distributions</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;trained distribution&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;royalblue&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;trained distribution&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;royalblue&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Spot Price at Maturity $S_T$ (\$)&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Probability ($\%$)&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">log_normal_samples</span><span class="p">,</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span><span class="s1">&#39;deepskyblue&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;target distribution&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Spot Price at Maturity $S_T$ (\$)&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Probability ($\%$)&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">log_normal_samples</span><span class="p">,</span>
+    <span class="s2">&quot;-o&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;deepskyblue&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;target distribution&quot;</span><span class="p">,</span>
+    <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">markersize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -654,8 +664,8 @@ div.rendered_html tbody tr:hover {
 <div class="output_area docutils container">
 <img alt="../_images/tutorials_10_qgan_option_pricing_7_0.svg" src="../_images/tutorials_10_qgan_option_pricing_7_0.svg" /></div>
 </div>
-</div>
-<div class="section" id="id2">
+</section>
+<section id="id2">
 <h3>গড় বেতন মূল্য নির্ধারণ কর<a class="headerlink" href="#id2" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
 <p>এখন, প্রশিক্ষিত (ট্রেইনড) অসম্ভাব্যতা মডেলটি কোয়ান্টাম বিস্তার অনুমান (কোয়ান্টাম অ্যামপ্লিটিউড এস্টিমেশন) দিয়ে বিকল্প মূল্য অন্বয়ের গড় মান বিশ্লেষণ করতে পারে।</p>
 <div class="nbinput docutils container">
@@ -664,7 +674,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Evaluate payoff for different distributions</span>
-<span class="n">payoff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">])</span>
+<span class="n">payoff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
 <span class="n">ep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">log_normal_samples</span><span class="p">,</span> <span class="n">payoff</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Analytically calculated expected payoff w.r.t. the target distribution:  </span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ep</span><span class="p">)</span>
 <span class="n">ep_trained</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">payoff</span><span class="p">)</span>
@@ -673,11 +683,11 @@ div.rendered_html tbody tr:hover {
 <span class="c1"># Plot exact payoff function (evaluated on the grid of the trained uncertainty model)</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
 <span class="n">y_strike</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">strike_price</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y_strike</span><span class="p">,</span> <span class="s1">&#39;ro-&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y_strike</span><span class="p">,</span> <span class="s2">&quot;ro-&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Payoff Function&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Spot Price&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Payoff&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Payoff Function&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Spot Price&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Payoff&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -705,8 +715,13 @@ Analytically calculated expected payoff w.r.t. the trained distribution: 0.9805
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># construct circuit for payoff function</span>
-<span class="n">european_call_pricing</span> <span class="o">=</span> <span class="n">EuropeanCallPricing</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">strike_price</span><span class="o">=</span><span class="n">strike_price</span><span class="p">,</span><span class="n">rescaling_factor</span><span class="o">=</span><span class="n">c_approx</span><span class="p">,</span>
-                                            <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span> <span class="n">uncertainty_model</span><span class="o">=</span><span class="n">uncertainty_model</span><span class="p">)</span>
+<span class="n">european_call_pricing</span> <span class="o">=</span> <span class="n">EuropeanCallPricing</span><span class="p">(</span>
+    <span class="n">num_qubits</span><span class="p">,</span>
+    <span class="n">strike_price</span><span class="o">=</span><span class="n">strike_price</span><span class="p">,</span>
+    <span class="n">rescaling_factor</span><span class="o">=</span><span class="n">c_approx</span><span class="p">,</span>
+    <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
+    <span class="n">uncertainty_model</span><span class="o">=</span><span class="n">uncertainty_model</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -719,7 +734,7 @@ Analytically calculated expected payoff w.r.t. the trained distribution: 0.9805
 <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">0.01</span>
 <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.05</span>
 
-<span class="n">qi</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;aer_simulator&#39;</span><span class="p">),</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">qi</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;aer_simulator&quot;</span><span class="p">),</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 <span class="n">problem</span> <span class="o">=</span> <span class="n">european_call_pricing</span><span class="o">.</span><span class="n">to_estimation_problem</span><span class="p">()</span>
 <span class="c1"># construct amplitude estimation</span>
 <span class="n">ae</span> <span class="o">=</span> <span class="n">IterativeAmplitudeEstimation</span><span class="p">(</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">qi</span><span class="p">)</span>
@@ -741,9 +756,9 @@ Analytically calculated expected payoff w.r.t. the trained distribution: 0.9805
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">conf_int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">confidence_interval_processed</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Exact value:        </span><span class="se">\t</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">ep_trained</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Estimated value:    </span><span class="se">\t</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">estimation_processed</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Confidence interval:</span><span class="se">\t</span><span class="s1">[</span><span class="si">%.4f</span><span class="s1">, </span><span class="si">%.4f</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">conf_int</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exact value:        </span><span class="se">\t</span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ep_trained</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimated value:    </span><span class="se">\t</span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">estimation_processed</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Confidence interval:</span><span class="se">\t</span><span class="s2">[</span><span class="si">%.4f</span><span class="s2">, </span><span class="si">%.4f</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">conf_int</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -763,6 +778,7 @@ Confidence interval:    [0.9965, 1.0455]
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -781,9 +797,9 @@ Confidence interval:    [0.9965, 1.0455]
 <div class="output_area rendered_html docutils container">
 <div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2021.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
              </article>
@@ -793,7 +809,7 @@ Confidence interval:    [0.9965, 1.0455]
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="11_time_series.html" class="btn btn-neutral float-right" title="স্টক-মার্কেট টাইম-সিরিজ ডেটা লোডিং এবং প্রসেসিং" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="11_time_series.html" class="btn btn-neutral float-right" title="পুঁজিবাজার কালীন-সারি (টাইম-সিরিজ) সংক্রান্ত তথ্য লোডিং এবং প্রক্রিয়াকরণ" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
         <a href="09_credit_risk_analysis.html" class="btn btn-neutral" title="ক্রেডিট ঝুঁকি বিশ্লেষণ" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>

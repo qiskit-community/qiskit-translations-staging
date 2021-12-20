@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="fr-FR" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Diversification du portefeuille &mdash; Documentation Qiskit Finance 0.2.1</title>
+  <title>Diversification du portefeuille &mdash; Documentation Qiskit Finance 0.3.0</title>
   
 
   
@@ -31,8 +32,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -175,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.1
+                  0.3.0
                 </div>
               
             
@@ -532,9 +533,9 @@ div.rendered_html tbody tr:hover {
 <p class="admonition-title">Note</p>
 <p>Cette page a été générée à partir de <cite>docs/tutorials/02_portfolio_diversification.ipynb</cite> __.</p>
 </div>
-<div class="section" id="Diversification-du-portefeuille">
+<section id="Diversification-du-portefeuille">
 <h1>Diversification du portefeuille<a class="headerlink" href="#Diversification-du-portefeuille" title="Lien permanent vers ce titre">¶</a></h1>
-<div class="section" id="Introduction">
+<section id="Introduction">
 <h2>Introduction<a class="headerlink" href="#Introduction" title="Lien permanent vers ce titre">¶</a></h2>
 <p>Dans la gestion des actifs, il y a généralement deux approches: la gestion active et passive de l’investissement. Dans le cadre de la gestion passive des investissements, il existe des fonds de suivi des indices et des approches basées sur la diversification des portefeuilles, qui visent à représenter un portefeuille avec un grand nombre d’actifs par un plus petit nombre de stocks représentatifs. Ce bloc-notes illustre un problème de diversification de portefeuille, qui est récemment devenu populaire pour deux raisons : 1. Il permet d’imiter la performance d’un indice (ou d’un ensemble similaire d’actifs) avec un budget limité, à des coûts de transaction limités. C’est-à-dire que l’indice traditionnel peut acheter tous les actifs de l’indice, idéalement avec les mêmes poids que ceux de l’indice. Cela peut être peu pratique pour un certain nombre de raisons : la valeur totale d’un lot à tour unique par actif peut être supérieur à l’actif sous gestion, la grande échelle du problème de suivi de l’indice avec des contraintes d’intégration peut rendre le problème d’optimisation difficile, et les coûts de transaction du rééquilibrage fréquent pour ajuster les positions aux pondérations de l’indice peuvent rendre l’approche coûteuse. Ainsi, une approche populaire consiste à sélectionner un portefeuille de <span class="math notranslate nohighlight">\(q\)</span> actifs qui représentent le marché avec <span class="math notranslate nohighlight">\(n\)</span> actifs, où <span class="math notranslate nohighlight">\(q\)</span> est significativement plus petit que <span class="math notranslate nohighlight">\(n\)</span>, mais où le portefeuille reproduit le comportement du marché sous-jacent. Pour déterminer comment regrouper des actifs dans <span class="math notranslate nohighlight">\(q\)</span> groupes et comment déterminer quels sont les <span class="math notranslate nohighlight">\(q\)</span> actifs qui doivent les représenter, il s’agit de résoudre un problème d’optimisation à grande échelle. Dans ce qui suit, nous décrirons le modèle mathématique du problème de diversification des portefeuilles tel qu’il a été introduit dans [Cornuejols &amp; Tutuncu, 2006] 2. Il permet des mesures de similarité entre les séries chronologiques au-delà de la matrice de covariance. Notez que, traditionnellement, la théorie moderne du portefeuille considère la matrice de covariance comme une mesure de similitude entre les actifs. Par conséquent, la matrice de covariance est imparfaite. Prenons par exemple une société cotée à la fois à Londres et à New York. Même si les deux listes devraient être très semblables, seules des parties de la série chronologique des prix des deux listes se chevaucheront, en raison du chevauchement partiel des périodes d’ouverture des marchés. Au lieu de covariance, on peut considérer, par exemple, un gauchissement dynamique de [Berndt et Clifford, 1994] comme une mesure de la similarité entre deux séries temporelles, ce qui permet au fait que pour certaines périodes, les données ne sont capturées que par une seule série temporelle, alors que pour d’autres, les deux séries temporelles présentent une similitude en raison de l’évolution parallèle du cours boursier.</p>
 <p>Le workflow global que nous démontrons comprend :</p>
@@ -546,8 +547,8 @@ div.rendered_html tbody tr:hover {
 <li><p>visualisation des résultats, dans notre cas, il s’agit à nouveau d’un graphique simpliste.</p></li>
 </ol>
 <p>Dans ce qui suit, nous expliquons d’abord le modèle utilisé ci-dessus (4), avant de procéder à l’installation des pré-requis et au chargement des données.</p>
-</div>
-<div class="section" id="Le-modèle">
+</section>
+<section id="Le-modèle">
 <h2>Le modèle<a class="headerlink" href="#Le-modèle" title="Lien permanent vers ce titre">¶</a></h2>
 <p>Comme discuté dans [Cornuejols &amp; Tutuncu, 2006], nous décrivons un modèle mathématique qui regroupe les actifs en groupes d’actifs similaires et sélectionne un actif représentatif de chaque groupe à inclure dans le portefeuille de fonds. Le modèle est basé sur les données suivantes, dont nous discuterons plus en détail plus tard :</p>
 <div class="math notranslate nohighlight">
@@ -571,11 +572,11 @@ div.rendered_html tbody tr:hover {
 <div class="math notranslate nohighlight">
 \[{\bf z} = [x_{11},x_{12},\ldots,x_{1n}, x_{22},\ldots,x_{nn}, y_{1},\ldots,y_{n}],\]</div>
 <p>dont la dimension est <span class="math notranslate nohighlight">\({ \bf z } \in \ { 0 ,1 \ } ^ N\)</span>, avec <span class="math notranslate nohighlight">\(N = n (n + 1)\)</span> et dénote la solution optimale avec <span class="math notranslate nohighlight">\({ \bf z } ^ * \)</span> f ^ * <a href="#id1"><span class="problematic" id="id2">`</span></a>.</p>
-</div>
-<div class="section" id="Une-approche-hybride">
+</section>
+<section id="Une-approche-hybride">
 <h2>Une approche hybride<a class="headerlink" href="#Une-approche-hybride" title="Lien permanent vers ce titre">¶</a></h2>
 <p>Ici, nous démontrons une approche qui combine des étapes d’informatique classique et quantique, et nous suivons l’approche d’optimisation quantique approximative de Farhi, Goldstone et Gutman (2014).</p>
-<div class="section" id="Construction-d'une-optimisation-polynomiale-binaire">
+<section id="Construction-d'une-optimisation-polynomiale-binaire">
 <h3>Construction d’une optimisation polynomiale binaire<a class="headerlink" href="#Construction-d'une-optimisation-polynomiale-binaire" title="Lien permanent vers ce titre">¶</a></h3>
 <p>A partir de :math:` (M) ` on peut construire une optimisation polynomiale binaire avec des contraintes d’égalité seulement, en substituant les contraintes d’inégalité :math:` x_{ij} leq y_j` avec les contraintes d’égalité équivalentes :math:` x_{ij} (1-y_j) = 0 <a href="#id1"><span class="problematic" id="id2">`</span></a>. Le problème devient alors:</p>
 <div class="math notranslate nohighlight">
@@ -587,14 +588,14 @@ div.rendered_html tbody tr:hover {
 \[\quad x_{ij} (1- y_j) = 0,\,\textrm{ for }\,  i = 1,\ldots, n; \, j = 1,\ldots, n,\]</div>
 <div class="math notranslate nohighlight">
 \[\quad x_{jj} = y_j,\,\textrm{ for }\,  j = 1,\ldots, n.\]</div>
-</div>
-<div class="section" id="Construction-de-l'hamiltonien-Ising">
+</section>
+<section id="Construction-de-l'hamiltonien-Ising">
 <h3>Construction de l’hamiltonien Ising<a class="headerlink" href="#Construction-de-l'hamiltonien-Ising" title="Lien permanent vers ce titre">¶</a></h3>
 <p>Nous pouvons maintenant construire l’hamiltonien Ising (QUBO) par des méthodes de pénalité (introduisant un coefficient de pénalité <span class="math notranslate nohighlight">\(A\)</span> pour chaque contrainte d’égalité) en tant que</p>
 <div class="math notranslate nohighlight">
 \[(IH) \quad H = \sum_{i=1}^n \sum_{j=1}^n \rho_{ij} x_{ij} + A\Big( \sum_{j=1}^n y_j - q\Big)^2 + \sum_{i=1}^n A\Big( \sum_{j=1}^n x_{ij} - 1\Big)^2 + \sum_{j=1}^n A (x_{jj}-y_j)^2 +\sum_{i=1}^n \sum_{j=1}^n A \left(x_{ij} (1- y_j)\right).\]</div>
-</div>
-<div class="section" id="De-l'Hamiltonien-à-la-formulation-de-programmation-quadratique-(QP)">
+</section>
+<section id="De-l'Hamiltonien-à-la-formulation-de-programmation-quadratique-(QP)">
 <h3>De l’Hamiltonien à la formulation de programmation quadratique (QP)<a class="headerlink" href="#De-l'Hamiltonien-à-la-formulation-de-programmation-quadratique-(QP)" title="Lien permanent vers ce titre">¶</a></h3>
 <p>Dans le vecteur <span class="math notranslate nohighlight">\({ \bf z }\)</span>, les éléments hamiltoniens d’Ising peuvent être réécrits comme suit :</p>
 <p>Premier terme:</p>
@@ -619,17 +620,17 @@ div.rendered_html tbody tr:hover {
 <div class="math notranslate nohighlight">
 \[(IH-QP)\quad \max_{{\bf z}\in\{0,1\}^{n(n+1)}} \, {\bf z}^T ({\bf Q}_0+{\bf Q}_1+ {\bf Q}_2 + {\bf Q}_3 ){\bf z} + ({\bf c}_0+{\bf c}_1+{\bf c}_2+{\bf c}_3)^T {\bf z} +r_0+r_1+r_2\]</div>
 <p>qui peuvent être transmis à l’eigensolver quantique variationnel.</p>
-</div>
-</div>
-<div class="section" id="Références">
+</section>
+</section>
+<section id="Références">
 <h2>Références<a class="headerlink" href="#Références" title="Lien permanent vers ce titre">¶</a></h2>
 <p>[1] G. Cornuejols, M. L. Fisher, and G. L. Nemhauser, <em>Location of bank accounts to optimize float: an analytical study of exact and approximate algorithms</em>, Management Science, vol. 23(8), 1997</p>
 <p>[2] E. Farhi, J. Goldstone, S. Gutmann e-print <a class="reference external" href="https://arxiv.org/abs/1411.4028">arXiv 1411.4028, 2014</a></p>
 <p>[3] G. Cornuejols and R. Tutuncu, <a class="reference external" href="http://web.math.ku.dk/~rolf/CT_FinOpt.pdf">Optimization methods in finance</a>, 2006</p>
 <p>[4] DJ. Berndt and J. Clifford, <em>Using dynamic time warping to find patterns in time series</em>. In KDD workshop 1994 (Vol. 10, No. 16, pp. 359-370).</p>
 <p>[5] <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/main/docs/tutorials/06_examples_max_cut_and_tsp.ipynb">Max-Cut and Traveling Salesman Problem</a></p>
-</div>
-<div class="section" id="L'implémentation">
+</section>
+<section id="L'implémentation">
 <h2>L’implémentation<a class="headerlink" href="#L'implémentation" title="Lien permanent vers ce titre">¶</a></h2>
 <p>Tout d’abord, nous importons les modules requis.</p>
 <div class="nbinput nblast docutils container">
@@ -646,6 +647,7 @@ div.rendered_html tbody tr:hover {
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
 <span class="o">%</span><span class="k">matplotlib</span> inline
 
 <span class="c1"># Import Qiskit packages</span>
@@ -656,6 +658,7 @@ div.rendered_html tbody tr:hover {
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">TwoLocal</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">QuantumInstance</span>
 <span class="kn">from</span> <span class="nn">qiskit_optimization.algorithms</span> <span class="kn">import</span> <span class="n">MinimumEigenOptimizer</span>
+
 <span class="c1"># The data providers of stock-market data</span>
 <span class="kn">from</span> <span class="nn">qiskit_finance.data_providers</span> <span class="kn">import</span> <span class="n">RandomDataProvider</span>
 <span class="kn">from</span> <span class="nn">qiskit_finance.applications.optimization</span> <span class="kn">import</span> <span class="n">PortfolioDiversification</span>
@@ -674,10 +677,12 @@ div.rendered_html tbody tr:hover {
 <span class="n">stocks</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;TICKER1&quot;</span><span class="p">,</span> <span class="s2">&quot;TICKER2&quot;</span><span class="p">]</span>
 <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">stocks</span><span class="p">)</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="n">RandomDataProvider</span><span class="p">(</span><span class="n">tickers</span> <span class="o">=</span> <span class="n">stocks</span><span class="p">,</span>
-                 <span class="n">start</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2016</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
-                 <span class="n">end</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2016</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">30</span><span class="p">),</span>
-                 <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">RandomDataProvider</span><span class="p">(</span>
+    <span class="n">tickers</span><span class="o">=</span><span class="n">stocks</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">end</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="n">data</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <span class="n">rho</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_similarity_matrix</span><span class="p">()</span>
 </pre></div>
@@ -693,8 +698,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Solution-classique-utilisant-IBM-ILOG-CPLEX">
+</section>
+<section id="Solution-classique-utilisant-IBM-ILOG-CPLEX">
 <h2>Solution classique utilisant IBM ILOG CPLEX<a class="headerlink" href="#Solution-classique-utilisant-IBM-ILOG-CPLEX" title="Lien permanent vers ce titre">¶</a></h2>
 <p>Pour une solution classique, nous utilisons IBM ILOG CPLEX. CPLEX est capable de trouver la solution exacte pour ce problème. Nous définissons d’abord une classe ClassicalOptimizer qui code le problème d’une manière que CPLEX peut résoudre, puis nous instancions la classe et nous résolvons le problème.</p>
 <div class="nbinput nblast docutils container">
@@ -720,14 +725,22 @@ div.rendered_html tbody tr:hover {
         <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span>
         <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">q</span>
 
-        <span class="n">my_obj</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">rho</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="mf">0.</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
+        <span class="n">my_obj</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">rho</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
         <span class="n">my_ub</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n</span><span class="p">)]</span>
         <span class="n">my_lb</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n</span><span class="p">)]</span>
-        <span class="n">my_ctype</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;I&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n</span><span class="p">)])</span>
+        <span class="n">my_ctype</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;I&quot;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n</span><span class="p">)])</span>
 
-        <span class="n">my_rhs</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span> <span class="o">+</span><span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="mf">0.1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)]</span>
-        <span class="n">my_sense</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;E&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="o">+</span><span class="n">n</span><span class="p">)])</span> <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;E&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)])</span> <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="p">[</span><span class="s1">&#39;L&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)])</span>
+        <span class="n">my_rhs</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[</span><span class="n">q</span><span class="p">]</span>
+            <span class="o">+</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
+            <span class="o">+</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
+            <span class="o">+</span> <span class="p">[</span><span class="mf">0.1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="n">my_sense</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;E&quot;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">n</span><span class="p">)])</span>
+            <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;E&quot;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)])</span>
+            <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;L&quot;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)])</span>
+        <span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">my_prob</span> <span class="o">=</span> <span class="n">cplex</span><span class="o">.</span><span class="n">Cplex</span><span class="p">()</span>
@@ -758,12 +771,12 @@ div.rendered_html tbody tr:hover {
         <span class="n">prob</span><span class="o">.</span><span class="n">set_results_stream</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 
         <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">n</span><span class="p">)]</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n</span><span class="p">)]</span>
         <span class="n">coef</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
         <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">col</span><span class="p">,</span> <span class="n">coef</span><span class="p">])</span>
 
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-            <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="o">+</span><span class="n">n</span><span class="o">*</span><span class="n">ii</span><span class="p">,</span> <span class="n">n</span><span class="o">+</span><span class="n">n</span><span class="o">*</span><span class="n">ii</span><span class="p">)]</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">*</span> <span class="n">ii</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">n</span> <span class="o">*</span> <span class="n">ii</span><span class="p">)]</span>
             <span class="n">coef</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
 
             <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">col</span><span class="p">,</span> <span class="n">coef</span><span class="p">])</span>
@@ -775,7 +788,7 @@ div.rendered_html tbody tr:hover {
 
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-                <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">ii</span><span class="o">*</span><span class="n">n</span> <span class="o">+</span> <span class="n">jj</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">jj</span><span class="p">]</span>
+                <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">ii</span> <span class="o">*</span> <span class="n">n</span> <span class="o">+</span> <span class="n">jj</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">jj</span><span class="p">]</span>
                 <span class="n">coef</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
                 <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">col</span><span class="p">,</span> <span class="n">coef</span><span class="p">])</span>
@@ -793,10 +806,10 @@ div.rendered_html tbody tr:hover {
 <span class="n">classical_optimizer</span> <span class="o">=</span> <span class="n">ClassicalOptimizer</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
 
 <span class="c1"># Compute the number of feasible solutions:</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of feasible combinations= &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">classical_optimizer</span><span class="o">.</span><span class="n">compute_allowed_combinations</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of feasible combinations= &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">classical_optimizer</span><span class="o">.</span><span class="n">compute_allowed_combinations</span><span class="p">()))</span>
 
 <span class="c1"># Compute the total number of possible combinations (feasible + unfeasible)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Total number of combinations= &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">))))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total number of combinations= &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))))</span>
 </pre></div>
 </div>
 </div>
@@ -819,30 +832,30 @@ Total number of combinations= 64
     <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xc</span><span class="p">)):</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">xc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.015</span><span class="p">,</span> <span class="n">yc</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">xc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.015</span><span class="p">,</span> <span class="n">yc</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
 
     <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
 
-    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">n</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xc</span><span class="p">[</span><span class="n">ii</span><span class="o">-</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">],</span> <span class="n">yc</span><span class="p">[</span><span class="n">ii</span><span class="o">-</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">],</span> <span class="s1">&#39;r*&#39;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xc</span><span class="p">[</span><span class="n">ii</span> <span class="o">-</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">],</span> <span class="n">yc</span><span class="p">[</span><span class="n">ii</span> <span class="o">-</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;r*&quot;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">iy</span> <span class="o">=</span> <span class="n">ii</span> <span class="o">//</span> <span class="n">n</span>
             <span class="n">ix</span> <span class="o">=</span> <span class="n">ii</span> <span class="o">%</span> <span class="n">n</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">xc</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span> <span class="n">xc</span><span class="p">[</span><span class="n">iy</span><span class="p">]],</span> <span class="p">[</span><span class="n">yc</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span> <span class="n">yc</span><span class="p">[</span><span class="n">iy</span><span class="p">]],</span> <span class="s1">&#39;C2&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">xc</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span> <span class="n">xc</span><span class="p">[</span><span class="n">iy</span><span class="p">]],</span> <span class="p">[</span><span class="n">yc</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span> <span class="n">yc</span><span class="p">[</span><span class="n">iy</span><span class="p">]],</span> <span class="s2">&quot;C2&quot;</span><span class="p">)</span>
 
-    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title_str</span> <span class="o">+</span><span class="s1">&#39; cost = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">C</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100.</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title_str</span> <span class="o">+</span> <span class="s2">&quot; cost = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">C</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">))</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <p>La solution montre les stocks sélectionnés avec les étoiles et en vert les liens (via les similitudes) avec d’autres stocks qui sont représentés dans le fonds par le stock lié.</p>
-</div>
-<div class="section" id="Informatique-quantique-avec-IBM-Q">
+</section>
+<section id="Informatique-quantique-avec-IBM-Q">
 <h2>Informatique quantique avec IBM Q<a class="headerlink" href="#Informatique-quantique-avec-IBM-Q" title="Lien permanent vers ce titre">¶</a></h2>
 <p>Pour la solution quantique, nous utilisons Qiskit. Nous avons d’abord défini une classe QuantumOptimizer qui code l’approche quantique pour résoudre le problème, puis nous l’instancions et la résolvons. Nous définissons les méthodes suivantes dans la classe :</p>
 <ul class="simple">
@@ -858,8 +871,8 @@ Total number of combinations= 64
 <span></span><span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">StateFn</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">algorithm_globals</span>
 
-<span class="k">class</span> <span class="nc">QuantumOptimizer</span><span class="p">:</span>
 
+<span class="k">class</span> <span class="nc">QuantumOptimizer</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rho</span> <span class="o">=</span> <span class="n">rho</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
@@ -876,11 +889,13 @@ Total number of combinations= 64
 
     <span class="k">def</span> <span class="nf">vqe_solution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">100</span>
-        <span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;statevector_simulator&#39;</span><span class="p">)</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;statevector_simulator&quot;</span><span class="p">)</span>
         <span class="n">cobyla</span> <span class="o">=</span> <span class="n">COBYLA</span><span class="p">()</span>
         <span class="n">cobyla</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="mi">250</span><span class="p">)</span>
-        <span class="n">ry</span> <span class="o">=</span> <span class="n">TwoLocal</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s1">&#39;ry&#39;</span><span class="p">,</span> <span class="s1">&#39;cz&#39;</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">)</span>
-        <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">seed_simulator</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">ry</span> <span class="o">=</span> <span class="n">TwoLocal</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s2">&quot;ry&quot;</span><span class="p">,</span> <span class="s2">&quot;cz&quot;</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s2">&quot;full&quot;</span><span class="p">)</span>
+        <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span>
+            <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">seed_simulator</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">seed</span>
+        <span class="p">)</span>
         <span class="n">vqe_mes</span> <span class="o">=</span> <span class="n">VQE</span><span class="p">(</span><span class="n">ry</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="n">cobyla</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">)</span>
         <span class="n">vqe</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">vqe_mes</span><span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">vqe</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qp</span><span class="p">)</span>
@@ -888,24 +903,25 @@ Total number of combinations= 64
 
     <span class="k">def</span> <span class="nf">qaoa_solution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">1234</span>
-        <span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;statevector_simulator&#39;</span><span class="p">)</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;statevector_simulator&quot;</span><span class="p">)</span>
         <span class="n">cobyla</span> <span class="o">=</span> <span class="n">COBYLA</span><span class="p">()</span>
         <span class="n">cobyla</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="mi">250</span><span class="p">)</span>
-        <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">seed_simulator</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span>
+            <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">seed_simulator</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">seed</span>
+        <span class="p">)</span>
         <span class="n">qaoa_mes</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="n">cobyla</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">)</span>
         <span class="n">qaoa</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">qaoa_mes</span><span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">qaoa</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qp</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decode_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">decode_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">decode_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="n">quantum_solution</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
         <span class="n">ground_level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qp</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">quantum_solution</span><span class="p">,</span> <span class="n">ground_level</span>
-
 </pre></div>
 </div>
 </div>
-<div class="section" id="Étape-1">
+<section id="Étape-1">
 <h3>Étape 1<a class="headerlink" href="#Étape-1" title="Lien permanent vers ce titre">¶</a></h3>
 <p>Instancions la classe d’optimiseur quantique avec les paramètres suivants : - la matrice de similarité : math:<cite>rho</cite> ; - le nombre de stocks et de groupes <code class="docutils literal notranslate"><span class="pre">n</span></code> et <code class="docutils literal notranslate"><span class="pre">q</span></code> ;</p>
 <div class="nbinput nblast docutils container">
@@ -918,8 +934,8 @@ Total number of combinations= 64
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Étape-2">
+</section>
+<section id="Étape-2">
 <h3>Étape 2<a class="headerlink" href="#Étape-2" title="Lien permanent vers ce titre">¶</a></h3>
 <p>Encodons le problème en tant que formulation binaire (IH-QP).</p>
 <p>Vérification : assurons-nous que la formulation binaire dans l’optimiseur quantique est correcte (c’est-à-dire qu’elle génère le même coût compte tenu de la même solution).</p>
@@ -931,14 +947,16 @@ Total number of combinations= 64
 <span></span><span class="c1"># Check if the binary representation is correct. This requires CPLEX</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">cplex</span>
-    <span class="c1">#warnings.filterwarnings(&#39;ignore&#39;)</span>
+
+    <span class="c1"># warnings.filterwarnings(&#39;ignore&#39;)</span>
     <span class="n">quantum_solution</span><span class="p">,</span> <span class="n">quantum_cost</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">exact_solution</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">quantum_solution</span><span class="p">,</span> <span class="n">quantum_cost</span><span class="p">)</span>
     <span class="n">classical_solution</span><span class="p">,</span> <span class="n">classical_cost</span> <span class="o">=</span> <span class="n">classical_optimizer</span><span class="o">.</span><span class="n">cplex_solution</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">classical_solution</span><span class="p">,</span> <span class="n">classical_cost</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">quantum_cost</span> <span class="o">-</span> <span class="n">classical_cost</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Binary formulation is correct&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Error in the formulation of the Hamiltonian&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Binary formulation is correct&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in the formulation of the Hamiltonian&quot;</span><span class="p">)</span>
 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span>
 </pre></div>
@@ -954,8 +972,8 @@ Total number of combinations= 64
 Binary formulation is correct
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Étape-3">
+</section>
+<section id="Étape-3">
 <h3>Étape 3<a class="headerlink" href="#Étape-3" title="Lien permanent vers ce titre">¶</a></h3>
 <p>Encode le problème en tant qu’hamiltonien Ising dans la base Z.</p>
 <p>Vérification : assurons-nous que la formulation binaire dans l’optimiseur quantique est correcte (c’est-à-dire qu’elle génère le même coût compte tenu de la même solution)</p>
@@ -968,9 +986,10 @@ Binary formulation is correct
 <span class="nb">print</span><span class="p">(</span><span class="n">ground_state</span><span class="p">)</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ground_level</span> <span class="o">-</span> <span class="n">classical_cost</span><span class="p">)</span><span class="o">&lt;</span><span class="mf">0.01</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Ising Hamiltonian in Z basis is correct&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Error in the Ising Hamiltonian formulation&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ground_level</span> <span class="o">-</span> <span class="n">classical_cost</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ising Hamiltonian in Z basis is correct&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in the Ising Hamiltonian formulation&quot;</span><span class="p">)</span>
 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span>
 </pre></div>
@@ -985,8 +1004,8 @@ Binary formulation is correct
 Ising Hamiltonian in Z basis is correct
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Étape-4">
+</section>
+<section id="Étape-4">
 <h3>Étape 4<a class="headerlink" href="#Étape-4" title="Lien permanent vers ce titre">¶</a></h3>
 <p>Résolvons le problème via VQE. Notez que selon le nombre de qubits, cela peut prendre un certain temps: pour 6 qubits il faut 15 minutes pour un Macbook Pro 2015, pour 12 qubits il faut plus de 12 heures. Pour les exécutions plus longues, le journaling peut être utile pour observer le fonctionnement ; sinon, il suffit d’attendre que la solution soit affichée.</p>
 <div class="nbinput docutils container">
@@ -999,8 +1018,11 @@ Ising Hamiltonian in Z basis is correct
 
 <span class="k">try</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">ground_state</span> <span class="o">-</span> <span class="n">vqe_state</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;VQE produces the same solution as the exact eigensolver.&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;VQE does not produce the same solution as the exact eigensolver, but that is to be expected.&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;VQE produces the same solution as the exact eigensolver.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;VQE does not produce the same solution as the exact eigensolver, but that is to be expected.&quot;</span>
+        <span class="p">)</span>
 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span>
 </pre></div>
@@ -1017,8 +1039,8 @@ VQE does not produce the same solution as the exact eigensolver, but that is to 
   warn(&#39;The sum of probability of samples is not close to 1: {}&#39;.format(sum_prob))
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Étape-5">
+</section>
+<section id="Étape-5">
 <h3>Étape 5<a class="headerlink" href="#Étape-5" title="Lien permanent vers ce titre">¶</a></h3>
 <p>Visualisons la solution</p>
 <div class="nbinput nblast docutils container">
@@ -1035,7 +1057,7 @@ VQE does not produce the same solution as the exact eigensolver, but that is to 
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">visualize_solution</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">ground_state</span><span class="p">,</span> <span class="n">ground_level</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="s1">&#39;Classical&#39;</span><span class="p">)</span>
+<span></span><span class="n">visualize_solution</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">ground_state</span><span class="p">,</span> <span class="n">ground_level</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="s2">&quot;Classical&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1050,7 +1072,7 @@ VQE does not produce the same solution as the exact eigensolver, but that is to 
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">visualize_solution</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">vqe_state</span><span class="p">,</span> <span class="n">vqe_level</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="s1">&#39;VQE&#39;</span><span class="p">)</span>
+<span></span><span class="n">visualize_solution</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">vqe_state</span><span class="p">,</span> <span class="n">vqe_level</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="s2">&quot;VQE&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1067,6 +1089,7 @@ VQE does not produce the same solution as the exact eigensolver, but that is to 
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -1094,9 +1117,9 @@ VQE does not produce the same solution as the exact eigensolver, but that is to 
 </pre></div>
 </div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
              </article>

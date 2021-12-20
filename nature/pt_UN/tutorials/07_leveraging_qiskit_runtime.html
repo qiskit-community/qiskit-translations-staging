@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="pt-UN" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Aproveitando o Qiskit Runtime &mdash; Documentação Qiskit Nature 0.2.2</title>
+  <title>Aproveitando o Qiskit Runtime &mdash; Documentação Qiskit Nature 0.3.0</title>
   
 
   
@@ -31,8 +32,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -175,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.2
+                  0.3.0
                 </div>
               
             
@@ -530,9 +531,9 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">Nota</p>
-<p>Esta página foi gerada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-nature/blob/stable/0.2/docs/tutorials/07_leveraging_qiskit_runtime.ipynb">docs/tutorials/07_leveraging_qiskit_runtime.ipynb</a>.</p>
+<p>Esta página foi gerada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-nature/blob/stable/0.3/docs/tutorials/07_leveraging_qiskit_runtime.ipynb">docs/tutorials/07_leveraging_qiskit_runtime.ipynb</a>.</p>
 </div>
-<div class="section" id="Aproveitando-o-Qiskit-Runtime">
+<section id="Aproveitando-o-Qiskit-Runtime">
 <h1>Aproveitando o Qiskit Runtime<a class="headerlink" href="#Aproveitando-o-Qiskit-Runtime" title="Link permanente para este título">¶</a></h1>
 <p>Algoritmos iterativos, como o Variational Quantum Eigensolver (VQE), tradicionalmente enviam um lote de circuitos (uma «tarefa») para ser executado no dispositivo quântico em cada iteração. O envio de uma tarefa envolve certa sobrecarga, principalmente</p>
 <ul class="simple">
@@ -542,8 +543,11 @@ div.rendered_html tbody tr:hover {
 <p>Se enviarmos centenas de tarefas iterativamente, essa sobrecarga rapidamente dominará o tempo de execução do nosso algoritmo. O Qiskit Runtime nos permite lidar com esses problemas e acelerar significativamente (em especial) os algoritmos iterativos. Com o Qiskit Runtime, uma tarefa não contém apenas um lote de circuitos mas o algoritmo <em>por completo</em>. Isso significa que apenas experimentamos a sobrecarga da API e a espera da fila <em>uma vez</em> em vez de a cada iteração! Você será capaz de até mesmo fazer upload dos parâmetros do algoritmo e delegar toda a complexidade para a nuvem, onde o seu programa é executado, ou fazer upload do seu algoritmo pessoal diretamente.</p>
 <p>Para o VQE, a integração do Qiskit Runtime no seu código existente é moleza. Existe uma (quase) substituição de drop-in, chamada <cite>VQEProgram`</cite> para a classe <code class="docutils literal notranslate"><span class="pre">VQE</span></code>.</p>
 <p>Vejamos como aproveitar o ambiente de execução em um exemplo de química simples: Encontrar a energia de estado fundamental da molécula de hidreto de lítio (LiH) a uma determinada distância de ligação.</p>
-<div class="section" id="Especificação-do-problema:-molécula-de-LiH">
-<h2>Especificação do problema: molécula de LiH<a class="headerlink" href="#Especificação-do-problema:-molécula-de-LiH" title="Link permanente para este título">¶</a></h2>
+<section id="Important:-Version-requirements">
+<h2><em>Important: Version requirements</em><a class="headerlink" href="#Important:-Version-requirements" title="Link permanente para este título">¶</a></h2>
+<p><em>This notebook requires a minimum version number of Qiskit Terra 0.18.0 and Qiskit Nature 0.3.0.</em></p>
+<section id="Especificação-do-problema:-molécula-de-LiH">
+<h3>Especificação do problema: molécula de LiH<a class="headerlink" href="#Especificação-do-problema:-molécula-de-LiH" title="Link permanente para este título">¶</a></h3>
 <p>Primeiro, especificamos a molécula cuja energia de estado fundamental buscamos. Aqui, olhamos para a LiH com uma distância de ligação de 2,5 Å.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
@@ -551,7 +555,10 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">qiskit_nature.drivers</span> <span class="kn">import</span> <span class="n">UnitsType</span><span class="p">,</span> <span class="n">Molecule</span>
-<span class="kn">from</span> <span class="nn">qiskit_nature.drivers.second_quantization</span> <span class="kn">import</span> <span class="n">ElectronicStructureDriverType</span><span class="p">,</span> <span class="n">ElectronicStructureMoleculeDriver</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.drivers.second_quantization</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ElectronicStructureDriverType</span><span class="p">,</span>
+    <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.problems.second_quantization.electronic</span> <span class="kn">import</span> <span class="n">ElectronicStructureProblem</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.converters.second_quantization</span> <span class="kn">import</span> <span class="n">QubitConverter</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.mappers.second_quantization</span> <span class="kn">import</span> <span class="n">ParityMapper</span>
@@ -568,21 +575,23 @@ div.rendered_html tbody tr:hover {
 <span></span><span class="n">bond_distance</span> <span class="o">=</span> <span class="mf">2.5</span>  <span class="c1"># in Angstrom</span>
 
 <span class="c1"># define molecule</span>
-<span class="n">molecule</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">geometry</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;Li&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]],</span>
-                              <span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span>  <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">bond_distance</span><span class="p">]]],</span>
-                        <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                        <span class="n">multiplicity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">molecule</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="p">[[</span><span class="s2">&quot;Li&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">bond_distance</span><span class="p">]]],</span> <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">multiplicity</span><span class="o">=</span><span class="mi">1</span>
+<span class="p">)</span>
 
 
 <span class="c1"># specify driver</span>
-<span class="n">driver</span> <span class="o">=</span> <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">(</span><span class="n">molecule</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;sto3g&#39;</span><span class="p">,</span> <span class="n">driver_type</span><span class="o">=</span><span class="n">ElectronicStructureDriverType</span><span class="o">.</span><span class="n">PYSCF</span><span class="p">)</span>
+<span class="n">driver</span> <span class="o">=</span> <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">(</span>
+    <span class="n">molecule</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto3g&quot;</span><span class="p">,</span> <span class="n">driver_type</span><span class="o">=</span><span class="n">ElectronicStructureDriverType</span><span class="o">.</span><span class="n">PYSCF</span>
+<span class="p">)</span>
 <span class="n">properties</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="n">particle_number</span> <span class="o">=</span> <span class="n">properties</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="n">ParticleNumber</span><span class="p">)</span>
 
 <span class="c1"># specify active space transformation</span>
-<span class="n">active_space_trafo</span> <span class="o">=</span> <span class="n">ActiveSpaceTransformer</span><span class="p">(</span><span class="n">num_electrons</span><span class="o">=</span><span class="n">particle_number</span><span class="o">.</span><span class="n">num_particles</span><span class="p">,</span>
-                                            <span class="n">num_molecular_orbitals</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">active_space_trafo</span> <span class="o">=</span> <span class="n">ActiveSpaceTransformer</span><span class="p">(</span>
+    <span class="n">num_electrons</span><span class="o">=</span><span class="n">particle_number</span><span class="o">.</span><span class="n">num_particles</span><span class="p">,</span> <span class="n">num_molecular_orbitals</span><span class="o">=</span><span class="mi">3</span>
+<span class="p">)</span>
 
 <span class="c1"># define electronic structure problem</span>
 <span class="n">problem</span> <span class="o">=</span> <span class="n">ElectronicStructureProblem</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="n">transformers</span><span class="o">=</span><span class="p">[</span><span class="n">active_space_trafo</span><span class="p">])</span>
@@ -592,9 +601,9 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Solução-de-referência-clássica">
-<h2>Solução de referência clássica<a class="headerlink" href="#Solução-de-referência-clássica" title="Link permanente para este título">¶</a></h2>
+</section>
+<section id="Solução-de-referência-clássica">
+<h3>Solução de referência clássica<a class="headerlink" href="#Solução-de-referência-clássica" title="Link permanente para este título">¶</a></h3>
 <p>Como uma solução de referência, podemos resolver este sistema classicamente com o <code class="docutils literal notranslate"><span class="pre">NumPyEigensolver</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
@@ -617,8 +626,9 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
 <span class="n">target_energy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np_result</span><span class="o">.</span><span class="n">eigenenergies</span> <span class="o">+</span> <span class="n">np_result</span><span class="o">.</span><span class="n">nuclear_repulsion_energy</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Energy:&#39;</span><span class="p">,</span> <span class="n">target_energy</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Energy:&quot;</span><span class="p">,</span> <span class="n">target_energy</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -630,9 +640,9 @@ div.rendered_html tbody tr:hover {
 Energy: -7.773617988868097
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="VQE">
-<h2>VQE<a class="headerlink" href="#VQE" title="Link permanente para este título">¶</a></h2>
+</section>
+<section id="VQE">
+<h3>VQE<a class="headerlink" href="#VQE" title="Link permanente para este título">¶</a></h3>
 <p>Para executar o VQE, precisamos selecionar um circuito quântico parametrizado que atue como ansatz e um otimizador clássico. Aqui escolheremos um ansatz heurístico, eficiente em hardware e o otimizador SPSA.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
@@ -641,8 +651,8 @@ Energy: -7.773617988868097
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">EfficientSU2</span>
 
-<span class="n">ansatz</span> <span class="o">=</span> <span class="n">EfficientSU2</span><span class="p">(</span><span class="n">num_qubits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="n">insert_barriers</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">ansatz</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="s1">&#39;mpl&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;iqx&#39;</span><span class="p">)</span>
+<span class="n">ansatz</span> <span class="o">=</span> <span class="n">EfficientSU2</span><span class="p">(</span><span class="n">num_qubits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="n">insert_barriers</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ansatz</span><span class="o">.</span><span class="n">decompose</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="s2">&quot;mpl&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;iqx&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -651,7 +661,7 @@ Energy: -7.773617988868097
 </pre></div>
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_07_leveraging_qiskit_runtime_10_0.png" src="../_images/tutorials_07_leveraging_qiskit_runtime_10_0.png" />
+<img alt="../_images/tutorials_07_leveraging_qiskit_runtime_11_0.png" src="../_images/tutorials_07_leveraging_qiskit_runtime_11_0.png" />
 </div>
 </div>
 <div class="nbinput nblast docutils container">
@@ -677,10 +687,12 @@ Energy: -7.773617988868097
 <span></span><span class="kn">from</span> <span class="nn">qiskit.providers.basicaer</span> <span class="kn">import</span> <span class="n">QasmSimulatorPy</span>  <span class="c1"># local simulator</span>
 <span class="kn">from</span> <span class="nn">qiskit.algorithms</span> <span class="kn">import</span> <span class="n">VQE</span>
 
-<span class="n">local_vqe</span> <span class="o">=</span> <span class="n">VQE</span><span class="p">(</span><span class="n">ansatz</span><span class="o">=</span><span class="n">ansatz</span><span class="p">,</span>
-                <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span>
-                <span class="n">initial_point</span><span class="o">=</span><span class="n">initial_point</span><span class="p">,</span>
-                <span class="n">quantum_instance</span><span class="o">=</span><span class="n">QasmSimulatorPy</span><span class="p">())</span>
+<span class="n">local_vqe</span> <span class="o">=</span> <span class="n">VQE</span><span class="p">(</span>
+    <span class="n">ansatz</span><span class="o">=</span><span class="n">ansatz</span><span class="p">,</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span>
+    <span class="n">initial_point</span><span class="o">=</span><span class="n">initial_point</span><span class="p">,</span>
+    <span class="n">quantum_instance</span><span class="o">=</span><span class="n">QasmSimulatorPy</span><span class="p">(),</span>
+<span class="p">)</span>
 
 <span class="n">local_vqe_groundstate_solver</span> <span class="o">=</span> <span class="n">GroundStateEigensolver</span><span class="p">(</span><span class="n">qubit_converter</span><span class="p">,</span> <span class="n">local_vqe</span><span class="p">)</span>
 
@@ -701,7 +713,10 @@ Measured Observable is not composed of only Paulis, converting to Pauli represen
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Energy:&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">local_vqe_result</span><span class="o">.</span><span class="n">eigenenergies</span> <span class="o">+</span> <span class="n">local_vqe_result</span><span class="o">.</span><span class="n">nuclear_repulsion_energy</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+<span></span><span class="nb">print</span><span class="p">(</span>
+    <span class="s2">&quot;Energy:&quot;</span><span class="p">,</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">local_vqe_result</span><span class="o">.</span><span class="n">eigenenergies</span> <span class="o">+</span> <span class="n">local_vqe_result</span><span class="o">.</span><span class="n">nuclear_repulsion_energy</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -713,10 +728,10 @@ Measured Observable is not composed of only Paulis, converting to Pauli represen
 Energy: -7.561492258661798
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Runtime-VQE">
-<h2>Runtime VQE<a class="headerlink" href="#Runtime-VQE" title="Link permanente para este título">¶</a></h2>
-<p>Vamos trocar o eigensolver de um algoritmo VQE local para um VQE executado usando o Qiskit Runtime – simplesmente ao trocar a classe <code class="docutils literal notranslate"><span class="pre">VQE</span></code> pelo <code class="docutils literal notranslate"><span class="pre">VQEProgram</span></code>.</p>
+</section>
+<section id="Runtime-VQE">
+<h3>Runtime VQE<a class="headerlink" href="#Runtime-VQE" title="Link permanente para este título">¶</a></h3>
+<p>Let’s exchange the eigensolver from a local VQE algorithm to a VQE executed using Qiskit Runtime – simply by exchanging the <code class="docutils literal notranslate"><span class="pre">VQE</span></code> class by the <code class="docutils literal notranslate"><span class="pre">qiskit_nature.runtime.VQEClient</span></code>.</p>
 <p>Primeiro, teremos que carregar um provedor para acessar o Qiskit Runtime.**Nota:** Você deve substituir a próxima célula pelo seu provedor.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -726,35 +741,38 @@ Energy: -7.561492258661798
 <span></span><span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">IBMQ</span>
 
 <span class="n">IBMQ</span><span class="o">.</span><span class="n">load_account</span><span class="p">()</span>
-<span class="n">provider</span> <span class="o">=</span> <span class="n">IBMQ</span><span class="o">.</span><span class="n">get_provider</span><span class="p">(</span><span class="n">project</span><span class="o">=</span><span class="s1">&#39;qiskit-runtime&#39;</span><span class="p">)</span>  <span class="c1"># replace by your runtime provider</span>
+<span class="n">provider</span> <span class="o">=</span> <span class="n">IBMQ</span><span class="o">.</span><span class="n">get_provider</span><span class="p">(</span><span class="n">project</span><span class="o">=</span><span class="s2">&quot;qiskit-runtime&quot;</span><span class="p">)</span>  <span class="c1"># replace by your runtime provider</span>
 
-<span class="n">backend</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;ibmq_montreal&#39;</span><span class="p">)</span>  <span class="c1"># select a backend that supports the runtime</span>
+<span class="n">backend</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;ibmq_montreal&quot;</span><span class="p">)</span>  <span class="c1"># select a backend that supports the runtime</span>
 </pre></div>
 </div>
 </div>
-<p>Agora podemos configurar o <code class="docutils literal notranslate"><span class="pre">VQEProgram</span></code>. Nesta primeira versão, o otimizador deve ser fornecido como um dicionário; em versões futuras, você poderá passar o mesmo objeto otimizador do VQE tradicional.</p>
+<p>Now we can set up the <code class="docutils literal notranslate"><span class="pre">VQEClient</span></code>. In this first release, the optimizer must be provided as a dictionary, in future releases you’ll be able to pass the same optimizer object as in the traditional VQE.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">qiskit_nature.runtime</span> <span class="kn">import</span> <span class="n">VQEProgram</span>
+<span></span><span class="kn">from</span> <span class="nn">qiskit_nature.runtime</span> <span class="kn">import</span> <span class="n">VQEClient</span>
 
-<span class="c1"># currently the VQEProgram supports only &#39;SPSA&#39; and &#39;QN-SPSA&#39;</span>
+<span class="c1"># Pass an qiskit.algorithms.optimizer.Optimizer object (like the ``optimizer`` variable from before)</span>
+<span class="c1"># or SPSA/QN-SPSA as dictionary. Here we&#39;re using the dictionary version</span>
 <span class="n">optimizer</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;QN-SPSA&#39;</span><span class="p">,</span>  <span class="c1"># leverage the Quantum Natural SPSA</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;QN-SPSA&quot;</span><span class="p">,</span>  <span class="c1"># leverage the Quantum Natural SPSA</span>
     <span class="c1"># &#39;name&#39;: &#39;SPSA&#39;,  # set to ordinary SPSA</span>
-    <span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
-    <span class="s1">&#39;resamplings&#39;</span><span class="p">:</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="mi">100</span><span class="p">},</span>  <span class="c1"># 100 samples of the QFI for the first step, then 1 sample per step</span>
+    <span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="s2">&quot;resamplings&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="mi">100</span><span class="p">},</span>  <span class="c1"># 100 samples of the QFI for the first step, then 1 sample per step</span>
 <span class="p">}</span>
 
-<span class="n">runtime_vqe</span> <span class="o">=</span> <span class="n">VQEProgram</span><span class="p">(</span><span class="n">ansatz</span><span class="o">=</span><span class="n">ansatz</span><span class="p">,</span>
-                         <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span>
-                         <span class="n">initial_point</span><span class="o">=</span><span class="n">initial_point</span><span class="p">,</span>
-                         <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
-                         <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
-                         <span class="n">shots</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
-                         <span class="n">measurement_error_mitigation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># use a complete measurement fitter for error mitigation</span>
+<span class="n">runtime_vqe</span> <span class="o">=</span> <span class="n">VQEClient</span><span class="p">(</span>
+    <span class="n">ansatz</span><span class="o">=</span><span class="n">ansatz</span><span class="p">,</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span>
+    <span class="n">initial_point</span><span class="o">=</span><span class="n">initial_point</span><span class="p">,</span>
+    <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+    <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+    <span class="n">measurement_error_mitigation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>  <span class="c1"># use a complete measurement fitter for error mitigation</span>
 </pre></div>
 </div>
 </div>
@@ -773,7 +791,10 @@ Energy: -7.561492258661798
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Energy:&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">runtime_vqe_result</span><span class="o">.</span><span class="n">eigenenergies</span> <span class="o">+</span> <span class="n">runtime_vqe_result</span><span class="o">.</span><span class="n">nuclear_repulsion_energy</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+<span></span><span class="nb">print</span><span class="p">(</span>
+    <span class="s2">&quot;Energy:&quot;</span><span class="p">,</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">runtime_vqe_result</span><span class="o">.</span><span class="n">eigenenergies</span> <span class="o">+</span> <span class="n">runtime_vqe_result</span><span class="o">.</span><span class="n">nuclear_repulsion_energy</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -785,15 +806,16 @@ Energy: -7.561492258661798
 Energy: -7.575601255595115
 </pre></div></div>
 </div>
-<p>Se estivermos interessados no desenvolvimento da energia, o <code class="docutils literal notranslate"><span class="pre">VQEProgram</span></code> permite acesso ao histórico do otimizador, que contém a perda por iteração (junto com os parâmetros e um timestamp). Podemos acessar esses dados por meio do atributo <code class="docutils literal notranslate"><span class="pre">raw_result</span></code> do solucionador de estado fundamental.</p>
+<p>If we are interested in the development of the energy, the <code class="docutils literal notranslate"><span class="pre">VQEClient</span></code> allows access to the history of the optimizer, which contains the loss per iteration (along with the parameters and a timestamp). Note that this only holds for the SPSA and QN-SPSA optimizers. Otherwise you have to use a callback to the <code class="docutils literal notranslate"><span class="pre">VQEClient</span></code>, similar to the normal <code class="docutils literal notranslate"><span class="pre">VQE</span></code>.</p>
+<p>We can access this data via the <code class="docutils literal notranslate"><span class="pre">raw_result</span></code> attribute of the ground state solver.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vqeprogram_result</span> <span class="o">=</span> <span class="n">runtime_vqe_result</span><span class="o">.</span><span class="n">raw_result</span>
-<span class="n">history</span> <span class="o">=</span> <span class="n">vqeprogram_result</span><span class="o">.</span><span class="n">optimizer_history</span>
-<span class="n">loss</span> <span class="o">=</span> <span class="n">history</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span>
+<span></span><span class="n">runtime_result</span> <span class="o">=</span> <span class="n">runtime_vqe_result</span><span class="o">.</span><span class="n">raw_result</span>
+<span class="n">history</span> <span class="o">=</span> <span class="n">runtime_result</span><span class="o">.</span><span class="n">optimizer_history</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">history</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
@@ -804,18 +826,18 @@ Energy: -7.575601255595115
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;font.size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">14</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;font.size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">14</span>
 
 <span class="c1"># plot loss and reference value</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">loss</span> <span class="o">+</span> <span class="n">runtime_vqe_result</span><span class="o">.</span><span class="n">nuclear_repulsion_energy</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Runtime VQE&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">target_energy</span> <span class="o">+</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;tab:red&#39;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Target + 200mH&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">target_energy</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;tab:red&#39;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Target&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">loss</span> <span class="o">+</span> <span class="n">runtime_vqe_result</span><span class="o">.</span><span class="n">nuclear_repulsion_energy</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Runtime VQE&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">target_energy</span> <span class="o">+</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:red&quot;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Target + 200mH&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">target_energy</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:red&quot;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Target&quot;</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Iteration&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Energy [H]&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;VQE energy&#39;</span><span class="p">);</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Iteration&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Energy [H]&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;VQE energy&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
@@ -823,7 +845,7 @@ Energy: -7.575601255595115
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_07_leveraging_qiskit_runtime_23_0.png" src="../_images/tutorials_07_leveraging_qiskit_runtime_23_0.png" />
+<img alt="../_images/tutorials_07_leveraging_qiskit_runtime_24_0.png" src="../_images/tutorials_07_leveraging_qiskit_runtime_24_0.png" />
 </div>
 </div>
 <div class="nbinput nblast docutils container">
@@ -835,8 +857,9 @@ Energy: -7.575601255595115
 </pre></div>
 </div>
 </div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
              </article>
@@ -882,10 +905,13 @@ Energy: -7.575601255595115
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
 <li><a class="reference internal" href="#">Aproveitando o Qiskit Runtime</a><ul>
+<li><a class="reference internal" href="#Important:-Version-requirements"><em>Important: Version requirements</em></a><ul>
 <li><a class="reference internal" href="#Especificação-do-problema:-molécula-de-LiH">Especificação do problema: molécula de LiH</a></li>
 <li><a class="reference internal" href="#Solução-de-referência-clássica">Solução de referência clássica</a></li>
 <li><a class="reference internal" href="#VQE">VQE</a></li>
 <li><a class="reference internal" href="#Runtime-VQE">Runtime VQE</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

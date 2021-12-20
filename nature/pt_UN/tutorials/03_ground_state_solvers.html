@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="pt-UN" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Solucionadores de estado fundamental &mdash; Documentação Qiskit Nature 0.2.2</title>
+  <title>Solucionadores de estado fundamental &mdash; Documentação Qiskit Nature 0.3.0</title>
   
 
   
@@ -31,8 +32,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -175,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.2
+                  0.3.0
                 </div>
               
             
@@ -530,13 +531,13 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">Nota</p>
-<p>Esta página foi gerada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-nature/blob/stable/0.2/docs/tutorials/03_ground_state_solvers.ipynb">docs/tutorials/03_ground_state_solvers.ipynb</a>.</p>
+<p>Esta página foi gerada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-nature/blob/stable/0.3/docs/tutorials/03_ground_state_solvers.ipynb">docs/tutorials/03_ground_state_solvers.ipynb</a>.</p>
 </div>
-<div class="section" id="Solucionadores-de-estado-fundamental">
+<section id="Solucionadores-de-estado-fundamental">
 <h1>Solucionadores de estado fundamental<a class="headerlink" href="#Solucionadores-de-estado-fundamental" title="Link permanente para este título">¶</a></h1>
-<div class="section" id="Introdução">
+<section id="Introdução">
 <h2>Introdução<a class="headerlink" href="#Introdução" title="Link permanente para este título">¶</a></h2>
-<p><img alt="60e0f43c72b7418e9677824322f7379f" class="no-scaled-link" src="../_images/H2_gs.png" style="width: 200px;" /></p>
+<p><img alt="08b786d57237420bb69a27d99791c840" class="no-scaled-link" src="../_images/H2_gs.png" style="width: 200px;" /></p>
 <p>Neste tutorial iremos discutir a interface de cálculo do estado fundamental do Qiskit Nature. O objetivo é calcular o estado fundamental de um Hamiltoniano molecular. Este Hamiltoniano pode ser eletrônico ou vibracional. Para saber mais sobre a preparação do Hamiltoniano, confira os tutoriais Estrutura Eletrônica e Estrutura Vibracional.</p>
 <p>O primeiro passo é definir o sistema molecular. A seguir, pedimos a parte eletrônica de uma molécula de hidrogênio.</p>
 <div class="nbinput docutils container">
@@ -546,15 +547,20 @@ div.rendered_html tbody tr:hover {
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">Aer</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.drivers</span> <span class="kn">import</span> <span class="n">UnitsType</span><span class="p">,</span> <span class="n">Molecule</span>
-<span class="kn">from</span> <span class="nn">qiskit_nature.drivers.second_quantization</span> <span class="kn">import</span> <span class="n">ElectronicStructureDriverType</span><span class="p">,</span> <span class="n">ElectronicStructureMoleculeDriver</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.drivers.second_quantization</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ElectronicStructureDriverType</span><span class="p">,</span>
+    <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.problems.second_quantization</span> <span class="kn">import</span> <span class="n">ElectronicStructureProblem</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.converters.second_quantization</span> <span class="kn">import</span> <span class="n">QubitConverter</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.mappers.second_quantization</span> <span class="kn">import</span> <span class="n">JordanWignerMapper</span>
 
-<span class="n">molecule</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">geometry</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]],</span>
-                              <span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.735</span><span class="p">]]],</span>
-                     <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">multiplicity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">driver</span> <span class="o">=</span> <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">(</span><span class="n">molecule</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;sto3g&#39;</span><span class="p">,</span> <span class="n">driver_type</span><span class="o">=</span><span class="n">ElectronicStructureDriverType</span><span class="o">.</span><span class="n">PYSCF</span><span class="p">)</span>
+<span class="n">molecule</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="p">[[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.735</span><span class="p">]]],</span> <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">multiplicity</span><span class="o">=</span><span class="mi">1</span>
+<span class="p">)</span>
+<span class="n">driver</span> <span class="o">=</span> <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">(</span>
+    <span class="n">molecule</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto3g&quot;</span><span class="p">,</span> <span class="n">driver_type</span><span class="o">=</span><span class="n">ElectronicStructureDriverType</span><span class="o">.</span><span class="n">PYSCF</span>
+<span class="p">)</span>
 
 <span class="n">es_problem</span> <span class="o">=</span> <span class="n">ElectronicStructureProblem</span><span class="p">(</span><span class="n">driver</span><span class="p">)</span>
 <span class="n">qubit_converter</span> <span class="o">=</span> <span class="n">QubitConverter</span><span class="p">(</span><span class="n">JordanWignerMapper</span><span class="p">())</span>
@@ -578,8 +584,8 @@ Couldn&#39;t find cython becke routine
   h5py.get_config().default_file_mode = &#39;a&#39;
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="O-Solucionador">
+</section>
+<section id="O-Solucionador">
 <h2>O Solucionador<a class="headerlink" href="#O-Solucionador" title="Link permanente para este título">¶</a></h2>
 <p>Então precisamos definir um solucionador. O solucionador é o algoritmo através do qual o estado fundamental é computado.</p>
 <p>Vamos começar com um exemplo puramente clássico: o NumPy minimum eigensolver. Esse algoritmo diagonaliza exatamente o Hamiltoniano. Embora escalone mal, ele pode ser usado em sistemas pequenos para verificar os resultados dos algoritmos quânticos.</p>
@@ -595,7 +601,7 @@ Couldn&#39;t find cython becke routine
 </div>
 </div>
 <p>Para encontrar o estado fundamental que poderiamos também usar o algoritmo Variational Quantum Eigensolver (VQE). Os algoritmos de VQE funcionam trocando informações entre um computador clássico e um quântico como retratado na figura a seguir.</p>
-<p><img alt="3306ad8f6863420f8fc9b64ee6a9682e" class="no-scaled-link" src="../_images/vqe.png" style="width: 600px;" /></p>
+<p><img alt="56294e8ed91b454e856c05b0d59d72b2" class="no-scaled-link" src="../_images/vqe.png" style="width: 600px;" /></p>
 <p>Vamos inicializar um solucionador VQE.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
@@ -607,7 +613,7 @@ Couldn&#39;t find cython becke routine
 <span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">QuantumInstance</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.algorithms</span> <span class="kn">import</span> <span class="n">VQEUCCFactory</span>
 
-<span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;aer_simulator_statevector&#39;</span><span class="p">))</span>
+<span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;aer_simulator_statevector&quot;</span><span class="p">))</span>
 <span class="n">vqe_solver</span> <span class="o">=</span> <span class="n">VQEUCCFactory</span><span class="p">(</span><span class="n">quantum_instance</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -627,16 +633,23 @@ Couldn&#39;t find cython becke routine
 <span></span><span class="kn">from</span> <span class="nn">qiskit.algorithms</span> <span class="kn">import</span> <span class="n">VQE</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">TwoLocal</span>
 
-<span class="n">tl_circuit</span> <span class="o">=</span> <span class="n">TwoLocal</span><span class="p">(</span><span class="n">rotation_blocks</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;rx&#39;</span><span class="p">],</span> <span class="n">entanglement_blocks</span> <span class="o">=</span> <span class="s1">&#39;cz&#39;</span><span class="p">,</span>
-                      <span class="n">entanglement</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">parameter_prefix</span> <span class="o">=</span> <span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">tl_circuit</span> <span class="o">=</span> <span class="n">TwoLocal</span><span class="p">(</span>
+    <span class="n">rotation_blocks</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">,</span> <span class="s2">&quot;rx&quot;</span><span class="p">],</span>
+    <span class="n">entanglement_blocks</span><span class="o">=</span><span class="s2">&quot;cz&quot;</span><span class="p">,</span>
+    <span class="n">entanglement</span><span class="o">=</span><span class="s2">&quot;full&quot;</span><span class="p">,</span>
+    <span class="n">reps</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">parameter_prefix</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span>
+<span class="p">)</span>
 
-<span class="n">another_solver</span> <span class="o">=</span> <span class="n">VQE</span><span class="p">(</span><span class="n">ansatz</span> <span class="o">=</span> <span class="n">tl_circuit</span><span class="p">,</span>
-                     <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;aer_simulator_statevector&#39;</span><span class="p">)))</span>
+<span class="n">another_solver</span> <span class="o">=</span> <span class="n">VQE</span><span class="p">(</span>
+    <span class="n">ansatz</span><span class="o">=</span><span class="n">tl_circuit</span><span class="p">,</span>
+    <span class="n">quantum_instance</span><span class="o">=</span><span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;aer_simulator_statevector&quot;</span><span class="p">)),</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="O-cálculo-e-os-resultados">
+</section>
+<section id="O-cálculo-e-os-resultados">
 <h2>O cálculo e os resultados<a class="headerlink" href="#O-cálculo-e-os-resultados" title="Link permanente para este título">¶</a></h2>
 <p>Estamos agora prontos para executar o cálculo.</p>
 <div class="nbinput docutils container">
@@ -721,8 +734,8 @@ Couldn&#39;t find cython becke routine
 
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Usando-uma-função-de-filtro">
+</section>
+<section id="Usando-uma-função-de-filtro">
 <h2>Usando uma função de filtro<a class="headerlink" href="#Usando-uma-função-de-filtro" title="Link permanente para este título">¶</a></h2>
 <p>Às vezes, o verdadeiro estado fundamental do Hamiltoniano não é de interesse porque está em um setor de simetria diferente do espaço de Hilbert. Nesse caso o autorresolvedor do Numpy pode usar uma função de filtro para retornar apenas os autoestados com, por exemplo, o número correto de partículas. Isso é de particular importância no caso de cálculos de estrutura vibracional, onde o verdadeiro estado fundamental do Hamiltoniano é o vácuo quântico. Um função de filtro padrão para verificar o número de partículas é implementada nas diferentes transformações e pode ser usada como</p>
 <div class="nbinput docutils container">
@@ -735,7 +748,7 @@ Couldn&#39;t find cython becke routine
 <span class="kn">from</span> <span class="nn">qiskit_nature.problems.second_quantization</span> <span class="kn">import</span> <span class="n">VibrationalStructureProblem</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.mappers.second_quantization</span> <span class="kn">import</span> <span class="n">DirectMapper</span>
 
-<span class="n">driver</span> <span class="o">=</span> <span class="n">GaussianForcesDriver</span><span class="p">(</span><span class="n">logfile</span><span class="o">=</span><span class="s1">&#39;aux_files/CO2_freq_B3LYP_ccpVDZ.log&#39;</span><span class="p">)</span>
+<span class="n">driver</span> <span class="o">=</span> <span class="n">GaussianForcesDriver</span><span class="p">(</span><span class="n">logfile</span><span class="o">=</span><span class="s2">&quot;aux_files/CO2_freq_B3LYP_ccpVDZ.log&quot;</span><span class="p">)</span>
 
 <span class="n">vib_problem</span> <span class="o">=</span> <span class="n">VibrationalStructureProblem</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="n">num_modals</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">truncation_order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
@@ -751,7 +764,7 @@ Couldn&#39;t find cython becke routine
 <span class="n">result_w</span> <span class="o">=</span> <span class="n">gsc_w</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">vib_problem</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">result_wo</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result_w</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -782,6 +795,7 @@ The number of occupied modals is
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -800,8 +814,8 @@ The number of occupied modals is
 <div class="output_area rendered_html docutils container">
 <div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2021.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

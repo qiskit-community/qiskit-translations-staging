@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="es-UN" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Optimización cuántica de arranque en caliente (warm-starting) &mdash; documentación de Qiskit Optimization - 0.2.3</title>
+  <title>Optimización cuántica de arranque en caliente (warm-starting) &mdash; documentación de Qiskit Optimization - 0.3.0</title>
   
 
   
@@ -27,10 +28,12 @@
 
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -173,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.3
+                  0.3.0
                 </div>
               
             
@@ -528,11 +531,11 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">Nota</p>
-<p>Esta página fue generada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.2/docs/tutorials/10_warm_start_qaoa.ipynb">docs/tutorials/10_warm_start_qaoa.ipynb</a>.</p>
+<p>Esta página fue generada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/10_warm_start_qaoa.ipynb">docs/tutorials/10_warm_start_qaoa.ipynb</a>.</p>
 </div>
-<div class="section" id="Optimización-cuántica-de-arranque-en-caliente-(warm-starting)">
+<section id="Optimización-cuántica-de-arranque-en-caliente-(warm-starting)">
 <h1>Optimización cuántica de arranque en caliente (warm-starting)<a class="headerlink" href="#Optimización-cuántica-de-arranque-en-caliente-(warm-starting)" title="Enlazar permanentemente con este título">¶</a></h1>
-<div class="section" id="Introducción">
+<section id="Introducción">
 <h2>Introducción<a class="headerlink" href="#Introducción" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>Los problemas de optimización con variables enteras o restricciones a menudo son difíciles de resolver. Por ejemplo, el problema de Optimización Binaria Cuadrática Sin Restricciones (Quadratic Unconstrained Binary Optimization, QUBO), es decir,</p>
 <p><span class="math">\begin{align}
@@ -543,8 +546,8 @@ div.rendered_html tbody tr:hover {
 \min_{x\in[0,1]^n}x^T\Sigma x,
 \end{align}</span></p>
 <p>que se vuelve fácil de resolver como <span class="math notranslate nohighlight">\(x\)</span> ahora representa <span class="math notranslate nohighlight">\(n\)</span> variables continuas restringidas al rango <span class="math notranslate nohighlight">\([0, 1]\)</span>. Estas relajaciones pueden aprovecharse para arrancar en caliente (warm-start) algoritmos de optimización cuántica como se muestra en [1].</p>
-</div>
-<div class="section" id="Referencias">
+</section>
+<section id="Referencias">
 <h2>Referencias<a class="headerlink" href="#Referencias" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>[1] <a class="reference external" href="http://arxiv.org/abs/2009.10095">D. J. Egger, J Marecek, S. Woerner, Warm-starting quantum optimization, arXiv:2009.10095</a></p>
 <div class="nbinput nblast docutils container">
@@ -571,8 +574,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Preliminares:-relajando-QUBOs">
+</section>
+<section id="Preliminares:-relajando-QUBOs">
 <h2>Preliminares: relajando QUBOs<a class="headerlink" href="#Preliminares:-relajando-QUBOs" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>Primero, mostramos cómo relajar un QUBO construido con una matriz semi-definida positiva para obtener un QP fácil de resolver.</p>
 <div class="nbinput nblast docutils container">
@@ -581,19 +584,22 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="k">def</span> <span class="nf">create_problem</span><span class="p">(</span><span class="n">mu</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">total</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuadraticProgram</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot; Solve the quadratic program using docplex. &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Solve the quadratic program using docplex.&quot;&quot;&quot;</span>
 
     <span class="n">mdl</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">mdl</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s1">&#39;x</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sigma</span><span class="p">))]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">mdl</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s2">&quot;x</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sigma</span><span class="p">))]</span>
 
-    <span class="n">objective</span> <span class="o">=</span> <span class="n">mdl</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">mu</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mu</span><span class="p">))])</span>
-    <span class="n">objective</span> <span class="o">-=</span> <span class="mi">2</span><span class="o">*</span><span class="n">mdl</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">sigma</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mu</span><span class="p">))</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mu</span><span class="p">))])</span>
+    <span class="n">objective</span> <span class="o">=</span> <span class="n">mdl</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">mu</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mu</span><span class="p">))])</span>
+    <span class="n">objective</span> <span class="o">-=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">mdl</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">sigma</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mu</span><span class="p">))</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mu</span><span class="p">))]</span>
+    <span class="p">)</span>
     <span class="n">mdl</span><span class="o">.</span><span class="n">maximize</span><span class="p">(</span><span class="n">objective</span><span class="p">)</span>
     <span class="n">cost</span> <span class="o">=</span> <span class="n">mdl</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
     <span class="n">mdl</span><span class="o">.</span><span class="n">add_constraint</span><span class="p">(</span><span class="n">cost</span> <span class="o">==</span> <span class="n">total</span><span class="p">)</span>
 
     <span class="n">qp</span> <span class="o">=</span> <span class="n">from_docplex_mp</span><span class="p">(</span><span class="n">mdl</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">qp</span>
+
 
 <span class="k">def</span> <span class="nf">relax_problem</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuadraticProgram</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Change all variables to continuous.&quot;&quot;&quot;</span>
@@ -611,13 +617,17 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">3.418</span><span class="p">,</span>  <span class="mf">2.0913</span><span class="p">,</span>  <span class="mf">6.2415</span><span class="p">,</span>  <span class="mf">4.4436</span><span class="p">,</span> <span class="mf">10.892</span> <span class="p">,</span>  <span class="mf">3.4051</span><span class="p">])</span>
-<span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span> <span class="mf">1.07978412</span><span class="p">,</span>  <span class="mf">0.00768914</span><span class="p">,</span>  <span class="mf">0.11227606</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.06842969</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.01016793</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00839765</span><span class="p">],</span>
-                  <span class="p">[</span> <span class="mf">0.00768914</span><span class="p">,</span>  <span class="mf">0.10922887</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.03043424</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.0020045</span> <span class="p">,</span>  <span class="mf">0.00670929</span><span class="p">,</span> <span class="mf">0.0147937</span> <span class="p">],</span>
-                  <span class="p">[</span> <span class="mf">0.11227606</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.03043424</span><span class="p">,</span>  <span class="mf">0.985353</span>  <span class="p">,</span>  <span class="mf">0.02307313</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.05249785</span><span class="p">,</span> <span class="mf">0.00904119</span><span class="p">],</span>
-                  <span class="p">[</span><span class="o">-</span><span class="mf">0.06842969</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.0020045</span> <span class="p">,</span>  <span class="mf">0.02307313</span><span class="p">,</span>  <span class="mf">0.6043817</span> <span class="p">,</span>  <span class="mf">0.03740115</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00945322</span><span class="p">],</span>
-                  <span class="p">[</span><span class="o">-</span><span class="mf">0.01016793</span><span class="p">,</span>  <span class="mf">0.00670929</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.05249785</span><span class="p">,</span>  <span class="mf">0.03740115</span><span class="p">,</span>  <span class="mf">0.79839634</span><span class="p">,</span> <span class="mf">0.07616951</span><span class="p">],</span>
-                  <span class="p">[</span><span class="o">-</span><span class="mf">0.00839765</span><span class="p">,</span>  <span class="mf">0.0147937</span> <span class="p">,</span>  <span class="mf">0.00904119</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00945322</span><span class="p">,</span>  <span class="mf">0.07616951</span><span class="p">,</span> <span class="mf">1.08464544</span><span class="p">]])</span>
+<span></span><span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">3.418</span><span class="p">,</span> <span class="mf">2.0913</span><span class="p">,</span> <span class="mf">6.2415</span><span class="p">,</span> <span class="mf">4.4436</span><span class="p">,</span> <span class="mf">10.892</span><span class="p">,</span> <span class="mf">3.4051</span><span class="p">])</span>
+<span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">[</span><span class="mf">1.07978412</span><span class="p">,</span> <span class="mf">0.00768914</span><span class="p">,</span> <span class="mf">0.11227606</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.06842969</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.01016793</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00839765</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.00768914</span><span class="p">,</span> <span class="mf">0.10922887</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.03043424</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.0020045</span><span class="p">,</span> <span class="mf">0.00670929</span><span class="p">,</span> <span class="mf">0.0147937</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.11227606</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.03043424</span><span class="p">,</span> <span class="mf">0.985353</span><span class="p">,</span> <span class="mf">0.02307313</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.05249785</span><span class="p">,</span> <span class="mf">0.00904119</span><span class="p">],</span>
+        <span class="p">[</span><span class="o">-</span><span class="mf">0.06842969</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.0020045</span><span class="p">,</span> <span class="mf">0.02307313</span><span class="p">,</span> <span class="mf">0.6043817</span><span class="p">,</span> <span class="mf">0.03740115</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00945322</span><span class="p">],</span>
+        <span class="p">[</span><span class="o">-</span><span class="mf">0.01016793</span><span class="p">,</span> <span class="mf">0.00670929</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.05249785</span><span class="p">,</span> <span class="mf">0.03740115</span><span class="p">,</span> <span class="mf">0.79839634</span><span class="p">,</span> <span class="mf">0.07616951</span><span class="p">],</span>
+        <span class="p">[</span><span class="o">-</span><span class="mf">0.00839765</span><span class="p">,</span> <span class="mf">0.0147937</span><span class="p">,</span> <span class="mf">0.00904119</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00945322</span><span class="p">,</span> <span class="mf">0.07616951</span><span class="p">,</span> <span class="mf">1.08464544</span><span class="p">],</span>
+    <span class="p">]</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -780,11 +790,11 @@ status: SUCCESS
  0.14438904470168346]
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="QAOA">
+</section>
+<section id="QAOA">
 <h2>QAOA<a class="headerlink" href="#QAOA" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>Aquí, ilustramos cómo arrancar en caliente (wamr-start) el algoritmo de optimización aproximada cuántica (quantum approximate optimization algorithm, QAOA) aprovechando el problema relajado que se muestra arriba.</p>
-<div class="section" id="QAOA-estándar">
+<section id="QAOA-estándar">
 <h3>QAOA estándar<a class="headerlink" href="#QAOA-estándar" title="Enlazar permanentemente con este título">¶</a></h3>
 <p>Primero, usamos QAOA estándar para resolver el QUBO. Para hacer esto, convertimos QUBO a la clase QuadraticProgram de Qiskit (ten en cuenta que el problema resultante sigue siendo un problema binario).</p>
 <div class="nbinput nblast docutils container">
@@ -793,10 +803,12 @@ status: SUCCESS
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">12345</span>
-<span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">BasicAer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;statevector_simulator&#39;</span><span class="p">),</span>
-                                   <span class="n">seed_simulator</span><span class="o">=</span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
-                                   <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span>
-<span class="n">qaoa_mes</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span><span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span> <span class="n">initial_point</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">])</span>
+<span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span>
+    <span class="n">BasicAer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;statevector_simulator&quot;</span><span class="p">),</span>
+    <span class="n">seed_simulator</span><span class="o">=</span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
+    <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">qaoa_mes</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span><span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span> <span class="n">initial_point</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
 <span class="n">exact_mes</span> <span class="o">=</span> <span class="n">NumPyMinimumEigensolver</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -830,8 +842,8 @@ optimal value: [0. 0. 1. 1. 1. 0.]
 status: SUCCESS
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="QAOA-de-arranque-en-caliente-(warm-start)">
+</section>
+<section id="QAOA-de-arranque-en-caliente-(warm-start)">
 <h3>QAOA de arranque en caliente (warm-start)<a class="headerlink" href="#QAOA-de-arranque-en-caliente-(warm-start)" title="Enlazar permanentemente con este título">¶</a></h3>
 <p>A continuación, comparamos este resultado con un QAOA de arranque en caliente (warm-start) en el que usamos la solución para la relajación continua del problema. Primero, creamos el estado inicial</p>
 <p><span class="math">\begin{align}
@@ -845,13 +857,13 @@ status: SUCCESS
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
 
-<span class="n">thetas</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">c_star</span><span class="p">))</span> <span class="k">for</span> <span class="n">c_star</span> <span class="ow">in</span> <span class="n">c_stars</span><span class="p">]</span>
+<span class="n">thetas</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">c_star</span><span class="p">))</span> <span class="k">for</span> <span class="n">c_star</span> <span class="ow">in</span> <span class="n">c_stars</span><span class="p">]</span>
 
 <span class="n">init_qc</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sigma</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">theta</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">thetas</span><span class="p">):</span>
     <span class="n">init_qc</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
 
-<span class="n">init_qc</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;mpl&#39;</span><span class="p">)</span>
+<span class="n">init_qc</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s2">&quot;mpl&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -879,15 +891,15 @@ H_{M,i}^{(ws)}=
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Parameter</span>
 
-<span class="n">beta</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;β&#39;</span><span class="p">)</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;β&quot;</span><span class="p">)</span>
 
 <span class="n">ws_mixer</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sigma</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">theta</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">thetas</span><span class="p">):</span>
     <span class="n">ws_mixer</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="o">-</span><span class="n">theta</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
-    <span class="n">ws_mixer</span><span class="o">.</span><span class="n">rz</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">beta</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+    <span class="n">ws_mixer</span><span class="o">.</span><span class="n">rz</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">beta</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
     <span class="n">ws_mixer</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
 
-<span class="n">ws_mixer</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;mpl&#39;</span><span class="p">)</span>
+<span class="n">ws_mixer</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s2">&quot;mpl&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -905,10 +917,12 @@ H_{M,i}^{(ws)}=
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ws_qaoa_mes</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span><span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span>
-                   <span class="n">initial_state</span><span class="o">=</span><span class="n">init_qc</span><span class="p">,</span>
-                   <span class="n">mixer</span><span class="o">=</span><span class="n">ws_mixer</span><span class="p">,</span>
-                   <span class="n">initial_point</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">])</span>
+<span></span><span class="n">ws_qaoa_mes</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span>
+    <span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span>
+    <span class="n">initial_state</span><span class="o">=</span><span class="n">init_qc</span><span class="p">,</span>
+    <span class="n">mixer</span><span class="o">=</span><span class="n">ws_mixer</span><span class="p">,</span>
+    <span class="n">initial_point</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -941,8 +955,8 @@ optimal value: [0. 0. 1. 1. 1. 0.]
 status: SUCCESS
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Análisis">
+</section>
+<section id="Análisis">
 <h3>Análisis<a class="headerlink" href="#Análisis" title="Enlazar permanentemente con este título">¶</a></h3>
 <p>Ambos resultados parecen dar el mismo resultado. Sin embargo, cuando observamos la distribución subyacente de probabilidades observamos que el arranque en caliente (warm-start) de QAOA tiene una probabilidad mucho mayor de muestrear la solución óptima.</p>
 <div class="nbinput docutils container">
@@ -954,11 +968,12 @@ status: SUCCESS
     <span class="n">qaoa_res</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-            <span class="n">qaoa_res</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">_</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="p">]),</span> <span class="n">s</span><span class="o">.</span><span class="n">fval</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">probability</span><span class="p">))</span>
+            <span class="n">qaoa_res</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">_</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="p">]),</span> <span class="n">s</span><span class="o">.</span><span class="n">fval</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">probability</span><span class="p">))</span>
 
     <span class="n">res</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">qaoa_res</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])[</span><span class="mi">0</span><span class="p">:</span><span class="n">max_len</span><span class="p">]</span>
 
-    <span class="k">return</span> <span class="p">[(</span><span class="n">_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;: value: </span><span class="si">{</span><span class="n">_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">, probability: </span><span class="si">{</span><span class="mf">1e2</span><span class="o">*</span><span class="n">_</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">%&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">res</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[(</span><span class="n">_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;: value: </span><span class="si">{</span><span class="n">_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">, probability: </span><span class="si">{</span><span class="mf">1e2</span><span class="o">*</span><span class="n">_</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">res</span><span class="p">]</span>
+
 
 <span class="n">format_qaoa_samples</span><span class="p">(</span><span class="n">qaoa_result</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
 </pre></div>
@@ -1005,9 +1020,9 @@ status: SUCCESS
  &#39;100011: value: 11.559, probability: 0.0%&#39;]
 </pre></div></div>
 </div>
-</div>
-</div>
-<div class="section" id="id2">
+</section>
+</section>
+<section id="id2">
 <h2>QAOA de arranque en caliente (warm-start)<a class="headerlink" href="#id2" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>Las características del inicio en caliente (warm-start) anteriores están disponibles en el módulo de optimización de Qiskit como un optimizador único llamado <code class="docutils literal notranslate"><span class="pre">WarmStartQAOAOptimizer</span></code> que se ilustra a continuación. Este solucionador resolverá un QUBO con un QAOA de arranque en caliente (warm-start). Calcula <span class="math notranslate nohighlight">\(c^*\)</span> relajando el problema. Este comportamiento se controla configurando <code class="docutils literal notranslate"><span class="pre">relax_for_pre_solver</span></code> en <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
 <div class="nbinput nblast docutils container">
@@ -1024,9 +1039,10 @@ status: SUCCESS
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">qaoa_mes</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span><span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span> <span class="n">initial_point</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">])</span>
-<span class="n">ws_qaoa</span> <span class="o">=</span> <span class="n">WarmStartQAOAOptimizer</span><span class="p">(</span><span class="n">pre_solver</span><span class="o">=</span><span class="n">CplexOptimizer</span><span class="p">(),</span> <span class="n">relax_for_pre_solver</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                 <span class="n">qaoa</span><span class="o">=</span><span class="n">qaoa_mes</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span></span><span class="n">qaoa_mes</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span><span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span> <span class="n">initial_point</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+<span class="n">ws_qaoa</span> <span class="o">=</span> <span class="n">WarmStartQAOAOptimizer</span><span class="p">(</span>
+    <span class="n">pre_solver</span><span class="o">=</span><span class="n">CplexOptimizer</span><span class="p">(),</span> <span class="n">relax_for_pre_solver</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">qaoa</span><span class="o">=</span><span class="n">qaoa_mes</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.0</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1080,6 +1096,7 @@ status: SUCCESS
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -1107,8 +1124,8 @@ status: SUCCESS
 </pre></div>
 </div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>
@@ -1178,6 +1195,7 @@ status: SUCCESS
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
          <script src="../_static/doctools.js"></script>
@@ -1185,8 +1203,8 @@ status: SUCCESS
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "tex2jax_ignore|mathjax_ignore|document", "processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
+         <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+         <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
      
 
   

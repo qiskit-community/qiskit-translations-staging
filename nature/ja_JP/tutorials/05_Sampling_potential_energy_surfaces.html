@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="ja-JP" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ポテンシャル・エネルギー面のサンプリング &mdash; Qiskit Nature 0.2.2 ドキュメント</title>
+  <title>ポテンシャル・エネルギー面のサンプリング &mdash; Qiskit Nature 0.3.0 ドキュメント</title>
   
 
   
@@ -31,8 +32,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -175,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.2
+                  0.3.0
                 </div>
               
             
@@ -530,11 +531,11 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">注釈</p>
-<p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-nature/blob/stable/0.2/docs/tutorials/05_Sampling_potential_energy_surfaces.ipynb">docs/tutorials/05_Sampling_potential_energy_surfaces.ipynb</a> から生成されました。</p>
+<p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-nature/blob/stable/0.3/docs/tutorials/05_Sampling_potential_energy_surfaces.ipynb">docs/tutorials/05_Sampling_potential_energy_surfaces.ipynb</a> から生成されました。</p>
 </div>
-<div class="section" id="ポテンシャル・エネルギー面のサンプリング">
+<section id="ポテンシャル・エネルギー面のサンプリング">
 <h1>ポテンシャル・エネルギー面のサンプリング<a class="headerlink" href="#ポテンシャル・エネルギー面のサンプリング" title="このヘッドラインへのパーマリンク">¶</a></h1>
-<div class="section" id="はじめに">
+<section id="はじめに">
 <h2>はじめに<a class="headerlink" href="#はじめに" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>この対話的ノートブックでは、 Qiskit Nature の PES (Potential Energy Surface) サンプラー・アルゴリズムを用いて、分子の解離プロファイルを生成する方法を実演します。 Born-Oppenheimer ポテンシャル・エネルギー面 (BOPES) を使用し、変分量子固有ソルバー (VQE) を用いて、PES を計算する際の関数評価の回数を減らすために、ブートストラップと外挿を利用する方法を示します。</p>
 <div class="nbinput nblast docutils container">
@@ -564,11 +565,15 @@ div.rendered_html tbody tr:hover {
 <span class="kn">from</span> <span class="nn">qiskit_nature.mappers.second_quantization</span> <span class="kn">import</span> <span class="n">JordanWignerMapper</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.algorithms</span> <span class="kn">import</span> <span class="n">GroundStateEigensolver</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.drivers</span> <span class="kn">import</span> <span class="n">UnitsType</span><span class="p">,</span> <span class="n">Molecule</span>
-<span class="kn">from</span> <span class="nn">qiskit_nature.drivers.second_quantization</span> <span class="kn">import</span> <span class="n">ElectronicStructureDriverType</span><span class="p">,</span> <span class="n">ElectronicStructureMoleculeDriver</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.drivers.second_quantization</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ElectronicStructureDriverType</span><span class="p">,</span>
+    <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.algorithms.pes_samplers</span> <span class="kn">import</span> <span class="n">BOPESSampler</span><span class="p">,</span> <span class="n">Extrapolator</span>
 
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">RankWarning</span><span class="p">)</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">RankWarning</span><span class="p">)</span>
 
 <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">75</span>
 </pre></div>
@@ -581,10 +586,10 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">stretch1</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">Molecule</span><span class="o">.</span><span class="n">absolute_stretching</span><span class="p">,</span> <span class="n">atom_pair</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-<span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">geometry</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]),</span>
-                        <span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])],</span>
-                       <span class="n">degrees_of_freedom</span><span class="o">=</span><span class="p">[</span><span class="n">stretch1</span><span class="p">],</span>
-                       <span class="p">)</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]),</span> <span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])],</span>
+    <span class="n">degrees_of_freedom</span><span class="o">=</span><span class="p">[</span><span class="n">stretch1</span><span class="p">],</span>
+<span class="p">)</span>
 
 <span class="c1"># pass molecule to PSYCF driver</span>
 <span class="n">driver</span> <span class="o">=</span> <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">driver_type</span><span class="o">=</span><span class="n">ElectronicStructureDriverType</span><span class="o">.</span><span class="n">PYSCF</span><span class="p">)</span>
@@ -608,7 +613,7 @@ div.rendered_html tbody tr:hover {
 [(&#39;H&#39;, [0.0, 0.0, 0.0]), (&#39;H&#39;, [0.0, 0.0, 0.3])]
 </pre></div></div>
 </div>
-<div class="section" id="absolute_stretching-自由度に沿った分子の摂動">
+<section id="absolute_stretching-自由度に沿った分子の摂動">
 <h3>absolute_stretching 自由度に沿った分子の摂動<a class="headerlink" href="#absolute_stretching-自由度に沿った分子の摂動" title="このヘッドラインへのパーマリンク">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -632,12 +637,12 @@ div.rendered_html tbody tr:hover {
 [(&#39;H&#39;, [0.0, 0.0, 0.0]), (&#39;H&#39;, [0.0, 0.0, 0.8999999999999999])]
 </pre></div></div>
 </div>
-</div>
-</div>
-<div class="section" id="BOPES-サンプラーを用いて、結合解離プロファイルを計算する">
+</section>
+</section>
+<section id="BOPES-サンプラーを用いて、結合解離プロファイルを計算する">
 <h2>BOPES サンプラーを用いて、結合解離プロファイルを計算する<a class="headerlink" href="#BOPES-サンプラーを用いて、結合解離プロファイルを計算する" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>ここでは、BOPES サンプラーと呼ばれる組み込み型に、分子の情報と VQE を渡します。 BOPES サンプラーにより、指定された自由度や点の組について、ポテンシャル・エネルギー面の計算が可能できます。</p>
-<div class="section" id="まず、ブートストラップなしの場合とありの場合を比較します。">
+<section id="まず、ブートストラップなしの場合とありの場合を比較します。">
 <h3>まず、ブートストラップなしの場合とありの場合を比較します。<a class="headerlink" href="#まず、ブートストラップなしの場合とありの場合を比較します。" title="このヘッドラインへのパーマリンク">¶</a></h3>
 <p>BOPES サンプラーをブートストラップするということには、与えられた自由度、ここでは r (例: 原子間距離) 、を次の自由度、例えば r + <span class="math notranslate nohighlight">\(\epsilon\)</span> における VQE の初期点として、最適な変分パラメーターを用いることが含まれます。デフォルトでは、bootstrapping が True に設定されている場合、それ以前の全ての最適パラメーターが次の実行で初期点として使用されます。</p>
 <div class="nbinput nblast docutils container">
@@ -648,7 +653,7 @@ div.rendered_html tbody tr:hover {
 <span></span><span class="n">es_problem</span> <span class="o">=</span> <span class="n">ElectronicStructureProblem</span><span class="p">(</span><span class="n">driver</span><span class="p">)</span>
 
 <span class="n">qubit_converter</span> <span class="o">=</span> <span class="n">QubitConverter</span><span class="p">(</span><span class="n">JordanWignerMapper</span><span class="p">())</span>
-<span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;aer_simulator_statevector&#39;</span><span class="p">))</span>
+<span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;aer_simulator_statevector&quot;</span><span class="p">))</span>
 <span class="n">solver</span> <span class="o">=</span> <span class="n">VQE</span><span class="p">(</span><span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">)</span>
 
 <span class="n">me_gsc</span> <span class="o">=</span> <span class="n">GroundStateEigensolver</span><span class="p">(</span><span class="n">qubit_converter</span><span class="p">,</span> <span class="n">solver</span><span class="p">)</span>
@@ -661,10 +666,10 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">distance1</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">Molecule</span><span class="o">.</span><span class="n">absolute_distance</span><span class="p">,</span> <span class="n">atom_pair</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-<span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">geometry</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]),</span>
-                        <span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])],</span>
-                       <span class="n">degrees_of_freedom</span><span class="o">=</span><span class="p">[</span><span class="n">distance1</span><span class="p">],</span>
-                       <span class="p">)</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]),</span> <span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])],</span>
+    <span class="n">degrees_of_freedom</span><span class="o">=</span><span class="p">[</span><span class="n">distance1</span><span class="p">],</span>
+<span class="p">)</span>
 
 <span class="c1"># pass molecule to PSYCF driver</span>
 <span class="n">driver</span> <span class="o">=</span> <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">driver_type</span><span class="o">=</span><span class="n">ElectronicStructureDriverType</span><span class="o">.</span><span class="n">PYSCF</span><span class="p">)</span>
@@ -674,29 +679,25 @@ div.rendered_html tbody tr:hover {
 
 <span class="c1"># Specify degree of freedom (points of interest)</span>
 <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
-<span class="n">results_full</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># full dictionary of results for each condition</span>
-<span class="n">results</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># dictionary of (point,energy) results for each condition</span>
-<span class="n">conditions</span> <span class="o">=</span> <span class="p">{</span><span class="kc">False</span><span class="p">:</span> <span class="s1">&#39;no bootstrapping&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">:</span> <span class="s1">&#39;bootstrapping&#39;</span><span class="p">}</span>
+<span class="n">results_full</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># full dictionary of results for each condition</span>
+<span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># dictionary of (point,energy) results for each condition</span>
+<span class="n">conditions</span> <span class="o">=</span> <span class="p">{</span><span class="kc">False</span><span class="p">:</span> <span class="s2">&quot;no bootstrapping&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">:</span> <span class="s2">&quot;bootstrapping&quot;</span><span class="p">}</span>
 
 
 <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">bootstrap</span> <span class="ow">in</span> <span class="n">conditions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="c1"># define instance to sampler</span>
-    <span class="n">bs</span> <span class="o">=</span> <span class="n">BOPESSampler</span><span class="p">(</span>
-        <span class="n">gss</span><span class="o">=</span><span class="n">me_gsc</span>
-        <span class="p">,</span><span class="n">bootstrap</span><span class="o">=</span><span class="n">value</span>
-        <span class="p">,</span><span class="n">num_bootstrap</span><span class="o">=</span><span class="kc">None</span>
-        <span class="p">,</span><span class="n">extrapolator</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">bs</span> <span class="o">=</span> <span class="n">BOPESSampler</span><span class="p">(</span><span class="n">gss</span><span class="o">=</span><span class="n">me_gsc</span><span class="p">,</span> <span class="n">bootstrap</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">num_bootstrap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extrapolator</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="c1"># execute</span>
-    <span class="n">res</span> <span class="o">=</span> <span class="n">bs</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">es_problem</span><span class="p">,</span><span class="n">points</span><span class="p">)</span>
-    <span class="n">results_full</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">res</span><span class="o">.</span><span class="n">raw_results</span>
-    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;points_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">points</span>
-    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;energies_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">energies</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">bs</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">es_problem</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span>
+    <span class="n">results_full</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">raw_results</span>
+    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;points_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">points</span>
+    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;energies_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">energies</span>
 </pre></div>
 </div>
 </div>
-</div>
-</div>
-<div class="section" id="古典固有値ソルバーとの比較">
+</section>
+</section>
+<section id="古典固有値ソルバーとの比較">
 <h2>古典固有値ソルバーとの比較<a class="headerlink" href="#古典固有値ソルバーとの比較" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
@@ -707,19 +708,17 @@ div.rendered_html tbody tr:hover {
 <span class="n">solver_numpy</span> <span class="o">=</span> <span class="n">NumPyMinimumEigensolver</span><span class="p">()</span>
 <span class="n">me_gsc_numpy</span> <span class="o">=</span> <span class="n">GroundStateEigensolver</span><span class="p">(</span><span class="n">qubit_converter</span><span class="p">,</span> <span class="n">solver_numpy</span><span class="p">)</span>
 <span class="n">bs_classical</span> <span class="o">=</span> <span class="n">BOPESSampler</span><span class="p">(</span>
-               <span class="n">gss</span><span class="o">=</span><span class="n">me_gsc_numpy</span>
-               <span class="p">,</span><span class="n">bootstrap</span><span class="o">=</span><span class="kc">False</span>
-               <span class="p">,</span><span class="n">num_bootstrap</span><span class="o">=</span><span class="kc">None</span>
-               <span class="p">,</span><span class="n">extrapolator</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">gss</span><span class="o">=</span><span class="n">me_gsc_numpy</span><span class="p">,</span> <span class="n">bootstrap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_bootstrap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extrapolator</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span>
 <span class="c1"># execute</span>
 <span class="n">res_np</span> <span class="o">=</span> <span class="n">bs_classical</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">es_problem</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span>
-<span class="n">results_full</span><span class="p">[</span><span class="s1">&#39;np&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">res_np</span><span class="o">.</span><span class="n">raw_results</span>
-<span class="n">results</span><span class="p">[</span><span class="s1">&#39;points_np&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_np</span><span class="o">.</span><span class="n">points</span>
-<span class="n">results</span><span class="p">[</span><span class="s1">&#39;energies_np&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_np</span><span class="o">.</span><span class="n">energies</span>
+<span class="n">results_full</span><span class="p">[</span><span class="s2">&quot;np&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_np</span><span class="o">.</span><span class="n">raw_results</span>
+<span class="n">results</span><span class="p">[</span><span class="s2">&quot;points_np&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_np</span><span class="o">.</span><span class="n">points</span>
+<span class="n">results</span><span class="p">[</span><span class="s2">&quot;energies_np&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_np</span><span class="o">.</span><span class="n">energies</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="結果のプロット">
+<section id="結果のプロット">
 <h3>結果のプロット<a class="headerlink" href="#結果のプロット" title="このヘッドラインへのパーマリンク">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -728,12 +727,12 @@ div.rendered_html tbody tr:hover {
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">bootstrap</span> <span class="ow">in</span> <span class="n">conditions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;points_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;energies_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">],</span> <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;points_np&#39;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;energies_np&#39;</span><span class="p">],</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;numpy&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;points_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;energies_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;points_np&quot;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;energies_np&quot;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Dissociation profile&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Interatomic distance&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Energy&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Dissociation profile&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Interatomic distance&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Energy&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -753,9 +752,9 @@ Text(0,0.5,&#39;Energy&#39;)
 <img alt="../_images/tutorials_05_Sampling_potential_energy_surfaces_15_1.png" src="../_images/tutorials_05_Sampling_potential_energy_surfaces_15_1.png" />
 </div>
 </div>
-</div>
-</div>
-<div class="section" id="評価回数の比較">
+</section>
+</section>
+<section id="評価回数の比較">
 <h2>評価回数の比較<a class="headerlink" href="#評価回数の比較" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
@@ -764,10 +763,10 @@ Text(0,0.5,&#39;Energy&#39;)
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="k">for</span> <span class="n">condition</span><span class="p">,</span> <span class="n">result_full</span> <span class="ow">in</span> <span class="n">results_full</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Total evaluations for &#39;</span> <span class="o">+</span> <span class="n">condition</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total evaluations for &quot;</span> <span class="o">+</span> <span class="n">condition</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
     <span class="nb">sum</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">result_full</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">condition</span> <span class="o">!=</span> <span class="s1">&#39;np&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">condition</span> <span class="o">!=</span> <span class="s2">&quot;np&quot;</span><span class="p">:</span>
             <span class="nb">sum</span> <span class="o">+=</span> <span class="n">result_full</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">raw_result</span><span class="o">.</span><span class="n">cost_function_evals</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">sum</span> <span class="o">=</span> <span class="mi">0</span>
@@ -791,8 +790,8 @@ Total evaluations for np:
 0
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="外挿">
+</section>
+<section id="外挿">
 <h2>外挿<a class="headerlink" href="#外挿" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>ここでは、指定した関数に各 (param, point) の組をフィッティングし、次の点 (自由度) の初期パラメーターの組を提案する外挿器を追加しています。</p>
 <ul class="simple">
@@ -807,7 +806,7 @@ Total evaluations for np:
 <li><p>Polynomial Extrapolator: ユーザーが指定した次数の多項式関数への、各パラメーターのフィッティングに基づく外挿器です。</p></li>
 <li><p>Differential Extrapolator: 各パラメーター集合を空間内の点として扱って次の点のパラメーター集合を予測する回帰に基づいた外挿器です。ユーザーが指定した次数に応じて、線形回帰の訓練データの特徴量として機能する点ベクトルの値に微分が加えられます。</p></li>
 </ol>
-<div class="section" id="ここでは、二つの異なる外挿手法を試します。">
+<section id="ここでは、二つの異なる外挿手法を試します。">
 <h3>ここでは、二つの異なる外挿手法を試します。<a class="headerlink" href="#ここでは、二つの異なる外挿手法を試します。" title="このヘッドラインへのパーマリンク">¶</a></h3>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
@@ -816,32 +815,27 @@ Total evaluations for np:
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># define different extrapolators</span>
 <span class="n">degree</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">extrap_poly</span> <span class="o">=</span> <span class="n">Extrapolator</span><span class="o">.</span><span class="n">factory</span><span class="p">(</span><span class="s2">&quot;poly&quot;</span><span class="p">,</span> <span class="n">degree</span> <span class="o">=</span> <span class="n">degree</span><span class="p">)</span>
-<span class="n">extrap_diff</span> <span class="o">=</span> <span class="n">Extrapolator</span><span class="o">.</span><span class="n">factory</span><span class="p">(</span><span class="s2">&quot;diff_model&quot;</span><span class="p">,</span> <span class="n">degree</span> <span class="o">=</span> <span class="n">degree</span><span class="p">)</span>
-<span class="n">extrapolators</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;poly&#39;</span><span class="p">:</span> <span class="n">extrap_poly</span><span class="p">,</span> <span class="s1">&#39;diff_model&#39;</span><span class="p">:</span> <span class="n">extrap_diff</span><span class="p">}</span>
+<span class="n">extrap_poly</span> <span class="o">=</span> <span class="n">Extrapolator</span><span class="o">.</span><span class="n">factory</span><span class="p">(</span><span class="s2">&quot;poly&quot;</span><span class="p">,</span> <span class="n">degree</span><span class="o">=</span><span class="n">degree</span><span class="p">)</span>
+<span class="n">extrap_diff</span> <span class="o">=</span> <span class="n">Extrapolator</span><span class="o">.</span><span class="n">factory</span><span class="p">(</span><span class="s2">&quot;diff_model&quot;</span><span class="p">,</span> <span class="n">degree</span><span class="o">=</span><span class="n">degree</span><span class="p">)</span>
+<span class="n">extrapolators</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;poly&quot;</span><span class="p">:</span> <span class="n">extrap_poly</span><span class="p">,</span> <span class="s2">&quot;diff_model&quot;</span><span class="p">:</span> <span class="n">extrap_diff</span><span class="p">}</span>
 
 <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">extrapolators</span><span class="p">:</span>
     <span class="n">extrap_internal</span> <span class="o">=</span> <span class="n">extrapolators</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-    <span class="n">extrap</span> <span class="o">=</span> <span class="n">Extrapolator</span><span class="o">.</span><span class="n">factory</span><span class="p">(</span><span class="s2">&quot;window&quot;</span><span class="p">,</span> <span class="n">extrapolator</span> <span class="o">=</span> <span class="n">extrap_internal</span><span class="p">)</span>
+    <span class="n">extrap</span> <span class="o">=</span> <span class="n">Extrapolator</span><span class="o">.</span><span class="n">factory</span><span class="p">(</span><span class="s2">&quot;window&quot;</span><span class="p">,</span> <span class="n">extrapolator</span><span class="o">=</span><span class="n">extrap_internal</span><span class="p">)</span>
     <span class="c1"># define extrapolator</span>
     <span class="c1"># BOPES sampler</span>
-    <span class="n">bs_extr</span> <span class="o">=</span> <span class="n">BOPESSampler</span><span class="p">(</span>
-        <span class="n">gss</span><span class="o">=</span><span class="n">me_gsc</span>
-        <span class="p">,</span><span class="n">bootstrap</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">,</span><span class="n">num_bootstrap</span><span class="o">=</span><span class="kc">None</span>
-        <span class="p">,</span><span class="n">extrapolator</span><span class="o">=</span><span class="n">extrap</span><span class="p">)</span>
+    <span class="n">bs_extr</span> <span class="o">=</span> <span class="n">BOPESSampler</span><span class="p">(</span><span class="n">gss</span><span class="o">=</span><span class="n">me_gsc</span><span class="p">,</span> <span class="n">bootstrap</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_bootstrap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extrapolator</span><span class="o">=</span><span class="n">extrap</span><span class="p">)</span>
     <span class="c1"># execute</span>
     <span class="n">res</span> <span class="o">=</span> <span class="n">bs_extr</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">es_problem</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span>
 
-    <span class="n">results_full</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span><span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">raw_results</span>
-    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;points_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">points</span>
-    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;energies_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">energies</span>
-
+    <span class="n">results_full</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">raw_results</span>
+    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;points_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">points</span>
+    <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;energies_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">energies</span>
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="id2">
+</section>
+<section id="id2">
 <h3>結果のプロット<a class="headerlink" href="#id2" title="このヘッドラインへのパーマリンク">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
@@ -850,15 +844,15 @@ Total evaluations for np:
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">bootstrap</span> <span class="ow">in</span> <span class="n">conditions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;points_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;energies_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">],</span> <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;points_np&#39;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;energies_np&#39;</span><span class="p">],</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;numpy&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;points_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;energies_</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bootstrap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;points_np&quot;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;energies_np&quot;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">extrapolators</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;points_</span><span class="si">{</span><span class="n">condition</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;energies_</span><span class="si">{</span><span class="n">condition</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">],</span> <span class="n">label</span> <span class="o">=</span> <span class="n">condition</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;points_</span><span class="si">{</span><span class="n">condition</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;energies_</span><span class="si">{</span><span class="n">condition</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">condition</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Dissociation profile&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Interatomic distance&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Energy&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Dissociation profile&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Interatomic distance&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Energy&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -887,9 +881,9 @@ Text(0,0.5,&#39;Energy&#39;)
 <img alt="../_images/tutorials_05_Sampling_potential_energy_surfaces_23_2.png" src="../_images/tutorials_05_Sampling_potential_energy_surfaces_23_2.png" />
 </div>
 </div>
-</div>
-</div>
-<div class="section" id="id3">
+</section>
+</section>
+<section id="id3">
 <h2>評価回数の比較<a class="headerlink" href="#id3" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
@@ -898,13 +892,13 @@ Text(0,0.5,&#39;Energy&#39;)
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="k">for</span> <span class="n">condition</span><span class="p">,</span> <span class="n">result_full</span> <span class="ow">in</span> <span class="n">results_full</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Total evaluations for &#39;</span> <span class="o">+</span> <span class="n">condition</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total evaluations for &quot;</span> <span class="o">+</span> <span class="n">condition</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
     <span class="nb">sum</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">results_full</span><span class="p">[</span><span class="n">condition</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">condition</span> <span class="o">!=</span> <span class="s1">&#39;np&#39;</span><span class="p">:</span>
-                <span class="nb">sum</span> <span class="o">+=</span> <span class="n">result_full</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">raw_result</span><span class="o">.</span><span class="n">cost_function_evals</span>
+        <span class="k">if</span> <span class="n">condition</span> <span class="o">!=</span> <span class="s2">&quot;np&quot;</span><span class="p">:</span>
+            <span class="nb">sum</span> <span class="o">+=</span> <span class="n">result_full</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">raw_result</span><span class="o">.</span><span class="n">cost_function_evals</span>
         <span class="k">else</span><span class="p">:</span>
-                <span class="nb">sum</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="nb">sum</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="nb">print</span><span class="p">(</span><span class="nb">sum</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -937,6 +931,7 @@ Total evaluations for diff_model:
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -964,8 +959,8 @@ Total evaluations for diff_model:
 </pre></div>
 </div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_optimization.translators.docplex_mp &mdash; Qiskit Optimization 0.2.3 說明文件</title>
+  <title>qiskit_optimization.translators.docplex_mp &mdash; Qiskit Optimization 0.3.0 說明文件</title>
   
 
   
@@ -27,10 +27,12 @@
 
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -171,7 +173,7 @@
               
               
                 <div class="version">
-                  0.2.3
+                  0.3.0
                 </div>
               
             
@@ -287,8 +289,11 @@
 
 <span class="sd">&quot;&quot;&quot;Translator between a docplex.mp model and a quadratic program&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">cast</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">isclose</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">cast</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
 
+<span class="kn">from</span> <span class="nn">docplex.mp.basic</span> <span class="kn">import</span> <span class="n">Expr</span>
 <span class="kn">from</span> <span class="nn">docplex.mp.constants</span> <span class="kn">import</span> <span class="n">ComparisonType</span>
 <span class="kn">from</span> <span class="nn">docplex.mp.constr</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">IndicatorConstraint</span><span class="p">,</span>
@@ -338,25 +343,30 @@
             <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Internal error: unsupported variable type: </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">vartype</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="c1"># add objective</span>
-    <span class="n">objective</span> <span class="o">=</span> <span class="n">quadratic_program</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">constant</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">quadratic_program</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">objective</span> <span class="o">+=</span> <span class="n">v</span> <span class="o">*</span> <span class="n">var</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">i</span><span class="p">)]</span>
-    <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">quadratic_program</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">quadratic</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">objective</span> <span class="o">+=</span> <span class="n">v</span> <span class="o">*</span> <span class="n">var</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">i</span><span class="p">)]</span> <span class="o">*</span> <span class="n">var</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span>
+    <span class="n">objective</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">quadratic_program</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">constant</span>
+        <span class="o">+</span> <span class="n">mdl</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">v</span> <span class="o">*</span> <span class="n">var</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">i</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">quadratic_program</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="o">+</span> <span class="n">mdl</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">v</span> <span class="o">*</span> <span class="n">var</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">i</span><span class="p">)]</span> <span class="o">*</span> <span class="n">var</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">quadratic_program</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">quadratic</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
     <span class="k">if</span> <span class="n">quadratic_program</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">sense</span> <span class="o">==</span> <span class="n">QuadraticObjective</span><span class="o">.</span><span class="n">Sense</span><span class="o">.</span><span class="n">MINIMIZE</span><span class="p">:</span>
         <span class="n">mdl</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">objective</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">mdl</span><span class="o">.</span><span class="n">maximize</span><span class="p">(</span><span class="n">objective</span><span class="p">)</span>
 
     <span class="c1"># add linear constraints</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">l_constraint</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">quadratic_program</span><span class="o">.</span><span class="n">linear_constraints</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">l_constraint</span> <span class="ow">in</span> <span class="n">quadratic_program</span><span class="o">.</span><span class="n">linear_constraints</span><span class="p">:</span>
         <span class="n">name</span> <span class="o">=</span> <span class="n">l_constraint</span><span class="o">.</span><span class="n">name</span>
         <span class="n">rhs</span> <span class="o">=</span> <span class="n">l_constraint</span><span class="o">.</span><span class="n">rhs</span>
         <span class="k">if</span> <span class="n">rhs</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">l_constraint</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">coefficients</span><span class="o">.</span><span class="n">nnz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">continue</span>
-        <span class="n">linear_expr</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">l_constraint</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">linear_expr</span> <span class="o">+=</span> <span class="n">v</span> <span class="o">*</span> <span class="n">var</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span>
+        <span class="n">linear_expr</span> <span class="o">=</span> <span class="n">mdl</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">v</span> <span class="o">*</span> <span class="n">var</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">l_constraint</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">)</span>
         <span class="n">sense</span> <span class="o">=</span> <span class="n">l_constraint</span><span class="o">.</span><span class="n">sense</span>
         <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="n">Constraint</span><span class="o">.</span><span class="n">Sense</span><span class="o">.</span><span class="n">EQ</span><span class="p">:</span>
             <span class="n">mdl</span><span class="o">.</span><span class="n">add_constraint</span><span class="p">(</span><span class="n">linear_expr</span> <span class="o">==</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">ctname</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
@@ -369,7 +379,7 @@
             <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Internal error: unsupported constraint sense: </span><span class="si">{</span><span class="n">sense</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="c1"># add quadratic constraints</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">q_constraint</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">quadratic_program</span><span class="o">.</span><span class="n">quadratic_constraints</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">q_constraint</span> <span class="ow">in</span> <span class="n">quadratic_program</span><span class="o">.</span><span class="n">quadratic_constraints</span><span class="p">:</span>
         <span class="n">name</span> <span class="o">=</span> <span class="n">q_constraint</span><span class="o">.</span><span class="n">name</span>
         <span class="n">rhs</span> <span class="o">=</span> <span class="n">q_constraint</span><span class="o">.</span><span class="n">rhs</span>
         <span class="k">if</span> <span class="p">(</span>
@@ -378,11 +388,12 @@
             <span class="ow">and</span> <span class="n">q_constraint</span><span class="o">.</span><span class="n">quadratic</span><span class="o">.</span><span class="n">coefficients</span><span class="o">.</span><span class="n">nnz</span> <span class="o">==</span> <span class="mi">0</span>
         <span class="p">):</span>
             <span class="k">continue</span>
-        <span class="n">quadratic_expr</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">q_constraint</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">quadratic_expr</span> <span class="o">+=</span> <span class="n">v</span> <span class="o">*</span> <span class="n">var</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">),</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">q_constraint</span><span class="o">.</span><span class="n">quadratic</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">quadratic_expr</span> <span class="o">+=</span> <span class="n">v</span> <span class="o">*</span> <span class="n">var</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span> <span class="o">*</span> <span class="n">var</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">k</span><span class="p">)]</span>
+        <span class="n">quadratic_expr</span> <span class="o">=</span> <span class="n">mdl</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">v</span> <span class="o">*</span> <span class="n">var</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">q_constraint</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">)</span> <span class="o">+</span> <span class="n">mdl</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">v</span> <span class="o">*</span> <span class="n">var</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span> <span class="o">*</span> <span class="n">var</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">k</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">),</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">q_constraint</span><span class="o">.</span><span class="n">quadratic</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">)</span>
         <span class="n">sense</span> <span class="o">=</span> <span class="n">q_constraint</span><span class="o">.</span><span class="n">sense</span>
         <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="n">Constraint</span><span class="o">.</span><span class="n">Sense</span><span class="o">.</span><span class="n">EQ</span><span class="p">:</span>
             <span class="n">mdl</span><span class="o">.</span><span class="n">add_constraint</span><span class="p">(</span><span class="n">quadratic_expr</span> <span class="o">==</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">ctname</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
@@ -403,156 +414,253 @@
 <span class="k">class</span> <span class="nc">_FromDocplexMp</span><span class="p">:</span>
     <span class="n">_sense_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">ComparisonType</span><span class="o">.</span><span class="n">EQ</span><span class="p">:</span> <span class="s2">&quot;==&quot;</span><span class="p">,</span> <span class="n">ComparisonType</span><span class="o">.</span><span class="n">LE</span><span class="p">:</span> <span class="s2">&quot;&lt;=&quot;</span><span class="p">,</span> <span class="n">ComparisonType</span><span class="o">.</span><span class="n">GE</span><span class="p">:</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">}</span>
 
-    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            model: Docplex model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">:</span> <span class="n">Model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_quadratic_program</span><span class="p">:</span> <span class="n">QuadraticProgram</span> <span class="o">=</span> <span class="n">QuadraticProgram</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_var_names</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Var</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_var_bounds</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># keep track of names separately, since docplex allows to have None names.</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">iter_variables</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">vartype</span><span class="p">,</span> <span class="n">ContinuousVarType</span><span class="p">):</span>
+                <span class="n">x_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quadratic_program</span><span class="o">.</span><span class="n">continuous_var</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">lb</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">ub</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">vartype</span><span class="p">,</span> <span class="n">BinaryVarType</span><span class="p">):</span>
+                <span class="n">x_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quadratic_program</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">vartype</span><span class="p">,</span> <span class="n">IntegerVarType</span><span class="p">):</span>
+                <span class="n">x_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quadratic_program</span><span class="o">.</span><span class="n">integer_var</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">lb</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">ub</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported variable type: </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">vartype</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_var_names</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_new</span><span class="o">.</span><span class="n">name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_var_bounds</span><span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_new</span><span class="o">.</span><span class="n">lowerbound</span><span class="p">,</span> <span class="n">x_new</span><span class="o">.</span><span class="n">upperbound</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_linear_expr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">AbstractLinearExpr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="c1"># AbstractLinearExpr is a parent of LinearExpr, ConstantExpr, and ZeroExpr</span>
+        <span class="n">linear</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">iter_terms</span><span class="p">():</span>
+            <span class="n">linear</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_var_names</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span> <span class="o">=</span> <span class="n">coeff</span>
+        <span class="k">return</span> <span class="n">linear</span>
+
+    <span class="k">def</span> <span class="nf">_quadratic_expr</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">QuadExpr</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">float</span><span class="p">]]:</span>
+        <span class="n">linear</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_expr</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">get_linear_part</span><span class="p">())</span>
+        <span class="n">quad</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">iter_quad_triplets</span><span class="p">():</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var_names</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var_names</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+            <span class="n">quad</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff</span>
+        <span class="k">return</span> <span class="n">linear</span><span class="p">,</span> <span class="n">quad</span>
+
+    <span class="k">def</span> <span class="nf">quadratic_program</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indicator_big_m</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">QuadraticProgram</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a quadratic program corresponding to the input Docplex model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            indicator_big_m: The big-M value used for the big-M formulation to convert</span>
+<span class="sd">            indicator constraints into linear constraints.</span>
+<span class="sd">            If ``None``, it is automatically derived from the model.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            a quadratic program corresponding to the input Docplex model.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_quadratic_program</span> <span class="o">=</span> <span class="n">QuadraticProgram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="c1"># prepare variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="p">()</span>
+
+        <span class="c1"># objective sense</span>
+        <span class="n">minimize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">objective_sense</span><span class="o">.</span><span class="n">is_minimize</span><span class="p">()</span>
+
+        <span class="c1"># make sure objective expression is linear or quadratic and not a variable</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">objective_expr</span><span class="p">,</span> <span class="n">Var</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">objective_expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">objective_expr</span> <span class="o">+</span> <span class="mi">0</span>  <span class="c1"># Var + 0 -&gt; LinearExpr</span>
+
+        <span class="n">constant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">objective_expr</span><span class="o">.</span><span class="n">constant</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">objective_expr</span><span class="p">,</span> <span class="n">QuadExpr</span><span class="p">):</span>
+            <span class="n">linear</span><span class="p">,</span> <span class="n">quadratic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quadratic_expr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">objective_expr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">linear</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_expr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">objective_expr</span><span class="o">.</span><span class="n">get_linear_part</span><span class="p">())</span>
+            <span class="n">quadratic</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># set objective</span>
+        <span class="k">if</span> <span class="n">minimize</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_quadratic_program</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">constant</span><span class="p">,</span> <span class="n">linear</span><span class="p">,</span> <span class="n">quadratic</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_quadratic_program</span><span class="o">.</span><span class="n">maximize</span><span class="p">(</span><span class="n">constant</span><span class="p">,</span> <span class="n">linear</span><span class="p">,</span> <span class="n">quadratic</span><span class="p">)</span>
+
+        <span class="c1"># set linear constraints</span>
+        <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">iter_linear_constraints</span><span class="p">():</span>
+            <span class="n">linear</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_constraint</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">linear</span><span class="p">:</span>  <span class="c1"># lhs == 0</span>
+                <span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trivial constraint: </span><span class="si">{</span><span class="n">constraint</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_quadratic_program</span><span class="o">.</span><span class="n">linear_constraint</span><span class="p">(</span><span class="n">linear</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">constraint</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="c1"># set quadratic constraints</span>
+        <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">iter_quadratic_constraints</span><span class="p">():</span>
+            <span class="n">linear</span><span class="p">,</span> <span class="n">quadratic</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quadratic_constraint</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">linear</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">quadratic</span><span class="p">:</span>  <span class="c1"># lhs == 0</span>
+                <span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trivial constraint: </span><span class="si">{</span><span class="n">constraint</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_quadratic_program</span><span class="o">.</span><span class="n">quadratic_constraint</span><span class="p">(</span>
+                <span class="n">linear</span><span class="p">,</span> <span class="n">quadratic</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">constraint</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">)</span>
+
+        <span class="c1"># set indicator constraints</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">iter_indicator_constraints</span><span class="p">()):</span>
+            <span class="n">linear</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_constraint</span><span class="p">(</span><span class="n">constraint</span><span class="o">.</span><span class="n">linear_constraint</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">linear</span><span class="p">:</span>  <span class="c1"># lhs == 0</span>
+                <span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trivial constraint: </span><span class="si">{</span><span class="n">constraint</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;ind</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">linear_constraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indicator_constraints</span><span class="p">(</span><span class="n">constraint</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">indicator_big_m</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">linear</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">linear_constraints</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_quadratic_program</span><span class="o">.</span><span class="n">linear_constraint</span><span class="p">(</span><span class="n">linear</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quadratic_program</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_subtract</span><span class="p">(</span><span class="n">dict1</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">dict2</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Calculate dict1 - dict2&quot;&quot;&quot;</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">dict1</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val2</span> <span class="ow">in</span> <span class="n">dict2</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dict1</span><span class="p">:</span>
+                <span class="n">val1</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">isclose</span><span class="p">(</span><span class="n">val1</span><span class="p">,</span> <span class="n">val2</span><span class="p">):</span>
+                    <span class="k">del</span> <span class="n">ret</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ret</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">-=</span> <span class="n">val2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ret</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">val2</span>
+        <span class="k">return</span> <span class="n">ret</span>
+
     <span class="k">def</span> <span class="nf">_linear_constraint</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span> <span class="n">var_names</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Var</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">constraint</span><span class="p">:</span> <span class="n">LinearConstraint</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">constraint</span><span class="p">:</span> <span class="n">LinearConstraint</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
         <span class="n">left_expr</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">get_left_expr</span><span class="p">()</span>
         <span class="n">right_expr</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">get_right_expr</span><span class="p">()</span>
         <span class="c1"># for linear constraints we may get an instance of Var instead of expression,</span>
         <span class="c1"># e.g. x + y = z</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left_expr</span><span class="p">,</span> <span class="p">(</span><span class="n">AbstractLinearExpr</span><span class="p">,</span> <span class="n">Var</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left_expr</span><span class="p">,</span> <span class="p">(</span><span class="n">Expr</span><span class="p">,</span> <span class="n">Var</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported expression: </span><span class="si">{</span><span class="n">left_expr</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">left_expr</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right_expr</span><span class="p">,</span> <span class="p">(</span><span class="n">AbstractLinearExpr</span><span class="p">,</span> <span class="n">Var</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right_expr</span><span class="p">,</span> <span class="p">(</span><span class="n">Expr</span><span class="p">,</span> <span class="n">Var</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Unsupported expression: </span><span class="si">{</span><span class="n">right_expr</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">right_expr</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left_expr</span><span class="p">,</span> <span class="n">Var</span><span class="p">):</span>
-            <span class="n">left_expr</span> <span class="o">=</span> <span class="n">left_expr</span> <span class="o">+</span> <span class="mi">0</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right_expr</span><span class="p">,</span> <span class="n">Var</span><span class="p">):</span>
-            <span class="n">right_expr</span> <span class="o">=</span> <span class="n">right_expr</span> <span class="o">+</span> <span class="mi">0</span>
-
-        <span class="n">linear</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">left_expr</span><span class="o">.</span><span class="n">iter_variables</span><span class="p">():</span>
-            <span class="n">linear</span><span class="p">[</span><span class="n">var_names</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span> <span class="o">=</span> <span class="n">left_expr</span><span class="o">.</span><span class="n">get_coef</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">right_expr</span><span class="o">.</span><span class="n">iter_variables</span><span class="p">():</span>
-            <span class="n">linear</span><span class="p">[</span><span class="n">var_names</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span> <span class="o">=</span> <span class="n">linear</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-</span> <span class="n">right_expr</span><span class="o">.</span><span class="n">get_coef</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-
-        <span class="n">rhs</span> <span class="o">=</span> <span class="n">right_expr</span><span class="o">.</span><span class="n">constant</span> <span class="o">-</span> <span class="n">left_expr</span><span class="o">.</span><span class="n">constant</span>
-
-        <span class="k">if</span> <span class="n">constraint</span><span class="o">.</span><span class="n">sense</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_sense_dict</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">constraint</span><span class="o">.</span><span class="n">sense</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sense_dict</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported constraint sense: </span><span class="si">{</span><span class="n">constraint</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">linear</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_sense_dict</span><span class="p">[</span><span class="n">constraint</span><span class="o">.</span><span class="n">sense</span><span class="p">],</span> <span class="n">rhs</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left_expr</span><span class="p">,</span> <span class="n">Var</span><span class="p">):</span>
+            <span class="n">left_expr</span> <span class="o">=</span> <span class="n">left_expr</span> <span class="o">+</span> <span class="mi">0</span>  <span class="c1"># Var + 0 -&gt; LinearExpr</span>
+        <span class="n">left_linear</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_expr</span><span class="p">(</span><span class="n">left_expr</span><span class="p">)</span>
 
-    <span class="nd">@classmethod</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right_expr</span><span class="p">,</span> <span class="n">Var</span><span class="p">):</span>
+            <span class="n">right_expr</span> <span class="o">=</span> <span class="n">right_expr</span> <span class="o">+</span> <span class="mi">0</span>
+        <span class="n">right_linear</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_expr</span><span class="p">(</span><span class="n">right_expr</span><span class="p">)</span>
+
+        <span class="n">linear</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subtract</span><span class="p">(</span><span class="n">left_linear</span><span class="p">,</span> <span class="n">right_linear</span><span class="p">)</span>
+        <span class="n">rhs</span> <span class="o">=</span> <span class="n">right_expr</span><span class="o">.</span><span class="n">constant</span> <span class="o">-</span> <span class="n">left_expr</span><span class="o">.</span><span class="n">constant</span>
+        <span class="k">return</span> <span class="n">linear</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sense_dict</span><span class="p">[</span><span class="n">constraint</span><span class="o">.</span><span class="n">sense</span><span class="p">],</span> <span class="n">rhs</span>
+
     <span class="k">def</span> <span class="nf">_quadratic_constraint</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span> <span class="n">var_names</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Var</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">constraint</span><span class="p">:</span> <span class="n">QuadraticConstraint</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">constraint</span><span class="p">:</span> <span class="n">QuadraticConstraint</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">float</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
         <span class="n">left_expr</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">get_left_expr</span><span class="p">()</span>
         <span class="n">right_expr</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">get_right_expr</span><span class="p">()</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left_expr</span><span class="p">,</span> <span class="p">(</span><span class="n">QuadExpr</span><span class="p">,</span> <span class="n">AbstractLinearExpr</span><span class="p">,</span> <span class="n">Var</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left_expr</span><span class="p">,</span> <span class="p">(</span><span class="n">Expr</span><span class="p">,</span> <span class="n">Var</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported expression: </span><span class="si">{</span><span class="n">left_expr</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">left_expr</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right_expr</span><span class="p">,</span> <span class="p">(</span><span class="n">QuadExpr</span><span class="p">,</span> <span class="n">AbstractLinearExpr</span><span class="p">,</span> <span class="n">Var</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right_expr</span><span class="p">,</span> <span class="p">(</span><span class="n">Expr</span><span class="p">,</span> <span class="n">Var</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Unsupported expression: </span><span class="si">{</span><span class="n">right_expr</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">right_expr</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
-
-        <span class="n">lin</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">quad</span> <span class="o">=</span> <span class="p">{}</span>
-
-        <span class="k">if</span> <span class="n">left_expr</span><span class="o">.</span><span class="n">is_quad_expr</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">left_expr</span><span class="o">.</span><span class="n">linear_part</span><span class="o">.</span><span class="n">iter_variables</span><span class="p">():</span>
-                <span class="n">lin</span><span class="p">[</span><span class="n">var_names</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span> <span class="o">=</span> <span class="n">left_expr</span><span class="o">.</span><span class="n">linear_part</span><span class="o">.</span><span class="n">get_coef</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">quad_triplet</span> <span class="ow">in</span> <span class="n">left_expr</span><span class="o">.</span><span class="n">iter_quad_triplets</span><span class="p">():</span>
-                <span class="n">i</span> <span class="o">=</span> <span class="n">var_names</span><span class="p">[</span><span class="n">quad_triplet</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-                <span class="n">j</span> <span class="o">=</span> <span class="n">var_names</span><span class="p">[</span><span class="n">quad_triplet</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
-                <span class="n">v</span> <span class="o">=</span> <span class="n">quad_triplet</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-                <span class="n">quad</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">left_expr</span><span class="o">.</span><span class="n">iter_variables</span><span class="p">():</span>
-                <span class="n">lin</span><span class="p">[</span><span class="n">var_names</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span> <span class="o">=</span> <span class="n">left_expr</span><span class="o">.</span><span class="n">get_coef</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">right_expr</span><span class="o">.</span><span class="n">is_quad_expr</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">right_expr</span><span class="o">.</span><span class="n">linear_part</span><span class="o">.</span><span class="n">iter_variables</span><span class="p">():</span>
-                <span class="n">lin</span><span class="p">[</span><span class="n">var_names</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span> <span class="o">=</span> <span class="n">lin</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-</span> <span class="n">right_expr</span><span class="o">.</span><span class="n">linear_part</span><span class="o">.</span><span class="n">get_coef</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">quad_triplet</span> <span class="ow">in</span> <span class="n">right_expr</span><span class="o">.</span><span class="n">iter_quad_triplets</span><span class="p">():</span>
-                <span class="n">i</span> <span class="o">=</span> <span class="n">var_names</span><span class="p">[</span><span class="n">quad_triplet</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-                <span class="n">j</span> <span class="o">=</span> <span class="n">var_names</span><span class="p">[</span><span class="n">quad_triplet</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
-                <span class="n">v</span> <span class="o">=</span> <span class="n">quad_triplet</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-                <span class="n">quad</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">quad</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-</span> <span class="n">v</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">right_expr</span><span class="o">.</span><span class="n">iter_variables</span><span class="p">():</span>
-                <span class="n">lin</span><span class="p">[</span><span class="n">var_names</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span> <span class="o">=</span> <span class="n">lin</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var_names</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-</span> <span class="n">right_expr</span><span class="o">.</span><span class="n">get_coef</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-
-        <span class="n">rhs</span> <span class="o">=</span> <span class="n">right_expr</span><span class="o">.</span><span class="n">constant</span> <span class="o">-</span> <span class="n">left_expr</span><span class="o">.</span><span class="n">constant</span>
-
-        <span class="k">if</span> <span class="n">constraint</span><span class="o">.</span><span class="n">sense</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_sense_dict</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">constraint</span><span class="o">.</span><span class="n">sense</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sense_dict</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported constraint sense: </span><span class="si">{</span><span class="n">constraint</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">lin</span><span class="p">,</span> <span class="n">quad</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_sense_dict</span><span class="p">[</span><span class="n">constraint</span><span class="o">.</span><span class="n">sense</span><span class="p">],</span> <span class="n">rhs</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left_expr</span><span class="p">,</span> <span class="n">Var</span><span class="p">):</span>
+            <span class="n">left_expr</span> <span class="o">=</span> <span class="n">left_expr</span> <span class="o">+</span> <span class="mi">0</span>  <span class="c1"># Var + 0 -&gt; LinearExpr</span>
+        <span class="k">if</span> <span class="n">left_expr</span><span class="o">.</span><span class="n">is_quad_expr</span><span class="p">():</span>
+            <span class="n">left_lin</span><span class="p">,</span> <span class="n">left_quad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quadratic_expr</span><span class="p">(</span><span class="n">left_expr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">left_lin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_expr</span><span class="p">(</span><span class="n">left_expr</span><span class="p">)</span>
+            <span class="n">left_quad</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_linear_bounds</span><span class="p">(</span><span class="n">var_bounds</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="n">linear</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right_expr</span><span class="p">,</span> <span class="n">Var</span><span class="p">):</span>
+            <span class="n">right_expr</span> <span class="o">=</span> <span class="n">right_expr</span> <span class="o">+</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">right_expr</span><span class="o">.</span><span class="n">is_quad_expr</span><span class="p">():</span>
+            <span class="n">right_lin</span><span class="p">,</span> <span class="n">right_quad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quadratic_expr</span><span class="p">(</span><span class="n">right_expr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">right_lin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_expr</span><span class="p">(</span><span class="n">right_expr</span><span class="p">)</span>
+            <span class="n">right_quad</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">linear</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subtract</span><span class="p">(</span><span class="n">left_lin</span><span class="p">,</span> <span class="n">right_lin</span><span class="p">)</span>
+        <span class="n">quadratic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subtract</span><span class="p">(</span><span class="n">left_quad</span><span class="p">,</span> <span class="n">right_quad</span><span class="p">)</span>
+        <span class="n">rhs</span> <span class="o">=</span> <span class="n">right_expr</span><span class="o">.</span><span class="n">constant</span> <span class="o">-</span> <span class="n">left_expr</span><span class="o">.</span><span class="n">constant</span>
+        <span class="k">return</span> <span class="n">linear</span><span class="p">,</span> <span class="n">quadratic</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sense_dict</span><span class="p">[</span><span class="n">constraint</span><span class="o">.</span><span class="n">sense</span><span class="p">],</span> <span class="n">rhs</span>
+
+    <span class="k">def</span> <span class="nf">_linear_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">linear</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]):</span>
         <span class="n">linear_lb</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="n">linear_ub</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="k">for</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">linear</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">x_lb</span><span class="p">,</span> <span class="n">x_ub</span> <span class="o">=</span> <span class="n">var_bounds</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span>
+            <span class="n">x_lb</span><span class="p">,</span> <span class="n">x_ub</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var_bounds</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span>
             <span class="n">x_lb</span> <span class="o">*=</span> <span class="n">val</span>
             <span class="n">x_ub</span> <span class="o">*=</span> <span class="n">val</span>
             <span class="n">linear_lb</span> <span class="o">+=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x_lb</span><span class="p">,</span> <span class="n">x_ub</span><span class="p">)</span>
             <span class="n">linear_ub</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x_lb</span><span class="p">,</span> <span class="n">x_ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">linear_lb</span><span class="p">,</span> <span class="n">linear_ub</span>
 
-    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">_indicator_constraints</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span>
-        <span class="n">var_names</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Var</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
-        <span class="n">var_bounds</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+        <span class="bp">self</span><span class="p">,</span>
         <span class="n">constraint</span><span class="p">:</span> <span class="n">IndicatorConstraint</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">indicator_big_m</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">name</span>
         <span class="n">binary_var</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">binary_var</span>
         <span class="n">active_value</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">active_value</span>
         <span class="n">linear_constraint</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">linear_constraint</span>
-        <span class="n">linear</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_linear_constraint</span><span class="p">(</span><span class="n">var_names</span><span class="p">,</span> <span class="n">linear_constraint</span><span class="p">)</span>
-        <span class="n">linear_lb</span><span class="p">,</span> <span class="n">linear_ub</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_linear_bounds</span><span class="p">(</span><span class="n">var_bounds</span><span class="p">,</span> <span class="n">linear</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s2">&quot;&lt;=&quot;</span><span class="p">:</span>
+        <span class="n">linear</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_constraint</span><span class="p">(</span><span class="n">linear_constraint</span><span class="p">)</span>
+        <span class="n">linear_lb</span><span class="p">,</span> <span class="n">linear_ub</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_bounds</span><span class="p">(</span><span class="n">linear</span><span class="p">)</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">sense</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;&lt;=&quot;</span><span class="p">,</span> <span class="s2">&quot;==&quot;</span><span class="p">]:</span>
             <span class="n">big_m</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">linear_ub</span> <span class="o">-</span> <span class="n">rhs</span><span class="p">)</span> <span class="k">if</span> <span class="n">indicator_big_m</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">indicator_big_m</span>
             <span class="k">if</span> <span class="n">active_value</span><span class="p">:</span>
-                <span class="n">linear</span><span class="p">[</span><span class="n">binary_var</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">big_m</span>
-                <span class="n">rhs</span> <span class="o">+=</span> <span class="n">big_m</span>
+                <span class="c1"># rhs += big_m * (1 - binary_var)</span>
+                <span class="n">linear2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subtract</span><span class="p">(</span><span class="n">linear</span><span class="p">,</span> <span class="p">{</span><span class="n">binary_var</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="o">-</span><span class="n">big_m</span><span class="p">})</span>
+                <span class="n">rhs2</span> <span class="o">=</span> <span class="n">rhs</span> <span class="o">+</span> <span class="n">big_m</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">linear</span><span class="p">[</span><span class="n">binary_var</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">big_m</span>
-            <span class="k">return</span> <span class="p">[(</span><span class="n">linear</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">name</span><span class="p">)]</span>
-        <span class="k">elif</span> <span class="n">sense</span> <span class="o">==</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">:</span>
+                <span class="c1"># rhs += big_m * binary_var</span>
+                <span class="n">linear2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subtract</span><span class="p">(</span><span class="n">linear</span><span class="p">,</span> <span class="p">{</span><span class="n">binary_var</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">big_m</span><span class="p">})</span>
+                <span class="n">rhs2</span> <span class="o">=</span> <span class="n">rhs</span>
+            <span class="n">name2</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_LE&quot;</span> <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s2">&quot;==&quot;</span> <span class="k">else</span> <span class="n">name</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">linear2</span><span class="p">,</span> <span class="s2">&quot;&lt;=&quot;</span><span class="p">,</span> <span class="n">rhs2</span><span class="p">,</span> <span class="n">name2</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">sense</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span> <span class="s2">&quot;==&quot;</span><span class="p">]:</span>
             <span class="n">big_m</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">rhs</span> <span class="o">-</span> <span class="n">linear_lb</span><span class="p">)</span> <span class="k">if</span> <span class="n">indicator_big_m</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">indicator_big_m</span>
             <span class="k">if</span> <span class="n">active_value</span><span class="p">:</span>
-                <span class="n">linear</span><span class="p">[</span><span class="n">binary_var</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">big_m</span>
-                <span class="n">rhs</span> <span class="o">-=</span> <span class="n">big_m</span>
+                <span class="c1"># rhs += -big_m * (1 - binary_var)</span>
+                <span class="n">linear2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subtract</span><span class="p">(</span><span class="n">linear</span><span class="p">,</span> <span class="p">{</span><span class="n">binary_var</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">big_m</span><span class="p">})</span>
+                <span class="n">rhs2</span> <span class="o">=</span> <span class="n">rhs</span> <span class="o">-</span> <span class="n">big_m</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">linear</span><span class="p">[</span><span class="n">binary_var</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">big_m</span>
-            <span class="k">return</span> <span class="p">[(</span><span class="n">linear</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">name</span><span class="p">)]</span>
-        <span class="k">elif</span> <span class="n">sense</span> <span class="o">==</span> <span class="s2">&quot;==&quot;</span><span class="p">:</span>
-            <span class="c1"># for equality constraints, add both GE and LE constraints.</span>
-            <span class="c1"># linear2, rhs2, and big_m2 are for the GE constraint.</span>
-            <span class="n">linear2</span> <span class="o">=</span> <span class="n">linear</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="n">rhs2</span> <span class="o">=</span> <span class="n">rhs</span>
-            <span class="n">big_m</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">linear_ub</span> <span class="o">-</span> <span class="n">rhs</span><span class="p">)</span> <span class="k">if</span> <span class="n">indicator_big_m</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">indicator_big_m</span>
-            <span class="n">big_m2</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">rhs</span> <span class="o">-</span> <span class="n">linear_lb</span><span class="p">)</span> <span class="k">if</span> <span class="n">indicator_big_m</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">indicator_big_m</span>
-            <span class="k">if</span> <span class="n">active_value</span><span class="p">:</span>
-                <span class="n">linear</span><span class="p">[</span><span class="n">binary_var</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">big_m</span>
-                <span class="n">rhs</span> <span class="o">+=</span> <span class="n">big_m</span>
-                <span class="n">linear2</span><span class="p">[</span><span class="n">binary_var</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">big_m2</span>
-                <span class="n">rhs2</span> <span class="o">-=</span> <span class="n">big_m2</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">linear</span><span class="p">[</span><span class="n">binary_var</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">big_m</span>
-                <span class="n">linear2</span><span class="p">[</span><span class="n">binary_var</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">big_m2</span>
-            <span class="k">return</span> <span class="p">[(</span><span class="n">linear</span><span class="p">,</span> <span class="s2">&quot;&lt;=&quot;</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_LE&quot;</span><span class="p">),</span> <span class="p">(</span><span class="n">linear2</span><span class="p">,</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span> <span class="n">rhs2</span><span class="p">,</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_GE&quot;</span><span class="p">)]</span>
-        <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># rhs += -big_m * binary_var</span>
+                <span class="n">linear2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subtract</span><span class="p">(</span><span class="n">linear</span><span class="p">,</span> <span class="p">{</span><span class="n">binary_var</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="o">-</span><span class="n">big_m</span><span class="p">})</span>
+                <span class="n">rhs2</span> <span class="o">=</span> <span class="n">rhs</span>
+            <span class="n">name2</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_GE&quot;</span> <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s2">&quot;==&quot;</span> <span class="k">else</span> <span class="n">name</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">linear2</span><span class="p">,</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span> <span class="n">rhs2</span><span class="p">,</span> <span class="n">name2</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">sense</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;&lt;=&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span> <span class="s2">&quot;==&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Internal error: invalid sense of indicator constraint: </span><span class="si">{</span><span class="n">sense</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span>
 
 
 <div class="viewcode-block" id="from_docplex_mp"><a class="viewcode-back" href="../../../stubs/qiskit_optimization.translators.from_docplex_mp.html#qiskit_optimization.translators.from_docplex_mp">[文件]</a><span class="k">def</span> <span class="nf">from_docplex_mp</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">indicator_big_m</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuadraticProgram</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Translate a docplex.mp model into a quadratic program.</span>
 
-<span class="sd">    Note that this supports only basic functions of docplex as follows:</span>
-<span class="sd">    - quadratic objective function</span>
+<span class="sd">    Note that this supports the following features of docplex:</span>
+<span class="sd">    - linear / quadratic objective function</span>
 <span class="sd">    - linear / quadratic / indicator constraints</span>
 <span class="sd">    - binary / integer / continuous variables</span>
+<span class="sd">    - logical expressions (``logical_not``, ``logical_and``, and ``logical_or``)</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        model: The docplex.mp model to be loaded.</span>
@@ -578,56 +686,6 @@
     <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">number_of_sos</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span><span class="s2">&quot;SOS sets are not supported&quot;</span><span class="p">)</span>
 
-    <span class="c1"># get name</span>
-    <span class="n">quadratic_program</span> <span class="o">=</span> <span class="n">QuadraticProgram</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-
-    <span class="c1"># get variables</span>
-    <span class="c1"># keep track of names separately, since docplex allows to have None names.</span>
-    <span class="n">var_names</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">var_bounds</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">iter_variables</span><span class="p">():</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">vartype</span><span class="p">,</span> <span class="n">ContinuousVarType</span><span class="p">):</span>
-            <span class="n">x_new</span> <span class="o">=</span> <span class="n">quadratic_program</span><span class="o">.</span><span class="n">continuous_var</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">lb</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">ub</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">vartype</span><span class="p">,</span> <span class="n">BinaryVarType</span><span class="p">):</span>
-            <span class="n">x_new</span> <span class="o">=</span> <span class="n">quadratic_program</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">vartype</span><span class="p">,</span> <span class="n">IntegerVarType</span><span class="p">):</span>
-            <span class="n">x_new</span> <span class="o">=</span> <span class="n">quadratic_program</span><span class="o">.</span><span class="n">integer_var</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">lb</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">ub</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported variable type: </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">vartype</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">var_names</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_new</span><span class="o">.</span><span class="n">name</span>
-        <span class="n">var_bounds</span><span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_new</span><span class="o">.</span><span class="n">lowerbound</span><span class="p">,</span> <span class="n">x_new</span><span class="o">.</span><span class="n">upperbound</span><span class="p">)</span>
-
-    <span class="c1"># objective sense</span>
-    <span class="n">minimize</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">objective_sense</span><span class="o">.</span><span class="n">is_minimize</span><span class="p">()</span>
-
-    <span class="c1"># make sure objective expression is linear or quadratic and not a variable</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">objective_expr</span><span class="p">,</span> <span class="n">Var</span><span class="p">):</span>
-        <span class="n">model</span><span class="o">.</span><span class="n">objective_expr</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">objective_expr</span> <span class="o">+</span> <span class="mi">0</span>
-
-    <span class="c1"># get objective offset</span>
-    <span class="n">constant</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">objective_expr</span><span class="o">.</span><span class="n">constant</span>
-
-    <span class="c1"># get linear part of objective</span>
-    <span class="n">linear</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">linear_part</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">objective_expr</span><span class="o">.</span><span class="n">get_linear_part</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">linear_part</span><span class="o">.</span><span class="n">iter_variables</span><span class="p">():</span>
-        <span class="n">linear</span><span class="p">[</span><span class="n">var_names</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span> <span class="o">=</span> <span class="n">linear_part</span><span class="o">.</span><span class="n">get_coef</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-
-    <span class="c1"># get quadratic part of objective</span>
-    <span class="n">quadratic</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">objective_expr</span><span class="p">,</span> <span class="n">QuadExpr</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">quad_triplet</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">objective_expr</span><span class="o">.</span><span class="n">iter_quad_triplets</span><span class="p">():</span>
-            <span class="n">i</span> <span class="o">=</span> <span class="n">var_names</span><span class="p">[</span><span class="n">quad_triplet</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-            <span class="n">j</span> <span class="o">=</span> <span class="n">var_names</span><span class="p">[</span><span class="n">quad_triplet</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
-            <span class="n">v</span> <span class="o">=</span> <span class="n">quad_triplet</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-            <span class="n">quadratic</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
-
-    <span class="c1"># set objective</span>
-    <span class="k">if</span> <span class="n">minimize</span><span class="p">:</span>
-        <span class="n">quadratic_program</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">constant</span><span class="p">,</span> <span class="n">linear</span><span class="p">,</span> <span class="n">quadratic</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">quadratic_program</span><span class="o">.</span><span class="n">maximize</span><span class="p">(</span><span class="n">constant</span><span class="p">,</span> <span class="n">linear</span><span class="p">,</span> <span class="n">quadratic</span><span class="p">)</span>
-
     <span class="c1"># check constraint type</span>
     <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">iter_constraints</span><span class="p">():</span>
         <span class="c1"># If any constraint is not linear/quadratic/indicator constraints, it raises an error.</span>
@@ -639,25 +697,7 @@
         <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint</span><span class="p">,</span> <span class="p">(</span><span class="n">QuadraticConstraint</span><span class="p">,</span> <span class="n">IndicatorConstraint</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported constraint: </span><span class="si">{</span><span class="n">constraint</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="c1"># get linear constraints</span>
-    <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">iter_linear_constraints</span><span class="p">():</span>
-        <span class="n">lhs</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span> <span class="o">=</span> <span class="n">_FromDocplexMp</span><span class="o">.</span><span class="n">_linear_constraint</span><span class="p">(</span><span class="n">var_names</span><span class="p">,</span> <span class="n">constraint</span><span class="p">)</span>
-        <span class="n">quadratic_program</span><span class="o">.</span><span class="n">linear_constraint</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">constraint</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-
-    <span class="c1"># get quadratic constraints</span>
-    <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">iter_quadratic_constraints</span><span class="p">():</span>
-        <span class="n">linear</span><span class="p">,</span> <span class="n">quadratic</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span> <span class="o">=</span> <span class="n">_FromDocplexMp</span><span class="o">.</span><span class="n">_quadratic_constraint</span><span class="p">(</span><span class="n">var_names</span><span class="p">,</span> <span class="n">constraint</span><span class="p">)</span>
-        <span class="n">quadratic_program</span><span class="o">.</span><span class="n">quadratic_constraint</span><span class="p">(</span><span class="n">linear</span><span class="p">,</span> <span class="n">quadratic</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">constraint</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-
-    <span class="c1"># get indicator constraints</span>
-    <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">iter_indicator_constraints</span><span class="p">():</span>
-        <span class="n">linear_constraints</span> <span class="o">=</span> <span class="n">_FromDocplexMp</span><span class="o">.</span><span class="n">_indicator_constraints</span><span class="p">(</span>
-            <span class="n">var_names</span><span class="p">,</span> <span class="n">var_bounds</span><span class="p">,</span> <span class="n">constraint</span><span class="p">,</span> <span class="n">indicator_big_m</span>
-        <span class="p">)</span>
-        <span class="k">for</span> <span class="n">linear</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">linear_constraints</span><span class="p">:</span>
-            <span class="n">quadratic_program</span><span class="o">.</span><span class="n">linear_constraint</span><span class="p">(</span><span class="n">linear</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">quadratic_program</span></div>
+    <span class="k">return</span> <span class="n">_FromDocplexMp</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">quadratic_program</span><span class="p">(</span><span class="n">indicator_big_m</span><span class="p">)</span></div>
 </pre></div>
 
              </article>
@@ -703,6 +743,7 @@
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
          <script src="../../../_static/jquery.js"></script>
          <script src="../../../_static/underscore.js"></script>
          <script src="../../../_static/doctools.js"></script>

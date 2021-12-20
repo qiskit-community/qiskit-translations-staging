@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_machine_learning.neural_networks.circuit_qnn &mdash; Tài liệu Qiskit Machine Learning 0.2.1</title>
+  <title>qiskit_machine_learning.neural_networks.circuit_qnn &mdash; Tài liệu Qiskit Machine Learning 0.3.0</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -197,7 +197,7 @@
               
               
                 <div class="version">
-                  0.2.1
+                  0.3.0
                 </div>
               
             
@@ -367,6 +367,12 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            circuit: The parametrized quantum circuit that generates the samples of this network.</span>
+<span class="sd">                There will be an attempt to transpile this circuit and cache the transpiled circuit</span>
+<span class="sd">                for subsequent usages by the network. If for some reasons the circuit can&#39;t be</span>
+<span class="sd">                transpiled, e.g. it originates from</span>
+<span class="sd">                :class:`~qiskit_machine_learning.circuit.library.RawFeatureVector`, the circuit</span>
+<span class="sd">                will be transpiled every time it is required to be executed and only when all</span>
+<span class="sd">                parameters are bound. This may impact overall performance on the network.</span>
 <span class="sd">            input_params: The parameters of the circuit corresponding to the input.</span>
 <span class="sd">            weight_params: The parameters of the circuit corresponding to the trainable weights.</span>
 <span class="sd">            sparse: Returns whether the output is sparse or not.</span>
@@ -406,6 +412,8 @@
         <span class="c1"># copy circuit and add measurements in case non are given</span>
         <span class="c1"># TODO: need to be able to handle partial measurements! (partial trace...)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># we have not transpiled the circuit yet</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_circuit_transpiled</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="c1"># these original values may be re-used when a quantum instance is set,</span>
         <span class="c1"># but initially it was None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_original_output_shape</span> <span class="o">=</span> <span class="n">output_shape</span>
@@ -577,6 +585,15 @@
 
             <span class="c1"># prepare sampler</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span> <span class="o">=</span> <span class="n">CircuitSampler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="p">,</span> <span class="n">param_qobj</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">caching</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+
+            <span class="c1"># transpile the QNN circuit</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">transpile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_circuit_transpiled</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">except</span> <span class="n">QiskitError</span><span class="p">:</span>
+                <span class="c1"># likely it is caused by RawFeatureVector, we just ignore this error and</span>
+                <span class="c1"># transpile circuits when it is required.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_circuit_transpiled</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_output_shape</span> <span class="o">=</span> <span class="n">output_shape</span>
 
@@ -643,7 +660,7 @@
             <span class="p">)</span>
             <span class="n">circuits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">bind_parameters</span><span class="p">(</span><span class="n">param_values</span><span class="p">))</span>
 
-        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">circuits</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">circuits</span><span class="p">,</span> <span class="n">had_transpiled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit_transpiled</span><span class="p">)</span>
         <span class="c1"># set the memory setting back</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">backend_options</span><span class="p">[</span><span class="s2">&quot;memory&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">orig_memory</span>
 
@@ -677,7 +694,7 @@
             <span class="p">)</span>
             <span class="n">circuits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">bind_parameters</span><span class="p">(</span><span class="n">param_values</span><span class="p">))</span>
 
-        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">circuits</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">circuits</span><span class="p">,</span> <span class="n">had_transpiled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit_transpiled</span><span class="p">)</span>
         <span class="c1"># initialize probabilities</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sparse</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">_HAS_SPARSE</span><span class="p">:</span>

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.circuit.library.ansatzes.utils.fermionic_excitation_generator &mdash; Tài liệu Qiskit Nature 0.2.2</title>
+  <title>qiskit_nature.circuit.library.ansatzes.utils.fermionic_excitation_generator &mdash; Tài liệu Qiskit Nature 0.3.0</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/custom.css" type="text/css" />
@@ -173,7 +173,7 @@
               
               
                 <div class="version">
-                  0.2.2
+                  0.3.0
                 </div>
               
             
@@ -287,15 +287,18 @@
 <span class="c1"># copyright notice, and modified files need to carry a notice indicating</span>
 <span class="c1"># that they have been altered from the originals.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">This method is used by the :class:`~.UCC` Ansatz in order to construct its excitation operators. It</span>
-<span class="sd">must be called for each type of excitation (singles, doubles, etc.) that is to be considered in the</span>
-<span class="sd">Ansatz.</span>
+<span class="sd">These utility methods are used by the :class:`~.UCC` Ansatz in order to construct its excitation</span>
+<span class="sd">operators. The `generate_fermionic_excitations` method must be called for each type of excitation</span>
+<span class="sd">(singles, doubles, etc.) that is to be considered in the Ansatz.</span>
 <span class="sd">Some keyword arguments are allowed through which the excitations can be filtered to fit the user&#39;s</span>
 <span class="sd">needs. `alpha_spin` and `beta_spin` are boolean flags which can be set to `False` in order to</span>
 <span class="sd">disable the inclusion of alpha-spin or beta-spin excitation, respectively.</span>
 <span class="sd">`max_spin_excitation` takes an integer value which defines the maximum number of excitations that</span>
 <span class="sd">can occur within the same spin. Thus, setting `max_spin_excitation=1` and `num_excitations=2` yields</span>
 <span class="sd">only those double excitations which do not excite the same spin species twice.</span>
+<span class="sd">`generalized` is another boolean flag which enables generalized excitations which are effectively</span>
+<span class="sd">ignoring the spin orbital occupancies. Therefore, the excitations are only determined based on the</span>
+<span class="sd">number of spin orbitals and are independent from the number of particles.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span>
@@ -306,6 +309,67 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
+<span class="k">def</span> <span class="nf">get_alpha_excitations</span><span class="p">(</span>
+    <span class="n">num_alpha</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">num_spin_orbitals</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">generalized</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;Generates all possible single alpha-electron excitations.</span>
+
+<span class="sd">    This method assumes block-ordered spin-orbitals.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        num_alpha: the number of alpha electrons.</span>
+<span class="sd">        num_spin_orbitals: the total number of spin-orbitals (alpha + alpha spin).</span>
+<span class="sd">        generalized: boolean flag whether or not to use generalized excitations, which ignore the</span>
+<span class="sd">            occupation of the spin orbitals. As such, the set of generalized excitations is only</span>
+<span class="sd">            determined from the number of spin orbitals and independent from the number of alpha</span>
+<span class="sd">            electrons.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The list of excitations encoded as tuples. Each tuple is a pair. The first entry contains</span>
+<span class="sd">        the occupied spin orbital index and the second entry the unoccupied one.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">generalized</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_spin_orbitals</span> <span class="o">//</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="n">alpha_occ</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_alpha</span><span class="p">)</span>
+    <span class="n">alpha_unocc</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_alpha</span><span class="p">,</span> <span class="n">num_spin_orbitals</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">alpha_occ</span><span class="p">,</span> <span class="n">alpha_unocc</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">get_beta_excitations</span><span class="p">(</span>
+    <span class="n">num_beta</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">num_spin_orbitals</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">generalized</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;Generates all possible single beta-electron excitations.</span>
+
+<span class="sd">    This method assumes block-ordered spin-orbitals.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        num_beta: the number of beta electrons.</span>
+<span class="sd">        num_spin_orbitals: the total number of spin-orbitals (alpha + beta spin).</span>
+<span class="sd">        generalized: boolean flag whether or not to use generalized excitations, which ignore the</span>
+<span class="sd">            occupation of the spin orbitals. As such, the set of generalized excitations is only</span>
+<span class="sd">            determined from the number of spin orbitals and independent from the number of beta</span>
+<span class="sd">            electrons.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The list of excitations encoded as tuples. Each tuple is a pair. The first entry contains</span>
+<span class="sd">        the occupied spin orbital index and the second entry the unoccupied one.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">generalized</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_spin_orbitals</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">num_spin_orbitals</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="n">beta_index_offset</span> <span class="o">=</span> <span class="n">num_spin_orbitals</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">beta_occ</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">beta_index_offset</span><span class="p">,</span> <span class="n">beta_index_offset</span> <span class="o">+</span> <span class="n">num_beta</span><span class="p">)</span>
+    <span class="n">beta_unocc</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">beta_index_offset</span> <span class="o">+</span> <span class="n">num_beta</span><span class="p">,</span> <span class="n">num_spin_orbitals</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">beta_occ</span><span class="p">,</span> <span class="n">beta_unocc</span><span class="p">))</span>
+
+
 <div class="viewcode-block" id="generate_fermionic_excitations"><a class="viewcode-back" href="../../../../../../stubs/qiskit_nature.circuit.library.ansatzes.utils.generate_fermionic_excitations.html#qiskit_nature.circuit.library.ansatzes.utils.generate_fermionic_excitations">[docs]</a><span class="k">def</span> <span class="nf">generate_fermionic_excitations</span><span class="p">(</span>
     <span class="n">num_excitations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">num_spin_orbitals</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -313,6 +377,8 @@
     <span class="n">alpha_spin</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">beta_spin</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">max_spin_excitation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">generalized</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">preserve_spin</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]:</span>
     <span class="sd">&quot;&quot;&quot;Generates all possible excitations with the given number of excitations for the specified</span>
 <span class="sd">    number of particles distributed among the given number of spin orbitals.</span>
@@ -329,6 +395,11 @@
 <span class="sd">                             this to 1 and `num_excitations` to 2 in order to obtain only</span>
 <span class="sd">                             mixed-spin double excitations (alpha,beta) but no pure-spin double</span>
 <span class="sd">                             excitations (alpha,alpha or beta,beta).</span>
+<span class="sd">        generalized: boolean flag whether or not to use generalized excitations, which ignore the</span>
+<span class="sd">            occupation of the spin orbitals. As such, the set of generalized excitations is only</span>
+<span class="sd">            determined from the number of spin orbitals and independent from the number of</span>
+<span class="sd">            particles.</span>
+<span class="sd">        preserve_spin: boolean flag whether or not to preserve the particle spins.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        The list of excitations encoded as tuples of tuples. Each tuple in the list is a pair. The</span>
@@ -336,22 +407,49 @@
 <span class="sd">        indices of the unoccupied spin orbitals.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">alpha_excitations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">alpha_spin</span><span class="p">:</span>
-        <span class="c1"># generate alpha-spin orbital indices for occupied and unoccupied ones</span>
-        <span class="n">alpha_occ</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_particles</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-        <span class="n">alpha_unocc</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_particles</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">num_spin_orbitals</span> <span class="o">//</span> <span class="mi">2</span><span class="p">))</span>
-        <span class="c1"># the Cartesian product of these lists gives all possible single alpha-spin excitations</span>
-        <span class="n">alpha_excitations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">alpha_occ</span><span class="p">,</span> <span class="n">alpha_unocc</span><span class="p">))</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Generated list of single alpha excitations: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">alpha_excitations</span><span class="p">)</span>
-
     <span class="n">beta_excitations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">beta_spin</span><span class="p">:</span>
-        <span class="c1"># generate beta-spin orbital indices for occupied and unoccupied ones</span>
-        <span class="n">beta_occ</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_spin_orbitals</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">num_spin_orbitals</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">num_particles</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="n">beta_unocc</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_spin_orbitals</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">num_particles</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">num_spin_orbitals</span><span class="p">))</span>
-        <span class="c1"># the Cartesian product of these lists gives all possible single beta-spin excitations</span>
-        <span class="n">beta_excitations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">beta_occ</span><span class="p">,</span> <span class="n">beta_unocc</span><span class="p">))</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Generated list of single beta excitations: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">beta_excitations</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">preserve_spin</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">alpha_spin</span><span class="p">:</span>
+            <span class="n">alpha_excitations</span> <span class="o">=</span> <span class="n">get_alpha_excitations</span><span class="p">(</span>
+                <span class="n">num_particles</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">num_spin_orbitals</span><span class="p">,</span> <span class="n">generalized</span>
+            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Generated list of single alpha excitations: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">alpha_excitations</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">beta_spin</span><span class="p">:</span>
+            <span class="n">beta_excitations</span> <span class="o">=</span> <span class="n">get_beta_excitations</span><span class="p">(</span>
+                <span class="n">num_particles</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">num_spin_orbitals</span><span class="p">,</span> <span class="n">generalized</span>
+            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Generated list of single beta excitations: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">beta_excitations</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># We can reuse our existing implementation for the scenario involving spin flips by</span>
+        <span class="c1"># generating the single excitations of an _interleaved_ spin orbital system.</span>
+        <span class="c1"># For this, we can reuse the alpha single excitation generator in a system of double the</span>
+        <span class="c1"># actual size.</span>
+        <span class="n">single_excitations</span> <span class="o">=</span> <span class="n">get_alpha_excitations</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">num_particles</span><span class="p">),</span> <span class="n">num_spin_orbitals</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">interleaved2blocked</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">total</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">index</span> <span class="o">//</span> <span class="mi">2</span>
+
+            <span class="k">return</span> <span class="p">(</span><span class="n">index</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">total</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+
+        <span class="c1"># we now split the generated single excitations into separate spin species</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">occ_interleaved</span><span class="p">,</span> <span class="n">unocc_interleaved</span><span class="p">)</span> <span class="ow">in</span> <span class="n">single_excitations</span><span class="p">:</span>
+            <span class="c1"># we map from interleaved to blocked spin orbital indices</span>
+            <span class="n">occ_blocked</span> <span class="o">=</span> <span class="n">interleaved2blocked</span><span class="p">(</span><span class="n">occ_interleaved</span><span class="p">,</span> <span class="n">num_spin_orbitals</span><span class="p">)</span>
+            <span class="n">unocc_blocked</span> <span class="o">=</span> <span class="n">interleaved2blocked</span><span class="p">(</span><span class="n">unocc_interleaved</span><span class="p">,</span> <span class="n">num_spin_orbitals</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">occ_interleaved</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># the originally occupied orbital was of alpha-spin character</span>
+                <span class="n">alpha_excitations</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">occ_blocked</span><span class="p">,</span> <span class="n">unocc_blocked</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">beta_excitations</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">occ_blocked</span><span class="p">,</span> <span class="n">unocc_blocked</span><span class="p">))</span>
+
+        <span class="c1"># NOTE: we sort the lists to ensure that non-spin flipped variants take higher precedence</span>
+        <span class="n">alpha_excitations</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">alpha_excitations</span><span class="p">)</span>
+        <span class="n">beta_excitations</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">beta_excitations</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">alpha_excitations</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">beta_excitations</span><span class="p">:</span>
         <span class="c1"># nothing to do, let&#39;s return early</span>

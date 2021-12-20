@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="es-UN" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Optimizador de Grover &mdash; documentación de Qiskit Optimization - 0.2.3</title>
+  <title>Optimizador de Grover &mdash; documentación de Qiskit Optimization - 0.3.0</title>
   
 
   
@@ -27,10 +28,12 @@
 
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -173,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.3
+                  0.3.0
                 </div>
               
             
@@ -528,20 +531,20 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">Nota</p>
-<p>Esta página fue generada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.2/docs/tutorials/04_grover_optimizer.ipynb">docs/tutorials/04_grover_optimizer.ipynb</a>.</p>
+<p>Esta página fue generada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/04_grover_optimizer.ipynb">docs/tutorials/04_grover_optimizer.ipynb</a>.</p>
 </div>
-<div class="section" id="Optimizador-de-Grover">
+<section id="Optimizador-de-Grover">
 <h1>Optimizador de Grover<a class="headerlink" href="#Optimizador-de-Grover" title="Enlazar permanentemente con este título">¶</a></h1>
-<div class="section" id="Introducción">
+<section id="Introducción">
 <h2>Introducción<a class="headerlink" href="#Introducción" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>La Búsqueda Adaptativa de Grover (GAS, por sus siglas en inglés: Grover Adaptive Search) ha sido explorada como una posible solución para problemas de optimización combinatoria, junto con algoritmo variacionales tal como el Solucionador Propio Cuántico Variacional (VQE, por sus siglas en inglés: Variational Quantum Eigensolver) y el Algoritmo de Optimización Aproximada Cuántica (QAOA, por sus siglas en inglés: Quantum Approximate Algorithm). El algoritmo aplica la Búsqueda de Grover iterativamente para encontrar el valor óptimo de una función objetivo, al usar el valor mejor conocido de la ejecución anterior como umbral. El oráculo adaptativo utilizado en GAS reconoce todos los valores arriba o debajo del umbral actual (para máximos y mínimos, respectivamente), al reducir el tamaño del espacio de búsqueda cada iteración cada que el umbral es actualizado, hasta que un óptimo es encontrado.</p>
 <p>En este cuaderno exploraremos cada componente del <code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code>, el cual utiliza las técnicas descritas en GAS, minimizando un problema de optimización binaria cuadrática sin restricciones (Quadratic Unconstrained Binary Optimization, QUBO), como se describe en [1]</p>
-<div class="section" id="Referencias">
+<section id="Referencias">
 <h3>Referencias<a class="headerlink" href="#Referencias" title="Enlazar permanentemente con este título">¶</a></h3>
 <p>[1] <a class="reference external" href="https://arxiv.org/abs/1912.04088">A. Gilliam, S. Woerner, C. Gonciulea, Grover Adaptive Search for Constrained Polynomial Binary Optimization, arXiv preprint arXiv:1912.04088 (2019).</a></p>
-</div>
-</div>
-<div class="section" id="Búsqueda-Adaptativa-de-Grover">
+</section>
+</section>
+<section id="Búsqueda-Adaptativa-de-Grover">
 <h2>Búsqueda Adaptativa de Grover<a class="headerlink" href="#Búsqueda-Adaptativa-de-Grover" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>La Búsqueda de Grover, el elemento central de GAS, necesita de tres ingredientes:</p>
 <ol class="arabic simple">
@@ -550,14 +553,14 @@ div.rendered_html tbody tr:hover {
 <li><p>El operador de difusión de Grover <span class="math notranslate nohighlight">\(D\)</span>, que multiplica la amplitud del estado <span class="math notranslate nohighlight">\(|0\rangle_n\)</span> por -1.</p></li>
 </ol>
 <p>Aunque las implementaciones de GAS varían según el caso de uso específico, en general, se siguen los pasos que se describen a continuación.</p>
-<div><p><img alt="947a405e66994ae6a84ce5222060af28" class="no-scaled-link" src="../_images/GAS-Algorithm.png" style="width: 400px;" /></p>
+<div><p><img alt="4e97d18a86fb423b902b1c2580fd1b83" class="no-scaled-link" src="../_images/GAS-Algorithm.png" style="width: 400px;" /></p>
 </div><p><code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code> utiliza <code class="docutils literal notranslate"><span class="pre">QuadraticProgramToNegativeValueOracle</span></code> para construir <span class="math notranslate nohighlight">\(A_y\)</span> tal que prepare un registro de <span class="math notranslate nohighlight">\(n\)</span> qubits para representar una superposición igual de todos los <span class="math notranslate nohighlight">\(|x\rangle_n\)</span> y a los registros de <span class="math notranslate nohighlight">\(m\)</span> qubits para representar (aproximadamente) el correspondiente <span class="math notranslate nohighlight">\(|Q(x)-y\rangle_m\)</span>. Entonces, todos los estados con una <span class="math notranslate nohighlight">\((Q(x) - y)\)</span> negativa deben ser marcados con <span class="math notranslate nohighlight">\(O_y\)</span>. Ten en cuenta que en la implementación discutida, el operador oráculo es en realidad independiente de <span class="math notranslate nohighlight">\(y\)</span>, pero esto no es un requisito. Para mayor claridad, nos referiremos al oráculo como <span class="math notranslate nohighlight">\(O\)</span> cuando el oráculo es independiente de <span class="math notranslate nohighlight">\(y\)</span>.</p>
 <p>Dicho formalmente, <code class="docutils literal notranslate"><span class="pre">QuadraticProgramToNegativeValueOracle</span></code> construye un <span class="math notranslate nohighlight">\(A_y\)</span> y un <span class="math notranslate nohighlight">\(O\)</span> tal que:</p>
-<div><p><img alt="7e499651ad474d1283c0e56abbf04013" class="no-scaled-link" src="../_images/a-o-dfn.png" style="width: 400px;" /></p>
+<div><p><img alt="351e2d647f114eaf8ac718b927c46d70" class="no-scaled-link" src="../_images/a-o-dfn.png" style="width: 400px;" /></p>
 </div><p>donde <span class="math notranslate nohighlight">\(|x\rangle\)</span> es la representación binaria del entero <span class="math notranslate nohighlight">\(x\)</span>.</p>
 <p>En cada iteración en la que se actualiza el umbral <span class="math notranslate nohighlight">\(y\)</span>, adaptamos <span class="math notranslate nohighlight">\(A_y\)</span> de manera que los valores de la función se desplazan hacia arriba o hacia abajo (para el mínimo y el máximo respectivamente) por <span class="math notranslate nohighlight">\(y\)</span>. Por ejemplo, en el contexto de encontrar el mínimo, a medida que el valor de <span class="math notranslate nohighlight">\(y\)</span> disminuye, el espacio de búsqueda (valores negativos) también disminuye, hasta que solo queda el valor mínimo. Se explorará un ejemplo concreto en la siguiente sección.</p>
-</div>
-<div class="section" id="Buscar-el-mínimo-de-un-problema-de-QUBO-utilizando-GroverOptimizer">
+</section>
+<section id="Buscar-el-mínimo-de-un-problema-de-QUBO-utilizando-GroverOptimizer">
 <h2>Buscar el mínimo de un problema de QUBO utilizando GroverOptimizer<a class="headerlink" href="#Buscar-el-mínimo-de-un-problema-de-QUBO-utilizando-GroverOptimizer" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>El siguiente es un ejemplo de juguete de un problema de minimización.</p>
 <p><span class="math">\begin{eqnarray}
@@ -576,7 +579,7 @@ div.rendered_html tbody tr:hover {
 <span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">BasicAer</span>
 <span class="kn">from</span> <span class="nn">docplex.mp.model</span> <span class="kn">import</span> <span class="n">Model</span>
 
-<span class="n">backend</span> <span class="o">=</span> <span class="n">BasicAer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;statevector_simulator&#39;</span><span class="p">)</span>
+<span class="n">backend</span> <span class="o">=</span> <span class="n">BasicAer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;statevector_simulator&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -586,10 +589,10 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
-<span class="n">x0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;x0&#39;</span><span class="p">)</span>
-<span class="n">x1</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;x1&#39;</span><span class="p">)</span>
-<span class="n">x2</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;x2&#39;</span><span class="p">)</span>
-<span class="n">model</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="o">-</span><span class="n">x0</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">x1</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">x2</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">x0</span><span class="o">*</span><span class="n">x2</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">x1</span><span class="o">*</span><span class="n">x2</span><span class="p">)</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;x0&quot;</span><span class="p">)</span>
+<span class="n">x1</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;x1&quot;</span><span class="p">)</span>
+<span class="n">x2</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;x2&quot;</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="o">-</span><span class="n">x0</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x1</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">x2</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x0</span> <span class="o">*</span> <span class="n">x2</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">x1</span> <span class="o">*</span> <span class="n">x2</span><span class="p">)</span>
 <span class="n">qp</span> <span class="o">=</span> <span class="n">from_docplex_mp</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">qp</span><span class="o">.</span><span class="n">export_as_lp_string</span><span class="p">())</span>
 </pre></div>
@@ -642,11 +645,11 @@ fval=-6.0
 </pre></div></div>
 </div>
 <p>Esto resulta en la solución óptima <span class="math notranslate nohighlight">\(x_0=1\)</span>, <span class="math notranslate nohighlight">\(x_1=0\)</span>, <span class="math notranslate nohighlight">\(x_2=1\)</span> y el valor objetivo óptimo de <span class="math notranslate nohighlight">\(-6\)</span> (la mayoría del tiempo, ya que es un algoritmo randomizado). A continuación, una visualización personalisada del estado cuántico muestra una posible ejecución de <code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code> aplicada a este QUBO.</p>
-<div><p><img alt="710f4e45523442b08f42a776a3f4501d" class="no-scaled-link" src="../_images/GAS-QUBO-Example.png" style="width: 800px;" /></p>
+<div><p><img alt="583fcbf57e8240209b430a15be2d9d53" class="no-scaled-link" src="../_images/GAS-QUBO-Example.png" style="width: 800px;" /></p>
 </div><p>Cada gráfica muestra una sola iteración de GAS, con los valores actuales de: <span class="math notranslate nohighlight">\(r\)</span> (= contador de iteraciones) y <span class="math notranslate nohighlight">\(y\)</span> (= umbral/compensación) mostrados en el título. El eje X muestra el equivalente entero de la entrada (p. ej., «101» <span class="math notranslate nohighlight">\(\rightarrow\)</span> 5), y el eje Y muestra los posibles valores de la función. Como hay 3 variables binarias, hay <span class="math notranslate nohighlight">\(2^3=8\)</span> posibles soluciones, que se muestran en cada gráfica. La intensidad del color indica la probabilidad de medir un resultado determinado (siendo la intensidad del brillo la más alta), mientras que el color real indica la fase correspondiente (consulta la rueda de colores de fase a continuación). Ten en cuenta que a medida que <span class="math notranslate nohighlight">\(y\)</span> disminuye, cambiamos todos los valores hacia arriba por esa cantidad, lo que significa que hay cada vez menos valores negativos en la distribución, hasta que solo queda uno (el mínimo).</p>
-<div><p><img alt="023a90ca1d34472380bf3627766cccaa" class="no-scaled-link" src="../_images/color-wheel-phase.png" style="width: 200px;" /></p>
-</div></div>
-<div class="section" id="Compruebe-que-GroverOptimizer-encuentre-el-valor-correcto">
+<div><p><img alt="fea9b570338b4ddcb730222fd2380ff4" class="no-scaled-link" src="../_images/color-wheel-phase.png" style="width: 200px;" /></p>
+</div></section>
+<section id="Compruebe-que-GroverOptimizer-encuentre-el-valor-correcto">
 <h2>Compruebe que GroverOptimizer encuentre el valor correcto<a class="headerlink" href="#Compruebe-que-GroverOptimizer-encuentre-el-valor-correcto" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>Podemos verificar que el algoritmo está funcionando correctamente usando el <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> en Qiskit.</p>
 <div class="nbinput docutils container">
@@ -676,6 +679,7 @@ fval=-6.0
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -703,8 +707,8 @@ fval=-6.0
 </pre></div>
 </div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>
@@ -771,6 +775,7 @@ fval=-6.0
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
          <script src="../_static/doctools.js"></script>
@@ -778,8 +783,8 @@ fval=-6.0
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "tex2jax_ignore|mathjax_ignore|document", "processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
+         <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+         <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
      
 
   

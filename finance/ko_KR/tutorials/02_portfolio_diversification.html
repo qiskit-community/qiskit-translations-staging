@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="ko-KR" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>포트폴리오 다각화 &mdash; Qiskit Finance 0.2.1 문서</title>
+  <title>포트폴리오 다각화 &mdash; Qiskit Finance 0.3.0 문서</title>
   
 
   
@@ -31,8 +32,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -175,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.1
+                  0.3.0
                 </div>
               
             
@@ -530,79 +531,79 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">참고</p>
-<p>이 페이지는 <a class="reference external" href="https://github.com/Qiskit/qiskit-finance/blob/stable/0.2/docs/tutorials/02_portfolio_diversification.ipynb">docs/tutorials/02_portfolio_diversification.ipynb</a> 에서 생성되었다.</p>
+<p>이 페이지는 <a class="reference external" href="https://github.com/Qiskit/qiskit-finance/blob/stable/0.3/docs/tutorials/02_portfolio_diversification.ipynb">docs/tutorials/02_portfolio_diversification.ipynb</a> 에서 생성되었다.</p>
 </div>
-<div class="section" id="포트폴리오-다각화">
+<section id="포트폴리오-다각화">
 <h1>포트폴리오 다각화<a class="headerlink" href="#포트폴리오-다각화" title="이 표제에 대한 퍼머링크">¶</a></h1>
-<div class="section" id="소개">
+<section id="소개">
 <h2>소개<a class="headerlink" href="#소개" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>자산 관리에서는 두 가지 개괄적인 접근 방식이 있다: 능동적 투자 관리와 수동적 투자 관리. 수동적 투자 관리에서는 지수-추적 펀드와 포트폴리오 다각화에 기반한 접근이 있는데, 이는 많은 자산을 소수의 대표 주식으로 포트폴리오를 만드는 것이 목적이다. 여기서는 최근 두 가지 이유로 유명해진 포트폴리오 다각화 문제를 설명한다: 1. 한정된 예산과 수수료로 지수 (혹은 유사한 대규모 자산)의 성능을 모방할 수 있다. 즉, 전통적인 지수-추적은 지수 내의 모든 자산을 구매하여 이상적으로 동일한 가중치를 주려고 한다. 이는 다수의 근거로 비현실적이다: 자산당 거래 단위가 하나여도 관리하는 자산보다 많을 수 있으며, 정수 제약이 있는 대규모의 지수-추적 문제는 최적화 문제를 어렵게 만들 수 있고, 지수에 가중치를 부여해 포지션을 조정하고자 반복적인 리밸런싱을 하여 수수료가 비싸질 수도 있다. 고로, <span class="math notranslate nohighlight">\(n\)</span> 개의 자산이 있는 시장에서 <span class="math notranslate nohighlight">\(q\)</span> 개의 자산을 가진 포트폴리오를 선택하여 <span class="math notranslate nohighlight">\(n\)</span> 보다 훨씬 적은 <span class="math notranslate nohighlight">\(q\)</span> 개의 자산으로도 시장의 흐름을 따르는 포트폴리오를 선택하는 방법이 인기가 있다. 자산을 <span class="math notranslate nohighlight">\(q\)</span> 클러스터들에 어떻게 그룹화하는지 그리고 어떤 <span class="math notranslate nohighlight">\(q\)</span> 개의 자산들이 <span class="math notranslate nohighlight">\(q\)</span> 클러스터들을 대표해야하는지 결정하는 방법은 대규모 최적화 문제를 푸는 것과 같다. 이후에는 [Cornuejols &amp; Tutuncu, 2006] 에서 소개된 포트폴리오 다각화 문제에 대한 수학적 모델을 기술할 것이다. 2. 이는 공분산 행렬을 넘어서 시계열 간의 유사도 측정을 가능하게 한다. 전통적으로 현대 포트폴리오 이론은 자산들 간의 유사도를 측정하는 것으로 여겼다는 것에 주목하라. 그러나 공분산 행렬은 불완전하다. 예를 들어서 런던과 뉴욕에 모두 상장된 회사를 고려해 보라. 두 상장 종목은 유사해야 함에도 불구하고 시장이 열리는 시간이 부분적으로만 겹치기에 두 상장 종목의 가격의 시계열도 부분적으로만 겹친다. 공분산 대신에 예를 들어, 어떤 시간 간격에서는 데이터를 오직 하나의 시계열에서만 가져오고, 다른 때에는 주가가 같이 변하는 유사성을 보이는 두 시계열에서의 유사도 측정치로써 [Berndt and Clifford, 1994] 의 동적 시간 워핑을 고려할 수 있다.</p>
 <p>설명할 전반적인 워크플로우는 다음으로 구성된다:</p>
 <ol class="arabic simple">
 <li><p>기초 세트 자산을 선택한다. 우리의 경우, 이것은 적은 수의 미국 주식이다.</p></li>
-<li><p>load the time series capturing the evolution of the prices of assets. In our case, this is a simplistic load of adjusted daily closing price data from Wikipedia or Nasdaq or LSE or EuroNext, whereas in a real asset management, a much higher frequency may be considered.</p></li>
-<li><p>compute the pair-wise similarity among the time series. In our case, we run a linear-time approximation of the dynamic time warping, still on the classical computer.</p></li>
-<li><p>compute the actual portfolio of <span class="math notranslate nohighlight">\(q\)</span> representative assets, based on the similarity measure. This step is run twice, actually. First, we obtain a reference value by a run of an IBM solver (IBM ILOG CPLEX or the Exact Eigensolver) on the classical computer. Second, we run an alternative, hybrid algorithm partly on the quantum computer.</p></li>
+<li><p>자산 가격의 진화를 포착하는 시계열을 로드한다. 우리의 경우, 이는 위키피디아, 나스닥, LSE 또는 EuroNext로부터의 조정된 일별 종가 데이터를 단순히 조정하는 것이지만, 실제 자산 관리에서는 훨씬 더 높은 수로 고려될 수 있다.</p></li>
+<li><p>시계열 사이에 쌍별 유사성을 계산한다. 우리의 경우, 여전히 고전 컴퓨터에 존재하는 동적시간워핑의 선형 시간 근사를 실행한다.</p></li>
+<li><p>이러한 유사성 측정에 기초하여 <span class="math notranslate nohighlight">\(q\)</span> 의 실제 자산의 실제 포트폴리오를 계산한다. 이 단계는 실제 두 번 실행된다. 먼저, 고전적인 컴퓨터에서 IBM solver (IBM ILOG CPLEX 또는 Exact Eigensolver) 를 실행하여 참조 값을 얻는다. 두 번째로, 우리는 양자 컴퓨터에 부분적으로 하이브리드 알고리즘을 실행한다.</p></li>
 <li><p>결과를 시각화한다. 우리의 경우, 이것은 단순한 도표이다.</p></li>
 </ol>
-<p>In the following, we first explain the model used in (4) above, before we proceed with the installation of the pre-requisites and the data loading.</p>
-</div>
-<div class="section" id="The-Model">
-<h2>The Model<a class="headerlink" href="#The-Model" title="이 표제에 대한 퍼머링크">¶</a></h2>
-<p>As discussed in [Cornuejols &amp; Tutuncu, 2006], we describe a mathematical model that clusters assets into groups of similar ones and selects one representative asset from each group to be included in the index fund portfolio. The model is based on the following data, which we will discuss in more detail later:</p>
+<p>다음에는 전제 조건 및 데이터 로드 설치를 진행하기 전에 위의 (4) 에서 사용된 모델을 먼저 설명한다.</p>
+</section>
+<section id="모델">
+<h2>모델<a class="headerlink" href="#모델" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<p>[Cornuejols &amp; Tutuncu, 2006] 에서 논의된 바와 같이, 우리는 자산을 유사한 것의 그룹들로 군집화하고, 인덱스 펀드 포트폴리오에 포함될 각 그룹으로부터 하나의 대표적인 자산을 선택하는 수학적 모델을 기술한다. 모델은 다음의 데이터를 기반으로 하는데 해당 데이터는 나중에 더 자세히 다룰 것이다.</p>
 <div class="math notranslate nohighlight">
 \[\rho_{ij} = \textrm{similarity}\, \textrm{between}\, \textrm{stock}\, i \, \textrm{and}\, \textrm{stock}\, j.\]</div>
-<p>For example, <span class="math notranslate nohighlight">\(\rho_{ii} = 1\)</span>, <span class="math notranslate nohighlight">\(\rho_{ij} \leq 1\)</span> for <span class="math notranslate nohighlight">\(i \neq j\)</span> and <span class="math notranslate nohighlight">\(\rho_{ij}\)</span> is larger for more similar stocks. An example of this is the correlation between the returns of stocks <span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(j\)</span>. But one could choose other similarity indices <span class="math notranslate nohighlight">\(\rho_{ij}\)</span>.</p>
+<p>예를 들어, <span class="math notranslate nohighlight">\(i \neq j\)</span> 인 <span class="math notranslate nohighlight">\(\rho_{ii} = 1\)</span>, <span class="math notranslate nohighlight">\(\rho_{ij} \leq 1\)</span> 과 <span class="math notranslate nohighlight">\(\rho_{ij}\)</span> 의 값은 비슷한 주식들에서 더 높다. 이것의 예에는 주식 수익률 <span class="math notranslate nohighlight">\(i\)</span> 과 <span class="math notranslate nohighlight">\(j\)</span> 의 연관성이 있다. 하지만 다른 유사성 지수 <span class="math notranslate nohighlight">\(\rho_{ij}\)</span> 도 선택할 수 있다.</p>
 <p>우리가 해결하고자 하는 문제는 다음과 같다.</p>
 <div class="math notranslate nohighlight">
 \[(M) \quad  f = \max_{x_{ij}, y_{j}} \,\, \sum_{i=1}^n \sum_{j=1}^n \rho_{ij} x_{ij}\]</div>
-<p>subject to the clustering constraint:</p>
+<p>다음과 같이 클러스터링 제한 조건에 적용된다.</p>
 <div class="math notranslate nohighlight">
 \[\sum_{j=1}^n y_j = q,\]</div>
-<p>to consistency constraints:</p>
+<p>일관성 제한 조건:</p>
 <div class="math notranslate nohighlight">
 \[\sum_{j=1}^n x_{ij} = 1, \,\textrm{ for }\,  i = 1,\ldots, n,
 \quad x_{ij} \leq y_j,\,\textrm{ for }\,  i = 1,\ldots, n; \, j = 1,\ldots, n,
 \quad x_{jj} = y_j,\,\textrm{ for }\,  j = 1,\ldots, n,\]</div>
-<p>and integral constraints:</p>
+<p>및 필수 제약 사항:</p>
 <div class="math notranslate nohighlight">
 \[\quad  x_{ij}, y_j \in\{0,1\}, \,\textrm{ for }\,  i = 1,\ldots, n; \, j = 1,\ldots, n.\]</div>
-<p>The variables <span class="math notranslate nohighlight">\(y_j\)</span> describe which stocks <span class="math notranslate nohighlight">\(j\)</span> are in the index fund (<span class="math notranslate nohighlight">\(y_j = 1\)</span> if <span class="math notranslate nohighlight">\(j\)</span> is selected in the fund, <span class="math notranslate nohighlight">\(0\)</span> otherwise). For each stock <span class="math notranslate nohighlight">\(i = 1,\dots,n\)</span>, the variable <span class="math notranslate nohighlight">\(x_{ij}\)</span> indicates which stock <span class="math notranslate nohighlight">\(j\)</span> in the index fund is most similar to <span class="math notranslate nohighlight">\(i\)</span> (<span class="math notranslate nohighlight">\(x_{ij} = 1\)</span> if <span class="math notranslate nohighlight">\(j\)</span> is the most similar stock in the index fund, <span class="math notranslate nohighlight">\(0\)</span> otherwise).</p>
-<p>The first constraint selects <span class="math notranslate nohighlight">\(q\)</span> stocks in the fund. The second constraint imposes that each stock <span class="math notranslate nohighlight">\(i\)</span> has exactly one representative stock <span class="math notranslate nohighlight">\(j\)</span> in the fund. The third and fourth constraints guarantee that stock <span class="math notranslate nohighlight">\(i\)</span> can be represented by stock <span class="math notranslate nohighlight">\(j\)</span> only if <span class="math notranslate nohighlight">\(j\)</span> is in the fund. The objective of the model maximizes the similarity between the <span class="math notranslate nohighlight">\(n\)</span> stocks and their representatives in the fund. Different cost functions can also be considered.</p>
+<p>변수 <span class="math notranslate nohighlight">\(y_j\)</span> 는 인덱스 펀드에 있는 주식 <span class="math notranslate nohighlight">\(j\)</span> 를 설명한다 (펀드에서 <span class="math notranslate nohighlight">\(y_j = 1\)</span> 가 선택된 경우 <span class="math notranslate nohighlight">\(y_j = 1\)</span> , 아닐 경우 <span class="math notranslate nohighlight">\(0\)</span> ). 각 주식 <span class="math notranslate nohighlight">\(i = 1, \dots,n\)</span> 는 인덱스 펀드의 <span class="math notranslate nohighlight">\(j\)</span> 가 인덱스 펀드에서 가장 유사한 주식이면 <span class="math notranslate nohighlight">\(x_{ij} = 1\)</span> , 아닐 경우 <span class="math notranslate nohighlight">\(0\)</span> ).</p>
+<p>첫 번째 제약은 펀드에서 <span class="math notranslate nohighlight">\(q\)</span> 주식을 선택한다. 두 번째 제약은 각 주식 <span class="math notranslate nohighlight">\(i\)</span> 주식과 펀드의 대표자 간의 유사성을 극대화한다. 다른 비용 함수도 고려할 수 있다.</p>
 <p>한 벡터에서 결정 변수를 연결하도록 한다.</p>
 <div class="math notranslate nohighlight">
 \[{\bf z} = [x_{11},x_{12},\ldots,x_{1n}, x_{22},\ldots,x_{nn}, y_{1},\ldots,y_{n}],\]</div>
-<p>whose dimension is <span class="math notranslate nohighlight">\({\bf z} \in \{0,1\}^N\)</span>, with <span class="math notranslate nohighlight">\(N = n (n+1)\)</span> and denote the optimal solution with <span class="math notranslate nohighlight">\({\bf z}^*\)</span>, and the optimal cost <span class="math notranslate nohighlight">\(f^*\)</span>.</p>
-</div>
-<div class="section" id="A-Hybrid-Approach">
-<h2>A Hybrid Approach<a class="headerlink" href="#A-Hybrid-Approach" title="이 표제에 대한 퍼머링크">¶</a></h2>
-<p>Here, we demonstrate an approach that combines classical and quantum computing steps, following the quantum approximate optimization approach of Farhi, Goldstone, and Gutmann (2014).</p>
-<div class="section" id="Construct-a-binary-polynomial-optimization">
-<h3>Construct a binary polynomial optimization<a class="headerlink" href="#Construct-a-binary-polynomial-optimization" title="이 표제에 대한 퍼머링크">¶</a></h3>
-<p>From <span class="math notranslate nohighlight">\((M)\)</span> one can construct a binary polynomial optimization with equality constraints only, by substituting the <span class="math notranslate nohighlight">\(x_{ij} \leq y_j\)</span> inequality constraints with the equivalent equality constraints <span class="math notranslate nohighlight">\(x_{ij} (1- y_j) = 0\)</span>. Then the problem becomes:</p>
+<p>그의 치수는 <span class="math notranslate nohighlight">\({\bf z} \in \{0,1\}^N\)</span> , <span class="math notranslate nohighlight">\(N = n (n+1)\)</span> 이고, 최적의 솔루션을 <span class="math notranslate nohighlight">\({\bf z}^*\)</span> 로 표시하고 최적의 비용은 <span class="math notranslate nohighlight">\(f^*\)</span> 이다.</p>
+</section>
+<section id="하이브리드-접근법">
+<h2>하이브리드 접근법<a class="headerlink" href="#하이브리드-접근법" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<p>여기에서는 Farhi, Goldstone, 그리고 Gutmann (2014)의 양자 근사 최적화 기법에 따라 고전과 양자 컴퓨팅 과정을 결합하는 접근법을 보여줄 것이다.</p>
+<section id="2진-다항식-최적화를-구성하기">
+<h3>2진 다항식 최적화를 구성하기<a class="headerlink" href="#2진-다항식-최적화를-구성하기" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<p><span class="math notranslate nohighlight">\((M)\)</span> 로부터, 동등한 동등한 동등 제약 조건 <span class="math notranslate nohighlight">\(x_{ij} (1- y_j) = 0\)</span> 부등식을 치환함으로써, 등식 제약만으로 2진 다항식 최적화를 구성할 수 있다.</p>
 <div class="math notranslate nohighlight">
 \[(BPO) \quad  f = \max_{x_{ij}, y_{j}} \,\, \sum_{i=1}^n \sum_{j=1}^n \rho_{ij} x_{ij}\]</div>
-<p>subject to the clustering constraint, the integral constraints, and the following modified consistency constraints:</p>
+<p>클러스터링(clustering) 제한조건, 통합(integral) 제한조건 및 다음 수정된 일관성 제한조건에 종속된다.</p>
 <div class="math notranslate nohighlight">
 \[\sum_{j=1}^n x_{ij} = 1, \,\textrm{ for }\,  i = 1,\ldots, n,\]</div>
 <div class="math notranslate nohighlight">
 \[\quad x_{ij} (1- y_j) = 0,\,\textrm{ for }\,  i = 1,\ldots, n; \, j = 1,\ldots, n,\]</div>
 <div class="math notranslate nohighlight">
 \[\quad x_{jj} = y_j,\,\textrm{ for }\,  j = 1,\ldots, n.\]</div>
-</div>
-<div class="section" id="Construct-the-Ising-Hamiltonian">
-<h3>Construct the Ising Hamiltonian<a class="headerlink" href="#Construct-the-Ising-Hamiltonian" title="이 표제에 대한 퍼머링크">¶</a></h3>
-<p>We can now construct the Ising Hamiltonian (QUBO) by penalty methods (introducing a penalty coefficient <span class="math notranslate nohighlight">\(A\)</span> for each equality constraint) as</p>
+</section>
+<section id="이징-해밀턴-(Ising-Hamiltonian)을-구성하다.">
+<h3>이징 해밀턴 (Ising Hamiltonian)을 구성하다.<a class="headerlink" href="#이징-해밀턴-(Ising-Hamiltonian)을-구성하다." title="이 표제에 대한 퍼머링크">¶</a></h3>
+<p>이제 다음과 같이 페널티 방법 (각각의 평등 제약에 대한 페널티 계수 <span class="math notranslate nohighlight">\(A\)</span> 를 도입함) 에 의해 이징 해밀토니언 (QUBO) 을 구성할 수 있다.</p>
 <div class="math notranslate nohighlight">
 \[(IH) \quad H = \sum_{i=1}^n \sum_{j=1}^n \rho_{ij} x_{ij} + A\Big( \sum_{j=1}^n y_j - q\Big)^2 + \sum_{i=1}^n A\Big( \sum_{j=1}^n x_{ij} - 1\Big)^2 + \sum_{j=1}^n A (x_{jj}-y_j)^2 +\sum_{i=1}^n \sum_{j=1}^n A \left(x_{ij} (1- y_j)\right).\]</div>
-</div>
-<div class="section" id="From-Hamiltonian-to-Quadratic-Programming-(QP)-formulation">
-<h3>From Hamiltonian to Quadratic Programming (QP) formulation<a class="headerlink" href="#From-Hamiltonian-to-Quadratic-Programming-(QP)-formulation" title="이 표제에 대한 퍼머링크">¶</a></h3>
-<p>In the vector <span class="math notranslate nohighlight">\({\bf z}\)</span>, the Ising Hamiltonian elements can be rewritten as follows,</p>
-<p>First term:</p>
+</section>
+<section id="해밀토니언에서-이차의-프로그래밍-(QP)-형성">
+<h3>해밀토니언에서 이차의 프로그래밍 (QP) 형성<a class="headerlink" href="#해밀토니언에서-이차의-프로그래밍-(QP)-형성" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<p>벡터 <span class="math notranslate nohighlight">\({\bf z}\)</span> 에서, 이징 해밀토니언 요소는 다음과 같이 재기록될 수 있다.</p>
+<p>첫 번째 용어:</p>
 <div class="math notranslate nohighlight">
 \[\sum_{i=1}^n \sum_{j=1}^n \rho_{ij} x_{ij} = [\rho_{11},\rho_{12},\ldots,\rho_{1n}, \rho_{22},\ldots,\rho_{nn}|{\bf 0}_n ]{\bf z} =: {\bf c}_0^T {\bf z}\]</div>
-<p>Second term:</p>
+<p>두 번째 용어:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}A\Big( \sum_{j=1}^n y_j - q\Big)^2 = A \Big(\sum_{j=1}^n y_j\Big)^2 - 2 Aq \sum_{j=1}^n y_j + A q^2 = A {\bf z}^T \left[\begin{array}{c}{\bf 0}_{n^2} \\ \hline  {\bf 1}_n  \end{array}\right]\left[\begin{array}{cc}{\bf 0}_{n^2} | {\bf 1}_n  \end{array}\right]{\bf z} - 2 A q [{\bf 0}_{n^2}|{\bf 1}_n]{\bf z} + A q^2 =: {\bf z}^T {\bf Q}_0 {\bf z} + {\bf c}_1^T {\bf z} + r_0\end{split}\]</div>
 <p>세 번째 용어:</p>
@@ -617,23 +618,23 @@ div.rendered_html tbody tr:hover {
 <p>다섯 번째 용어:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\sum_{i=1}^n \sum_{j=1}^n A \left(x_{ij} (1- y_j)\right) = A [{\bf 1}_{n^2}|{\bf 0}_n]{\bf z} + A {\bf z}^T \left( \sum_{i=1}^n \sum_{j=1}^n \left[\begin{array}{ccc|c}  &amp;  &amp; &amp; \\ &amp; {\bf 0}_{n^2\times n^2} &amp; &amp; -1/2_{(ij,j)}  \\ &amp; &amp; &amp; \\ \hline &amp; -1/2_{(j, ij)} &amp;  &amp; {\bf 0}_{n} \end{array}\right] \right) {\bf z} =:  {\bf z}^T {\bf Q}_3 {\bf z} + {\bf c}_3^T {\bf z}\end{split}\]</div>
-<p>Therefore, the formulation becomes,</p>
+<p>따라서, 형태는 다음과 같이 된다:</p>
 <div class="math notranslate nohighlight">
 \[(IH-QP)\quad \max_{{\bf z}\in\{0,1\}^{n(n+1)}} \, {\bf z}^T ({\bf Q}_0+{\bf Q}_1+ {\bf Q}_2 + {\bf Q}_3 ){\bf z} + ({\bf c}_0+{\bf c}_1+{\bf c}_2+{\bf c}_3)^T {\bf z} +r_0+r_1+r_2\]</div>
-<p>which can be passed to the variational quantum eigensolver.</p>
-</div>
-</div>
-<div class="section" id="References">
-<h2>References<a class="headerlink" href="#References" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<p>이는 variational quantum eigensolver에 전달될 수 있다.</p>
+</section>
+</section>
+<section id="참조">
+<h2>참조<a class="headerlink" href="#참조" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>[1] G. Cornuejols, M. L. Fisher, and G. L. Nemhauser, <em>Location of bank accounts to optimize float: an analytical study of exact and approximate algorithms</em>, Management Science, vol. 23(8), 1997</p>
 <p>[2] E. Farhi, J. Goldstone, S. Gutmann e-print <a class="reference external" href="https://arxiv.org/abs/1411.4028">arXiv 1411.4028, 2014</a></p>
 <p>[3] G. Cornuejols and R. Tutuncu, <a class="reference external" href="http://web.math.ku.dk/~rolf/CT_FinOpt.pdf">Optimization methods in finance</a>, 2006</p>
 <p>[4] DJ. Berndt and J. Clifford, <em>Using dynamic time warping to find patterns in time series</em>. In KDD workshop 1994 (Vol. 10, No. 16, pp. 359-370).</p>
 <p>[5] <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/main/docs/tutorials/06_examples_max_cut_and_tsp.ipynb">Max-Cut and Traveling Salesman Problem</a></p>
-</div>
-<div class="section" id="The-Implementation">
-<h2>The Implementation<a class="headerlink" href="#The-Implementation" title="이 표제에 대한 퍼머링크">¶</a></h2>
-<p>First, we import the requisite modules.</p>
+</section>
+<section id="구현">
+<h2>구현<a class="headerlink" href="#구현" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<p>먼저 필요한 모듈을 가져온다.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -648,6 +649,7 @@ div.rendered_html tbody tr:hover {
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
 <span class="o">%</span><span class="k">matplotlib</span> inline
 
 <span class="c1"># Import Qiskit packages</span>
@@ -658,6 +660,7 @@ div.rendered_html tbody tr:hover {
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">TwoLocal</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">QuantumInstance</span>
 <span class="kn">from</span> <span class="nn">qiskit_optimization.algorithms</span> <span class="kn">import</span> <span class="n">MinimumEigenOptimizer</span>
+
 <span class="c1"># The data providers of stock-market data</span>
 <span class="kn">from</span> <span class="nn">qiskit_finance.data_providers</span> <span class="kn">import</span> <span class="n">RandomDataProvider</span>
 <span class="kn">from</span> <span class="nn">qiskit_finance.applications.optimization</span> <span class="kn">import</span> <span class="n">PortfolioDiversification</span>
@@ -676,16 +679,18 @@ div.rendered_html tbody tr:hover {
 <span class="n">stocks</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;TICKER1&quot;</span><span class="p">,</span> <span class="s2">&quot;TICKER2&quot;</span><span class="p">]</span>
 <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">stocks</span><span class="p">)</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="n">RandomDataProvider</span><span class="p">(</span><span class="n">tickers</span> <span class="o">=</span> <span class="n">stocks</span><span class="p">,</span>
-                 <span class="n">start</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2016</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
-                 <span class="n">end</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2016</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">30</span><span class="p">),</span>
-                 <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">RandomDataProvider</span><span class="p">(</span>
+    <span class="n">tickers</span><span class="o">=</span><span class="n">stocks</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">end</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="n">data</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <span class="n">rho</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_similarity_matrix</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
-<p>Now we decide on the number of clusters. This has to be smaller than the number of stocks we have loaded.</p>
+<p>이제 군집 수를 결정한다. 이는 우리가 보유한 주식 수보다 적어야 한다.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -695,9 +700,9 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Classical-solution-using-IBM-ILOG-CPLEX">
-<h2>Classical solution using IBM ILOG CPLEX<a class="headerlink" href="#Classical-solution-using-IBM-ILOG-CPLEX" title="이 표제에 대한 퍼머링크">¶</a></h2>
+</section>
+<section id="IBM-ILOG-CPLEX를-사용한-고전적-솔루션">
+<h2>IBM ILOG CPLEX를 사용한 고전적 솔루션<a class="headerlink" href="#IBM-ILOG-CPLEX를-사용한-고전적-솔루션" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>고전적 해의 경우 IBM CPLEX를 사용한다. CPLEX는 이 문제에 대한 완전해를 찾을 수 있다. 먼저 문제를 CPLEX가 풀 수 있는 방식으로 인코딩하는 ClassicalOptimizer 클래스를 정의하고, 클래스를 인스턴스화하고 푼다.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -722,14 +727,22 @@ div.rendered_html tbody tr:hover {
         <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span>
         <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">q</span>
 
-        <span class="n">my_obj</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">rho</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="mf">0.</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
+        <span class="n">my_obj</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">rho</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
         <span class="n">my_ub</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n</span><span class="p">)]</span>
         <span class="n">my_lb</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n</span><span class="p">)]</span>
-        <span class="n">my_ctype</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;I&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n</span><span class="p">)])</span>
+        <span class="n">my_ctype</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;I&quot;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n</span><span class="p">)])</span>
 
-        <span class="n">my_rhs</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span> <span class="o">+</span><span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="mf">0.1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)]</span>
-        <span class="n">my_sense</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;E&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="o">+</span><span class="n">n</span><span class="p">)])</span> <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;E&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)])</span> <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="p">[</span><span class="s1">&#39;L&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)])</span>
+        <span class="n">my_rhs</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[</span><span class="n">q</span><span class="p">]</span>
+            <span class="o">+</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
+            <span class="o">+</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
+            <span class="o">+</span> <span class="p">[</span><span class="mf">0.1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="n">my_sense</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;E&quot;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">n</span><span class="p">)])</span>
+            <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;E&quot;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)])</span>
+            <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;L&quot;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)])</span>
+        <span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">my_prob</span> <span class="o">=</span> <span class="n">cplex</span><span class="o">.</span><span class="n">Cplex</span><span class="p">()</span>
@@ -760,12 +773,12 @@ div.rendered_html tbody tr:hover {
         <span class="n">prob</span><span class="o">.</span><span class="n">set_results_stream</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 
         <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">n</span><span class="p">)]</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n</span><span class="p">)]</span>
         <span class="n">coef</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
         <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">col</span><span class="p">,</span> <span class="n">coef</span><span class="p">])</span>
 
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-            <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="o">+</span><span class="n">n</span><span class="o">*</span><span class="n">ii</span><span class="p">,</span> <span class="n">n</span><span class="o">+</span><span class="n">n</span><span class="o">*</span><span class="n">ii</span><span class="p">)]</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">*</span> <span class="n">ii</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">n</span> <span class="o">*</span> <span class="n">ii</span><span class="p">)]</span>
             <span class="n">coef</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
 
             <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">col</span><span class="p">,</span> <span class="n">coef</span><span class="p">])</span>
@@ -777,7 +790,7 @@ div.rendered_html tbody tr:hover {
 
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-                <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">ii</span><span class="o">*</span><span class="n">n</span> <span class="o">+</span> <span class="n">jj</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">jj</span><span class="p">]</span>
+                <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">ii</span> <span class="o">*</span> <span class="n">n</span> <span class="o">+</span> <span class="n">jj</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">jj</span><span class="p">]</span>
                 <span class="n">coef</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
                 <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">col</span><span class="p">,</span> <span class="n">coef</span><span class="p">])</span>
@@ -795,10 +808,10 @@ div.rendered_html tbody tr:hover {
 <span class="n">classical_optimizer</span> <span class="o">=</span> <span class="n">ClassicalOptimizer</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
 
 <span class="c1"># Compute the number of feasible solutions:</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of feasible combinations= &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">classical_optimizer</span><span class="o">.</span><span class="n">compute_allowed_combinations</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of feasible combinations= &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">classical_optimizer</span><span class="o">.</span><span class="n">compute_allowed_combinations</span><span class="p">()))</span>
 
 <span class="c1"># Compute the total number of possible combinations (feasible + unfeasible)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Total number of combinations= &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">))))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total number of combinations= &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))))</span>
 </pre></div>
 </div>
 </div>
@@ -821,36 +834,36 @@ Total number of combinations= 64
     <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xc</span><span class="p">)):</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">xc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.015</span><span class="p">,</span> <span class="n">yc</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">xc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.015</span><span class="p">,</span> <span class="n">yc</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
 
     <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
 
-    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">n</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xc</span><span class="p">[</span><span class="n">ii</span><span class="o">-</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">],</span> <span class="n">yc</span><span class="p">[</span><span class="n">ii</span><span class="o">-</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">],</span> <span class="s1">&#39;r*&#39;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xc</span><span class="p">[</span><span class="n">ii</span> <span class="o">-</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">],</span> <span class="n">yc</span><span class="p">[</span><span class="n">ii</span> <span class="o">-</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;r*&quot;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">iy</span> <span class="o">=</span> <span class="n">ii</span> <span class="o">//</span> <span class="n">n</span>
             <span class="n">ix</span> <span class="o">=</span> <span class="n">ii</span> <span class="o">%</span> <span class="n">n</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">xc</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span> <span class="n">xc</span><span class="p">[</span><span class="n">iy</span><span class="p">]],</span> <span class="p">[</span><span class="n">yc</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span> <span class="n">yc</span><span class="p">[</span><span class="n">iy</span><span class="p">]],</span> <span class="s1">&#39;C2&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">xc</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span> <span class="n">xc</span><span class="p">[</span><span class="n">iy</span><span class="p">]],</span> <span class="p">[</span><span class="n">yc</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span> <span class="n">yc</span><span class="p">[</span><span class="n">iy</span><span class="p">]],</span> <span class="s2">&quot;C2&quot;</span><span class="p">)</span>
 
-    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title_str</span> <span class="o">+</span><span class="s1">&#39; cost = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">C</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100.</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title_str</span> <span class="o">+</span> <span class="s2">&quot; cost = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">C</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">))</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
-<p>Solution shows the selected stocks via the stars and in green the links (via similarities) with other stocks that are represented in the fund by the linked stock.</p>
-</div>
-<div class="section" id="Quantum-Computing-with-IBM-Q">
-<h2>Quantum Computing with IBM Q<a class="headerlink" href="#Quantum-Computing-with-IBM-Q" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<p>솔루션은 링크된 주식에 의해 펀드에 표시되는 다른 주식과 함께 별표를 통해 선택된 주식을 표시하고 링크 (유사성을 통해) 를 녹색으로 표시한다.</p>
+</section>
+<section id="IBM-Q를-이용한-양자-컴퓨팅">
+<h2>IBM Q를 이용한 양자 컴퓨팅<a class="headerlink" href="#IBM-Q를-이용한-양자-컴퓨팅" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>양자 해의 경우 Qiskit을 사용한다. 먼저 문제를 양자적으로 풀 수 있는 방식으로 인코딩하는 클래스 QuantumOptimizer를 정의하고 인스턴스화하여 푼다. 클래스 안에 다음의 메서드들을 정의한다.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">exact_solution</span></code> : to make sure that the Ising Hamiltonian is correctly encoded in the <span class="math notranslate nohighlight">\(Z\)</span> basis, we can compute its eigendecomposition classically, i.e., considering a symmetric matrix of dimension <span class="math notranslate nohighlight">\(2^N \times 2^N\)</span>. For the problem at hand <span class="math notranslate nohighlight">\(n=3\)</span>, that is <span class="math notranslate nohighlight">\(N = 12\)</span>, seems to be the limit for many laptops;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">vqe_solution</span></code> : solves the problem <span class="math notranslate nohighlight">\((M)\)</span> via the variational quantum eigensolver (VQE);</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">qaoa_solution</span></code> : solves the problem <span class="math notranslate nohighlight">\((M)\)</span> via a Quantum Approximate Optimization Algorithm (QAOA).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exact_solution</span></code>: Ising Hamiltonian이 <span class="math notranslate nohighlight">\(Z\)</span> 기반으로 올바르게 인코딩되었는지 확인하기 위해 고유 분해를 고전적으로 계산할 수 있다. 즉, 차원의 대칭 행렬을 고려한다. <span class="math notranslate nohighlight">\(2^N \times 2^N\)</span>. 당면한 문제의 경우 <span class="math notranslate nohighlight">\(n=3\)</span>, 즉 <span class="math notranslate nohighlight">\(N = 12\)</span> 는 많은 랩톱의 한계이다.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vqe_solution</span></code>: 변하는 양자 고유솔버 (VQE) 를 통해 문제 <span class="math notranslate nohighlight">\((M)\)</span> 를 해결한다.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">qaoa_solution</span></code>: 양자 Ap근사 최적화 알고리즘 (QAOA) 을 통해 문제 <span class="math notranslate nohighlight">\((M)\)</span> 를 해결한다.</p></li>
 </ul>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -860,8 +873,8 @@ Total number of combinations= 64
 <span></span><span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">StateFn</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">algorithm_globals</span>
 
-<span class="k">class</span> <span class="nc">QuantumOptimizer</span><span class="p">:</span>
 
+<span class="k">class</span> <span class="nc">QuantumOptimizer</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rho</span> <span class="o">=</span> <span class="n">rho</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
@@ -878,11 +891,13 @@ Total number of combinations= 64
 
     <span class="k">def</span> <span class="nf">vqe_solution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">100</span>
-        <span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;statevector_simulator&#39;</span><span class="p">)</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;statevector_simulator&quot;</span><span class="p">)</span>
         <span class="n">cobyla</span> <span class="o">=</span> <span class="n">COBYLA</span><span class="p">()</span>
         <span class="n">cobyla</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="mi">250</span><span class="p">)</span>
-        <span class="n">ry</span> <span class="o">=</span> <span class="n">TwoLocal</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s1">&#39;ry&#39;</span><span class="p">,</span> <span class="s1">&#39;cz&#39;</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">)</span>
-        <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">seed_simulator</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">ry</span> <span class="o">=</span> <span class="n">TwoLocal</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s2">&quot;ry&quot;</span><span class="p">,</span> <span class="s2">&quot;cz&quot;</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s2">&quot;full&quot;</span><span class="p">)</span>
+        <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span>
+            <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">seed_simulator</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">seed</span>
+        <span class="p">)</span>
         <span class="n">vqe_mes</span> <span class="o">=</span> <span class="n">VQE</span><span class="p">(</span><span class="n">ry</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="n">cobyla</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">)</span>
         <span class="n">vqe</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">vqe_mes</span><span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">vqe</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qp</span><span class="p">)</span>
@@ -890,26 +905,27 @@ Total number of combinations= 64
 
     <span class="k">def</span> <span class="nf">qaoa_solution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">1234</span>
-        <span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;statevector_simulator&#39;</span><span class="p">)</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;statevector_simulator&quot;</span><span class="p">)</span>
         <span class="n">cobyla</span> <span class="o">=</span> <span class="n">COBYLA</span><span class="p">()</span>
         <span class="n">cobyla</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="mi">250</span><span class="p">)</span>
-        <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">seed_simulator</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span>
+            <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">seed_simulator</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">seed</span>
+        <span class="p">)</span>
         <span class="n">qaoa_mes</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="n">cobyla</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">)</span>
         <span class="n">qaoa</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">qaoa_mes</span><span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">qaoa</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qp</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decode_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">decode_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">decode_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="n">quantum_solution</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
         <span class="n">ground_level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qp</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">quantum_solution</span><span class="p">,</span> <span class="n">ground_level</span>
-
 </pre></div>
 </div>
 </div>
-<div class="section" id="Step-1">
-<h3>Step 1<a class="headerlink" href="#Step-1" title="이 표제에 대한 퍼머링크">¶</a></h3>
-<p>Instantiate the quantum optimizer class with parameters: - the similarity matrix <code class="docutils literal notranslate"><span class="pre">rho</span></code>; - the number of assets and clusters <code class="docutils literal notranslate"><span class="pre">n</span></code> and <code class="docutils literal notranslate"><span class="pre">q</span></code>;</p>
+<section id="단계-1">
+<h3>단계 1<a class="headerlink" href="#단계-1" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<p>매개변수를 사용하여 양자 최적화 프로그램 클래스를 인스턴스화한다: - 유사성 매트릭스 <code class="docutils literal notranslate"><span class="pre">rho</span></code>; 자산과 클러스터의 수 <code class="docutils literal notranslate"><span class="pre">n</span></code> 및 <code class="docutils literal notranslate"><span class="pre">q</span></code>).</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -920,11 +936,11 @@ Total number of combinations= 64
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Step-2">
-<h3>Step 2<a class="headerlink" href="#Step-2" title="이 표제에 대한 퍼머링크">¶</a></h3>
-<p>Encode the problem as a binary formulation (IH-QP).</p>
-<p>Sanity check: make sure that the binary formulation in the quantum optimizer is correct (i.e., yields the same cost given the same solution).</p>
+</section>
+<section id="단계-2">
+<h3>단계 2<a class="headerlink" href="#단계-2" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<p>문제를 이원 제형 (IH-QP) 으로 코딩한다.</p>
+<p>정상 검사: 양자 최적화 프로그램의 2진 공식화가 정확한지 확인한다 (즉, 동일한 솔루션에서 동일한 비용을 산출함).</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
@@ -933,14 +949,16 @@ Total number of combinations= 64
 <span></span><span class="c1"># Check if the binary representation is correct. This requires CPLEX</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">cplex</span>
-    <span class="c1">#warnings.filterwarnings(&#39;ignore&#39;)</span>
+
+    <span class="c1"># warnings.filterwarnings(&#39;ignore&#39;)</span>
     <span class="n">quantum_solution</span><span class="p">,</span> <span class="n">quantum_cost</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">exact_solution</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">quantum_solution</span><span class="p">,</span> <span class="n">quantum_cost</span><span class="p">)</span>
     <span class="n">classical_solution</span><span class="p">,</span> <span class="n">classical_cost</span> <span class="o">=</span> <span class="n">classical_optimizer</span><span class="o">.</span><span class="n">cplex_solution</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">classical_solution</span><span class="p">,</span> <span class="n">classical_cost</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">quantum_cost</span> <span class="o">-</span> <span class="n">classical_cost</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Binary formulation is correct&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Error in the formulation of the Hamiltonian&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Binary formulation is correct&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in the formulation of the Hamiltonian&quot;</span><span class="p">)</span>
 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span>
 </pre></div>
@@ -956,11 +974,11 @@ Total number of combinations= 64
 Binary formulation is correct
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Step-3">
-<h3>Step 3<a class="headerlink" href="#Step-3" title="이 표제에 대한 퍼머링크">¶</a></h3>
+</section>
+<section id="단계-3">
+<h3>단계 3<a class="headerlink" href="#단계-3" title="이 표제에 대한 퍼머링크">¶</a></h3>
 <p>Encode the problem as an Ising Hamiltonian in the Z basis.</p>
-<p>Sanity check: make sure that the formulation is correct (i.e., yields the same cost given the same solution)</p>
+<p>정상 검사: 해당 제형이 올바른지 확인한다. 즉, 동일한 솔루션에 동일한 비용이 제공한다.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
@@ -970,9 +988,10 @@ Binary formulation is correct
 <span class="nb">print</span><span class="p">(</span><span class="n">ground_state</span><span class="p">)</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ground_level</span> <span class="o">-</span> <span class="n">classical_cost</span><span class="p">)</span><span class="o">&lt;</span><span class="mf">0.01</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Ising Hamiltonian in Z basis is correct&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Error in the Ising Hamiltonian formulation&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ground_level</span> <span class="o">-</span> <span class="n">classical_cost</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ising Hamiltonian in Z basis is correct&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in the Ising Hamiltonian formulation&quot;</span><span class="p">)</span>
 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span>
 </pre></div>
@@ -987,10 +1006,10 @@ Binary formulation is correct
 Ising Hamiltonian in Z basis is correct
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Step-4">
-<h3>Step 4<a class="headerlink" href="#Step-4" title="이 표제에 대한 퍼머링크">¶</a></h3>
-<p>Solve the problem via VQE. Notice that depending on the number of qubits, this can take a while: for 6 qubits it takes 15 minutes on a 2015 Macbook Pro, for 12 qubits it takes more than 12 hours. For longer runs, logging may be useful to observe the workings; otherwise, you just have to wait until the solution is printed.</p>
+</section>
+<section id="단계-4">
+<h3>단계 4<a class="headerlink" href="#단계-4" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<p>VQE를 통해 문제를 해결하라. 큐비트의 수에 따라 이것은 어느 정도 시간이 걸릴 수 있다: 2015 Macbook Pro에서 6큐비트는 15분이 소요되지만, 12큐비트는 12시간이 넘는 시간이 소요된다는 점에 주목하자. 장시간의 작업에서 로그를 남기는 것은 작업 과정을 관찰하는 데 유용하다. 그렇지 않으면 최종 결과가 출력될 때까지 그저 기다려야만 할 것이다.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
@@ -1001,8 +1020,11 @@ Ising Hamiltonian in Z basis is correct
 
 <span class="k">try</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">ground_state</span> <span class="o">-</span> <span class="n">vqe_state</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;VQE produces the same solution as the exact eigensolver.&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;VQE does not produce the same solution as the exact eigensolver, but that is to be expected.&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;VQE produces the same solution as the exact eigensolver.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;VQE does not produce the same solution as the exact eigensolver, but that is to be expected.&quot;</span>
+        <span class="p">)</span>
 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span>
 </pre></div>
@@ -1019,10 +1041,10 @@ VQE does not produce the same solution as the exact eigensolver, but that is to 
   warn(&#39;The sum of probability of samples is not close to 1: {}&#39;.format(sum_prob))
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Step-5">
-<h3>Step 5<a class="headerlink" href="#Step-5" title="이 표제에 대한 퍼머링크">¶</a></h3>
-<p>Visualize the solution</p>
+</section>
+<section id="단계-5">
+<h3>단계 5<a class="headerlink" href="#단계-5" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<p>솔루션 시각화</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
@@ -1037,7 +1059,7 @@ VQE does not produce the same solution as the exact eigensolver, but that is to 
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">visualize_solution</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">ground_state</span><span class="p">,</span> <span class="n">ground_level</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="s1">&#39;Classical&#39;</span><span class="p">)</span>
+<span></span><span class="n">visualize_solution</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">ground_state</span><span class="p">,</span> <span class="n">ground_level</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="s2">&quot;Classical&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1052,7 +1074,7 @@ VQE does not produce the same solution as the exact eigensolver, but that is to 
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">visualize_solution</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">vqe_state</span><span class="p">,</span> <span class="n">vqe_level</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="s1">&#39;VQE&#39;</span><span class="p">)</span>
+<span></span><span class="n">visualize_solution</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">vqe_state</span><span class="p">,</span> <span class="n">vqe_level</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="s2">&quot;VQE&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1062,14 +1084,14 @@ VQE does not produce the same solution as the exact eigensolver, but that is to 
 <div class="output_area docutils container">
 <img alt="../_images/tutorials_02_portfolio_diversification_25_0.svg" src="../_images/tutorials_02_portfolio_diversification_25_0.svg" /></div>
 </div>
-<p>Solution shows the selected stocks via the stars and in green the links (via similarities) with other stocks that are represented in the fund by the linked stock. Keep in mind that VQE is a heuristic working on the QP formulation of the Ising Hamiltonian, though. For suitable choices of A, local optima of the QP formulation will be feasible solutions to the ILP. While for some small instances, as above, we can find optimal solutions of the QP formulation which coincide with optima of the ILP,
-finding optimal solutions of the ILP is harder than finding local optima of the QP formulation, in general. Even within the VQE, one may provide stronger guarantees, for specific variational forms (trial wave functions).</p>
+<p>솔루션은 링크된 주식에 의해 펀드에 표시되는 다른 주식과 함께 별표를 통해 선택된 주식을 표시하고 링크 (유사성을 통해) 를 녹색으로 표시한다. VQE는 Ising Hamiltonian (Ising Hamiltonian) 의 QP 제형에 대해 휴리스틱 (heuristic) 한 작업이라는 점에 유의하라. A의 적합한 선택을 위해, QP 제형의 국소 최적화는 ILP에 대한 가능한 솔루션일 것이다. 일부 작은 경우들에 대하여, 상술한 바와 같이, ILP의 최적화와 일치하는 QP 제제의 최적의 솔루션을 찾을 수 있고, ILP의 최적의 솔루션을 찾는 것은 일반적으로 QP 제제의 국소 최적화를 발견하는 것보다 어렵다. VQE 내에서도, 특정 다양한 형태 (시험 파형 기능) 에 대해 보다 강력한 보증을 제공할 수 있다.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -1097,9 +1119,9 @@ finding optimal solutions of the ILP is harder than finding local optima of the 
 </pre></div>
 </div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
              </article>
@@ -1146,22 +1168,22 @@ finding optimal solutions of the ILP is harder than finding local optima of the 
               <ul>
 <li><a class="reference internal" href="#">포트폴리오 다각화</a><ul>
 <li><a class="reference internal" href="#소개">소개</a></li>
-<li><a class="reference internal" href="#The-Model">The Model</a></li>
-<li><a class="reference internal" href="#A-Hybrid-Approach">A Hybrid Approach</a><ul>
-<li><a class="reference internal" href="#Construct-a-binary-polynomial-optimization">Construct a binary polynomial optimization</a></li>
-<li><a class="reference internal" href="#Construct-the-Ising-Hamiltonian">Construct the Ising Hamiltonian</a></li>
-<li><a class="reference internal" href="#From-Hamiltonian-to-Quadratic-Programming-(QP)-formulation">From Hamiltonian to Quadratic Programming (QP) formulation</a></li>
+<li><a class="reference internal" href="#모델">모델</a></li>
+<li><a class="reference internal" href="#하이브리드-접근법">하이브리드 접근법</a><ul>
+<li><a class="reference internal" href="#2진-다항식-최적화를-구성하기">2진 다항식 최적화를 구성하기</a></li>
+<li><a class="reference internal" href="#이징-해밀턴-(Ising-Hamiltonian)을-구성하다.">이징 해밀턴 (Ising Hamiltonian)을 구성하다.</a></li>
+<li><a class="reference internal" href="#해밀토니언에서-이차의-프로그래밍-(QP)-형성">해밀토니언에서 이차의 프로그래밍 (QP) 형성</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#References">References</a></li>
-<li><a class="reference internal" href="#The-Implementation">The Implementation</a></li>
-<li><a class="reference internal" href="#Classical-solution-using-IBM-ILOG-CPLEX">Classical solution using IBM ILOG CPLEX</a></li>
-<li><a class="reference internal" href="#Quantum-Computing-with-IBM-Q">Quantum Computing with IBM Q</a><ul>
-<li><a class="reference internal" href="#Step-1">Step 1</a></li>
-<li><a class="reference internal" href="#Step-2">Step 2</a></li>
-<li><a class="reference internal" href="#Step-3">Step 3</a></li>
-<li><a class="reference internal" href="#Step-4">Step 4</a></li>
-<li><a class="reference internal" href="#Step-5">Step 5</a></li>
+<li><a class="reference internal" href="#참조">참조</a></li>
+<li><a class="reference internal" href="#구현">구현</a></li>
+<li><a class="reference internal" href="#IBM-ILOG-CPLEX를-사용한-고전적-솔루션">IBM ILOG CPLEX를 사용한 고전적 솔루션</a></li>
+<li><a class="reference internal" href="#IBM-Q를-이용한-양자-컴퓨팅">IBM Q를 이용한 양자 컴퓨팅</a><ul>
+<li><a class="reference internal" href="#단계-1">단계 1</a></li>
+<li><a class="reference internal" href="#단계-2">단계 2</a></li>
+<li><a class="reference internal" href="#단계-3">단계 3</a></li>
+<li><a class="reference internal" href="#단계-4">단계 4</a></li>
+<li><a class="reference internal" href="#단계-5">단계 5</a></li>
 </ul>
 </li>
 </ul>

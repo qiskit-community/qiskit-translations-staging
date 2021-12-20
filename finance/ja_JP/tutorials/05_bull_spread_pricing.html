@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="ja-JP" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ブル・スプレッドの価格推定 &mdash; Qiskit Finance 0.2.1 ドキュメント</title>
+  <title>ブル・スプレッドの価格推定 &mdash; Qiskit Finance 0.3.0 ドキュメント</title>
   
 
   
@@ -31,8 +32,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -175,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.1
+                  0.3.0
                 </div>
               
             
@@ -530,11 +531,11 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">注釈</p>
-<p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-finance/blob/stable/0.2/docs/tutorials/05_bull_spread_pricing.ipynb">docs/tutorials/05_bull_spread_pricing.ipynb</a> から生成されました。</p>
+<p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-finance/blob/stable/0.3/docs/tutorials/05_bull_spread_pricing.ipynb">docs/tutorials/05_bull_spread_pricing.ipynb</a> から生成されました。</p>
 </div>
-<div class="section" id="ブル・スプレッドの価格推定">
+<section id="ブル・スプレッドの価格推定">
 <h1>ブル・スプレッドの価格推定<a class="headerlink" href="#ブル・スプレッドの価格推定" title="このヘッドラインへのパーマリンク">¶</a></h1>
-<div class="section" id="はじめに">
+<section id="はじめに">
 <h2>はじめに<a class="headerlink" href="#はじめに" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>権利行使価格 <span class="math notranslate nohighlight">\(K_1 &lt; K_2\)</span> で、満期時のスポット価格 <span class="math notranslate nohighlight">\(S_T\)</span> がある確率分布に従うブル・スプレッド &lt;<a class="reference external" href="http://www.theoptionsguide.com/bull-call-spread.aspx">http://www.theoptionsguide.com/bull-call-spread.aspx</a>&gt;`__ を考えます。この時ペイオフ関数は次のように定義されます：</p>
 <div class="math notranslate nohighlight">
@@ -556,6 +557,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
 <span class="o">%</span><span class="k">matplotlib</span> inline
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -567,8 +569,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="不確実性モデル">
+</section>
+<section id="不確実性モデル">
 <h2>不確実性モデル<a class="headerlink" href="#不確実性モデル" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>対数正規ランダム分布を量子状態にロードする回路ファクトリを構築します。 分布は、指定された区間 <span class="math notranslate nohighlight">\([\text{low}, \text{high}]\)</span> に切り捨てられ、 <span class="math notranslate nohighlight">\(2^n\)</span> 個のグリッドポイントを使用して離散化されます。ここで、 <span class="math notranslate nohighlight">\(n\)</span> は使用される量子ビットの数を示します。 回路ファクトリに対応するユニタリー演算子は次のように実装されます:</p>
 <div class="math notranslate nohighlight">
@@ -585,24 +587,26 @@ div.rendered_html tbody tr:hover {
 <span class="n">num_uncertainty_qubits</span> <span class="o">=</span> <span class="mi">3</span>
 
 <span class="c1"># parameters for considered random distribution</span>
-<span class="n">S</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="c1"># initial spot price</span>
-<span class="n">vol</span> <span class="o">=</span> <span class="mf">0.4</span> <span class="c1"># volatility of 40%</span>
-<span class="n">r</span> <span class="o">=</span> <span class="mf">0.05</span> <span class="c1"># annual interest rate of 4%</span>
-<span class="n">T</span> <span class="o">=</span> <span class="mi">40</span> <span class="o">/</span> <span class="mi">365</span> <span class="c1"># 40 days to maturity</span>
+<span class="n">S</span> <span class="o">=</span> <span class="mf">2.0</span>  <span class="c1"># initial spot price</span>
+<span class="n">vol</span> <span class="o">=</span> <span class="mf">0.4</span>  <span class="c1"># volatility of 40%</span>
+<span class="n">r</span> <span class="o">=</span> <span class="mf">0.05</span>  <span class="c1"># annual interest rate of 4%</span>
+<span class="n">T</span> <span class="o">=</span> <span class="mi">40</span> <span class="o">/</span> <span class="mi">365</span>  <span class="c1"># 40 days to maturity</span>
 
 <span class="c1"># resulting parameters for log-normal distribution</span>
-<span class="n">mu</span> <span class="o">=</span> <span class="p">((</span><span class="n">r</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">vol</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">T</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">S</span><span class="p">))</span>
+<span class="n">mu</span> <span class="o">=</span> <span class="p">(</span><span class="n">r</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">vol</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">T</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
 <span class="n">sigma</span> <span class="o">=</span> <span class="n">vol</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
-<span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">mu</span> <span class="o">+</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">variance</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">mu</span> <span class="o">+</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">mu</span> <span class="o">+</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">variance</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">mu</span> <span class="o">+</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
 <span class="n">stddev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variance</span><span class="p">)</span>
 
 <span class="c1"># lowest and highest value considered for the spot price; in between, an equidistant discretization is considered.</span>
-<span class="n">low</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mean</span> <span class="o">-</span> <span class="mi">3</span><span class="o">*</span><span class="n">stddev</span><span class="p">)</span>
-<span class="n">high</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">+</span> <span class="mi">3</span><span class="o">*</span><span class="n">stddev</span>
+<span class="n">low</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mean</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">stddev</span><span class="p">)</span>
+<span class="n">high</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">stddev</span>
 
 <span class="c1"># construct circuit factory for uncertainty model</span>
-<span class="n">uncertainty_model</span> <span class="o">=</span> <span class="n">LogNormalDistribution</span><span class="p">(</span><span class="n">num_uncertainty_qubits</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">))</span>
+<span class="n">uncertainty_model</span> <span class="o">=</span> <span class="n">LogNormalDistribution</span><span class="p">(</span>
+    <span class="n">num_uncertainty_qubits</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -618,8 +622,8 @@ div.rendered_html tbody tr:hover {
 <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Spot Price at Maturity $S_T$ (\$)&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Probability ($\%$)&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Spot Price at Maturity $S_T$ (\$)&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Probability ($\%$)&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -630,8 +634,8 @@ div.rendered_html tbody tr:hover {
 <div class="output_area docutils container">
 <img alt="../_images/tutorials_05_bull_spread_pricing_5_0.svg" src="../_images/tutorials_05_bull_spread_pricing_5_0.svg" /></div>
 </div>
-</div>
-<div class="section" id="ペイオフ関数">
+</section>
+<section id="ペイオフ関数">
 <h2>ペイオフ関数<a class="headerlink" href="#ペイオフ関数" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>満期 <span class="math notranslate nohighlight">\(S_T\)</span> でのスポット価格が権利行使価格 <span class="math notranslate nohighlight">\(K_1\)</span> 未満である限り、ペイオフ関数はゼロに等しくなり、その後線形に増加し、 <span class="math notranslate nohighlight">\(K_2\)</span> によって制限されます。 実装では、 <span class="math notranslate nohighlight">\(S_T \geq K_1\)</span> および <span class="math notranslate nohighlight">\(S_T \leq K_2\)</span> の場合にそれぞれ <span class="math notranslate nohighlight">\(\big|0\rangle\)</span> から <span class="math notranslate nohighlight">\(\big|1\rangle\)</span> に補助量子ビットを反転する2つのコンパレータを使用し、これらの補助ビットを使用してペイオフ関数の線形部分を制御します。</p>
 <p>線形部分自体は、次のように近似されます。 小さい <span class="math notranslate nohighlight">\(|y|\)</span> に対して <span class="math notranslate nohighlight">\(\sin^2(y + \pi/4) \approx y + 1/2\)</span> という事実を利用します。 したがって、与えられた近似再スケーリング係数 <span class="math notranslate nohighlight">\(c_\text{approx} \in [0, 1]\)</span> および <span class="math notranslate nohighlight">\(x \in [0, 1]\)</span> に対して、以下を考えます。</p>
@@ -669,7 +673,7 @@ div.rendered_html tbody tr:hover {
     <span class="n">domain</span><span class="o">=</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">),</span>
     <span class="n">image</span><span class="o">=</span><span class="p">(</span><span class="n">f_min</span><span class="p">,</span> <span class="n">f_max</span><span class="p">),</span>
     <span class="n">breakpoints</span><span class="o">=</span><span class="n">breakpoints</span><span class="p">,</span>
-    <span class="n">rescaling_factor</span><span class="o">=</span><span class="n">rescaling_factor</span>
+    <span class="n">rescaling_factor</span><span class="o">=</span><span class="n">rescaling_factor</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># construct A operator for QAE for the payoff function by</span>
@@ -686,11 +690,11 @@ div.rendered_html tbody tr:hover {
 <span></span><span class="c1"># plot exact payoff function (evaluated on the grid of the uncertainty model)</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">uncertainty_model</span><span class="o">.</span><span class="n">values</span>
 <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">strike_price_1</span><span class="p">),</span> <span class="n">strike_price_2</span> <span class="o">-</span> <span class="n">strike_price_1</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;ro-&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;ro-&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Payoff Function&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Spot Price&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Payoff&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Payoff Function&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Spot Price&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Payoff&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -710,9 +714,11 @@ div.rendered_html tbody tr:hover {
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># evaluate exact expected value (normalized to the [0, 1] interval)</span>
 <span class="n">exact_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">uncertainty_model</span><span class="o">.</span><span class="n">probabilities</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-<span class="n">exact_delta</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">uncertainty_model</span><span class="o">.</span><span class="n">probabilities</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;=</span> <span class="n">strike_price_1</span><span class="p">,</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">strike_price_2</span><span class="p">)])</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;exact expected value:</span><span class="se">\t</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">exact_value</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;exact delta value:   </span><span class="se">\t</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">exact_delta</span><span class="p">)</span>
+<span class="n">exact_delta</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+    <span class="n">uncertainty_model</span><span class="o">.</span><span class="n">probabilities</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;=</span> <span class="n">strike_price_1</span><span class="p">,</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">strike_price_2</span><span class="p">)]</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;exact expected value:</span><span class="se">\t</span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">exact_value</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;exact delta value:   </span><span class="se">\t</span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">exact_delta</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -725,8 +731,8 @@ exact expected value:   0.5695
 exact delta value:      0.9291
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="期待ペイオフの評価">
+</section>
+<section id="期待ペイオフの評価">
 <h2>期待ペイオフの評価<a class="headerlink" href="#期待ペイオフの評価" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -737,10 +743,12 @@ exact delta value:      0.9291
 <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">0.01</span>
 <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.05</span>
 
-<span class="n">qi</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;aer_simulator&#39;</span><span class="p">),</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-<span class="n">problem</span> <span class="o">=</span> <span class="n">EstimationProblem</span><span class="p">(</span><span class="n">state_preparation</span><span class="o">=</span><span class="n">bull_spread</span><span class="p">,</span>
-                            <span class="n">objective_qubits</span><span class="o">=</span><span class="p">[</span><span class="n">num_uncertainty_qubits</span><span class="p">],</span>
-                            <span class="n">post_processing</span><span class="o">=</span><span class="n">bull_spread_objective</span><span class="o">.</span><span class="n">post_processing</span><span class="p">)</span>
+<span class="n">qi</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;aer_simulator&quot;</span><span class="p">),</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">EstimationProblem</span><span class="p">(</span>
+    <span class="n">state_preparation</span><span class="o">=</span><span class="n">bull_spread</span><span class="p">,</span>
+    <span class="n">objective_qubits</span><span class="o">=</span><span class="p">[</span><span class="n">num_uncertainty_qubits</span><span class="p">],</span>
+    <span class="n">post_processing</span><span class="o">=</span><span class="n">bull_spread_objective</span><span class="o">.</span><span class="n">post_processing</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="c1"># construct amplitude estimation</span>
 <span class="n">ae</span> <span class="o">=</span> <span class="n">IterativeAmplitudeEstimation</span><span class="p">(</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">qi</span><span class="p">)</span>
 </pre></div>
@@ -761,9 +769,9 @@ exact delta value:      0.9291
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">conf_int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">confidence_interval_processed</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Exact value:    </span><span class="se">\t</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">exact_value</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Estimated value:</span><span class="se">\t</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">result</span><span class="o">.</span><span class="n">estimation_processed</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Confidence interval: </span><span class="se">\t</span><span class="s1">[</span><span class="si">%.4f</span><span class="s1">, </span><span class="si">%.4f</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">conf_int</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exact value:    </span><span class="se">\t</span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">exact_value</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimated value:</span><span class="se">\t</span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">result</span><span class="o">.</span><span class="n">estimation_processed</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Confidence interval: </span><span class="se">\t</span><span class="s2">[</span><span class="si">%.4f</span><span class="s2">, </span><span class="si">%.4f</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">conf_int</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -777,8 +785,8 @@ Estimated value:        0.5730
 Confidence interval:    [0.5493, 0.5967]
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="デルタの評価">
+</section>
+<section id="デルタの評価">
 <h2>デルタの評価<a class="headerlink" href="#デルタの評価" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>デルタは期待ペイオフよりも少し評価が簡単です。 期待ペイオフと同様に、コンパレータ回路と補助量子ビットを使用して、 :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>K_1 leq S_T leq K_2`の場合を特定します。しかしながら、この条件が真であるときの確率のみに興味があるので、振幅推定において他に何も仮定せずにこの補助量子ビットを直接目的量子ビットとして使うことができます。</p>
 <div class="nbinput nblast docutils container">
@@ -816,9 +824,10 @@ Confidence interval:    [0.5493, 0.5967]
 <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">0.01</span>
 <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.05</span>
 
-<span class="n">qi</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;aer_simulator&#39;</span><span class="p">),</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-<span class="n">problem</span> <span class="o">=</span> <span class="n">EstimationProblem</span><span class="p">(</span><span class="n">state_preparation</span><span class="o">=</span><span class="n">bull_spread_delta</span><span class="p">,</span>
-                            <span class="n">objective_qubits</span><span class="o">=</span><span class="p">[</span><span class="n">num_uncertainty_qubits</span><span class="p">])</span>
+<span class="n">qi</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;aer_simulator&quot;</span><span class="p">),</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">EstimationProblem</span><span class="p">(</span>
+    <span class="n">state_preparation</span><span class="o">=</span><span class="n">bull_spread_delta</span><span class="p">,</span> <span class="n">objective_qubits</span><span class="o">=</span><span class="p">[</span><span class="n">num_uncertainty_qubits</span><span class="p">]</span>
+<span class="p">)</span>
 <span class="c1"># construct amplitude estimation</span>
 <span class="n">ae_delta</span> <span class="o">=</span> <span class="n">IterativeAmplitudeEstimation</span><span class="p">(</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">qi</span><span class="p">)</span>
 </pre></div>
@@ -839,9 +848,9 @@ Confidence interval:    [0.5493, 0.5967]
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">conf_int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result_delta</span><span class="o">.</span><span class="n">confidence_interval</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Exact delta:    </span><span class="se">\t</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">exact_delta</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Estimated value:</span><span class="se">\t</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">result_delta</span><span class="o">.</span><span class="n">estimation</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Confidence interval: </span><span class="se">\t</span><span class="s1">[</span><span class="si">%.4f</span><span class="s1">, </span><span class="si">%.4f</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">conf_int</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exact delta:    </span><span class="se">\t</span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">exact_delta</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimated value:</span><span class="se">\t</span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">result_delta</span><span class="o">.</span><span class="n">estimation</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Confidence interval: </span><span class="se">\t</span><span class="s2">[</span><span class="si">%.4f</span><span class="s2">, </span><span class="si">%.4f</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">conf_int</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -861,6 +870,7 @@ Confidence interval:    [0.9277, 0.9305]
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -888,8 +898,8 @@ Confidence interval:    [0.9277, 0.9305]
 </pre></div>
 </div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

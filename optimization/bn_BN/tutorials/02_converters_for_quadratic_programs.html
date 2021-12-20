@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="bn-BN" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>দ্বিঘাত (কোয়াড্রাটিক) প্রোগ্রামগুলির জন্য পরিবর্তক (কনভার্টার) &mdash; Qiskit Optimization 0.2.3 documentation</title>
+  <title>দ্বিঘাত (কোয়াড্রাটিক) প্রোগ্রামগুলির জন্য পরিবর্তক (কনভার্টার) &mdash; Qiskit Optimization 0.3.0 documentation</title>
   
 
   
@@ -27,10 +28,12 @@
 
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -173,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.3
+                  0.3.0
                 </div>
               
             
@@ -528,12 +531,13 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">নোট</p>
-<p>এই পৃষ্ঠাটি <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.2/docs/tutorials/02_converters_for_quadratic_programs.ipynb">docs/tutorials/02_converters_for_quadratic_programs.ipynb</a> থেকে বানানো হয়েছে।</p>
+<p>এই পৃষ্ঠাটি <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/02_converters_for_quadratic_programs.ipynb">docs/tutorials/02_converters_for_quadratic_programs.ipynb</a> থেকে বানানো হয়েছে।</p>
 </div>
-<div class="section" id="দ্বিঘাত-(কোয়াড্রাটিক)-প্রোগ্রামগুলির-জন্য-পরিবর্তক-(কনভার্টার)">
+<section id="দ্বিঘাত-(কোয়াড্রাটিক)-প্রোগ্রামগুলির-জন্য-পরিবর্তক-(কনভার্টার)">
 <h1>দ্বিঘাত (কোয়াড্রাটিক) প্রোগ্রামগুলির জন্য পরিবর্তক (কনভার্টার)<a class="headerlink" href="#দ্বিঘাত-(কোয়াড্রাটিক)-প্রোগ্রামগুলির-জন্য-পরিবর্তক-(কনভার্টার)" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h1>
-<p>Qiskit এর অপ্টিমাইজেশন মডিউলে অপ্টিমাইজেশন সমস্যাগুলি <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> ক্লাসের সাথে প্রতিনিধিত্ব করে, যা অনুকূলায়ন (অপ্টিমাইজেশন) সমস্যাসমূহ জন্য জেনেরিক এবং শক্তিশালী উপস্থাপন। সাধারণভাবে, অনুকূলায়ন (অপ্টিমাইজেশন) অ্যালগরিদমগুলি একটি দ্বিঘাত প্রোগ্রামের নির্দিষ্ট গঠনের জন্য সংজ্ঞায়িত হয় এবং আমাদের সমস্যাটিকে সঠিক ধরণের রূপান্তর করতে হবে।</p>
-<p>উদাহরণস্বরূপ, Qiskit একাধিক অপ্টিমাইজেশান অ্যালগরিদম সরবরাহ করে যা শর্তহীন দ্বিঘাত দ্বিমিক অনুকূলায়ন (Quadratic Unconstrained Binary Optimization - QUBO) সমস্যাগুলি পরিচালনা করতে পারে। এগুলি আইসিং হ্যামিল্টনীয় তে চিত্রায়ন করা হয়েছে, যার জন্য Qiskit <code class="docutils literal notranslate"><span class="pre">qiskit.aqua.operators</span></code> মডিউল ব্যবহার করে এবং তারপরে তাদের গ্রাউন্ড অবস্থাটি হিসাব করা হয়। এই অপ্টিমাইজেশনের জন্য সাধারণত VQE বা QAOA এর মতো পরিচিত অ্যালগরিদম অন্তর্নিহিত রুটিন হিসাবে ব্যবহার করা যেতে পারে। আরও বিস্তারিত জানার জন্য <a class="reference external" href="./3_minimum_eigen_optimizer.ipynb">Minimum Eigen Optimizer</a> সম্পর্কে নিম্নলিখিত টিউটোরিয়ালটি দেখুন। খেয়াল করুন যে অন্যান্য অ্যালগরিদমগুলিও রয়েছে যেগুলি <code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code> এর মতো আলাদাভাবে কাজ করে।</p>
+<p>Optimization problems in Qiskit’s optimization module are represented with the <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> class, which is a generic and powerful representation for optimization problems. In general, optimization algorithms are defined for a certain formulation of a quadratic program, and we need to convert our problem to the right type.</p>
+<p>For instance, Qiskit provides several optimization algorithms that can handle <a class="reference external" href="https://en.wikipedia.org/wiki/Quadratic_unconstrained_binary_optimization">Quadratic Unconstrained Binary Optimization</a> (QUBO) problems. These are mapped to Ising Hamiltonians, for which Qiskit uses the <code class="docutils literal notranslate"><span class="pre">qiskit.opflow</span></code> module, and then their ground state is approximated. For this optimization, commonly known algorithms such as VQE or QAOA can be used as underlying routine. See the following tutorial about the
+<a class="reference internal" href="03_minimum_eigen_optimizer.html"><span class="doc">Minimum Eigen Optimizer</span></a> for more detail. Note that also other algorithms exist that work differently, such as the <code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code>.</p>
 <p>To map a problem to the correct input format, the optimization module of Qiskit offers a variety of converters. In this tutorial we’re providing an overview on this functionality. Currently, Qiskit contains the following converters.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">InequalityToEquality</span></code>: converts inequality constraints into equality constraints with additional slack variables.</p></li>
@@ -541,7 +545,7 @@ div.rendered_html tbody tr:hover {
 <li><p><code class="docutils literal notranslate"><span class="pre">LinearEqualityToPenalty</span></code>: convert equality constraints into additional terms of the object function.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">QuadraticProgramToQubo</span></code>: a wrapper for <code class="docutils literal notranslate"><span class="pre">InequalityToEquality</span></code>, <code class="docutils literal notranslate"><span class="pre">IntegerToBinary</span></code>, and <code class="docutils literal notranslate"><span class="pre">LinearEqualityToPenalty</span></code> for convenience.</p></li>
 </ul>
-<div class="section" id="InequalityToEquality">
+<section id="InequalityToEquality">
 <h2>InequalityToEquality<a class="headerlink" href="#InequalityToEquality" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">InequalityToEqualityConverter</span></code> টি <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> থেকে অসমতার সীমাবদ্ধতা অপসারণ করতে অতিরিক্ত স্ল্যাক চল রাশির সাথে অসমতার সীমাবদ্ধতায় রূপান্তর করে। উপরের সীমা (আবদ্ধ) এবং স্ল্যাক ভেরিয়েবলের নিম্নসীমা বাম দিক এবং সীমাবদ্ধতার ডান দিকের পার্থক্য থেকে গণনা করা হবে। স্ল্যাক চল রাশির চিহ্নগুলি <span class="math notranslate nohighlight">\(\leq\)</span> এবং <span class="math notranslate nohighlight">\(\geq\)</span> এর মতো সীমাবদ্ধতার মধ্যে চিহ্নগুলির উপর নির্ভর করে।</p>
 <p>নীচে দুটি অসমতার সীমাবদ্ধতার সাথে সর্বাধিক সমস্যার একটি উদাহরণ রয়েছে। চল রাশি <span class="math notranslate nohighlight">\(x\)</span> এবং <span class="math notranslate nohighlight">\(y\)</span> বাইনারি চল রাশি এবং চল রাশি : <span class="math notranslate nohighlight">\(z\)</span> একটি পূর্ণসংখ্যার চল রাশি ।</p>
@@ -561,13 +565,13 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">qp</span> <span class="o">=</span> <span class="n">QuadraticProgram</span><span class="p">()</span>
-<span class="n">qp</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
-<span class="n">qp</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
-<span class="n">qp</span><span class="o">.</span><span class="n">integer_var</span><span class="p">(</span><span class="n">lowerbound</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upperbound</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+<span class="n">qp</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">qp</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
+<span class="n">qp</span><span class="o">.</span><span class="n">integer_var</span><span class="p">(</span><span class="n">lowerbound</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upperbound</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;z&quot;</span><span class="p">)</span>
 
-<span class="n">qp</span><span class="o">.</span><span class="n">maximize</span><span class="p">(</span><span class="n">linear</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
-<span class="n">qp</span><span class="o">.</span><span class="n">linear_constraint</span><span class="p">(</span><span class="n">linear</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;LE&#39;</span><span class="p">,</span> <span class="n">rhs</span><span class="o">=</span><span class="mf">5.5</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;xyz_leq&#39;</span><span class="p">)</span>
-<span class="n">qp</span><span class="o">.</span><span class="n">linear_constraint</span><span class="p">(</span><span class="n">linear</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;GE&#39;</span><span class="p">,</span> <span class="n">rhs</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;xyz_geq&#39;</span><span class="p">)</span>
+<span class="n">qp</span><span class="o">.</span><span class="n">maximize</span><span class="p">(</span><span class="n">linear</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+<span class="n">qp</span><span class="o">.</span><span class="n">linear_constraint</span><span class="p">(</span><span class="n">linear</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="n">sense</span><span class="o">=</span><span class="s2">&quot;LE&quot;</span><span class="p">,</span> <span class="n">rhs</span><span class="o">=</span><span class="mf">5.5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;xyz_leq&quot;</span><span class="p">)</span>
+<span class="n">qp</span><span class="o">.</span><span class="n">linear_constraint</span><span class="p">(</span><span class="n">linear</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="n">sense</span><span class="o">=</span><span class="s2">&quot;GE&quot;</span><span class="p">,</span> <span class="n">rhs</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;xyz_geq&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">qp</span><span class="o">.</span><span class="n">export_as_lp_string</span><span class="p">())</span>
 </pre></div>
 </div>
@@ -653,13 +657,14 @@ End
 
 </pre></div></div>
 </div>
-<p>রূপান্তর করার পরে, সমস্যার সূত্রটি নীচের মত দেখাচ্ছে। আমরা দেখতে পাচ্ছি যে অসমতার সীমাবদ্ধতাগুলি অতিরিক্ত সংখ্যার স্ল্যাক চল রাশিগুলি, <span class="math notranslate nohighlight">\(xyz\_leg\text{&#64;}int\_slack\)</span> এবং <span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span>-র সাথে সমতা সীমাবদ্ধতার সাথে প্রতিস্থাপিত হয়।</p>
-<p>আসুন কীভাবে রূপান্তরটি কাজ করে তা ব্যাখ্যা করি। উদাহরণস্বরূপ, প্রথম সীমাবদ্ধতার বাম পাশের নীচের অংশটি <span class="math notranslate nohighlight">\(0\)</span> যা <span class="math notranslate nohighlight">\(x=0\)</span>, <span class="math notranslate nohighlight">\(y=0\)</span> এবং <span class="math notranslate nohighlight">\(z=0\)</span> এর ক্ষেত্রে। সুতরাং, <span class="math notranslate nohighlight">\(x=0\)</span>, <span class="math notranslate nohighlight">\(y=0\)</span> এবং <span class="math notranslate nohighlight">\(z=0\)</span> এর ক্ষেত্রেও সফল করতে অতিরিক্ত পূর্ণসংখ্যার চল রাশির উপরের দিকে <span class="math notranslate nohighlight">\(5\)</span> হওয়া আবশ্যক। খেয়াল করুন যে আমরা রূপান্তরিত সূচনার দশমিক পয়েন্টের পরে অংশটি কেটে দিয়েছি যেহেতু মূল গঠনের প্রথম সীমাবদ্ধতার বাম দিকটি কেবল পূর্ণসংখ্যার মান হতে পারে। দ্বিতীয় শর্তের জন্য, মূলত আমরা একই পদ্ধতির প্রয়োগ করি। যাইহোক, দ্বিতীয় শর্তের প্রতীকটি হল <span class="math notranslate nohighlight">\(\geq\)</span>, তাই আমরা <span class="math notranslate nohighlight">\(x=1, y=1\)</span>, এবং <span class="math notranslate nohighlight">\(z=7\)</span> এমনকি কেস সন্তুষ্ট করতে সক্ষম হতে <span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span> এর আগে বিয়োগ যোগ করি।</p>
-</div>
-<div class="section" id="IntegerToBinary">
+<p>After converting, the formulation of the problem looks like the above output. As we can see, the inequality constraints are replaced with equality constraints with additional integer slack variables, <span class="math notranslate nohighlight">\(xyz\_leg\text{&#64;}int\_slack\)</span> and <span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span>.</p>
+<p>Let us explain how the conversion works. For example, the lower bound of the left side of the first constraint is <span class="math notranslate nohighlight">\(0\)</span> which is the case of <span class="math notranslate nohighlight">\(x=0\)</span>, <span class="math notranslate nohighlight">\(y=0\)</span>, and <span class="math notranslate nohighlight">\(z=0\)</span>. Thus, the upper bound of the additional integer variable must be <span class="math notranslate nohighlight">\(5\)</span> to be able to satisfy even the case of <span class="math notranslate nohighlight">\(x=0\)</span>, <span class="math notranslate nohighlight">\(y=0\)</span>, and <span class="math notranslate nohighlight">\(z=0\)</span>. Note that we cut off the part after the decimal point in the converted formulation since the left side of the first constraint in the original formulation
+can be only integer values. For the second constraint, basically we apply the same approach. However, the symbol in the second constraint is <span class="math notranslate nohighlight">\(\geq\)</span>, so we add minus before <span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span> to be able to satisfy even the case of <span class="math notranslate nohighlight">\(x=1, y=1\)</span>, and <span class="math notranslate nohighlight">\(z=7\)</span>.</p>
+</section>
+<section id="IntegerToBinary">
 <h2>IntegerToBinary<a class="headerlink" href="#IntegerToBinary" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">IntegerToBinary</span></code> পূর্ণসংখ্যার চল রাশিগুলিকে বাইনারি চল রাশি এবং সহগগুলিকে <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> থেকে পূর্ণসংখ্য ভেরিয়েবলগুলি সরাতে রূপান্তর করে। রূপান্তর করার জন্য, প্রস্তাবিত সীমাবদ্ধ-গুণফলের এনকোডিং <a class="reference external" href="https://arxiv.org/abs/1706.01945">arxiv:1706.01945</a> (Eq. (5)) ব্যবহৃত হয়। এনকোডিং পদ্ধতির আরও বিশদের জন্য দয়া করে গবেষণাটি দেখুন।</p>
-<p>আমরা <code class="docutils literal notranslate"><span class="pre">InequalityToEquality</span></code> এর ফলাফলটি প্রারম্ভিক পয়েন্ট হিসাবে ব্যবহার করি। চলরাশি <span class="math notranslate nohighlight">\(x\)</span> এবং <span class="math notranslate nohighlight">\(y\)</span> হ’ল বাইনারি চলরাশি, অন্যদিকে চলরাশি <span class="math notranslate nohighlight">\(z\)</span> এবং স্ল্যাক চল রাশি <span class="math notranslate nohighlight">\(xyz\_leq\text{&#64;}int\_slack\)</span> এবং <span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span> পূর্ণসংখ্যা চলরাশি। আমরা আবার সমস্যাটি মুদ্রণের জন্য তথ্যসূত্র (রেফারেন্স) করব।</p>
+<p>We use the output of <code class="docutils literal notranslate"><span class="pre">InequalityToEquality</span></code> as a starting point. Variables <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span> are binary variables, while the variable <span class="math notranslate nohighlight">\(z\)</span> and the slack variables <span class="math notranslate nohighlight">\(xyz\_leq\text{&#64;}int\_slack\)</span> and <span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span> are integer variables. We print the problem again for reference.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -758,14 +763,14 @@ End
 
 </pre></div></div>
 </div>
-<p>রূপান্তর করার পরে, পূর্ণসংখ্যার চল রাশি গুলি <span class="math notranslate nohighlight">\(z\)</span> তিনটি বাইনারি চল রাশি উপরের আলোচনা অনুযায়ী যথাক্রমে ১, ২ এবং ৪ সহগের সাথে প্রতিস্থাপন করা হয় <span class="math notranslate nohighlight">\(z\text{&#64;}0\)</span>, <span class="math notranslate nohighlight">\(z\text{&#64;}1\)</span> এবং <span class="math notranslate nohighlight">\(z\text{&#64;}2\)</span> দ্বারা। স্ল্যাক চল রাশি গুলি <span class="math notranslate nohighlight">\(xyz\_leq\text{&#64;}int\_slack\)</span> এবং <span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span> যেগুলি <code class="docutils literal notranslate"><span class="pre">InequalityToEquality</span></code> দ্বারা প্রবর্তিত, এবং উভয়কে প্রতিস্থাপন করা হয়েছে সহগের ১,২,২ এবং ১,২,৩ তিনটি বাইনারি ভেরিয়েবল দ্বারা।</p>
+<p>After converting, the integer variable <span class="math notranslate nohighlight">\(z\)</span> is replaced with three binary variables <span class="math notranslate nohighlight">\(z\text{&#64;}0\)</span>, <span class="math notranslate nohighlight">\(z\text{&#64;}1\)</span> and <span class="math notranslate nohighlight">\(z\text{&#64;}2\)</span> with coefficients 1, 2 and 4, respectively as the above. The slack variables <span class="math notranslate nohighlight">\(xyz\_leq\text{&#64;}int\_slack\)</span> and <span class="math notranslate nohighlight">\(xyz\_geq\text{&#64;}int\_slack\)</span> that were introduced by <code class="docutils literal notranslate"><span class="pre">InequalityToEquality</span></code> are also both replaced with three binary variables with coefficients 1, 2, 2, and 1, 2, 3, respectively.</p>
 <p>টীকা: মূলত সহগের অর্থ হল সহগের সাথে এই বাইনারি চল রাশি গুলির যোগফল <span class="math notranslate nohighlight">\(\{1, 2, 4\}\)</span>, <span class="math notranslate nohighlight">\(\{1, 2, 2\}\)</span>,এবং <span class="math notranslate nohighlight">\(\{1, 2, 3\}\)</span> এর একটি সাবসেটের যোগফল হতে পারে এবং সেই গ্রহণযোগ্য মানগুলি উপস্থাপন করে <span class="math notranslate nohighlight">\(\{0, \ldots, 7\}\)</span>, <span class="math notranslate nohighlight">\(\{0, \ldots, 5\}\)</span>, এবং <span class="math notranslate nohighlight">\(\{0, \ldots, 6\}\)</span>, যা নীচের বাউন্ড এবং মূল সংখ্যার ভেরিয়েবলের উপরের সীমানাকে সঠিকভাবে মেনে চলে ।</p>
 <p><code class="docutils literal notranslate"><span class="pre">IntegerToBinary</span></code> একটি <code class="docutils literal notranslate"><span class="pre">interpret</span></code> পদ্ধতিও সরবরাহ করে যা প্রদত্ত বাইনারি ফলাফলটিকে মূল পূর্ণসংখ্যার উপস্থাপনায় ফিরে অনুবাদ করার কার্যকারিতা।</p>
-</div>
-<div class="section" id="LinearEqualityToPenalty">
+</section>
+<section id="LinearEqualityToPenalty">
 <h2>LinearEqualityToPenalty<a class="headerlink" href="#LinearEqualityToPenalty" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">LinearEqualityToPenalty</span></code>, <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> কে একটি অনিয়ন্ত্রিত আকারে ম্যাপ করার উদ্দেশ্যে রৈখিক সমতার সীমাবদ্ধতাকে নৈর্ব্যক্তিক অন্বয় (অব্জেক্টিভ ফাংশন) এর অতিরিক্ত দ্বিঘাত (কোয়াড্রাটিক) শর্তে রূপান্তরিত করে। পরিবর্তক (কনভার্টার) একটি ইনপুট কেবল রৈখিক সমতার সীমাবদ্ধতার সাথে একটি <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> হতে হবে। এই সাম্যতার সীমাবদ্ধতা, যেমন: <span class="math notranslate nohighlight">\(\sum_i a_i x_i = b\)</span> যেখানে e <span class="math notranslate nohighlight">\(a_i\)</span> এবং <span class="math notranslate nohighlight">\(b\)</span> সংখ্যা এবং <span class="math notranslate nohighlight">\(x_i\)</span> , একটি ভেরিয়েবল, <span class="math notranslate nohighlight">\(M(b - \sum_i a_i x_i)^2\)</span> এর আকারে নৈর্ব্যক্তিক অন্বয় (অব্জেক্টিভ ফাংশন) এর সাথে যুক্ত হবে , যেখানে <span class="math notranslate nohighlight">\(M\)</span> পেনাল্টি ফ্যাক্টর হিসাবে একটি বিশাল সংখ্যা। ডিফল্টরূপে <span class="math notranslate nohighlight">\(M= 1e5\)</span> শব্দটির চিহ্নটি সমস্যার ধরণটি সর্বাধিককরণ বা হ্রাসকরণের উপর নির্ভর করে।</p>
-<p>আমরা <code class="docutils literal notranslate"><span class="pre">IntegerToBinary</span></code> এর আউটপুটটিকে প্রারম্ভিক পয়েন্ট হিসাবে ব্যবহার করি, যেখানে সমস্ত চলরাশিগুলি বাইনারি চল রাশি এবং সমস্ত অসমতার সীমাবদ্ধতাগুলিকে সাম্যতার সীমাবদ্ধতায় ম্যাপ করা হয়েছে। আমরা আবার সমস্যাটি print করব এর রেফারেন্স এর জন্য।</p>
+<p>We use the output of <code class="docutils literal notranslate"><span class="pre">IntegerToBinary</span></code> as a starting point, where all variables are binary variables and all inequality constraints have been mapped to equality constraints. We print the problem again for reference.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -900,6 +905,7 @@ End
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -927,8 +933,8 @@ End
 </pre></div>
 </div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>
@@ -991,6 +997,7 @@ End
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
          <script src="../_static/doctools.js"></script>
@@ -998,8 +1005,8 @@ End
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "tex2jax_ignore|mathjax_ignore|document", "processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
+         <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+         <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
      
 
   

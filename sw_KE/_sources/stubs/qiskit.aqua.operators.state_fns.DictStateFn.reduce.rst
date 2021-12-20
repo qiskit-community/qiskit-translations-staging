@@ -1,6 +1,0 @@
-qiskit.aqua.operators.state\_fns.DictStateFn.reduce
-===================================================
-
-.. currentmodule:: qiskit.aqua.operators.state_fns
-
-.. automethod:: DictStateFn.reduce

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_machine_learning.algorithms.distribution_learners.qgan.numpy_discriminator &mdash; Qiskit Machine Learning 0.2.1 दिग्दर्शिका</title>
+  <title>qiskit_machine_learning.algorithms.distribution_learners.qgan.numpy_discriminator &mdash; Qiskit Machine Learning 0.3.0 दिग्दर्शिका</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
@@ -197,7 +197,7 @@
               
               
                 <div class="version">
-                  0.2.1
+                  0.3.0
                 </div>
               
             
@@ -714,8 +714,7 @@
 <span class="sd">        Perform one training step w.r.t to the discriminator&#39;s parameters</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            data (tuple(numpy.ndarray, numpy.ndarray)):</span>
-<span class="sd">                real_batch: array, Training data batch.</span>
+<span class="sd">            data (tuple(numpy.ndarray, numpy.ndarray)): real_batch: array, Training data batch.</span>
 <span class="sd">                generated_batch: array, Generated data batch.</span>
 <span class="sd">            weights (tuple):real problem, generated problem</span>
 <span class="sd">            penalty (bool): Depreciated for classical networks.</span>
@@ -733,14 +732,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span><span class="o">.</span><span class="n">_t</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">objective</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_objective_function</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
         <span class="n">gradient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_gradient_function</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_discriminator</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span>
-            <span class="n">num_vars</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_discriminator</span><span class="o">.</span><span class="n">parameters</span><span class="p">),</span>
-            <span class="n">objective_function</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
-            <span class="n">initial_point</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_discriminator</span><span class="o">.</span><span class="n">parameters</span><span class="p">),</span>
-            <span class="n">gradient_function</span><span class="o">=</span><span class="n">gradient</span><span class="p">,</span>
+        <span class="n">opt_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span>
+            <span class="n">fun</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+            <span class="n">x0</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_discriminator</span><span class="o">.</span><span class="n">parameters</span><span class="p">),</span>
+            <span class="n">jac</span><span class="o">=</span><span class="n">gradient</span><span class="p">,</span>
         <span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">loss</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_discriminator</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">opt_result</span><span class="o">.</span><span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">opt_result</span><span class="o">.</span><span class="n">fun</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_discriminator</span><span class="o">.</span><span class="n">parameters</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span></div></div>

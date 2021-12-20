@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="ta-IN" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>குவாண்டம் நியூரல் நெட்வொர்க்குகள் &mdash; Qiskit Machine Learning 0.2.1 documentation</title>
+  <title>குவாண்டம் நியூரல் நெட்வொர்க்குகள் &mdash; Qiskit Machine Learning 0.3.0 documentation</title>
   
 
   
@@ -31,8 +32,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -199,7 +200,7 @@
               
               
                 <div class="version">
-                  0.2.1
+                  0.3.0
                 </div>
               
             
@@ -554,9 +555,9 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>இந்தப் பக்கம் <a class="reference external" href="https://github.com/Qiskit/qiskit-machine-learning/blob/stable/0.2/docs/tutorials/01_neural_networks.ipynb">docs/tutorials/01_neural_networks.ipynb</a> இலிருந்து உருவாக்கப்பட்டது.</p>
+<p>இந்தப் பக்கம் <a class="reference external" href="https://github.com/Qiskit/qiskit-machine-learning/blob/stable/0.3/docs/tutorials/01_neural_networks.ipynb">docs/tutorials/01_neural_networks.ipynb</a> இலிருந்து உருவாக்கப்பட்டது.</p>
 </div>
-<div class="section" id="குவாண்டம்-நியூரல்-நெட்வொர்க்குகள்">
+<section id="குவாண்டம்-நியூரல்-நெட்வொர்க்குகள்">
 <h1>குவாண்டம் நியூரல் நெட்வொர்க்குகள்<a class="headerlink" href="#குவாண்டம்-நியூரல்-நெட்வொர்க்குகள்" title="Permalink to this headline">¶</a></h1>
 <p>இந்த நோட்புக் qiskit இயந்திர கற்றலில் வழங்கப்பட்ட வெவ்வேறு பொதுவான குவாண்டம் நியூரல் நெட்வொர்க் (QNN) செயலாக்கங்களை நிரூபிக்கிறது. நெட்வொர்க்குகள் பயன்பாட்டு-அஞ்ஞான கணக்கீட்டு அலகுகளாகக் கருதப்படுகின்றன, அவை பலவிதமான பயன்பாட்டு நிகழ்வுகளுக்குப் பயன்படுத்தப்படலாம். பயன்பாட்டைப் பொறுத்து, ஒரு குறிப்பிட்ட வகை நெட்வொர்க் அதிகமாகவோ அல்லது குறைவாகவோ பொருத்தமானதாக இருக்கலாம் மற்றும் ஒரு குறிப்பிட்ட வழியில் அமைக்க வேண்டியிருக்கும். பின்வரும் வெவ்வேறு நரம்பியல் நெட்வொர்க்குகள் இப்போது விரிவாக விவாதிக்கப்படும்:</p>
 <ol class="arabic simple">
@@ -576,7 +577,9 @@ div.rendered_html tbody tr:hover {
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Parameter</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">RealAmplitudes</span><span class="p">,</span> <span class="n">ZZFeatureMap</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">StateFn</span><span class="p">,</span> <span class="n">PauliSumOp</span><span class="p">,</span> <span class="n">AerPauliExpectation</span><span class="p">,</span> <span class="n">ListOp</span><span class="p">,</span> <span class="n">Gradient</span>
-<span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">QuantumInstance</span>
+<span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">QuantumInstance</span><span class="p">,</span> <span class="n">algorithm_globals</span>
+
+<span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">42</span>
 </pre></div>
 </div>
 </div>
@@ -592,19 +595,19 @@ div.rendered_html tbody tr:hover {
 <span class="n">gradient</span> <span class="o">=</span> <span class="n">Gradient</span><span class="p">()</span>
 
 <span class="c1"># define quantum instances (statevector and sample based)</span>
-<span class="n">qi_sv</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;aer_simulator_statevector&#39;</span><span class="p">))</span>
+<span class="n">qi_sv</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;aer_simulator_statevector&quot;</span><span class="p">))</span>
 
 <span class="c1"># we set shots to 10 as this will determine the number of samples later on.</span>
-<span class="n">qi_qasm</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;aer_simulator&#39;</span><span class="p">),</span> <span class="n">shots</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">qi_qasm</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;aer_simulator&quot;</span><span class="p">),</span> <span class="n">shots</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="1.-NeuralNetwork">
+<section id="1.-NeuralNetwork">
 <h2>1. <code class="docutils literal notranslate"><span class="pre">NeuralNetwork</span></code><a class="headerlink" href="#1.-NeuralNetwork" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">NeuralNetwork</span></code> என்பது qiskit இயந்திர கற்றலில் கிடைக்கும் அனைத்து நரம்பியல் நெட்வொர்க்குகளுக்கான இடைமுகத்தைக் குறிக்கிறது. இது தரவு மாதிரிகள் மற்றும் பயிற்சியளிக்கக்கூடிய எடைகளை உள்ளீடாக எடுத்து முன்னோக்கி மற்றும் பின்தங்கிய பாஸை அம்பலப்படுத்துகிறது. <code class="docutils literal notranslate"><span class="pre">NeuralNetwork</span></code> எந்த பயிற்சி திறன்களையும் கொண்டிருக்கவில்லை, இவை உண்மையான வழிமுறைகள் / பயன்பாடுகளுக்குத் தள்ளப்படுகின்றன. எனவே, ஒரு <code class="docutils literal notranslate"><span class="pre">NeuralNetwork</span></code> பயிற்சியளிக்கக்கூடிய எடைகளுக்கான மதிப்புகளையும் சேமிக்காது. பின்வருவனவற்றில், இந்த இடைமுகங்களின் வெவ்வேறு செயலாக்கங்கள் அறிமுகப்படுத்தப்படுகின்றன.</p>
 <p><code class="docutils literal notranslate"><span class="pre">nn</span></code> எனப்படும் <code class="docutils literal notranslate"><span class="pre">NeuralNetwork</span></code> என்று வைத்துக்கொள்வோம். பின்னர், <code class="docutils literal notranslate"><span class="pre">nn.forward(input,</span> <span class="pre">weights)</span></code> பாஸ் முறையே தரவு மற்றும் எடைகள் <code class="docutils literal notranslate"><span class="pre">nn.num_inputs</span></code> மற்றும் <code class="docutils literal notranslate"><span class="pre">nn.num_weights</span></code> ஆகியவற்றிற்கான தட்டையான உள்ளீடுகளை எடுக்கும். <code class="docutils literal notranslate"><span class="pre">NeuralNetwork</span></code> உள்ளீடுகளின் தொகுப்பை ஆதரிக்கிறது மற்றும் தொடர்புடைய வடிவத்தின் வெளியீட்டின் தொகுப்புகளை வழங்குகிறது.</p>
-</div>
-<div class="section" id="2.-OpflowQNN">
+</section>
+<section id="2.-OpflowQNN">
 <h2>2. <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code><a class="headerlink" href="#2.-OpflowQNN" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> qiskit-டிலிருந்து ஒரு (அளவுரு) ஆபரேட்டரை எடுத்து பின்தங்கிய பாஸை வழங்க qiskit-டின் சாய்வு கட்டமைப்பை ஆதரிக்கிறது. அத்தகைய ஆபரேட்டர் உதாரணமாக, ஒரு அளவுரு குவாண்டம் நிலையைப் பொறுத்தவரை கவனிக்கக்கூடிய ஒரு குவாண்டம் இயந்திரத்தின் எதிர்பார்க்கப்படும் மதிப்பாக இருக்கலாம். கிளாசிக்கல் தரவை ஏற்றுவதற்கும், பயிற்சியளிக்கக்கூடிய எடைகளைக் குறிப்பதற்கும் அளவுருக்கள் பயன்படுத்தப்படலாம். <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> ஆபரேட்டர்கள் மற்றும் மிகவும் சிக்கலான கட்டமைப்புகளின் பட்டியல்களை மிகவும் சிக்கலான QNN களை உருவாக்க அனுமதிக்கிறது.</p>
 <div class="nbinput nblast docutils container">
@@ -622,7 +625,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># construct parametrized circuit</span>
-<span class="n">params1</span> <span class="o">=</span> <span class="p">[</span><span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;input1&#39;</span><span class="p">),</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;weight1&#39;</span><span class="p">)]</span>
+<span class="n">params1</span> <span class="o">=</span> <span class="p">[</span><span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;input1&quot;</span><span class="p">),</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;weight1&quot;</span><span class="p">)]</span>
 <span class="n">qc1</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">qc1</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">qc1</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="n">params1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
@@ -630,7 +633,7 @@ div.rendered_html tbody tr:hover {
 <span class="n">qc_sfn1</span> <span class="o">=</span> <span class="n">StateFn</span><span class="p">(</span><span class="n">qc1</span><span class="p">)</span>
 
 <span class="c1"># construct cost operator</span>
-<span class="n">H1</span> <span class="o">=</span> <span class="n">StateFn</span><span class="p">(</span><span class="n">PauliSumOp</span><span class="o">.</span><span class="n">from_list</span><span class="p">([(</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)]))</span>
+<span class="n">H1</span> <span class="o">=</span> <span class="n">StateFn</span><span class="p">(</span><span class="n">PauliSumOp</span><span class="o">.</span><span class="n">from_list</span><span class="p">([(</span><span class="s2">&quot;Z&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)]))</span>
 
 <span class="c1"># combine operator and circuit to objective function</span>
 <span class="n">op1</span> <span class="o">=</span> <span class="o">~</span><span class="n">H1</span> <span class="o">@</span> <span class="n">qc_sfn1</span>
@@ -648,7 +651,7 @@ ComposedOp([
   + 1.0 * X),
   CircuitStateFn(
        ┌───┐┌────────────┐┌─────────────┐
-  q_0: ┤ H ├┤ RY(input1) ├┤ RX(weight1) ├
+  q_0: ┤ H ├┤ Ry(input1) ├┤ Rx(weight1) ├
        └───┘└────────────┘└─────────────┘
   )
 ])
@@ -671,8 +674,8 @@ ComposedOp([
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># define (random) input and weights</span>
-<span class="n">input1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">qnn1</span><span class="o">.</span><span class="n">num_inputs</span><span class="p">)</span>
-<span class="n">weights1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">qnn1</span><span class="o">.</span><span class="n">num_weights</span><span class="p">)</span>
+<span class="n">input1</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">qnn1</span><span class="o">.</span><span class="n">num_inputs</span><span class="p">)</span>
+<span class="n">weights1</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">qnn1</span><span class="o">.</span><span class="n">num_weights</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -692,7 +695,7 @@ ComposedOp([
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[0.81422018]])
+array([[0.08242345]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -711,8 +714,8 @@ array([[0.81422018]])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[0.81422018],
-       [0.81422018]])
+array([[0.08242345],
+       [0.08242345]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -731,7 +734,7 @@ array([[0.81422018],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(array([[[-1.15629599]]]), array([[[0.0008565]]]))
+(None, array([[[0.2970094]]]))
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -750,12 +753,10 @@ array([[0.81422018],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(array([[[-1.15629599]],
+(None,
+ array([[[0.2970094]],
 
-        [[-1.15629599]]]),
- array([[[0.0008565]],
-
-        [[0.0008565]]]))
+        [[0.2970094]]]))
 </pre></div></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">ListOp</span></code> இல் பல அவதானிப்புகளை இணைப்பது மிகவும் சிக்கலான QNN களை உருவாக்க அனுமதிக்கிறது</p>
@@ -785,7 +786,7 @@ array([[0.81422018],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[0.81422018, 0.81422018]])
+array([[0.08242345, 0.08242345]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -804,14 +805,13 @@ array([[0.81422018, 0.81422018]])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(array([[[-1.15629599],
-         [-1.15629599]]]),
- array([[[0.0008565],
-         [0.0008565]]]))
+(None,
+ array([[[0.2970094],
+         [0.2970094]]]))
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="3.-TwoLayerQNN">
+</section>
+<section id="3.-TwoLayerQNN">
 <h2>3. <code class="docutils literal notranslate"><span class="pre">TwoLayerQNN</span></code><a class="headerlink" href="#3.-TwoLayerQNN" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">TwoLayerQNN</span></code> என்பது ஒரு சிறப்பு <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> இல் <span class="math notranslate nohighlight">\(n\)</span> குவிட்ஸ், இது முதலில் தரவைச் செருகுவதற்கான அம்ச வரைபடத்தையும், இரண்டாவதாக பயிற்சியளிக்கப்பட்ட ஒரு அன்சாட்ஸையும் கொண்டுள்ளது. இயல்புநிலையாகக் காணக்கூடியது <span class="math notranslate nohighlight">\(Z^{\otimes n}\)</span>, அதாவது, சமநிலை.</p>
 <div class="nbinput nblast docutils container">
@@ -840,7 +840,7 @@ array([[0.81422018, 0.81422018]])
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># specify the feature map</span>
 <span class="n">fm</span> <span class="o">=</span> <span class="n">ZZFeatureMap</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">fm</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;mpl&#39;</span><span class="p">)</span>
+<span class="n">fm</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s2">&quot;mpl&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -859,7 +859,7 @@ array([[0.81422018, 0.81422018]])
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># specify the ansatz</span>
 <span class="n">ansatz</span> <span class="o">=</span> <span class="n">RealAmplitudes</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">ansatz</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;mpl&#39;</span><span class="p">)</span>
+<span class="n">ansatz</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s2">&quot;mpl&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -877,7 +877,7 @@ array([[0.81422018, 0.81422018]])
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># specify the observable</span>
-<span class="n">observable</span> <span class="o">=</span> <span class="n">PauliSumOp</span><span class="o">.</span><span class="n">from_list</span><span class="p">([(</span><span class="s1">&#39;Z&#39;</span><span class="o">*</span><span class="n">num_qubits</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
+<span class="n">observable</span> <span class="o">=</span> <span class="n">PauliSumOp</span><span class="o">.</span><span class="n">from_list</span><span class="p">([(</span><span class="s2">&quot;Z&quot;</span> <span class="o">*</span> <span class="n">num_qubits</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">observable</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -896,10 +896,9 @@ array([[0.81422018, 0.81422018]])
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># define two layer QNN</span>
-<span class="n">qnn3</span> <span class="o">=</span> <span class="n">TwoLayerQNN</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span>
-                   <span class="n">feature_map</span><span class="o">=</span><span class="n">fm</span><span class="p">,</span>
-                   <span class="n">ansatz</span><span class="o">=</span><span class="n">ansatz</span><span class="p">,</span>
-                   <span class="n">observable</span><span class="o">=</span><span class="n">observable</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">qi_sv</span><span class="p">)</span>
+<span class="n">qnn3</span> <span class="o">=</span> <span class="n">TwoLayerQNN</span><span class="p">(</span>
+    <span class="n">num_qubits</span><span class="p">,</span> <span class="n">feature_map</span><span class="o">=</span><span class="n">fm</span><span class="p">,</span> <span class="n">ansatz</span><span class="o">=</span><span class="n">ansatz</span><span class="p">,</span> <span class="n">observable</span><span class="o">=</span><span class="n">observable</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">qi_sv</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -909,8 +908,8 @@ array([[0.81422018, 0.81422018]])
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># define (random) input and weights</span>
-<span class="n">input3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">qnn3</span><span class="o">.</span><span class="n">num_inputs</span><span class="p">)</span>
-<span class="n">weights3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">qnn3</span><span class="o">.</span><span class="n">num_weights</span><span class="p">)</span>
+<span class="n">input3</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">qnn3</span><span class="o">.</span><span class="n">num_inputs</span><span class="p">)</span>
+<span class="n">weights3</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">qnn3</span><span class="o">.</span><span class="n">num_weights</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -930,7 +929,7 @@ array([[0.81422018, 0.81422018]])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[0.28520667]])
+array([[0.18276559]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -949,13 +948,13 @@ array([[0.28520667]])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(array([[[-0.2933431 , -0.78565729,  0.5416021 ]]]),
- array([[[-0.09093077,  0.02802006, -0.13559047,  0.1814619 ,
-           0.11644461, -0.4073129 ]]]))
+(None,
+ array([[[ 0.10231208,  0.10656571,  0.41017902,  0.16528909,
+          -0.27780262,  0.41365763]]]))
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="4.-CircuitQNN">
+</section>
+<section id="4.-CircuitQNN">
 <h2>4. <code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code><a class="headerlink" href="#4.-CircuitQNN" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code> என்பது ஒரு (அளவுருவாக்கப்பட்ட) <code class="docutils literal notranslate"><span class="pre">QuantumCircuit</span></code> ஐ அடிப்படையாகக் கொண்டது. இது உள்ளீடு மற்றும் எடை அளவுருக்களை எடுத்து அளவீட்டிலிருந்து மாதிரிகளை உருவாக்குகிறது. மாதிரிகள் ஒரு பிட்ஸ்ட்ரிங்கிற்கு ஒத்த முழு எண் குறியீட்டை அளவிடுவதற்கான நிகழ்தகவுகள் அல்லது நேரடியாக பைனரி வெளியீட்டின் தொகுப்பாக விளக்கப்படலாம். நிகழ்தகவுகளின் விஷயத்தில், சாய்வுகளை திறமையாக மதிப்பிடலாம் மற்றும் <code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code> பின்தங்கிய பாஸையும் வழங்குகிறது. மாதிரிகள் விஷயத்தில், வேறுபாடு சாத்தியமில்லை மற்றும் பின்தங்கிய பாஸ் <code class="docutils literal notranslate"><span class="pre">(None,</span> <span class="pre">None)</span></code>.</p>
 <p>மேலும், <code class="docutils literal notranslate"><span class="pre">CircuitQN</span></code> மாதிரிகளை பிந்தைய செயலாக்க <code class="docutils literal notranslate"><span class="pre">interpret</span></code> செயல்பாட்டைக் குறிப்பிட அனுமதிக்கிறது. இது அளவிடப்பட்ட முழு எண்ணை (bitstring-ல் இருந்து) எடுத்து புதிய அட்டவணைக்கு ஒப்பிடப்படுகிறது என்று எதிர்பார்க்கப்படுகிறது, அதாவது எதிர்மறை அல்லாத முழு எண். இந்த வழக்கில், வெளியீட்டு வடிவத்தை வழங்க வேண்டும் மற்றும் அதற்கேற்ப நிகழ்தகவு திரட்டப்படுகிறது.</p>
@@ -974,8 +973,8 @@ array([[0.28520667]])
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">qc</span> <span class="o">=</span> <span class="n">RealAmplitudes</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">qc</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;mpl&#39;</span><span class="p">)</span>
+<span></span><span class="n">qc</span> <span class="o">=</span> <span class="n">RealAmplitudes</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s2">&quot;mpl&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -987,7 +986,7 @@ array([[0.28520667]])
 <img alt="../_images/tutorials_01_neural_networks_29_0.png" src="../_images/tutorials_01_neural_networks_29_0.png" />
 </div>
 </div>
-<div class="section" id="4.1-வெளியீடு:-சிதறல்-முழு-எண்-நிகழ்தகவுகள்">
+<section id="4.1-வெளியீடு:-சிதறல்-முழு-எண்-நிகழ்தகவுகள்">
 <h3>4.1 வெளியீடு: சிதறல் முழு எண் நிகழ்தகவுகள்<a class="headerlink" href="#4.1-வெளியீடு:-சிதறல்-முழு-எண்-நிகழ்தகவுகள்" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
@@ -1005,8 +1004,8 @@ array([[0.28520667]])
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># define (random) input and weights</span>
-<span class="n">input4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">qnn4</span><span class="o">.</span><span class="n">num_inputs</span><span class="p">)</span>
-<span class="n">weights4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">qnn4</span><span class="o">.</span><span class="n">num_weights</span><span class="p">)</span>
+<span class="n">input4</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">qnn4</span><span class="o">.</span><span class="n">num_inputs</span><span class="p">)</span>
+<span class="n">weights4</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">qnn4</span><span class="o">.</span><span class="n">num_weights</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1026,7 +1025,7 @@ array([[0.28520667]])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[0.5, 0. , 0. , 0. , 0.3, 0. , 0. , 0.2]])
+array([[0.6, 0.1, 0. , 0. , 0. , 0. , 0. , 0.3]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1045,12 +1044,11 @@ array([[0.5, 0. , 0. , 0. , 0.3, 0. , 0. , 0.2]])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(&lt;COO: shape=(1, 8, 0), dtype=float64, nnz=0, fill_value=0.0&gt;,
- &lt;COO: shape=(1, 8, 6), dtype=float64, nnz=22, fill_value=0.0&gt;)
+(None, &lt;COO: shape=(1, 8, 6), dtype=float64, nnz=33, fill_value=0.0&gt;)
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="4.2-வெளியீடு:-அடர்த்தியான-சமநிலை-நிகழ்தகவுகள்">
+</section>
+<section id="4.2-வெளியீடு:-அடர்த்தியான-சமநிலை-நிகழ்தகவுகள்">
 <h3>4.2 வெளியீடு: அடர்த்தியான சமநிலை நிகழ்தகவுகள்<a class="headerlink" href="#4.2-வெளியீடு:-அடர்த்தியான-சமநிலை-நிகழ்தகவுகள்" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
@@ -1058,10 +1056,17 @@ array([[0.5, 0. , 0. , 0. , 0.3, 0. , 0. , 0.2]])
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># specify circuit QNN</span>
-<span class="n">parity</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">{:b}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span>
+<span class="n">parity</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{:b}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span>
 <span class="n">output_shape</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># this is required in case of a callable with dense output</span>
-<span class="n">qnn6</span> <span class="o">=</span> <span class="n">CircuitQNN</span><span class="p">(</span><span class="n">qc</span><span class="p">,</span> <span class="p">[],</span> <span class="n">qc</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">interpret</span><span class="o">=</span><span class="n">parity</span><span class="p">,</span> <span class="n">output_shape</span><span class="o">=</span><span class="n">output_shape</span><span class="p">,</span>
-                  <span class="n">quantum_instance</span><span class="o">=</span><span class="n">qi_qasm</span><span class="p">)</span>
+<span class="n">qnn6</span> <span class="o">=</span> <span class="n">CircuitQNN</span><span class="p">(</span>
+    <span class="n">qc</span><span class="p">,</span>
+    <span class="p">[],</span>
+    <span class="n">qc</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+    <span class="n">sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">interpret</span><span class="o">=</span><span class="n">parity</span><span class="p">,</span>
+    <span class="n">output_shape</span><span class="o">=</span><span class="n">output_shape</span><span class="p">,</span>
+    <span class="n">quantum_instance</span><span class="o">=</span><span class="n">qi_qasm</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1071,8 +1076,8 @@ array([[0.5, 0. , 0. , 0. , 0.3, 0. , 0. , 0.2]])
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># define (random) input and weights</span>
-<span class="n">input6</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">qnn6</span><span class="o">.</span><span class="n">num_inputs</span><span class="p">)</span>
-<span class="n">weights6</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">qnn6</span><span class="o">.</span><span class="n">num_weights</span><span class="p">)</span>
+<span class="n">input6</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">qnn6</span><span class="o">.</span><span class="n">num_inputs</span><span class="p">)</span>
+<span class="n">weights6</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">qnn6</span><span class="o">.</span><span class="n">num_weights</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1092,7 +1097,7 @@ array([[0.5, 0. , 0. , 0. , 0.3, 0. , 0. , 0.2]])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[0.8, 0.2]])
+array([[0.5, 0.5]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1111,15 +1116,13 @@ array([[0.8, 0.2]])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(array([], shape=(1, 2, 0), dtype=float64),
- array([[[-1.00000000e-01,  5.55111512e-17, -5.00000000e-02,
-           1.38777878e-17, -2.00000000e-01,  5.00000000e-02],
-         [ 1.00000000e-01,  0.00000000e+00,  5.00000000e-02,
-          -5.55111512e-17,  2.00000000e-01, -5.00000000e-02]]]))
+(None,
+ array([[[-0.2 ,  0.1 , -0.15, -0.15,  0.15, -0.15],
+         [ 0.2 , -0.1 ,  0.15,  0.15, -0.15,  0.15]]]))
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="4.3-வெளியீடு:-மாதிரிகள்">
+</section>
+<section id="4.3-வெளியீடு:-மாதிரிகள்">
 <h3>4.3 வெளியீடு: மாதிரிகள்<a class="headerlink" href="#4.3-வெளியீடு:-மாதிரிகள்" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
@@ -1127,8 +1130,7 @@ array([[0.8, 0.2]])
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># specify circuit QNN</span>
-<span class="n">qnn7</span> <span class="o">=</span> <span class="n">CircuitQNN</span><span class="p">(</span><span class="n">qc</span><span class="p">,</span> <span class="p">[],</span> <span class="n">qc</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">sampling</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                  <span class="n">quantum_instance</span><span class="o">=</span><span class="n">qi_qasm</span><span class="p">)</span>
+<span class="n">qnn7</span> <span class="o">=</span> <span class="n">CircuitQNN</span><span class="p">(</span><span class="n">qc</span><span class="p">,</span> <span class="p">[],</span> <span class="n">qc</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">sampling</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">qi_qasm</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1138,8 +1140,8 @@ array([[0.8, 0.2]])
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># define (random) input and weights</span>
-<span class="n">input7</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">qnn7</span><span class="o">.</span><span class="n">num_inputs</span><span class="p">)</span>
-<span class="n">weights7</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">qnn7</span><span class="o">.</span><span class="n">num_weights</span><span class="p">)</span>
+<span class="n">input7</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">qnn7</span><span class="o">.</span><span class="n">num_inputs</span><span class="p">)</span>
+<span class="n">weights7</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">qnn7</span><span class="o">.</span><span class="n">num_weights</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1159,16 +1161,16 @@ array([[0.8, 0.2]])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[[4.],
-        [4.],
-        [7.],
+array([[[0.],
         [1.],
-        [7.],
-        [4.],
-        [4.],
-        [4.],
         [0.],
-        [0.]]])
+        [7.],
+        [0.],
+        [6.],
+        [0.],
+        [0.],
+        [1.],
+        [6.]]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1190,8 +1192,8 @@ array([[[4.],
 (None, None)
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="4.4-வெளியீடு:-பரிதி-மாதிரிகள்">
+</section>
+<section id="4.4-வெளியீடு:-பரிதி-மாதிரிகள்">
 <h3>4.4 வெளியீடு: பரிதி மாதிரிகள்<a class="headerlink" href="#4.4-வெளியீடு:-பரிதி-மாதிரிகள்" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
@@ -1199,8 +1201,7 @@ array([[[4.],
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># specify circuit QNN</span>
-<span class="n">qnn8</span> <span class="o">=</span> <span class="n">CircuitQNN</span><span class="p">(</span><span class="n">qc</span><span class="p">,</span> <span class="p">[],</span> <span class="n">qc</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">sampling</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">interpret</span><span class="o">=</span><span class="n">parity</span><span class="p">,</span>
-                  <span class="n">quantum_instance</span><span class="o">=</span><span class="n">qi_qasm</span><span class="p">)</span>
+<span class="n">qnn8</span> <span class="o">=</span> <span class="n">CircuitQNN</span><span class="p">(</span><span class="n">qc</span><span class="p">,</span> <span class="p">[],</span> <span class="n">qc</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">sampling</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">interpret</span><span class="o">=</span><span class="n">parity</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">qi_qasm</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1210,8 +1211,8 @@ array([[[4.],
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># define (random) input and weights</span>
-<span class="n">input8</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">qnn8</span><span class="o">.</span><span class="n">num_inputs</span><span class="p">)</span>
-<span class="n">weights8</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">qnn8</span><span class="o">.</span><span class="n">num_weights</span><span class="p">)</span>
+<span class="n">input8</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">qnn8</span><span class="o">.</span><span class="n">num_inputs</span><span class="p">)</span>
+<span class="n">weights8</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">qnn8</span><span class="o">.</span><span class="n">num_weights</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1231,16 +1232,16 @@ array([[[4.],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[[1.],
+array([[[0.],
+        [1.],
+        [1.],
         [0.],
         [1.],
         [0.],
         [0.],
         [0.],
-        [0.],
-        [0.],
-        [0.],
-        [0.]]])
+        [1.],
+        [1.]]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1263,11 +1264,12 @@ array([[[1.],
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[41]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[43]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -1277,8 +1279,8 @@ array([[[1.],
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td>Qiskit</td><td>None</td></tr><tr><td>Terra</td><td>0.17.0.dev0+346ffa8</td></tr><tr><td>Aer</td><td>0.8.0</td></tr><tr><td>Ignis</td><td>0.6.0.dev0+d6f1ad7</td></tr><tr><td>Aqua</td><td>None</td></tr><tr><td>IBM Q Provider</td><td>0.13.0.dev0+10f19e0</td></tr><tr><th>System information</th></tr><tr><td>Python</td><td>3.8.8 (default, Feb 24 2021, 13:46:16)
-[Clang 10.0.0 ]</td></tr><tr><td>OS</td><td>Darwin</td></tr><tr><td>CPUs</td><td>6</td></tr><tr><td>Memory (Gb)</td><td>16.0</td></tr><tr><td colspan='2'>Wed Mar 31 23:25:48 2021 CEST</td></tr></table></div>
+<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td><code>qiskit-terra</code></td><td>0.19.0</td></tr><tr><td><code>qiskit-aer</code></td><td>0.9.0</td></tr><tr><td><code>qiskit-ignis</code></td><td>0.7.0</td></tr><tr><td><code>qiskit-ibmq-provider</code></td><td>0.17.0</td></tr><tr><td><code>qiskit-aqua</code></td><td>0.10.0</td></tr><tr><td><code>qiskit-machine-learning</code></td><td>0.3.0</td></tr><tr><th>System information</th></tr><tr><td>Python</td><td>3.8.10 (default, Jun  2 2021, 10:49:15)
+[GCC 9.4.0]</td></tr><tr><td>OS</td><td>Linux</td></tr><tr><td>CPUs</td><td>4</td></tr><tr><td>Memory (Gb)</td><td>7.6849517822265625</td></tr><tr><td colspan='2'>Sat Aug 28 01:04:52 2021 IST</td></tr></table></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
@@ -1295,9 +1297,9 @@ array([[[1.],
 </pre></div>
 </div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
              </article>

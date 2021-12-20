@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_machine_learning.kernels.quantum_kernel &mdash; документация Qiskit Machine Learning 0.2.1</title>
+  <title>qiskit_machine_learning.kernels.quantum_kernel &mdash; документация Qiskit Machine Learning 0.3.0</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -197,7 +197,7 @@
               
               
                 <div class="version">
-                  0.2.1
+                  0.3.0
                 </div>
               
             
@@ -313,12 +313,15 @@
 
 <span class="sd">&quot;&quot;&quot;Quantum Kernel Algorithm&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">numbers</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span><span class="p">,</span> <span class="n">QuantumRegister</span><span class="p">,</span> <span class="n">ClassicalRegister</span>
-<span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">ParameterVector</span>
+<span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Parameter</span><span class="p">,</span> <span class="n">ParameterVector</span><span class="p">,</span> <span class="n">ParameterExpression</span>
+<span class="kn">from</span> <span class="nn">qiskit.circuit.parameterexpression</span> <span class="kn">import</span> <span class="n">ParameterValueType</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">ZZFeatureMap</span>
 <span class="kn">from</span> <span class="nn">qiskit.providers</span> <span class="kn">import</span> <span class="n">Backend</span><span class="p">,</span> <span class="n">BaseBackend</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">QuantumInstance</span>
@@ -351,6 +354,7 @@
         <span class="n">enforce_psd</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">900</span><span class="p">,</span>
         <span class="n">quantum_instance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">QuantumInstance</span><span class="p">,</span> <span class="n">BaseBackend</span><span class="p">,</span> <span class="n">Backend</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">user_parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ParameterVector</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Parameter</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -358,38 +362,210 @@
 <span class="sd">                the `ZZFeatureMap` is used with two qubits.</span>
 <span class="sd">            enforce_psd: Project to closest positive semidefinite matrix if x = y.</span>
 <span class="sd">                Only enforced when not using the state vector simulator. Default True.</span>
-<span class="sd">            batch_size: Number of circuits to batch together for computation. Default 1000.</span>
+<span class="sd">            batch_size: Number of circuits to batch together for computation. Default 900.</span>
 <span class="sd">            quantum_instance: Quantum Instance or Backend</span>
+<span class="sd">            user_parameters: Iterable containing ``Parameter`` objects which correspond to</span>
+<span class="sd">                 quantum gates on the feature map circuit which may be tuned. If users intend to</span>
+<span class="sd">                 tune feature map parameters to find optimal values, this field should be set.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span> <span class="o">=</span> <span class="n">feature_map</span> <span class="k">if</span> <span class="n">feature_map</span> <span class="k">else</span> <span class="n">ZZFeatureMap</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># Class fields</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unbound_feature_map</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_param_binds</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_enforce_psd</span> <span class="o">=</span> <span class="n">enforce_psd</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span> <span class="o">=</span> <span class="n">quantum_instance</span>
 
+        <span class="c1"># Setters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_map</span> <span class="o">=</span> <span class="n">feature_map</span> <span class="k">if</span> <span class="n">feature_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ZZFeatureMap</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">user_parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">user_parameters</span> <span class="o">=</span> <span class="n">user_parameters</span>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">feature_map</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuantumCircuit</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Returns feature map&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Return feature map&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span>
 
     <span class="nd">@feature_map</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">feature_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_map</span><span class="p">:</span> <span class="n">QuantumCircuit</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Sets feature map&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">feature_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_map</span><span class="p">:</span> <span class="n">QuantumCircuit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set feature map.</span>
+
+<span class="sd">        The ``unbound_feature_map`` field will be automatically updated when this field is set,</span>
+<span class="sd">        and ``user_parameters`` and ``user_param_binds`` fields will be reset to ``None``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span> <span class="o">=</span> <span class="n">feature_map</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unbound_feature_map</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_param_binds</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">unbound_feature_map</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuantumCircuit</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return unbound feature map&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unbound_feature_map</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">quantum_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuantumInstance</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Returns quantum instance&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Return quantum instance&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span>
 
     <span class="nd">@quantum_instance</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">quantum_instance</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Backend</span><span class="p">,</span> <span class="n">BaseBackend</span><span class="p">,</span> <span class="n">QuantumInstance</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Sets quantum instance&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Set quantum instance&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">quantum_instance</span><span class="p">,</span> <span class="p">(</span><span class="n">BaseBackend</span><span class="p">,</span> <span class="n">Backend</span><span class="p">)):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">quantum_instance</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span> <span class="o">=</span> <span class="n">quantum_instance</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">user_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ParameterVector</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Parameter</span><span class="p">]]]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the vector of user parameters.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">)</span>
+
+    <span class="nd">@user_parameters</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">user_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_params</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ParameterVector</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Parameter</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Set the user parameters&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_param_binds</span> <span class="o">=</span> <span class="p">{</span><span class="n">user_params</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span> <span class="n">user_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">user_params</span><span class="p">)}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">user_params</span><span class="p">)</span>
+
+<div class="viewcode-block" id="QuantumKernel.assign_user_parameters"><a class="viewcode-back" href="../../../stubs/qiskit_machine_learning.kernels.QuantumKernel.assign_user_parameters.html#qiskit_machine_learning.kernels.QuantumKernel.assign_user_parameters">[документация]</a>    <span class="k">def</span> <span class="nf">assign_user_parameters</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">Parameter</span><span class="p">,</span> <span class="n">ParameterValueType</span><span class="p">],</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ParameterValueType</span><span class="p">]]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Assign user parameters in the ``QuantumKernel`` feature map.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            values (dict or iterable): Either a dictionary or iterable specifying the new</span>
+<span class="sd">            parameter values. If a dict, it specifies the mapping from ``current_parameter`` to</span>
+<span class="sd">            ``new_parameter``, where ``new_parameter`` can be a parameter expression or a</span>
+<span class="sd">            numeric value. If an iterable, the elements are assigned to the existing parameters</span>
+<span class="sd">            in the order of ``QuantumKernel.user_parameters``.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: Incompatible number of user parameters and values</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                The number of parameter values (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="si">}</span><span class="s2">) does not</span>
+<span class="s2">                match the number of user parameters tracked by the QuantumKernel</span>
+<span class="s2">                (None).</span>
+<span class="s2">                &quot;&quot;&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Get the input parameters. These should remain unaffected by assigning of user parameters.</span>
+        <span class="n">input_params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unbound_feature_map</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">))</span>
+
+        <span class="c1"># If iterable of values is passed, the length must match length of user_parameters field</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="p">(</span><span class="n">Sequence</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                The number of parameter values (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="si">}</span><span class="s2">) does not</span>
+<span class="s2">                match the number of user parameters tracked by the QuantumKernel</span>
+<span class="s2">                (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">)</span><span class="si">}</span><span class="s2">).</span>
+<span class="s2">                &quot;&quot;&quot;</span>
+                <span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="p">:</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">)}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    &#39;values&#39; must be of type Dict or Sequence.</span>
+<span class="s2">                    Type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="si">}</span><span class="s2"> is not supported.</span>
+<span class="s2">                    &quot;&quot;&quot;</span>
+                <span class="p">)</span>
+
+            <span class="c1"># All input keys must exist in the circuit</span>
+            <span class="c1"># This check actually catches some well defined assignments;</span>
+            <span class="c1"># however; we throw an error to be consistent with the behavior</span>
+            <span class="c1"># of QuantumCircuit&#39;s parameter binding.</span>
+            <span class="n">unknown_parameters</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unknown_parameters</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Cannot bind parameters (</span><span class="si">{</span><span class="n">unknown_parameters</span><span class="si">}</span><span class="s2">) not tracked by the quantum kernel.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Because QuantumKernel supports parameter rebinding, entries of the `values` dictionary must</span>
+        <span class="c1"># be handled differently depending on whether they represent numerical assignments or parameter</span>
+        <span class="c1"># reassignments. However, re-ordering the values dictionary inherently changes the expected</span>
+        <span class="c1"># behavior of parameter binding, as entries in the values dict do not commute with one another</span>
+        <span class="c1"># in general. To resolve this issue, we handle each entry of the values dict one at a time.</span>
+        <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">bind</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bind</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_unbound_feature_map</span><span class="o">.</span><span class="n">assign_parameters</span><span class="p">({</span><span class="n">param</span><span class="p">:</span> <span class="n">bind</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                <span class="c1"># User params are all non-input params in the unbound feature map</span>
+                <span class="c1"># This list comprehension ensures that self._user_parameters is ordered</span>
+                <span class="c1"># in a way that is consistent with self.feature_map.parameters</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unbound_feature_map</span><span class="o">.</span><span class="n">parameters</span> <span class="k">if</span> <span class="p">(</span><span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">input_params</span><span class="p">)</span>
+                <span class="p">]</span>
+
+                <span class="c1"># Remove param if it was overwritten</span>
+                <span class="k">if</span> <span class="n">param</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">:</span>
+                    <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_param_binds</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+
+                <span class="c1"># Add new parameters</span>
+                <span class="k">for</span> <span class="n">sub_param</span> <span class="ow">in</span> <span class="n">bind</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">sub_param</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_param_binds</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_user_param_binds</span><span class="p">[</span><span class="n">sub_param</span><span class="p">]</span> <span class="o">=</span> <span class="n">sub_param</span>
+
+                <span class="c1"># If parameter is being set to expression of itself, user_param_binds</span>
+                <span class="c1"># reflects a self-bind</span>
+                <span class="k">if</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">bind</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_user_param_binds</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">param</span>
+
+            <span class="c1"># If assignment is numerical, update the param_binds</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bind</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Number</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_user_param_binds</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">bind</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    Parameters can only be bound to numeric values,</span>
+<span class="s2">                    Parameters, or ParameterExpressions. Type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">bind</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
+<span class="s2">                    is not supported.</span>
+<span class="s2">                    &quot;&quot;&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Reorder dict according to self._user_parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_param_binds</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">param</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_param_binds</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Update feature map with numerical parameter assignments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unbound_feature_map</span><span class="o">.</span><span class="n">assign_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_param_binds</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">user_param_binds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">Parameter</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Return a copy of the current user parameter mappings for the feature map circuit.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_param_binds</span><span class="p">)</span>
+
+<div class="viewcode-block" id="QuantumKernel.bind_user_parameters"><a class="viewcode-back" href="../../../stubs/qiskit_machine_learning.kernels.QuantumKernel.bind_user_parameters.html#qiskit_machine_learning.kernels.QuantumKernel.bind_user_parameters">[документация]</a>    <span class="k">def</span> <span class="nf">bind_user_parameters</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">Parameter</span><span class="p">,</span> <span class="n">ParameterValueType</span><span class="p">],</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ParameterValueType</span><span class="p">]]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Alternate function signature for ``assign_user_parameters``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assign_user_parameters</span><span class="p">(</span><span class="n">values</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="QuantumKernel.get_unbound_user_parameters"><a class="viewcode-back" href="../../../stubs/qiskit_machine_learning.kernels.QuantumKernel.get_unbound_user_parameters.html#qiskit_machine_learning.kernels.QuantumKernel.get_unbound_user_parameters">[документация]</a>    <span class="k">def</span> <span class="nf">get_unbound_user_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Parameter</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of any unbound user parameters in the feature map circuit.&quot;&quot;&quot;</span>
+        <span class="n">unbound_user_params</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_param_binds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Get all user parameters not associated with numerical values</span>
+            <span class="n">unbound_user_params</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">val</span>
+                <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_param_binds</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Number</span><span class="p">)</span>
+            <span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">unbound_user_params</span></div>
 
 <div class="viewcode-block" id="QuantumKernel.construct_circuit"><a class="viewcode-back" href="../../../stubs/qiskit_machine_learning.kernels.QuantumKernel.construct_circuit.html#qiskit_machine_learning.kernels.QuantumKernel.construct_circuit">[документация]</a>    <span class="k">def</span> <span class="nf">construct_circuit</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -417,13 +593,23 @@
 <span class="sd">        Raises:</span>
 <span class="sd">            ValueError:</span>
 <span class="sd">                - x and/or y have incompatible dimension with feature map</span>
+<span class="sd">                - unbound user parameters in the feature map circuit</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Ensure all user parameters have been bound in the feature map circuit.</span>
+        <span class="n">unbound_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unbound_user_parameters</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">unbound_params</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                The feature map circuit contains unbound user parameters (</span><span class="si">{</span><span class="n">unbound_params</span><span class="si">}</span><span class="s2">).</span>
+<span class="s2">                All user parameters must be bound to numerical values before constructing</span>
+<span class="s2">                inner product circuit.</span>
+<span class="s2">                &quot;&quot;&quot;</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span><span class="o">.</span><span class="n">num_parameters</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;x and class feature map incompatible dimensions.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                <span class="o">+</span> <span class="s2">&quot;x has </span><span class="si">%s</span><span class="s2"> dimensions, but feature map has </span><span class="si">%s</span><span class="s2">.&quot;</span>
-                <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span><span class="o">.</span><span class="n">num_parameters</span><span class="p">)</span>
+                <span class="sa">f</span><span class="s2">&quot;x has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="si">}</span><span class="s2"> dimensions, but feature map has </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span><span class="o">.</span><span class="n">num_parameters</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
 
         <span class="n">q</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">,</span> <span class="s2">&quot;q&quot;</span><span class="p">)</span>
@@ -438,8 +624,7 @@
             <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span><span class="o">.</span><span class="n">num_parameters</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s2">&quot;y and class feature map incompatible dimensions.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                    <span class="o">+</span> <span class="s2">&quot;y has </span><span class="si">%s</span><span class="s2"> dimensions, but feature map has </span><span class="si">%s</span><span class="s2">.&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span><span class="o">.</span><span class="n">num_parameters</span><span class="p">)</span>
+                    <span class="sa">f</span><span class="s2">&quot;y has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="si">}</span><span class="s2"> dimensions, but feature map has </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span><span class="o">.</span><span class="n">num_parameters</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -454,13 +639,13 @@
                 <span class="n">qc</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">qc</span></div>
 
-    <span class="k">def</span> <span class="nf">_compute_overlap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">is_statevector_sim</span><span class="p">,</span> <span class="n">measurement_basis</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_compute_overlap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">is_statevector_sim</span><span class="p">,</span> <span class="n">measurement_basis</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Helper function to compute overlap for given input.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">is_statevector_sim</span><span class="p">:</span>
             <span class="c1"># |&lt;0|Psi^dagger(y) x Psi(x)|0&gt;|^2, take the amplitude</span>
-            <span class="n">v_a</span><span class="p">,</span> <span class="n">v_b</span> <span class="o">=</span> <span class="p">[</span><span class="n">results</span><span class="o">.</span><span class="n">get_statevector</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">]</span>
+            <span class="n">v_a</span><span class="p">,</span> <span class="n">v_b</span> <span class="o">=</span> <span class="p">[</span><span class="n">results</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">]</span>
             <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">v_a</span><span class="p">,</span> <span class="n">v_b</span><span class="p">)</span>
             <span class="n">kernel_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>  <span class="c1"># pylint: disable=no-member</span>
         <span class="k">else</span><span class="p">:</span>
@@ -490,11 +675,23 @@
 <span class="sd">            QiskitMachineLearningError:</span>
 <span class="sd">                - A quantum instance or backend has not been provided</span>
 <span class="sd">            ValueError:</span>
+<span class="sd">                - unbound user parameters in the feature map circuit</span>
 <span class="sd">                - x_vec and/or y_vec are not one or two dimensional arrays</span>
 <span class="sd">                - x_vec and y_vec have have incompatible dimensions</span>
 <span class="sd">                - x_vec and/or y_vec have incompatible dimension with feature map and</span>
 <span class="sd">                    and feature map can not be modified to match.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Ensure all user parameters have been bound in the feature map circuit.</span>
+        <span class="n">unbound_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unbound_user_parameters</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">unbound_params</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                The feature map circuit contains unbound user parameters (</span><span class="si">{</span><span class="n">unbound_params</span><span class="si">}</span><span class="s2">).</span>
+<span class="s2">                All user parameters must be bound to numerical values before evaluating</span>
+<span class="s2">                the kernel matrix.</span>
+<span class="s2">                &quot;&quot;&quot;</span>
+            <span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">QiskitMachineLearningError</span><span class="p">(</span>
                 <span class="s2">&quot;A QuantumInstance or Backend must be supplied to evaluate a quantum kernel.&quot;</span>
@@ -522,7 +719,7 @@
         <span class="k">if</span> <span class="n">y_vec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">y_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">x_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;x_vec and y_vec have incompatible dimensions.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                <span class="o">+</span> <span class="s2">&quot;x_vec has </span><span class="si">%s</span><span class="s2"> dimensions, but y_vec has </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">y_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="sa">f</span><span class="s2">&quot;x_vec has </span><span class="si">{</span><span class="n">x_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> dimensions, but y_vec has </span><span class="si">{</span><span class="n">y_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">x_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span><span class="o">.</span><span class="n">num_parameters</span><span class="p">:</span>
@@ -531,15 +728,15 @@
             <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s2">&quot;x_vec and class feature map have incompatible dimensions.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                    <span class="o">+</span> <span class="s2">&quot;x_vec has </span><span class="si">%s</span><span class="s2"> dimensions, but feature map has </span><span class="si">%s</span><span class="s2">.&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="n">x_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span><span class="o">.</span><span class="n">num_parameters</span><span class="p">)</span>
+                    <span class="sa">f</span><span class="s2">&quot;x_vec has </span><span class="si">{</span><span class="n">x_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> dimensions, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;but feature map has </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span><span class="o">.</span><span class="n">num_parameters</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span> <span class="kn">from</span> <span class="nn">AttributeError</span>
 
         <span class="k">if</span> <span class="n">y_vec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">y_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span><span class="o">.</span><span class="n">num_parameters</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;y_vec and class feature map have incompatible dimensions.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                <span class="o">+</span> <span class="s2">&quot;y_vec has </span><span class="si">%s</span><span class="s2"> dimensions, but feature map has </span><span class="si">%s</span><span class="s2">.&quot;</span>
-                <span class="o">%</span> <span class="p">(</span><span class="n">y_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span><span class="o">.</span><span class="n">num_parameters</span><span class="p">)</span>
+                <span class="sa">f</span><span class="s2">&quot;y_vec has </span><span class="si">{</span><span class="n">y_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> dimensions, but feature map &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;has </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_feature_map</span><span class="o">.</span><span class="n">num_parameters</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
 
         <span class="c1"># determine if calculating self inner product</span>
@@ -583,16 +780,21 @@
                 <span class="n">is_statevector_sim</span><span class="o">=</span><span class="n">is_statevector_sim</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">parameterized_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">transpile</span><span class="p">(</span><span class="n">parameterized_circuit</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">circuits</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">parameterized_circuit</span><span class="o">.</span><span class="n">assign_parameters</span><span class="p">({</span><span class="n">feature_map_params</span><span class="p">:</span> <span class="n">x</span><span class="p">})</span>
-                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">to_be_computed_data</span>
-            <span class="p">]</span>
+            <span class="n">statevectors</span> <span class="o">=</span> <span class="p">[]</span>
 
-            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">circuits</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">min_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_be_computed_data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span><span class="p">):</span>
+                <span class="n">max_idx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">min_idx</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_be_computed_data</span><span class="p">))</span>
+                <span class="n">circuits</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">parameterized_circuit</span><span class="o">.</span><span class="n">assign_parameters</span><span class="p">({</span><span class="n">feature_map_params</span><span class="p">:</span> <span class="n">x</span><span class="p">})</span>
+                    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">to_be_computed_data</span><span class="p">[</span><span class="n">min_idx</span><span class="p">:</span><span class="n">max_idx</span><span class="p">]</span>
+                <span class="p">]</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">circuits</span><span class="p">,</span> <span class="n">had_transpiled</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_idx</span> <span class="o">-</span> <span class="n">min_idx</span><span class="p">):</span>
+                    <span class="n">statevectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">get_statevector</span><span class="p">(</span><span class="n">j</span><span class="p">))</span>
 
             <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">is_symmetric</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_vec</span><span class="p">)</span>
             <span class="n">matrix_elements</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_compute_overlap</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">is_statevector_sim</span><span class="p">,</span> <span class="n">measurement_basis</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_compute_overlap</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">statevectors</span><span class="p">,</span> <span class="n">is_statevector_sim</span><span class="p">,</span> <span class="n">measurement_basis</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">mus</span><span class="p">,</span> <span class="n">nus</span> <span class="o">+</span> <span class="n">offset</span><span class="p">))</span>
             <span class="p">]</span>
 
@@ -631,7 +833,7 @@
                     <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">to_be_computed_data_pair</span>
                 <span class="p">]</span>
 
-                <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">circuits</span><span class="p">)</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">circuits</span><span class="p">,</span> <span class="n">had_transpiled</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
                 <span class="n">matrix_elements</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_compute_overlap</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">is_statevector_sim</span><span class="p">,</span> <span class="n">measurement_basis</span><span class="p">)</span>

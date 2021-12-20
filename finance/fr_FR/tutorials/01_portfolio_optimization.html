@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="fr-FR" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Optimisation de portefeuille &mdash; Documentation Qiskit Finance 0.2.1</title>
+  <title>Optimisation de portefeuille &mdash; Documentation Qiskit Finance 0.3.0</title>
   
 
   
@@ -31,8 +32,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -175,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.1
+                  0.3.0
                 </div>
               
             
@@ -532,9 +533,9 @@ div.rendered_html tbody tr:hover {
 <p class="admonition-title">Note</p>
 <p>Cette page a été générée à partir de <cite>docs/tutorials/01_portfolio_optimization.ipynb</cite> __.</p>
 </div>
-<div class="section" id="Optimisation-de-portefeuille">
+<section id="Optimisation-de-portefeuille">
 <h1>Optimisation de portefeuille<a class="headerlink" href="#Optimisation-de-portefeuille" title="Lien permanent vers ce titre">¶</a></h1>
-<div class="section" id="Introduction">
+<section id="Introduction">
 <h2>Introduction<a class="headerlink" href="#Introduction" title="Lien permanent vers ce titre">¶</a></h2>
 <p>Ce tutoriel montre comment résoudre un problème d’optimisation de variance moyenne pour un portefeuille contenant <span class="math notranslate nohighlight">\(n\)</span> valeurs d’actifs :</p>
 <div class="math notranslate nohighlight">
@@ -574,13 +575,13 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="section" id="[Optional]-Préparation-du-jeton-d'accès-pour-exécuter-l'expérimentation-sur-un-backend-réel">
+<section id="[Optional]-Préparation-du-jeton-d'accès-pour-exécuter-l'expérimentation-sur-un-backend-réel">
 <h3>[Optional] Préparation du jeton d’accès pour exécuter l’expérimentation sur un backend réel<a class="headerlink" href="#[Optional]-Préparation-du-jeton-d'accès-pour-exécuter-l'expérimentation-sur-un-backend-réel" title="Lien permanent vers ce titre">¶</a></h3>
 <p>Si vous souhaitez exécuter l’expérience sur un backend réel, vous devez d’abord configurer votre compte.</p>
 <p>Note: Si votre jeton d’accès n’est pas déjà stocké localement utilisez d’abord <code class="docutils literal notranslate"><span class="pre">IBMQ.save_account('MY_API_TOKEN')</span></code>.</p>
-</div>
-</div>
-<div class="section" id="Définir-d'une-instance-du-problème">
+</section>
+</section>
+<section id="Définir-d'une-instance-du-problème">
 <h2>Définir d’une instance du problème<a class="headerlink" href="#Définir-d'une-instance-du-problème" title="Lien permanent vers ce titre">¶</a></h2>
 <p>Ici, une instance d’opérateur est créée pour notre hamiltonien. Dans ce cas, les représentations de Pauli proviennent d’un hamiltonien d’Ising traduisant le problème du portefeuille. Nous utilisons un problème aléatoire de portefeuille pour ce bloc-notes. Il est tout à fait possible de l’étendre à l’utilisation de données financières réelles telles qu’illustrées dans ce document : <cite>Chargement et Traitement des séries temporelles de données du marché d’action &lt;11_time_series.ipynb&gt;</cite> __</p>
 <div class="nbinput nblast docutils container">
@@ -594,10 +595,12 @@ div.rendered_html tbody tr:hover {
 
 <span class="c1"># Generate expected return and covariance matrix from (random) time-series</span>
 <span class="n">stocks</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;TICKER</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_assets</span><span class="p">)]</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">RandomDataProvider</span><span class="p">(</span><span class="n">tickers</span><span class="o">=</span><span class="n">stocks</span><span class="p">,</span>
-                 <span class="n">start</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2016</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
-                 <span class="n">end</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2016</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">30</span><span class="p">),</span>
-                 <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">RandomDataProvider</span><span class="p">(</span>
+    <span class="n">tickers</span><span class="o">=</span><span class="n">stocks</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">end</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="n">data</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <span class="n">mu</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_period_return_mean_vector</span><span class="p">()</span>
 <span class="n">sigma</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_period_return_covariance_matrix</span><span class="p">()</span>
@@ -610,7 +613,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># plot sigma</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -626,11 +629,13 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">q</span> <span class="o">=</span> <span class="mf">0.5</span>                   <span class="c1"># set risk factor</span>
+<span></span><span class="n">q</span> <span class="o">=</span> <span class="mf">0.5</span>  <span class="c1"># set risk factor</span>
 <span class="n">budget</span> <span class="o">=</span> <span class="n">num_assets</span> <span class="o">//</span> <span class="mi">2</span>  <span class="c1"># set budget</span>
-<span class="n">penalty</span> <span class="o">=</span> <span class="n">num_assets</span>      <span class="c1"># set parameter to scale the budget penalty term</span>
+<span class="n">penalty</span> <span class="o">=</span> <span class="n">num_assets</span>  <span class="c1"># set parameter to scale the budget penalty term</span>
 
-<span class="n">portfolio</span> <span class="o">=</span> <span class="n">PortfolioOptimization</span><span class="p">(</span><span class="n">expected_returns</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">covariances</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">risk_factor</span><span class="o">=</span><span class="n">q</span><span class="p">,</span> <span class="n">budget</span><span class="o">=</span><span class="n">budget</span><span class="p">)</span>
+<span class="n">portfolio</span> <span class="o">=</span> <span class="n">PortfolioOptimization</span><span class="p">(</span>
+    <span class="n">expected_returns</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">covariances</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">risk_factor</span><span class="o">=</span><span class="n">q</span><span class="p">,</span> <span class="n">budget</span><span class="o">=</span><span class="n">budget</span>
+<span class="p">)</span>
 <span class="n">qp</span> <span class="o">=</span> <span class="n">portfolio</span><span class="o">.</span><span class="n">to_quadratic_program</span><span class="p">()</span>
 <span class="n">qp</span>
 </pre></div>
@@ -674,32 +679,33 @@ End
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="k">def</span> <span class="nf">index_to_selection</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">num_assets</span><span class="p">):</span>
     <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0:b}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">rjust</span><span class="p">(</span><span class="n">num_assets</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;1&#39;</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_assets</span><span class="p">))])</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_assets</span><span class="p">))])</span>
     <span class="k">return</span> <span class="n">x</span>
+
 
 <span class="k">def</span> <span class="nf">print_result</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
     <span class="n">selection</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span>
     <span class="n">value</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fval</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Optimal: selection </span><span class="si">{}</span><span class="s1">, value </span><span class="si">{:.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">selection</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Optimal: selection </span><span class="si">{}</span><span class="s2">, value </span><span class="si">{:.4f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">selection</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
 
     <span class="n">eigenstate</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">min_eigen_solver_result</span><span class="o">.</span><span class="n">eigenstate</span>
     <span class="n">eigenvector</span> <span class="o">=</span> <span class="n">eigenstate</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eigenstate</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">else</span> <span class="n">eigenstate</span><span class="o">.</span><span class="n">to_matrix</span><span class="p">()</span>
-    <span class="n">probabilities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigenvector</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">probabilities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigenvector</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
     <span class="n">i_sorted</span> <span class="o">=</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">probabilities</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">----------------- Full result ---------------------&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;selection</span><span class="se">\t</span><span class="s1">value</span><span class="se">\t\t</span><span class="s1">probability&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;---------------------------------------------------&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">----------------- Full result ---------------------&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;selection</span><span class="se">\t</span><span class="s2">value</span><span class="se">\t\t</span><span class="s2">probability&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------------------------------------&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">i_sorted</span><span class="p">:</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">index_to_selection</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">num_assets</span><span class="p">)</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">QuadraticProgramToQubo</span><span class="p">()</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="c1">#value = portfolio.to_quadratic_program().objective.evaluate(x)</span>
+        <span class="c1"># value = portfolio.to_quadratic_program().objective.evaluate(x)</span>
         <span class="n">probability</span> <span class="o">=</span> <span class="n">probabilities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%10s</span><span class="se">\t</span><span class="si">%.4f</span><span class="se">\t\t</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">probability</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%10s</span><span class="se">\t</span><span class="si">%.4f</span><span class="se">\t\t</span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">probability</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="NumPyMinimumEigensolver-(en-tant-que-référence-classique)">
+</section>
+<section id="NumPyMinimumEigensolver-(en-tant-que-référence-classique)">
 <h2>NumPyMinimumEigensolver (en tant que référence classique)<a class="headerlink" href="#NumPyMinimumEigensolver-(en-tant-que-référence-classique)" title="Lien permanent vers ce titre">¶</a></h2>
 <p>Résolvons le problème. D’abord de manière classique…</p>
 <p>Nous pouvons maintenant utiliser l’opérateur que nous avons construit ci-dessus sans tenir compte des détails de la façon dont il a été créé. Nous avons défini l’algorithme pour le NumPyMinimumEigensolver afin que nous puissions avoir une référence classique. Le problème est préparé pour le modèle de “ising”. Le backend n’est pas requis car ce calcul est classique et n’utilise aucun calcul quantique. Le résultat est renvoyé sous forme de dictionnaire.</p>
@@ -745,8 +751,8 @@ selection       value           probability
  [0 0 0 0]      4.0795          0.0000
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Solution-utilisant-VQE">
+</section>
+<section id="Solution-utilisant-VQE">
 <h2>Solution utilisant VQE<a class="headerlink" href="#Solution-utilisant-VQE" title="Lien permanent vers ce titre">¶</a></h2>
 <p>Nous pouvons maintenant utiliser le Variational Quantum Eigensolver (VQE) pour résoudre le problème. Nous préciserons l’optimiseur et la forme variationnelle à utiliser.</p>
 <p>Note: Vous pouvez basculer vers différents backends en fournissant le nom du backend.</p>
@@ -758,11 +764,11 @@ selection       value           probability
 <span></span><span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">algorithm_globals</span>
 
 <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">1234</span>
-<span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;statevector_simulator&#39;</span><span class="p">)</span>
+<span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;statevector_simulator&quot;</span><span class="p">)</span>
 
 <span class="n">cobyla</span> <span class="o">=</span> <span class="n">COBYLA</span><span class="p">()</span>
 <span class="n">cobyla</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
-<span class="n">ry</span> <span class="o">=</span> <span class="n">TwoLocal</span><span class="p">(</span><span class="n">num_assets</span><span class="p">,</span> <span class="s1">&#39;ry&#39;</span><span class="p">,</span> <span class="s1">&#39;cz&#39;</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">)</span>
+<span class="n">ry</span> <span class="o">=</span> <span class="n">TwoLocal</span><span class="p">(</span><span class="n">num_assets</span><span class="p">,</span> <span class="s2">&quot;ry&quot;</span><span class="p">,</span> <span class="s2">&quot;cz&quot;</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s2">&quot;full&quot;</span><span class="p">)</span>
 <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">seed_simulator</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
 <span class="n">vqe_mes</span> <span class="o">=</span> <span class="n">VQE</span><span class="p">(</span><span class="n">ry</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="n">cobyla</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">)</span>
 <span class="n">vqe</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">vqe_mes</span><span class="p">)</span>
@@ -800,7 +806,7 @@ selection       value           probability
  [1 1 0 0]      0.0160          0.0000
 </pre></div></div>
 </div>
-<div class="section" id="Solution-utilisant-QAOA">
+<section id="Solution-utilisant-QAOA">
 <h3>Solution utilisant QAOA<a class="headerlink" href="#Solution-utilisant-QAOA" title="Lien permanent vers ce titre">¶</a></h3>
 <p>Nous montrons également ici un résultat obtenu à l’aide de l’algorithme QAOA (Quantum Approximate Optimization Algorithm). Il s’agit d’un autre algorithme variationnel qui utilise une forme variationnelle interne qui est créé en fonction du problème.</p>
 <div class="nbinput docutils container">
@@ -809,7 +815,7 @@ selection       value           probability
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">1234</span>
-<span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;statevector_simulator&#39;</span><span class="p">)</span>
+<span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;statevector_simulator&quot;</span><span class="p">)</span>
 
 <span class="n">cobyla</span> <span class="o">=</span> <span class="n">COBYLA</span><span class="p">()</span>
 <span class="n">cobyla</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="mi">250</span><span class="p">)</span>
@@ -856,6 +862,7 @@ selection       value           probability
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -883,9 +890,9 @@ selection       value           probability
 </pre></div>
 </div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
              </article>

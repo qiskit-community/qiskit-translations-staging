@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="fr-FR" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Option Pricing with qGANs &mdash; Documentation Qiskit Finance 0.2.1</title>
+  <title>Option Pricing with qGANs &mdash; Documentation Qiskit Finance 0.3.0</title>
   
 
   
@@ -31,8 +32,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -175,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.1
+                  0.3.0
                 </div>
               
             
@@ -530,11 +531,11 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This page was generated from <a class="reference external" href="https://github.com/Qiskit/qiskit-finance/blob/stable/0.2/docs/tutorials/10_qgan_option_pricing.ipynb">docs/tutorials/10_qgan_option_pricing.ipynb</a>.</p>
+<p>This page was generated from <a class="reference external" href="https://github.com/Qiskit/qiskit-finance/blob/stable/0.3/docs/tutorials/10_qgan_option_pricing.ipynb">docs/tutorials/10_qgan_option_pricing.ipynb</a>.</p>
 </div>
-<div class="section" id="Option-Pricing-with-qGANs">
+<section id="Option-Pricing-with-qGANs">
 <h1>Option Pricing with qGANs<a class="headerlink" href="#Option-Pricing-with-qGANs" title="Lien permanent vers ce titre">¶</a></h1>
-<div class="section" id="Introduction">
+<section id="Introduction">
 <h2>Introduction<a class="headerlink" href="#Introduction" title="Lien permanent vers ce titre">¶</a></h2>
 <p>In this notebook, we discuss how a Quantum Machine Learning Algorithm, namely a quantum Generative Adversarial Network (qGAN), can facilitate the pricing of a European call option. More specifically, a qGAN can be trained such that a quantum circuit models the spot price of an asset underlying a European call option. The resulting model can then be integrated into a Quantum Amplitude Estimation based algorithm to evaluate the expected payoff - see <a class="reference internal" href="03_european_call_option_pricing.html"><span class="doc">European Call Option
 Pricing</span></a>. For further details on learning and loading random distributions by training a qGAN please refer to <a class="reference external" href="https://www.nature.com/articles/s41534-019-0223-2">Quantum Generative Adversarial Networks for Learning and Loading Random Distributions. Zoufal, Lucchi, Woerner. 2019.</a></p>
@@ -558,7 +559,7 @@ Pricing</span></a>. For further details on learning and loading random distribut
 </pre></div>
 </div>
 </div>
-<div class="section" id="Modèle-d'incertitude">
+<section id="Modèle-d'incertitude">
 <h3>Modèle d’incertitude<a class="headerlink" href="#Modèle-d'incertitude" title="Lien permanent vers ce titre">¶</a></h3>
 <p>The Black-Scholes model assumes that the spot price at maturity <span class="math notranslate nohighlight">\(S_T\)</span> for a European call option is log-normally distributed. Thus, we can train a qGAN on samples from a log-normal distribution and use the result as an uncertainty model underlying the option. In the following, we construct a quantum circuit that loads the uncertainty model. The circuit output reads</p>
 <div class="math notranslate nohighlight">
@@ -570,7 +571,7 @@ Pricing</span></a>. For further details on learning and loading random distribut
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Set upper and lower data values</span>
-<span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span><span class="mf">7.</span><span class="p">])</span>
+<span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">7.0</span><span class="p">])</span>
 <span class="c1"># Set number of qubits used in the uncertainty model</span>
 <span class="n">num_qubits</span> <span class="o">=</span> <span class="mi">3</span>
 
@@ -578,10 +579,10 @@ Pricing</span></a>. For further details on learning and loading random distribut
 <span class="n">g_params</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.29399714</span><span class="p">,</span> <span class="mf">0.38853322</span><span class="p">,</span> <span class="mf">0.9557694</span><span class="p">,</span> <span class="mf">0.07245791</span><span class="p">,</span> <span class="mf">6.02626428</span><span class="p">,</span> <span class="mf">0.13537225</span><span class="p">]</span>
 
 <span class="c1"># Set an initial state for the generator circuit</span>
-<span class="n">init_dist</span> <span class="o">=</span> <span class="n">NormalDistribution</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">)</span>
+<span class="n">init_dist</span> <span class="o">=</span> <span class="n">NormalDistribution</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">)</span>
 
 <span class="c1"># construct the variational form</span>
-<span class="n">var_form</span> <span class="o">=</span> <span class="n">TwoLocal</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="s1">&#39;ry&#39;</span><span class="p">,</span> <span class="s1">&#39;cz&#39;</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s1">&#39;circular&#39;</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">var_form</span> <span class="o">=</span> <span class="n">TwoLocal</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="s2">&quot;ry&quot;</span><span class="p">,</span> <span class="s2">&quot;cz&quot;</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s2">&quot;circular&quot;</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># keep a list of the parameters so we can associate them to the list of numerical values</span>
 <span class="c1"># (otherwise we need a dictionary)</span>
@@ -592,8 +593,8 @@ Pricing</span></a>. For further details on learning and loading random distribut
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Evaluer-le-paiement-attendu">
+</section>
+<section id="Evaluer-le-paiement-attendu">
 <h3>Evaluer le paiement attendu<a class="headerlink" href="#Evaluer-le-paiement-attendu" title="Lien permanent vers ce titre">¶</a></h3>
 <p>Now, the trained uncertainty model can be used to evaluate the expectation value of the option’s payoff function with Quantum Amplitude Estimation.</p>
 <div class="nbinput nblast docutils container">
@@ -609,8 +610,8 @@ Pricing</span></a>. For further details on learning and loading random distribut
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Plot-the-probability-distribution">
+</section>
+<section id="Plot-the-probability-distribution">
 <h3>Plot the probability distribution<a class="headerlink" href="#Plot-the-probability-distribution" title="Lien permanent vers ce titre">¶</a></h3>
 <p>Next, we plot the trained probability distribution and, for reasons of comparison, also the target probability distribution.</p>
 <div class="nbinput docutils container">
@@ -619,7 +620,9 @@ Pricing</span></a>. For further details on learning and loading random distribut
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Evaluate trained probability distribution</span>
-<span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">x</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">num_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">num_qubits</span><span class="p">)]</span>
+<span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">x</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">num_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">num_qubits</span><span class="p">)</span>
+<span class="p">]</span>
 <span class="n">uncertainty_model</span> <span class="o">=</span> <span class="n">g_circuit</span><span class="o">.</span><span class="n">assign_parameters</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">g_params</span><span class="p">)))</span>
 <span class="n">amplitudes</span> <span class="o">=</span> <span class="n">Statevector</span><span class="o">.</span><span class="n">from_instruction</span><span class="p">(</span><span class="n">uncertainty_model</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
 
@@ -633,18 +636,25 @@ Pricing</span></a>. For further details on learning and loading random distribut
 <span class="n">log_normal</span> <span class="o">=</span> <span class="n">log_normal</span><span class="p">[</span><span class="n">log_normal</span> <span class="o">&lt;=</span> <span class="mi">7</span><span class="p">]</span>
 <span class="n">log_normal_samples</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
-    <span class="n">log_normal_samples</span> <span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">log_normal</span><span class="o">==</span><span class="n">i</span><span class="p">)]</span>
+    <span class="n">log_normal_samples</span> <span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">log_normal</span> <span class="o">==</span> <span class="n">i</span><span class="p">)]</span>
 <span class="n">log_normal_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">log_normal_samples</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">log_normal_samples</span><span class="p">))</span>
 
 <span class="c1"># Plot distributions</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;trained distribution&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;royalblue&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;trained distribution&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;royalblue&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Spot Price at Maturity $S_T$ (\$)&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Probability ($\%$)&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">log_normal_samples</span><span class="p">,</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span><span class="s1">&#39;deepskyblue&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;target distribution&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Spot Price at Maturity $S_T$ (\$)&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Probability ($\%$)&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">log_normal_samples</span><span class="p">,</span>
+    <span class="s2">&quot;-o&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;deepskyblue&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;target distribution&quot;</span><span class="p">,</span>
+    <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">markersize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -655,8 +665,8 @@ Pricing</span></a>. For further details on learning and loading random distribut
 <div class="output_area docutils container">
 <img alt="../_images/tutorials_10_qgan_option_pricing_7_0.svg" src="../_images/tutorials_10_qgan_option_pricing_7_0.svg" /></div>
 </div>
-</div>
-<div class="section" id="id2">
+</section>
+<section id="id2">
 <h3>Evaluer le paiement attendu<a class="headerlink" href="#id2" title="Lien permanent vers ce titre">¶</a></h3>
 <p>Now, the trained uncertainty model can be used to evaluate the expectation value of the option’s payoff function analytically and with Quantum Amplitude Estimation.</p>
 <div class="nbinput docutils container">
@@ -665,7 +675,7 @@ Pricing</span></a>. For further details on learning and loading random distribut
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Evaluate payoff for different distributions</span>
-<span class="n">payoff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">])</span>
+<span class="n">payoff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
 <span class="n">ep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">log_normal_samples</span><span class="p">,</span> <span class="n">payoff</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Analytically calculated expected payoff w.r.t. the target distribution:  </span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ep</span><span class="p">)</span>
 <span class="n">ep_trained</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">payoff</span><span class="p">)</span>
@@ -674,11 +684,11 @@ Pricing</span></a>. For further details on learning and loading random distribut
 <span class="c1"># Plot exact payoff function (evaluated on the grid of the trained uncertainty model)</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
 <span class="n">y_strike</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">strike_price</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y_strike</span><span class="p">,</span> <span class="s1">&#39;ro-&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y_strike</span><span class="p">,</span> <span class="s2">&quot;ro-&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Payoff Function&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Spot Price&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Payoff&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Payoff Function&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Spot Price&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Payoff&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -706,8 +716,13 @@ Analytically calculated expected payoff w.r.t. the trained distribution: 0.9805
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># construct circuit for payoff function</span>
-<span class="n">european_call_pricing</span> <span class="o">=</span> <span class="n">EuropeanCallPricing</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">strike_price</span><span class="o">=</span><span class="n">strike_price</span><span class="p">,</span><span class="n">rescaling_factor</span><span class="o">=</span><span class="n">c_approx</span><span class="p">,</span>
-                                            <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span> <span class="n">uncertainty_model</span><span class="o">=</span><span class="n">uncertainty_model</span><span class="p">)</span>
+<span class="n">european_call_pricing</span> <span class="o">=</span> <span class="n">EuropeanCallPricing</span><span class="p">(</span>
+    <span class="n">num_qubits</span><span class="p">,</span>
+    <span class="n">strike_price</span><span class="o">=</span><span class="n">strike_price</span><span class="p">,</span>
+    <span class="n">rescaling_factor</span><span class="o">=</span><span class="n">c_approx</span><span class="p">,</span>
+    <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
+    <span class="n">uncertainty_model</span><span class="o">=</span><span class="n">uncertainty_model</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -720,7 +735,7 @@ Analytically calculated expected payoff w.r.t. the trained distribution: 0.9805
 <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">0.01</span>
 <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.05</span>
 
-<span class="n">qi</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;aer_simulator&#39;</span><span class="p">),</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">qi</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;aer_simulator&quot;</span><span class="p">),</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 <span class="n">problem</span> <span class="o">=</span> <span class="n">european_call_pricing</span><span class="o">.</span><span class="n">to_estimation_problem</span><span class="p">()</span>
 <span class="c1"># construct amplitude estimation</span>
 <span class="n">ae</span> <span class="o">=</span> <span class="n">IterativeAmplitudeEstimation</span><span class="p">(</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">qi</span><span class="p">)</span>
@@ -742,9 +757,9 @@ Analytically calculated expected payoff w.r.t. the trained distribution: 0.9805
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">conf_int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">confidence_interval_processed</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Exact value:        </span><span class="se">\t</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">ep_trained</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Estimated value:    </span><span class="se">\t</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">estimation_processed</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Confidence interval:</span><span class="se">\t</span><span class="s1">[</span><span class="si">%.4f</span><span class="s1">, </span><span class="si">%.4f</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">conf_int</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exact value:        </span><span class="se">\t</span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ep_trained</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimated value:    </span><span class="se">\t</span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">estimation_processed</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Confidence interval:</span><span class="se">\t</span><span class="s2">[</span><span class="si">%.4f</span><span class="s2">, </span><span class="si">%.4f</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">conf_int</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -764,6 +779,7 @@ Confidence interval:    [0.9965, 1.0455]
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -782,9 +798,9 @@ Confidence interval:    [0.9965, 1.0455]
 <div class="output_area rendered_html docutils container">
 <div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2021.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
              </article>

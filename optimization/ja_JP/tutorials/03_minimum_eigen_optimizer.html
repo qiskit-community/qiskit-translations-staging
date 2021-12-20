@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="ja-JP" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>最小固有値オプティマイザー (Minimum Eigen Optimizer) &mdash; Qiskit Optimization 0.2.3 ドキュメント</title>
+  <title>最小固有値オプティマイザー (Minimum Eigen Optimizer) &mdash; Qiskit Optimization 0.3.0 ドキュメント</title>
   
 
   
@@ -27,10 +28,12 @@
 
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -173,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.3
+                  0.3.0
                 </div>
               
             
@@ -528,29 +531,29 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">注釈</p>
-<p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.2/docs/tutorials/03_minimum_eigen_optimizer.ipynb">docs/tutorials/03_minimum_eigen_optimizer.ipynb</a> から生成されました。</p>
+<p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/03_minimum_eigen_optimizer.ipynb">docs/tutorials/03_minimum_eigen_optimizer.ipynb</a> から生成されました。</p>
 </div>
-<div class="section" id="最小固有値オプティマイザー-(Minimum-Eigen-Optimizer)">
+<section id="最小固有値オプティマイザー-(Minimum-Eigen-Optimizer)">
 <h1>最小固有値オプティマイザー (Minimum Eigen Optimizer)<a class="headerlink" href="#最小固有値オプティマイザー-(Minimum-Eigen-Optimizer)" title="このヘッドラインへのパーマリンク">¶</a></h1>
-<div class="section" id="はじめに">
+<section id="はじめに">
 <h2>はじめに<a class="headerlink" href="#はじめに" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>量子コンピューティングによって対処される興味深い最適化問題のクラスは、Quadratic Unconstrained Binary Optimization（QUBO）問題です。QUBOの解を求めることは、対応するイジング・ハミルトニアンの基底状態を見つけることに相当します。これは、最適化だけでなく、量子化学や物理学でも重要な問題です。この変換の場合、 <span class="math notranslate nohighlight">\(\{0, 1\}\)</span> の値を取るバイナリ変数は、 <span class="math notranslate nohighlight">\(\{-1, +1\}\)</span> の値を取るスピン変数に置き換えられます。これにより、パウリZ行列によって得られるスピン変数をイジング・ハミルトニアンに置換することができます。このマッピングの詳細については、[1]を参照してください。</p>
-<p>Qiskit provides automatic conversion from a suitable <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> to an Ising Hamiltonian, which then allows to leverage all the <code class="docutils literal notranslate"><span class="pre">MinimumEigenSolver</span></code> such as</p>
+<p>Qiskitは、適切な <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> からイジングハミルトニアンへの自動変換を提供します。これにより、次のようなすべての <code class="docutils literal notranslate"><span class="pre">MinimumEigenSolver</span></code> を活用できます。</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">VQE</span></code>,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">QAOA</span></code>, or</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">NumpyMinimumEigensolver</span></code> (classical exact method).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">VQE</span></code> 、</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">QAOA</span></code> 、または</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NumpyMinimumEigensolver</span></code> （古典的な正確な方法）。</p></li>
 </ul>
 <p>Qiskitは、イジング・ハミルトニアン (Qiskit Aquaでは <code class="docutils literal notranslate"><span class="pre">Operator</span></code> とも呼ばれます) への翻訳、すなわち  <code class="docutils literal notranslate"><span class="pre">MinimumEigensolver</span></code> への呼び出しと、結果の翻訳とを、ラップして <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> の <code class="docutils literal notranslate"><span class="pre">OptimizationResult</span></code> に戻します。</p>
 <p>以下では、まず、<code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> から <code class="docutils literal notranslate"><span class="pre">Operator</span></code> への変換を示します。次に、与えられた <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> を解くのに、<code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> を異なる <code class="docutils literal notranslate"><span class="pre">MinimumEigensolver</span></code> にどう使うのかを示します。Qiskitのアルゴリズムは、与えられた問題を、可能であればサポートされている問題クラスに自動的に変換しようとします。例えば、<code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> は整数変数をバイナリー変数に自動的に変換したり、線形等価制約を2次ペナルティ項として目的関数に追加したりします。整数変数を持つ二次計画問題を変換しようとすると、Aqua は <code class="docutils literal notranslate"><span class="pre">QiskitOptimizationError</span></code> を投げることに注意してください。</p>
 <p><code class="docutils literal notranslate"><span class="pre">QAOA</span></code> の回路の深さは、問題の大きさに応じて必然的に増加する可能性があり、これは近未来の量子デバイスにとっては障害となる可能性があります。考えられる回避策として、 [2] で紹介されている再帰QAOAがあります。このチュートリアルの最後で紹介しますが、Qiskit はこの概念を`RecursiveMinimumEigenOptimizer` に一般化しています。</p>
-<div class="section" id="参考文献">
+<section id="参考文献">
 <h3>参考文献<a class="headerlink" href="#参考文献" title="このヘッドラインへのパーマリンク">¶</a></h3>
 <p>[1] <a class="reference external" href="https://arxiv.org/abs/1302.5843">A. Lucas, Ising formulations of many NP problems, Front. Phys., 12 (2014).</a></p>
 <p>[2] <a class="reference external" href="https://arxiv.org/abs/1910.08980">S. Bravyi, A. Kliesch, R. Koenig, E. Tang, Obstacles to State Preparation and Variational Optimization from Symmetry Protection, arXiv preprint arXiv:1910.08980 (2019).</a></p>
-</div>
-</div>
-<div class="section" id="QUBOをオペレーターに変換する">
+</section>
+</section>
+<section id="QUBOをオペレーターに変換する">
 <h2>QUBOをオペレーターに変換する<a class="headerlink" href="#QUBOをオペレーターに変換する" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
@@ -560,7 +563,12 @@ div.rendered_html tbody tr:hover {
 <span></span><span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">BasicAer</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">algorithm_globals</span><span class="p">,</span> <span class="n">QuantumInstance</span>
 <span class="kn">from</span> <span class="nn">qiskit.algorithms</span> <span class="kn">import</span> <span class="n">QAOA</span><span class="p">,</span> <span class="n">NumPyMinimumEigensolver</span>
-<span class="kn">from</span> <span class="nn">qiskit_optimization.algorithms</span> <span class="kn">import</span> <span class="n">MinimumEigenOptimizer</span><span class="p">,</span> <span class="n">RecursiveMinimumEigenOptimizer</span><span class="p">,</span> <span class="n">SolutionSample</span><span class="p">,</span> <span class="n">OptimizationResultStatus</span>
+<span class="kn">from</span> <span class="nn">qiskit_optimization.algorithms</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MinimumEigenOptimizer</span><span class="p">,</span>
+    <span class="n">RecursiveMinimumEigenOptimizer</span><span class="p">,</span>
+    <span class="n">SolutionSample</span><span class="p">,</span>
+    <span class="n">OptimizationResultStatus</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">qiskit_optimization</span> <span class="kn">import</span> <span class="n">QuadraticProgram</span>
 <span class="kn">from</span> <span class="nn">qiskit.visualization</span> <span class="kn">import</span> <span class="n">plot_histogram</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
@@ -575,10 +583,10 @@ div.rendered_html tbody tr:hover {
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># create a QUBO</span>
 <span class="n">qubo</span> <span class="o">=</span> <span class="n">QuadraticProgram</span><span class="p">()</span>
-<span class="n">qubo</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
-<span class="n">qubo</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
-<span class="n">qubo</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
-<span class="n">qubo</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">linear</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="n">quadratic</span><span class="o">=</span><span class="p">{(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">):</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">):</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">):</span> <span class="mi">2</span><span class="p">})</span>
+<span class="n">qubo</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">qubo</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
+<span class="n">qubo</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="s2">&quot;z&quot;</span><span class="p">)</span>
+<span class="n">qubo</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">linear</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">quadratic</span><span class="o">=</span><span class="p">{(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">):</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">):</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">):</span> <span class="mi">2</span><span class="p">})</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">qubo</span><span class="o">.</span><span class="n">export_as_lp_string</span><span class="p">())</span>
 </pre></div>
 </div>
@@ -614,8 +622,8 @@ End
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">op</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">qubo</span><span class="o">.</span><span class="n">to_ising</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;offset: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">offset</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;operator:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;offset: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">offset</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;operator:&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -641,7 +649,7 @@ operator:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">qp</span><span class="o">=</span><span class="n">QuadraticProgram</span><span class="p">()</span>
+<span></span><span class="n">qp</span> <span class="o">=</span> <span class="n">QuadraticProgram</span><span class="p">()</span>
 <span class="n">qp</span><span class="o">.</span><span class="n">from_ising</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">qp</span><span class="o">.</span><span class="n">export_as_lp_string</span><span class="p">())</span>
 </pre></div>
@@ -672,8 +680,8 @@ End
 </pre></div></div>
 </div>
 <p>このコンバーターにより、例えば、<code class="docutils literal notranslate"><span class="pre">Operator</span></code> を <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> に変換して、イジング・ハミルトニアン表現に基づいていない他のアルゴリズム（例えば <code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code> ）で問題を解くことができます。</p>
-</div>
-<div class="section" id="MinimumEigenOptimizer-で-QUBO-を解く">
+</section>
+<section id="MinimumEigenOptimizer-で-QUBO-を解く">
 <h2>MinimumEigenOptimizer で QUBO を解く<a class="headerlink" href="#MinimumEigenOptimizer-で-QUBO-を解く" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>まず、使用する <code class="docutils literal notranslate"><span class="pre">MinimumEigensolver</span></code> を初期化します。</p>
 <div class="nbinput nblast docutils container">
@@ -682,10 +690,12 @@ End
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">10598</span>
-<span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">BasicAer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;statevector_simulator&#39;</span><span class="p">),</span>
-                                   <span class="n">seed_simulator</span><span class="o">=</span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
-                                   <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span>
-<span class="n">qaoa_mes</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span><span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span> <span class="n">initial_point</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])</span>
+<span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span>
+    <span class="n">BasicAer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;statevector_simulator&quot;</span><span class="p">),</span>
+    <span class="n">seed_simulator</span><span class="o">=</span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
+    <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">qaoa_mes</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span><span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span> <span class="n">initial_point</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
 <span class="n">exact_mes</span> <span class="o">=</span> <span class="n">NumPyMinimumEigensolver</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -696,7 +706,7 @@ End
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">qaoa</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">qaoa_mes</span><span class="p">)</span>   <span class="c1"># using QAOA</span>
+<span></span><span class="n">qaoa</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">qaoa_mes</span><span class="p">)</span>  <span class="c1"># using QAOA</span>
 <span class="n">exact</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">exact_mes</span><span class="p">)</span>  <span class="c1"># using the exact classical numpy minimum eigen solver</span>
 </pre></div>
 </div>
@@ -743,7 +753,7 @@ optimal value: [0. 1. 0.]
 status: SUCCESS
 </pre></div></div>
 </div>
-<div class="section" id="サンプルの分析">
+<section id="サンプルの分析">
 <h3>サンプルの分析<a class="headerlink" href="#サンプルの分析" title="このヘッドラインへのパーマリンク">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">OptimizationResult</span></code> は有益な情報源 <code class="docutils literal notranslate"><span class="pre">SolutionSample</span></code> (ここでは <em>サンプル</em> と記述) を提供します。これは入力値 <code class="docutils literal notranslate"><span class="pre">x</span></code>、目的関数 <code class="docutils literal notranslate"><span class="pre">fval</span></code>、その結果を得る確率 <code class="docutils literal notranslate"><span class="pre">probability</span></code> と解のステータス <code class="docutils literal notranslate"><span class="pre">status</span></code> (<code class="docutils literal notranslate"><span class="pre">SUCCESS</span></code>, <code class="docutils literal notranslate"><span class="pre">FAILURE</span></code>, <code class="docutils literal notranslate"><span class="pre">INFEASIBLE</span></code>) に関する情報を含みます。</p>
 <div class="nbinput docutils container">
@@ -751,7 +761,7 @@ status: SUCCESS
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;variable order:&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">var</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">qaoa_result</span><span class="o">.</span><span class="n">variables</span><span class="p">])</span>
+<span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;variable order:&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">var</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">qaoa_result</span><span class="o">.</span><span class="n">variables</span><span class="p">])</span>
 <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">qaoa_result</span><span class="o">.</span><span class="n">samples</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
 </pre></div>
@@ -779,9 +789,11 @@ SolutionSample(x=array([1., 1., 1.]), fval=4.0, probability=0.12499999999999994,
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="k">def</span> <span class="nf">get_filtered_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SolutionSample</span><span class="p">],</span>
-                         <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-                         <span class="n">allowed_status</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">OptimizationResultStatus</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">OptimizationResultStatus</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">,)):</span>
+<span></span><span class="k">def</span> <span class="nf">get_filtered_samples</span><span class="p">(</span>
+    <span class="n">samples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SolutionSample</span><span class="p">],</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">allowed_status</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">OptimizationResultStatus</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">OptimizationResultStatus</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">,),</span>
+<span class="p">):</span>
     <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="n">allowed_status</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">probability</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">:</span>
@@ -796,9 +808,9 @@ SolutionSample(x=array([1., 1., 1.]), fval=4.0, probability=0.12499999999999994,
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">filtered_samples</span> <span class="o">=</span> <span class="n">get_filtered_samples</span><span class="p">(</span><span class="n">qaoa_result</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span>
-                                        <span class="n">threshold</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span>
-                                        <span class="n">allowed_status</span><span class="o">=</span><span class="p">(</span><span class="n">OptimizationResultStatus</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">,))</span>
+<span></span><span class="n">filtered_samples</span> <span class="o">=</span> <span class="n">get_filtered_samples</span><span class="p">(</span>
+    <span class="n">qaoa_result</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span> <span class="n">allowed_status</span><span class="o">=</span><span class="p">(</span><span class="n">OptimizationResultStatus</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">,)</span>
+<span class="p">)</span>
 <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">filtered_samples</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
 </pre></div>
@@ -872,9 +884,10 @@ SolutionSample(x=array([1., 1., 1.]), fval=4.0, probability=0.12499999999999994,
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">samples_for_plot</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">qaoa_result</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">=</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span>
-                             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="p">)):</span> <span class="n">s</span><span class="o">.</span><span class="n">probability</span>
-                    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">filtered_samples</span><span class="p">}</span>
+<span></span><span class="n">samples_for_plot</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">qaoa_result</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="p">)):</span> <span class="n">s</span><span class="o">.</span><span class="n">probability</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">filtered_samples</span>
+<span class="p">}</span>
 <span class="n">samples_for_plot</span>
 </pre></div>
 </div>
@@ -912,9 +925,9 @@ SolutionSample(x=array([1., 1., 1.]), fval=4.0, probability=0.12499999999999994,
 <img alt="../_images/tutorials_03_minimum_eigen_optimizer_31_0.png" src="../_images/tutorials_03_minimum_eigen_optimizer_31_0.png" />
 </div>
 </div>
-</div>
-</div>
-<div class="section" id="RecursiveMinimumEigenOptimizer">
+</section>
+</section>
+<section id="RecursiveMinimumEigenOptimizer">
 <h2>RecursiveMinimumEigenOptimizer<a class="headerlink" href="#RecursiveMinimumEigenOptimizer" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">RecursiveMinimumEigenOptimizer</span></code> は入力として <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> を取り、再帰的な最適化スキームを適用して、問題のサイズを一度に1変数ずつ小さくします。 生成された中間問題のサイズが与えられたしきい値 (<code class="docutils literal notranslate"><span class="pre">min_num_vars</span></code>) を下回ると、<code class="docutils literal notranslate"><span class="pre">RecursiveMinimumEigenOptimizer</span></code> は別のソルバー(<code class="docutils literal notranslate"><span class="pre">min_num_vars_optimizer</span></code>)を使用します。（例えば <code class="docutils literal notranslate"><span class="pre">NumPyMinimumEigensolver</span></code> に基づく、CPLEXや <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> などの厳密な古典ソルバーなど）</p>
 <p>以下では、以前に導入した 2 つの <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> を使用して <code class="docutils literal notranslate"><span class="pre">RecursiveMinimumEigenOptimizer</span></code> を使用する方法を示します。</p>
@@ -953,9 +966,9 @@ status: SUCCESS
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">filtered_samples</span> <span class="o">=</span> <span class="n">get_filtered_samples</span><span class="p">(</span><span class="n">rqaoa_result</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span>
-                                        <span class="n">threshold</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span>
-                                        <span class="n">allowed_status</span><span class="o">=</span><span class="p">(</span><span class="n">OptimizationResultStatus</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">,))</span>
+<span></span><span class="n">filtered_samples</span> <span class="o">=</span> <span class="n">get_filtered_samples</span><span class="p">(</span>
+    <span class="n">rqaoa_result</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span> <span class="n">allowed_status</span><span class="o">=</span><span class="p">(</span><span class="n">OptimizationResultStatus</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">,)</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -964,9 +977,10 @@ status: SUCCESS
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">samples_for_plot</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">rqaoa_result</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">=</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span>
-                             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="p">)):</span> <span class="n">s</span><span class="o">.</span><span class="n">probability</span>
-                    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">filtered_samples</span><span class="p">}</span>
+<span></span><span class="n">samples_for_plot</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">rqaoa_result</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="p">)):</span> <span class="n">s</span><span class="o">.</span><span class="n">probability</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">filtered_samples</span>
+<span class="p">}</span>
 <span class="n">samples_for_plot</span>
 </pre></div>
 </div>
@@ -1003,6 +1017,7 @@ status: SUCCESS
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -1030,8 +1045,8 @@ status: SUCCESS
 </pre></div>
 </div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>
@@ -1101,6 +1116,7 @@ status: SUCCESS
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
          <script src="../_static/doctools.js"></script>
@@ -1108,8 +1124,8 @@ status: SUCCESS
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "tex2jax_ignore|mathjax_ignore|document", "processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
+         <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+         <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
      
 
   

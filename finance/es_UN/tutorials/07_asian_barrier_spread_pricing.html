@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="es-UN" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Fijación de Precios de los Márgenes de Barrera Asiáticos &mdash; documentación de Qiskit Finance - 0.2.1</title>
+  <title>Fijación de Precios de los Márgenes de Barrera Asiáticos &mdash; documentación de Qiskit Finance - 0.3.0</title>
   
 
   
@@ -31,8 +32,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -175,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.1
+                  0.3.0
                 </div>
               
             
@@ -530,11 +531,11 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">Nota</p>
-<p>Esta página fue generada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-finance/blob/stable/0.2/docs/tutorials/07_asian_barrier_spread_pricing.ipynb">docs/tutorials/07_asian_barrier_spread_pricing.ipynb</a>.</p>
+<p>Esta página fue generada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-finance/blob/stable/0.3/docs/tutorials/07_asian_barrier_spread_pricing.ipynb">docs/tutorials/07_asian_barrier_spread_pricing.ipynb</a>.</p>
 </div>
-<div class="section" id="Fijación-de-Precios-de-los-Márgenes-de-Barrera-Asiáticos">
+<section id="Fijación-de-Precios-de-los-Márgenes-de-Barrera-Asiáticos">
 <h1>Fijación de Precios de los Márgenes de Barrera Asiáticos<a class="headerlink" href="#Fijación-de-Precios-de-los-Márgenes-de-Barrera-Asiáticos" title="Enlazar permanentemente con este título">¶</a></h1>
-<div class="section" id="Introducción">
+<section id="Introducción">
 <h2>Introducción<a class="headerlink" href="#Introducción" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>Un margen de barrera asiático es una combinación de 3 tipos de opciones diferentes y, como tal, combina múltiples características posibles que soporta el framework de precios de opciones de Qiskit Finance:</p>
 <ul class="simple">
@@ -565,6 +566,7 @@ div.rendered_html tbody tr:hover {
 <span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">Axes3D</span>
 <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">griddata</span>
+
 <span class="o">%</span><span class="k">matplotlib</span> inline
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -576,8 +578,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Modelo-de-Incertidumbre">
+</section>
+<section id="Modelo-de-Incertidumbre">
 <h2>Modelo de Incertidumbre<a class="headerlink" href="#Modelo-de-Incertidumbre" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>Construimos una fábrica de circuitos para cargar una distribución aleatoria logarítmica normal multivariante en un estado cuántico en <span class="math notranslate nohighlight">\(n\)</span> qubits. Para cada dimensión <span class="math notranslate nohighlight">\(j = 1,\ldots,d\)</span>, la distribución es truncada a un intervalo dado <span class="math notranslate nohighlight">\([\text{low}_j, \text{high}_j]\)</span> y discretizada usando una cuadrícula de <span class="math notranslate nohighlight">\(2^{n_j}\)</span> puntos, donde <span class="math notranslate nohighlight">\(n_j\)</span> denota el número de qubits usados para representar la dimensión <span class="math notranslate nohighlight">\(j\)</span>, es decir, <span class="math notranslate nohighlight">\(n_1+\ldots+n_d = n\)</span>. El operador unitario correspondiente a la fábrica de circuitos implementa lo siguiente:</p>
 <div class="math notranslate nohighlight">
@@ -595,30 +597,30 @@ div.rendered_html tbody tr:hover {
 <span class="n">num_uncertainty_qubits</span> <span class="o">=</span> <span class="mi">2</span>
 
 <span class="c1"># parameters for considered random distribution</span>
-<span class="n">S</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="c1"># initial spot price</span>
-<span class="n">vol</span> <span class="o">=</span> <span class="mf">0.4</span> <span class="c1"># volatility of 40%</span>
-<span class="n">r</span> <span class="o">=</span> <span class="mf">0.05</span> <span class="c1"># annual interest rate of 4%</span>
-<span class="n">T</span> <span class="o">=</span> <span class="mi">40</span> <span class="o">/</span> <span class="mi">365</span> <span class="c1"># 40 days to maturity</span>
+<span class="n">S</span> <span class="o">=</span> <span class="mf">2.0</span>  <span class="c1"># initial spot price</span>
+<span class="n">vol</span> <span class="o">=</span> <span class="mf">0.4</span>  <span class="c1"># volatility of 40%</span>
+<span class="n">r</span> <span class="o">=</span> <span class="mf">0.05</span>  <span class="c1"># annual interest rate of 4%</span>
+<span class="n">T</span> <span class="o">=</span> <span class="mi">40</span> <span class="o">/</span> <span class="mi">365</span>  <span class="c1"># 40 days to maturity</span>
 
 <span class="c1"># resulting parameters for log-normal distribution</span>
-<span class="n">mu</span> <span class="o">=</span> <span class="p">((</span><span class="n">r</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">vol</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">T</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">S</span><span class="p">))</span>
+<span class="n">mu</span> <span class="o">=</span> <span class="p">(</span><span class="n">r</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">vol</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">T</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
 <span class="n">sigma</span> <span class="o">=</span> <span class="n">vol</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
-<span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">mu</span> <span class="o">+</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">variance</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">mu</span> <span class="o">+</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">mu</span> <span class="o">+</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">variance</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">mu</span> <span class="o">+</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
 <span class="n">stddev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variance</span><span class="p">)</span>
 
 <span class="c1"># lowest and highest value considered for the spot price; in between, an equidistant discretization is considered.</span>
-<span class="n">low</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mean</span> <span class="o">-</span> <span class="mi">3</span><span class="o">*</span><span class="n">stddev</span><span class="p">)</span>
-<span class="n">high</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">+</span> <span class="mi">3</span><span class="o">*</span><span class="n">stddev</span>
+<span class="n">low</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mean</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">stddev</span><span class="p">)</span>
+<span class="n">high</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">stddev</span>
 
 <span class="c1"># map to higher dimensional distribution</span>
 <span class="c1"># for simplicity assuming dimensions are independent and identically distributed)</span>
 <span class="n">dimension</span> <span class="o">=</span> <span class="mi">2</span>
-<span class="n">num_qubits</span><span class="o">=</span><span class="p">[</span><span class="n">num_uncertainty_qubits</span><span class="p">]</span><span class="o">*</span><span class="n">dimension</span>
-<span class="n">low</span><span class="o">=</span><span class="n">low</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dimension</span><span class="p">)</span>
-<span class="n">high</span><span class="o">=</span><span class="n">high</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dimension</span><span class="p">)</span>
-<span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dimension</span><span class="p">)</span>
-<span class="n">cov</span><span class="o">=</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dimension</span><span class="p">)</span>
+<span class="n">num_qubits</span> <span class="o">=</span> <span class="p">[</span><span class="n">num_uncertainty_qubits</span><span class="p">]</span> <span class="o">*</span> <span class="n">dimension</span>
+<span class="n">low</span> <span class="o">=</span> <span class="n">low</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dimension</span><span class="p">)</span>
+<span class="n">high</span> <span class="o">=</span> <span class="n">high</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dimension</span><span class="p">)</span>
+<span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dimension</span><span class="p">)</span>
+<span class="n">cov</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dimension</span><span class="p">)</span>
 
 <span class="c1"># construct circuit factory</span>
 <span class="n">u</span> <span class="o">=</span> <span class="n">LogNormalDistribution</span><span class="p">(</span><span class="n">num_qubits</span><span class="o">=</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">cov</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">))))</span>
@@ -631,20 +633,20 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># plot PDF of uncertainty model</span>
-<span class="n">x</span> <span class="o">=</span> <span class="p">[</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">u</span><span class="o">.</span><span class="n">values</span> <span class="p">]</span>
-<span class="n">y</span> <span class="o">=</span> <span class="p">[</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">u</span><span class="o">.</span><span class="n">values</span> <span class="p">]</span>
+<span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">u</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+<span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">u</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
 <span class="n">z</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">probabilities</span>
-<span class="c1">#z = map(float, z)</span>
-<span class="c1">#z = list(map(float, z))</span>
-<span class="n">resolution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">num_qubits</span><span class="p">])</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span>
-<span class="n">grid_x</span><span class="p">,</span> <span class="n">grid_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">):</span><span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">):</span><span class="n">resolution</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">):</span><span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">):</span><span class="n">resolution</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+<span class="c1"># z = map(float, z)</span>
+<span class="c1"># z = list(map(float, z))</span>
+<span class="n">resolution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span> <span class="o">**</span> <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">num_qubits</span><span class="p">])</span> <span class="o">*</span> <span class="mi">1</span><span class="n">j</span>
+<span class="n">grid_x</span><span class="p">,</span> <span class="n">grid_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">:</span> <span class="n">resolution</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="p">:</span> <span class="n">resolution</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
 <span class="n">grid_z</span> <span class="o">=</span> <span class="n">griddata</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">z</span><span class="p">,</span> <span class="p">(</span><span class="n">grid_x</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">))</span>
 <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
-<span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">(</span><span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">(</span><span class="n">projection</span><span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">plot_surface</span><span class="p">(</span><span class="n">grid_x</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_z</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Spectral</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Spot Price $S_1$ (\$)&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Spot Price $S_2$ (\$)&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;Probability (\%)&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Spot Price $S_1$ (\$)&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Spot Price $S_2$ (\$)&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s2">&quot;Probability (\%)&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -656,8 +658,8 @@ div.rendered_html tbody tr:hover {
 <img alt="../_images/tutorials_07_asian_barrier_spread_pricing_5_0.png" src="../_images/tutorials_07_asian_barrier_spread_pricing_5_0.png" />
 </div>
 </div>
-</div>
-<div class="section" id="Función-de-Rendimiento">
+</section>
+<section id="Función-de-Rendimiento">
 <h2>Función de Rendimiento<a class="headerlink" href="#Función-de-Rendimiento" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>Para simplificar, consideramos la suma de los precios al contado en lugar de su promedio. El resultado se puede transformar al promedio simplemente dividiéndolo entre 2.</p>
 <p>La función de rendimiento es igual a cero siempre que la suma de los precios al contado <span class="math notranslate nohighlight">\((S_1 + S_2)\)</span> sea menor que el precio de ejercicio <span class="math notranslate nohighlight">\(K_1\)</span> y luego aumenta linealmente hasta que la suma de los precios al contado alcanza <span class="math notranslate nohighlight">\(K_2\)</span>. Luego, el rendimiento permanece constante en <span class="math notranslate nohighlight">\(K_2 - K_1\)</span> a menos que cualquiera de los dos precios al contado exceda el umbral de barrera <span class="math notranslate nohighlight">\(B\)</span>, entonces el rendimiento baja inmediatamente a cero. La implementación primero usa un operador de suma ponderada para calcular la suma de los precios al contado en un registro ancilla, y luego usa un comparador, que cambia un qubit ancilla de <span class="math notranslate nohighlight">\(\big|0\rangle\)</span> a <span class="math notranslate nohighlight">\(\big|1\rangle\)</span> si <span class="math notranslate nohighlight">\((S_1 + S_2) \geq K_1\)</span> y otro comparador/ancilla para capturar el caso de que <span class="math notranslate nohighlight">\((S_1 + S_2) \geq K_2\)</span>. Estas ancillas se utilizan para controlar la parte lineal de la función de rendimiento.</p>
@@ -682,7 +684,7 @@ div.rendered_html tbody tr:hover {
 <span class="n">weights</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">num_qubits</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-        <span class="n">weights</span> <span class="o">+=</span> <span class="p">[</span><span class="mi">2</span><span class="o">**</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">weights</span> <span class="o">+=</span> <span class="p">[</span><span class="mi">2</span> <span class="o">**</span> <span class="n">i</span><span class="p">]</span>
 
 <span class="c1"># create aggregation circuit</span>
 <span class="n">agg</span> <span class="o">=</span> <span class="n">WeightedAdder</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">),</span> <span class="n">weights</span><span class="p">)</span>
@@ -704,13 +706,17 @@ div.rendered_html tbody tr:hover {
 <span class="n">barrier</span> <span class="o">=</span> <span class="mf">2.5</span>
 
 <span class="c1"># map strike prices and barrier threshold from [low, high] to {0, ..., 2^n-1}</span>
-<span class="n">max_value</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">n_s</span> <span class="o">-</span> <span class="mi">1</span>
+<span class="n">max_value</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">n_s</span> <span class="o">-</span> <span class="mi">1</span>
 <span class="n">low_</span> <span class="o">=</span> <span class="n">low</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">high_</span> <span class="o">=</span> <span class="n">high</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-<span class="n">mapped_strike_price_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">strike_price_1</span> <span class="o">-</span> <span class="n">dimension</span><span class="o">*</span><span class="n">low_</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">high_</span> <span class="o">-</span> <span class="n">low_</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">num_uncertainty_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">mapped_strike_price_2</span> <span class="o">=</span> <span class="p">(</span><span class="n">strike_price_2</span> <span class="o">-</span> <span class="n">dimension</span><span class="o">*</span><span class="n">low_</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">high_</span> <span class="o">-</span> <span class="n">low_</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">num_uncertainty_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">mapped_barrier</span> <span class="o">=</span> <span class="p">(</span><span class="n">barrier</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">high</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">num_uncertainty_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">mapped_strike_price_1</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="n">strike_price_1</span> <span class="o">-</span> <span class="n">dimension</span> <span class="o">*</span> <span class="n">low_</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">high_</span> <span class="o">-</span> <span class="n">low_</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">num_uncertainty_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">mapped_strike_price_2</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="n">strike_price_2</span> <span class="o">-</span> <span class="n">dimension</span> <span class="o">*</span> <span class="n">low_</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">high_</span> <span class="o">-</span> <span class="n">low_</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">num_uncertainty_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">mapped_barrier</span> <span class="o">=</span> <span class="p">(</span><span class="n">barrier</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">high</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">num_uncertainty_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -721,7 +727,7 @@ div.rendered_html tbody tr:hover {
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># condition and condition result</span>
 <span class="n">conditions</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">barrier_thresholds</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">dimension</span>
+<span class="n">barrier_thresholds</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">dimension</span>
 <span class="n">n_aux_conditions</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dimension</span><span class="p">):</span>
     <span class="c1"># target dimension of random distribution and corresponding condition (which is required to be True)</span>
@@ -752,7 +758,7 @@ div.rendered_html tbody tr:hover {
     <span class="n">domain</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_value</span><span class="p">),</span>
     <span class="n">image</span><span class="o">=</span><span class="p">(</span><span class="n">f_min</span><span class="p">,</span> <span class="n">f_max</span><span class="p">),</span>
     <span class="n">rescaling_factor</span><span class="o">=</span><span class="n">c_approx</span><span class="p">,</span>
-    <span class="n">breakpoints</span><span class="o">=</span><span class="n">breakpoints</span>
+    <span class="n">breakpoints</span><span class="o">=</span><span class="n">breakpoints</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -763,11 +769,13 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># define overall multivariate problem</span>
-<span class="n">qr_state</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">,</span> <span class="s1">&#39;state&#39;</span><span class="p">)</span>  <span class="c1"># to load the probability distribution</span>
-<span class="n">qr_obj</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;obj&#39;</span><span class="p">)</span>  <span class="c1"># to encode the function values</span>
-<span class="n">ar_sum</span> <span class="o">=</span> <span class="n">AncillaRegister</span><span class="p">(</span><span class="n">n_s</span><span class="p">,</span> <span class="s1">&#39;sum&#39;</span><span class="p">)</span>  <span class="c1"># number of qubits used to encode the sum</span>
-<span class="n">ar_cond</span> <span class="o">=</span> <span class="n">AncillaRegister</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;conditions&#39;</span><span class="p">)</span>
-<span class="n">ar</span> <span class="o">=</span> <span class="n">AncillaRegister</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">n_aux</span><span class="p">,</span> <span class="n">n_aux_conditions</span><span class="p">,</span> <span class="n">objective</span><span class="o">.</span><span class="n">num_ancillas</span><span class="p">),</span> <span class="s1">&#39;work&#39;</span><span class="p">)</span>  <span class="c1"># additional qubits</span>
+<span class="n">qr_state</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">,</span> <span class="s2">&quot;state&quot;</span><span class="p">)</span>  <span class="c1"># to load the probability distribution</span>
+<span class="n">qr_obj</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;obj&quot;</span><span class="p">)</span>  <span class="c1"># to encode the function values</span>
+<span class="n">ar_sum</span> <span class="o">=</span> <span class="n">AncillaRegister</span><span class="p">(</span><span class="n">n_s</span><span class="p">,</span> <span class="s2">&quot;sum&quot;</span><span class="p">)</span>  <span class="c1"># number of qubits used to encode the sum</span>
+<span class="n">ar_cond</span> <span class="o">=</span> <span class="n">AncillaRegister</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;conditions&quot;</span><span class="p">)</span>
+<span class="n">ar</span> <span class="o">=</span> <span class="n">AncillaRegister</span><span class="p">(</span>
+    <span class="nb">max</span><span class="p">(</span><span class="n">n_aux</span><span class="p">,</span> <span class="n">n_aux_conditions</span><span class="p">,</span> <span class="n">objective</span><span class="o">.</span><span class="n">num_ancillas</span><span class="p">),</span> <span class="s2">&quot;work&quot;</span>
+<span class="p">)</span>  <span class="c1"># additional qubits</span>
 
 <span class="n">objective_index</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">num_qubits</span>
 
@@ -779,8 +787,8 @@ div.rendered_html tbody tr:hover {
 
 <span class="c1"># apply the conditions</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cond</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">conditions</span><span class="p">):</span>
-    <span class="n">state_qubits</span> <span class="o">=</span> <span class="n">qr_state</span><span class="p">[(</span><span class="n">num_uncertainty_qubits</span> <span class="o">*</span> <span class="n">i</span><span class="p">):(</span><span class="n">num_uncertainty_qubits</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))]</span>
-    <span class="n">asian_barrier_spread</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cond</span><span class="p">,</span> <span class="n">state_qubits</span> <span class="o">+</span> <span class="p">[</span><span class="n">ar_cond</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">+</span> <span class="n">ar</span><span class="p">[:</span><span class="n">cond</span><span class="o">.</span><span class="n">num_ancillas</span><span class="p">])</span>
+    <span class="n">state_qubits</span> <span class="o">=</span> <span class="n">qr_state</span><span class="p">[(</span><span class="n">num_uncertainty_qubits</span> <span class="o">*</span> <span class="n">i</span><span class="p">)</span> <span class="p">:</span> <span class="p">(</span><span class="n">num_uncertainty_qubits</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))]</span>
+    <span class="n">asian_barrier_spread</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cond</span><span class="p">,</span> <span class="n">state_qubits</span> <span class="o">+</span> <span class="p">[</span><span class="n">ar_cond</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">+</span> <span class="n">ar</span><span class="p">[:</span> <span class="n">cond</span><span class="o">.</span><span class="n">num_ancillas</span><span class="p">])</span>
 
 <span class="c1"># aggregate the conditions on a single qubit</span>
 <span class="n">asian_barrier_spread</span><span class="o">.</span><span class="n">mcx</span><span class="p">(</span><span class="n">ar_cond</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">ar_cond</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
@@ -789,21 +797,25 @@ div.rendered_html tbody tr:hover {
 <span class="n">asian_barrier_spread</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agg</span><span class="o">.</span><span class="n">control</span><span class="p">(),</span> <span class="p">[</span><span class="n">ar_cond</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+</span> <span class="n">qr_state</span><span class="p">[:]</span> <span class="o">+</span> <span class="n">ar_sum</span><span class="p">[:]</span> <span class="o">+</span> <span class="n">ar</span><span class="p">[:</span><span class="n">n_aux</span><span class="p">])</span>
 
 <span class="c1"># apply the payoff function</span>
-<span class="n">asian_barrier_spread</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">objective</span><span class="p">,</span> <span class="n">ar_sum</span><span class="p">[:]</span> <span class="o">+</span> <span class="n">qr_obj</span><span class="p">[:]</span> <span class="o">+</span> <span class="n">ar</span><span class="p">[:</span><span class="n">objective</span><span class="o">.</span><span class="n">num_ancillas</span><span class="p">])</span>
+<span class="n">asian_barrier_spread</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">objective</span><span class="p">,</span> <span class="n">ar_sum</span><span class="p">[:]</span> <span class="o">+</span> <span class="n">qr_obj</span><span class="p">[:]</span> <span class="o">+</span> <span class="n">ar</span><span class="p">[:</span> <span class="n">objective</span><span class="o">.</span><span class="n">num_ancillas</span><span class="p">])</span>
 
 <span class="c1"># uncompute the aggregation</span>
-<span class="n">asian_barrier_spread</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agg</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span><span class="o">.</span><span class="n">control</span><span class="p">(),</span> <span class="p">[</span><span class="n">ar_cond</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+</span> <span class="n">qr_state</span><span class="p">[:]</span> <span class="o">+</span> <span class="n">ar_sum</span><span class="p">[:]</span> <span class="o">+</span> <span class="n">ar</span><span class="p">[:</span><span class="n">n_aux</span><span class="p">])</span>
+<span class="n">asian_barrier_spread</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+    <span class="n">agg</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span><span class="o">.</span><span class="n">control</span><span class="p">(),</span> <span class="p">[</span><span class="n">ar_cond</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+</span> <span class="n">qr_state</span><span class="p">[:]</span> <span class="o">+</span> <span class="n">ar_sum</span><span class="p">[:]</span> <span class="o">+</span> <span class="n">ar</span><span class="p">[:</span><span class="n">n_aux</span><span class="p">]</span>
+<span class="p">)</span>
 
 <span class="c1"># uncompute the conditions</span>
 <span class="n">asian_barrier_spread</span><span class="o">.</span><span class="n">mcx</span><span class="p">(</span><span class="n">ar_cond</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">ar_cond</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
 <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">cond</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">conditions</span><span class="p">)):</span>
     <span class="n">i</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span> <span class="o">-</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span>
-    <span class="n">state_qubits</span> <span class="o">=</span> <span class="n">qr_state</span><span class="p">[(</span><span class="n">num_uncertainty_qubits</span> <span class="o">*</span> <span class="n">i</span><span class="p">):(</span><span class="n">num_uncertainty_qubits</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))]</span>
-    <span class="n">asian_barrier_spread</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cond</span><span class="o">.</span><span class="n">inverse</span><span class="p">(),</span> <span class="n">state_qubits</span> <span class="o">+</span> <span class="p">[</span><span class="n">ar_cond</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">+</span> <span class="n">ar</span><span class="p">[:</span><span class="n">cond</span><span class="o">.</span><span class="n">num_ancillas</span><span class="p">])</span>
+    <span class="n">state_qubits</span> <span class="o">=</span> <span class="n">qr_state</span><span class="p">[(</span><span class="n">num_uncertainty_qubits</span> <span class="o">*</span> <span class="n">i</span><span class="p">)</span> <span class="p">:</span> <span class="p">(</span><span class="n">num_uncertainty_qubits</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))]</span>
+    <span class="n">asian_barrier_spread</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">cond</span><span class="o">.</span><span class="n">inverse</span><span class="p">(),</span> <span class="n">state_qubits</span> <span class="o">+</span> <span class="p">[</span><span class="n">ar_cond</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">+</span> <span class="n">ar</span><span class="p">[:</span> <span class="n">cond</span><span class="o">.</span><span class="n">num_ancillas</span><span class="p">]</span>
+    <span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">asian_barrier_spread</span><span class="o">.</span><span class="n">draw</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;objective qubit index&#39;</span><span class="p">,</span> <span class="n">objective_index</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;objective qubit index&quot;</span><span class="p">,</span> <span class="n">objective_index</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -879,14 +891,14 @@ objective qubit index 4
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># plot exact payoff function</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">low</span><span class="p">),</span> <span class="nb">sum</span><span class="p">(</span><span class="n">high</span><span class="p">))</span>
-<span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">strike_price_1</span><span class="p">),</span> <span class="n">strike_price_2</span> <span class="o">-</span> <span class="n">strike_price_1</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;r-&#39;</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">strike_price_1</span><span class="p">),</span> <span class="n">strike_price_2</span> <span class="o">-</span> <span class="n">strike_price_1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;r-&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Payoff Function (for $S_1 = S_2$)&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Sum of Spot Prices ($S_1 + S_2)$&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Payoff&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Payoff Function (for $S_1 = S_2$)&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Sum of Spot Prices ($S_1 + S_2)$&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Payoff&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -906,21 +918,23 @@ objective qubit index 4
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># plot contour of payoff function with respect to both time steps, including barrier</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
 <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">17</span><span class="p">,</span> <span class="mi">17</span><span class="p">))</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">low</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">high</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">17</span><span class="p">)</span>
 <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">low</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">high</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">17</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">y_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
-        <span class="n">z</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x_</span> <span class="o">+</span> <span class="n">y_</span> <span class="o">-</span> <span class="n">strike_price_1</span><span class="p">),</span> <span class="n">strike_price_2</span> <span class="o">-</span> <span class="n">strike_price_1</span><span class="p">)</span>
+        <span class="n">z</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x_</span> <span class="o">+</span> <span class="n">y_</span> <span class="o">-</span> <span class="n">strike_price_1</span><span class="p">),</span> <span class="n">strike_price_2</span> <span class="o">-</span> <span class="n">strike_price_1</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="n">x_</span> <span class="o">&gt;</span> <span class="n">barrier</span> <span class="ow">or</span> <span class="n">y_</span> <span class="o">&gt;</span> <span class="n">barrier</span><span class="p">:</span>
             <span class="n">z</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Payoff Function&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Payoff Function&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Spot Price $S_1$&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Spot Price $S_2$&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Spot Price $S_1$&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Spot Price $S_2$&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -942,9 +956,9 @@ objective qubit index 4
 <span></span><span class="c1"># evaluate exact expected value</span>
 <span class="n">sum_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">payoff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">sum_values</span> <span class="o">-</span> <span class="n">strike_price_1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">strike_price_2</span> <span class="o">-</span> <span class="n">strike_price_1</span><span class="p">)</span>
-<span class="n">leq_barrier</span> <span class="o">=</span> <span class="p">[</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">barrier</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">u</span><span class="o">.</span><span class="n">values</span> <span class="p">]</span>
+<span class="n">leq_barrier</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">barrier</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">u</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
 <span class="n">exact_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">probabilities</span><span class="p">[</span><span class="n">leq_barrier</span><span class="p">],</span> <span class="n">payoff</span><span class="p">[</span><span class="n">leq_barrier</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;exact expected value:</span><span class="se">\t</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">exact_value</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;exact expected value:</span><span class="se">\t</span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">exact_value</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -956,8 +970,8 @@ objective qubit index 4
 exact expected value:   0.8023
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Evaluar-el-Rendimiento-Esperado">
+</section>
+<section id="Evaluar-el-Rendimiento-Esperado">
 <h2>Evaluar el Rendimiento Esperado<a class="headerlink" href="#Evaluar-el-Rendimiento-Esperado" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>Primero verificamos el circuito cuántico simulándolo y analizando la probabilidad resultante para medir el estado <span class="math notranslate nohighlight">\(|1\rangle\)</span> en el qubit objetivo.</p>
 <div class="nbinput docutils container">
@@ -966,10 +980,10 @@ exact expected value:   0.8023
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">num_state_qubits</span> <span class="o">=</span> <span class="n">asian_barrier_spread</span><span class="o">.</span><span class="n">num_qubits</span> <span class="o">-</span> <span class="n">asian_barrier_spread</span><span class="o">.</span><span class="n">num_ancillas</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;state qubits: &#39;</span><span class="p">,</span> <span class="n">num_state_qubits</span><span class="p">)</span>
-<span class="n">transpiled</span> <span class="o">=</span> <span class="n">transpile</span><span class="p">(</span><span class="n">asian_barrier_spread</span><span class="p">,</span> <span class="n">basis_gates</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;cx&#39;</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;circuit width:&#39;</span><span class="p">,</span> <span class="n">transpiled</span><span class="o">.</span><span class="n">width</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;circuit depth:&#39;</span><span class="p">,</span> <span class="n">transpiled</span><span class="o">.</span><span class="n">depth</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;state qubits: &quot;</span><span class="p">,</span> <span class="n">num_state_qubits</span><span class="p">)</span>
+<span class="n">transpiled</span> <span class="o">=</span> <span class="n">transpile</span><span class="p">(</span><span class="n">asian_barrier_spread</span><span class="p">,</span> <span class="n">basis_gates</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;u&quot;</span><span class="p">,</span> <span class="s2">&quot;cx&quot;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;circuit width:&quot;</span><span class="p">,</span> <span class="n">transpiled</span><span class="o">.</span><span class="n">width</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;circuit depth:&quot;</span><span class="p">,</span> <span class="n">transpiled</span><span class="o">.</span><span class="n">depth</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -988,7 +1002,7 @@ circuit depth: 6370
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">job</span> <span class="o">=</span> <span class="n">execute</span><span class="p">(</span><span class="n">asian_barrier_spread</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;statevector_simulator&#39;</span><span class="p">))</span>
+<span></span><span class="n">job</span> <span class="o">=</span> <span class="n">execute</span><span class="p">(</span><span class="n">asian_barrier_spread</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;statevector_simulator&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -1000,19 +1014,19 @@ circuit depth: 6370
 <span></span><span class="c1"># evaluate resulting statevector</span>
 <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">result</span><span class="p">()</span><span class="o">.</span><span class="n">get_statevector</span><span class="p">()):</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;{0:0</span><span class="si">%s</span><span class="s1">b}&#39;</span> <span class="o">%</span> <span class="n">num_state_qubits</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)[</span><span class="o">-</span><span class="n">num_state_qubits</span><span class="p">:]</span>
-    <span class="n">prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
-    <span class="k">if</span> <span class="n">prob</span> <span class="o">&gt;</span> <span class="mf">1e-4</span> <span class="ow">and</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;{0:0</span><span class="si">%s</span><span class="s2">b}&quot;</span> <span class="o">%</span> <span class="n">num_state_qubits</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)[</span><span class="o">-</span><span class="n">num_state_qubits</span><span class="p">:]</span>
+    <span class="n">prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">prob</span> <span class="o">&gt;</span> <span class="mf">1e-4</span> <span class="ow">and</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span><span class="p">:</span>
         <span class="n">value</span> <span class="o">+=</span> <span class="n">prob</span>
     <span class="c1"># all other states should have zero probability due to ancilla qubits</span>
-    <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="o">**</span><span class="n">num_state_qubits</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">num_state_qubits</span><span class="p">:</span>
         <span class="k">break</span>
 
 <span class="c1"># map value to original range</span>
-<span class="n">mapped_value</span> <span class="o">=</span> <span class="n">objective</span><span class="o">.</span><span class="n">post_processing</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">num_uncertainty_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">high_</span> <span class="o">-</span> <span class="n">low_</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Exact Operator Value:  </span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">value</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Mapped Operator value: </span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">mapped_value</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Exact Expected Payoff: </span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">exact_value</span><span class="p">)</span>
+<span class="n">mapped_value</span> <span class="o">=</span> <span class="n">objective</span><span class="o">.</span><span class="n">post_processing</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">num_uncertainty_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">high_</span> <span class="o">-</span> <span class="n">low_</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exact Operator Value:  </span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">value</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Mapped Operator value: </span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">mapped_value</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exact Expected Payoff: </span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">exact_value</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1036,10 +1050,12 @@ Exact Expected Payoff: 0.8023
 <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">0.01</span>
 <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.05</span>
 
-<span class="n">qi</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;aer_simulator&#39;</span><span class="p">),</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-<span class="n">problem</span> <span class="o">=</span> <span class="n">EstimationProblem</span><span class="p">(</span><span class="n">state_preparation</span><span class="o">=</span><span class="n">asian_barrier_spread</span><span class="p">,</span>
-                            <span class="n">objective_qubits</span><span class="o">=</span><span class="p">[</span><span class="n">objective_index</span><span class="p">],</span>
-                            <span class="n">post_processing</span><span class="o">=</span><span class="n">objective</span><span class="o">.</span><span class="n">post_processing</span><span class="p">)</span>
+<span class="n">qi</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;aer_simulator&quot;</span><span class="p">),</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">EstimationProblem</span><span class="p">(</span>
+    <span class="n">state_preparation</span><span class="o">=</span><span class="n">asian_barrier_spread</span><span class="p">,</span>
+    <span class="n">objective_qubits</span><span class="o">=</span><span class="p">[</span><span class="n">objective_index</span><span class="p">],</span>
+    <span class="n">post_processing</span><span class="o">=</span><span class="n">objective</span><span class="o">.</span><span class="n">post_processing</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="c1"># construct amplitude estimation</span>
 <span class="n">ae</span> <span class="o">=</span> <span class="n">IterativeAmplitudeEstimation</span><span class="p">(</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">qi</span><span class="p">)</span>
 </pre></div>
@@ -1059,10 +1075,17 @@ Exact Expected Payoff: 0.8023
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">conf_int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">confidence_interval_processed</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">num_uncertainty_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">high_</span> <span class="o">-</span> <span class="n">low_</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Exact value:    </span><span class="se">\t</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">exact_value</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Estimated value:</span><span class="se">\t</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">estimation_processed</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">num_uncertainty_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">high_</span> <span class="o">-</span> <span class="n">low_</span><span class="p">)))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Confidence interval: </span><span class="se">\t</span><span class="s1">[</span><span class="si">%.4f</span><span class="s1">, </span><span class="si">%.4f</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">conf_int</span><span class="p">))</span>
+<span></span><span class="n">conf_int</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">confidence_interval_processed</span><span class="p">)</span>
+    <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">num_uncertainty_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">high_</span> <span class="o">-</span> <span class="n">low_</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exact value:    </span><span class="se">\t</span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">exact_value</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="s2">&quot;Estimated value:</span><span class="se">\t</span><span class="si">%.4f</span><span class="s2">&quot;</span>
+    <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">estimation_processed</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">num_uncertainty_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">high_</span> <span class="o">-</span> <span class="n">low_</span><span class="p">))</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Confidence interval: </span><span class="se">\t</span><span class="s2">[</span><span class="si">%.4f</span><span class="s2">, </span><span class="si">%.4f</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">conf_int</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -1082,6 +1105,7 @@ Confidence interval:    [0.8268, 0.8388]
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -1118,8 +1142,8 @@ Confidence interval:    [0.8268, 0.8388]
 </pre></div>
 </div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

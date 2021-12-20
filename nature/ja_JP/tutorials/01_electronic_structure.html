@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="ja-JP" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>電子構造 &mdash; Qiskit Nature 0.2.2 ドキュメント</title>
+  <title>電子構造 &mdash; Qiskit Nature 0.3.0 ドキュメント</title>
   
 
   
@@ -31,8 +32,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -175,7 +176,7 @@
               
               
                 <div class="version">
-                  0.2.2
+                  0.3.0
                 </div>
               
             
@@ -530,11 +531,11 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">注釈</p>
-<p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-nature/blob/stable/0.2/docs/tutorials/01_electronic_structure.ipynb">docs/tutorials/01_electronic_structure.ipynb</a> から生成されました。</p>
+<p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-nature/blob/stable/0.3/docs/tutorials/01_electronic_structure.ipynb">docs/tutorials/01_electronic_structure.ipynb</a> から生成されました。</p>
 </div>
-<div class="section" id="電子構造">
+<section id="電子構造">
 <h1>電子構造<a class="headerlink" href="#電子構造" title="このヘッドラインへのパーマリンク">¶</a></h1>
-<div class="section" id="はじめに">
+<section id="はじめに">
 <h2>はじめに<a class="headerlink" href="#はじめに" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>ある分子のハミルトニアンは、以下の数式で表されます。</p>
 <div class="math notranslate nohighlight">
@@ -552,8 +553,8 @@ div.rendered_html tbody tr:hover {
 <p>ここで <span class="math notranslate nohighlight">\(\Psi_0\)</span> は、系の基底状態です。</p>
 <p>しかし、この問題の有する次元数は、分子/電子の自由度に応じて指数関数的に増大します。そのため、 こうした計算の次元数の増加を押さえるアプローチとして、 <span class="math notranslate nohighlight">\(\Psi_0\)</span> を量子コンピューター上に用意してハミルトンの期待値(または <span class="math notranslate nohighlight">\(E_0\)</span> )を直接測定する方法が考えられています。</p>
 <p>では具体的にはどのようなアプローチなのでしょうか？</p>
-</div>
-<div class="section" id="ハートリーフォック法による初期推測">
+</section>
+<section id="ハートリーフォック法による初期推測">
 <h2>ハートリーフォック法による初期推測<a class="headerlink" href="#ハートリーフォック法による初期推測" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>この問題を解くアプローチの出発点として、ハー トリー・フォック法が用いられます。 この手法では、電子N体を独立したN個体の問題に近似（平均場近似）します。古典コンピューター上でハートリー・フォック方程式を解くことは効率的であり、正確な交換エネルギーにつながりますが、電子同士の相関は考慮されていません。 したがって、電子同士の相関を計算に考慮するのは良い議論の出発点とされています。</p>
 <p>上述の電子のハミルトニアンは、ハートリー・フォック法、別名分子軌道法（MOs）を用いても数学的に表現可能です。</p>
@@ -576,11 +577,17 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">qiskit_nature.drivers</span> <span class="kn">import</span> <span class="n">UnitsType</span><span class="p">,</span> <span class="n">Molecule</span>
-<span class="kn">from</span> <span class="nn">qiskit_nature.drivers.second_quantization</span> <span class="kn">import</span> <span class="n">ElectronicStructureDriverType</span><span class="p">,</span> <span class="n">ElectronicStructureMoleculeDriver</span>
-<span class="n">molecule</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">geometry</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]],</span>
-                              <span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.735</span><span class="p">]]],</span>
-                     <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">multiplicity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">driver</span> <span class="o">=</span> <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">(</span><span class="n">molecule</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;sto3g&#39;</span><span class="p">,</span> <span class="n">driver_type</span><span class="o">=</span><span class="n">ElectronicStructureDriverType</span><span class="o">.</span><span class="n">PYSCF</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.drivers.second_quantization</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ElectronicStructureDriverType</span><span class="p">,</span>
+    <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">molecule</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="p">[[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.735</span><span class="p">]]],</span> <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">multiplicity</span><span class="o">=</span><span class="mi">1</span>
+<span class="p">)</span>
+<span class="n">driver</span> <span class="o">=</span> <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">(</span>
+    <span class="n">molecule</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto3g&quot;</span><span class="p">,</span> <span class="n">driver_type</span><span class="o">=</span><span class="n">ElectronicStructureDriverType</span><span class="o">.</span><span class="n">PYSCF</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -602,10 +609,10 @@ Couldn&#39;t find cython becke routine
 </pre></div></div>
 </div>
 <p>ドライバの詳細については、<a class="reference external" href="https://qiskit.org/documentation/nature/apidocs/qiskit_nature.drivers.second_quantization.html">https://qiskit.org/documentation/nature/apidocs/qiskit_nature.drivers.second_quantization.html</a> を参照してください。</p>
-</div>
-<div class="section" id="フェルミ粒子から量子ビットへのマッピング">
+</section>
+<section id="フェルミ粒子から量子ビットへのマッピング">
 <h2>フェルミ粒子から量子ビットへのマッピング<a class="headerlink" href="#フェルミ粒子から量子ビットへのマッピング" title="このヘッドラインへのパーマリンク">¶</a></h2>
-<p><img alt="1fc9b7c5fc674374a4dac1e4b676db32" class="no-scaled-link" src="../_images/jw_mapping.png" style="width: 500px;" /></p>
+<p><img alt="3b91b2f414174eb8b2ab03cbc42f9395" class="no-scaled-link" src="../_images/jw_mapping.png" style="width: 500px;" /></p>
 <p>前項で示したハミルトニアンはフェルミオン演算子で表されています。 対象とする問題を量子コンピューターの状態にエンコードするには、これらの演算子をスピン演算子にマッピングする必要があります(実際の量子ビットはスピン統計に従います)。</p>
 <p>異なるプロパティを持つ様々なマッピングの種類が存在します。Qiskitはすでに以下のマッピングをサポートしています。* The Jordan-Wigner ‘jordan_wigner’ マッピング (über das paulische äquivalenzverbot. In The Collected Works of Eugene Paul Wigner (pp. 109-129). Springer, Berlin, Heidelberg (1993)). * The Parity ‘parity’ (The Journal of chemical physics, 137(22), 224109 (2012)) * The Bravyi-Kitaev ‘bravyi_kitaev’ (Annals of Physics, 298(1), 210-226 (2002))</p>
 <p>Jordan-Wignerのマッピングは、特に、各スピンの軌道状態を量子ビットにエンコードするには有用とされています (上記図参照)。</p>
@@ -693,7 +700,7 @@ Couldn&#39;t find cython becke routine
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">qubit_converter</span> <span class="o">=</span> <span class="n">QubitConverter</span><span class="p">(</span><span class="n">mapper</span> <span class="o">=</span> <span class="n">ParityMapper</span><span class="p">(),</span> <span class="n">two_qubit_reduction</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span></span><span class="n">qubit_converter</span> <span class="o">=</span> <span class="n">QubitConverter</span><span class="p">(</span><span class="n">mapper</span><span class="o">=</span><span class="n">ParityMapper</span><span class="p">(),</span> <span class="n">two_qubit_reduction</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">qubit_op</span> <span class="o">=</span> <span class="n">qubit_converter</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">second_q_op</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">num_particles</span><span class="o">=</span><span class="n">es_problem</span><span class="o">.</span><span class="n">num_particles</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">qubit_op</span><span class="p">)</span>
 </pre></div>
@@ -719,6 +726,7 @@ Couldn&#39;t find cython becke routine
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+
 <span class="o">%</span><span class="k">qiskit_version_table</span>
 <span class="o">%</span><span class="k">qiskit_copyright</span>
 </pre></div>
@@ -737,8 +745,8 @@ Couldn&#39;t find cython becke routine
 <div class="output_area rendered_html docutils container">
 <div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2021.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>
