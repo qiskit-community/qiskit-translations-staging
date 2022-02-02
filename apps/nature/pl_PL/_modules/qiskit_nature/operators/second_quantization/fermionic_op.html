@@ -277,7 +277,7 @@
   <h1>Kod źródłowy modułu qiskit_nature.operators.second_quantization.fermionic_op</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2021.</span>
+<span class="c1"># (C) Copyright IBM 2021, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -569,6 +569,8 @@
                     <span class="p">)</span>
                     <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">data</span>
                 <span class="p">]</span>
+                <span class="k">if</span> <span class="n">register_length</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">register_length</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="p">(</span>
@@ -580,14 +582,16 @@
                     <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">data</span>
                 <span class="p">]</span>
 
-            <span class="k">if</span> <span class="n">register_length</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">register_length</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_register_length</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">((</span><span class="n">p</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">l</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_register_length</span> <span class="o">=</span> <span class="n">register_length</span>
 
     <span class="k">def</span> <span class="nf">_substituted_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
-        <span class="n">max_index</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">new_label</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">label</span><span class="p">:</span>
-            <span class="n">max_index</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_index</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot;+&quot;</span><span class="p">:</span>
                 <span class="n">new_label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_FermionLabelPrimitive</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">index</span><span class="p">))</span>
             <span class="k">elif</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span><span class="p">:</span>
@@ -603,7 +607,6 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid label </span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> is given.&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_register_length</span> <span class="o">=</span> <span class="n">max_index</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="n">new_label</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -933,7 +936,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            The zero-operator of the given length.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">FermionicOp</span><span class="p">((</span><span class="s2">&quot;I_0&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">register_length</span><span class="o">=</span><span class="n">register_length</span><span class="p">,</span> <span class="n">display_format</span><span class="o">=</span><span class="s2">&quot;sparse&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">FermionicOp</span><span class="p">((</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">register_length</span><span class="o">=</span><span class="n">register_length</span><span class="p">,</span> <span class="n">display_format</span><span class="o">=</span><span class="s2">&quot;sparse&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="FermionicOp.one"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.one.html#qiskit_nature.operators.second_quantization.FermionicOp.one">[dokumentacja]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">one</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">register_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FermionicOp&quot;</span><span class="p">:</span>
@@ -945,7 +948,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            The unity-operator of the given length.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">FermionicOp</span><span class="p">((</span><span class="s2">&quot;I_0&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="n">register_length</span><span class="o">=</span><span class="n">register_length</span><span class="p">,</span> <span class="n">display_format</span><span class="o">=</span><span class="s2">&quot;sparse&quot;</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">FermionicOp</span><span class="p">((</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="n">register_length</span><span class="o">=</span><span class="n">register_length</span><span class="p">,</span> <span class="n">display_format</span><span class="o">=</span><span class="s2">&quot;sparse&quot;</span><span class="p">)</span></div></div>
 </pre></div>
 
              </article>
