@@ -531,11 +531,11 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">Nota</p>
-<p>This page was generated from <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/12_qaoa_runtime.ipynb">docs/tutorials/12_qaoa_runtime.ipynb</a>.</p>
+<p>Esta página fue generada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/12_qaoa_runtime.ipynb">docs/tutorials/12_qaoa_runtime.ipynb</a>.</p>
 </div>
 <section id="QAOA-Runtime">
 <h1>QAOA Runtime<a class="headerlink" href="#QAOA-Runtime" title="Enlazar permanentemente con este título">¶</a></h1>
-<p>The Qiskit runtime is an execution model that permits us to run an entire program on the backend side. Here, we discuss how to run the QAOA algorithm in the Qiskit runtime. We will discuss several of the features that this first version of the QAOA Runtime makes available.</p>
+<p>El runtime de Qiskit es un modelo de ejecución que nos permite ejecutar un programa completo en el backend. Aquí, discutimos cómo ejecutar el algoritmo QAOA en el runtime de Qiskit. Discutiremos varias de las características que esta primera versión de QAOA Runtime pone a disposición.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -548,9 +548,9 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<section id="Preliminaries">
-<h2>Preliminaries<a class="headerlink" href="#Preliminaries" title="Enlazar permanentemente con este título">¶</a></h2>
-<p>First, we load the program and inspect its arguments to know what inputs it is expecting. We also investigate the return types to understand what will be returned to us. We obtain the QAOA program from the provider as follows.</p>
+<section id="Preliminares">
+<h2>Preliminares<a class="headerlink" href="#Preliminares" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>Primero, cargamos el programa e inspeccionamos sus argumentos para saber qué entradas espera. También investigamos los tipos de retorno para entender qué se nos devolverá. Obtenemos el programa QAOA del proveedor de la siguiente manera.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -560,7 +560,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>The arguments to the runtime are obtained as follows.</p>
+<p>Los argumentos para el runtime se obtienen de la siguiente manera.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -593,31 +593,30 @@ ParameterNamespace (Values):
 | use_swap_s | None         | boolean     | False    | A boolean on whether or not to use swap strategies when transpiling. This flag is set to True by default. If this is False then the standard transpiler with the given optimization level will run. |
 </pre></div></div>
 </div>
-<p>Here, we see the different input arguments which we now elaborate on.</p>
+<p>Aquí, vemos los diferentes argumentos de entrada en los que ahora elaboramos.</p>
 <ul class="simple">
-<li><p><strong>operator</strong> is by far the most important argument since it represent the cost operator that we want to minimize. For QAOA this corresponds to a <code class="docutils literal notranslate"><span class="pre">PauliSumOp</span></code>. Each time there is a quadratic term between two decision variables in the problem we wish to minimize there will be a corresponding <code class="docutils literal notranslate"><span class="pre">ZZ</span></code> term in the <code class="docutils literal notranslate"><span class="pre">PauliSumOp</span></code>. For example, the operator <code class="docutils literal notranslate"><span class="pre">PauliSumOp.from_list([(&quot;ZIZ&quot;,</span> <span class="pre">1),</span> <span class="pre">(&quot;IZZ&quot;,</span> <span class="pre">-1),</span> <span class="pre">(&quot;ZZI&quot;,</span> <span class="pre">1)])</span></code> may correspond to a Maxcut problem on a triangle where one edge has a negative
-weight.</p></li>
-<li><p><strong>optimizer</strong> represents the optimizer used in the closed-loop classical optimization. This will default to SPSA to deal with the noise of the hardware.</p></li>
-<li><p><strong>reps</strong> this integer is the number of QAOA layers.</p></li>
-<li><p><strong>initial_point</strong> is the initial values for <span class="math notranslate nohighlight">\(\gamma\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span>. This is a list given in the following order <span class="math notranslate nohighlight">\([\gamma_1, \beta_1, \gamma_2, \beta_2, ...]\)</span>. The length of this list should therefore be twice the QAOA depth (i.e. the <code class="docutils literal notranslate"><span class="pre">reps</span></code> parameter).</p></li>
-<li><p><strong>shots</strong> is the number of shots to gather for each circuit.</p></li>
-<li><p><strong>alpha</strong> is the <span class="math notranslate nohighlight">\(\alpha\)</span> of the CVaR optimization [1]. If <span class="math notranslate nohighlight">\(\alpha\)</span> is smaller than one then only the best <span class="math notranslate nohighlight">\(\alpha\)</span> fraction of shots will be retained in the optimization, i.e. this corresponds to using <code class="docutils literal notranslate"><span class="pre">CVaRExpectation(alpha,</span> <span class="pre">PauliExpectation())</span></code> which can be found in <code class="docutils literal notranslate"><span class="pre">qiskit.opflow</span></code>.</p></li>
-<li><p><strong>measurement_error_mitigation</strong> determines or not to use readout error mitigation. If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the algorithm used this will employ the <code class="docutils literal notranslate"><span class="pre">TensoredMeasFitter</span></code>.</p></li>
-<li><p>If <strong>use_swap_strategies</strong> is <code class="docutils literal notranslate"><span class="pre">True</span></code> the QAOA program will transpile the QAOA circuit with dedicated swap strategies that take into account the commutative nature of the <code class="docutils literal notranslate"><span class="pre">ZZ</span></code> operators in QAOA and the coupling map of the backend on which the program will run. If this option is False then the QAOA program will default to the standard transpiler with optimization level 1. This optimization level can be chosen using the <strong>optimization_level</strong> input option.</p></li>
-<li><p>If <strong>use_pulse_efficient</strong> is set to <code class="docutils literal notranslate"><span class="pre">True</span></code> then a pulse efficient transpilation will be run at each QAOA iteration [2]. This collects two-qubit blocks and applies Cartan’s KAK decomposition to obtain a <code class="docutils literal notranslate"><span class="pre">RZXGate</span></code> representation of the circuit. Scaled cross-resonance pulses are then used. Further details are given in Appendix A below.</p></li>
-<li><p>If <strong>use_initial_mapping</strong> is <code class="docutils literal notranslate"><span class="pre">True</span></code> then a heuristic algorithm will be run to permute the Pauli operators in the cost operator to better fit the coupling map of the device. This permutation is only applied if the <code class="docutils literal notranslate"><span class="pre">use_swap_strategies</span></code> option is set to <code class="docutils literal notranslate"><span class="pre">True</span></code> and only makes sense for non-fully-connected problems.</p></li>
-<li><p><strong>optimization_level</strong> This is the optimization level of the Qiskit transpiler if swap strategies are not used. The default value is 1.</p></li>
+<li><p><strong>operator</strong> es, con mucho, el argumento más importante, ya que representa el operador de costo que queremos minimizar. Para QAOA, esto corresponde a un <code class="docutils literal notranslate"><span class="pre">PauliSumOp</span></code>. Cada vez que haya un término cuadrático entre dos variables de decisión en el problema que deseamos minimizar, habrá un término <code class="docutils literal notranslate"><span class="pre">ZZ</span></code> correspondiente en el <code class="docutils literal notranslate"><span class="pre">PauliSumOp</span></code>. Por ejemplo, el operador <code class="docutils literal notranslate"><span class="pre">PauliSumOp.from_list([(&quot;ZIZ&quot;,</span> <span class="pre">1),</span> <span class="pre">(&quot;IZZ&quot;,</span> <span class="pre">-1),</span> <span class="pre">(&quot;ZZI&quot;,</span> <span class="pre">1)])</span></code> puede corresponder a un problema de Maxcut sobre un triángulo donde un borde tiene un peso negativo.</p></li>
+<li><p><strong>optimizer</strong> representa el optimizador utilizado en la optimización clásica de ciclo cerrado. Esto se establecerá de forma predeterminada en SPSA para hacer frente al ruido del hardware.</p></li>
+<li><p><strong>reps</strong> este número entero es el número de capas del QAOA.</p></li>
+<li><p><strong>initial_point</strong> son los valores iniciales para <span class="math notranslate nohighlight">\(\gamma\)</span> y <span class="math notranslate nohighlight">\(\beta\)</span>. Esta es una lista en el siguiente orden <span class="math notranslate nohighlight">\([\gamma_1, \beta_1, \gamma_2, \beta_2, ...]\)</span>. Por lo tanto, la longitud de esta lista debe ser el doble de la profundidad de QAOA (es decir, el parámetro <code class="docutils literal notranslate"><span class="pre">reps</span></code>).</p></li>
+<li><p><strong>shots</strong> es el número de iteraciones a ejecutar para cada circuito.</p></li>
+<li><p><strong>alpha</strong> es el <span class="math notranslate nohighlight">\(\alpha\)</span> de la optimización CVaR [1]. Si <span class="math notranslate nohighlight">\(\alpha\)</span> es menor que uno, entonces solo la mejor fracción de <span class="math notranslate nohighlight">\(\alpha\)</span> de iteraciones se retendrá en la optimización, es decir, esto corresponde al uso de <code class="docutils literal notranslate"><span class="pre">CVaRExpectation(alpha,</span> <span class="pre">PauliExpectation())</span></code> que se puede encontrar en <code class="docutils literal notranslate"><span class="pre">qiskit.opflow</span></code>.</p></li>
+<li><p><strong>measurement_error_mitigation</strong> determina si se debe utilizar la mitigación de errores de lectura. Si es <code class="docutils literal notranslate"><span class="pre">True</span></code>, el algoritmo empleado usará el <code class="docutils literal notranslate"><span class="pre">TensoredMeasFitter</span></code>.</p></li>
+<li><p>Si <strong>use_swap_strategies</strong> es <code class="docutils literal notranslate"><span class="pre">True</span></code>, el programa QAOA transpilará el circuito QAOA con estrategias de intercambio dedicadas que tienen en cuenta la naturaleza conmutativa de los operadores <code class="docutils literal notranslate"><span class="pre">ZZ</span></code> en QAOA y el mapa de acoplamiento del backend en el que el programa se ejecutará. Si esta opción es False, entonces el programa QAOA usará por defecto el transpilador estándar con nivel de optimización 1. Este nivel de optimización se puede elegir utilizando la opción de entrada <strong>optimization_level</strong>.</p></li>
+<li><p>Si <strong>use_pulse_efficient</strong> se establece en <code class="docutils literal notranslate"><span class="pre">True</span></code>, se ejecutará una transpilación eficiente en pulsos en cada iteración de QAOA [2]. Esto recopila bloques de dos qubits y aplica la descomposición KAK de Cartan para obtener una representación <code class="docutils literal notranslate"><span class="pre">RZXGate</span></code> del circuito. A continuación, se utilizan pulsos de resonancia cruzada escalados. Se proporcionan más detalles en el Apéndice A más abajo.</p></li>
+<li><p>Si <strong>use_initial_mapping</strong> es <code class="docutils literal notranslate"><span class="pre">True</span></code>, se ejecutará un algoritmo heurístico para permutar los operadores de Pauli en el operador de costos para que se ajuste mejor el mapa de acoplamiento del dispositivo. Esta permutación solo se aplica si la opción <code class="docutils literal notranslate"><span class="pre">use_swap_strategies</span></code> está configurada en <code class="docutils literal notranslate"><span class="pre">True</span></code> y solo tiene sentido para problemas que no están completamente conectados.</p></li>
+<li><p><strong>optimization_level</strong> Este es el nivel de optimización del transpilador Qiskit si no se utilizan estrategias de intercambio. El valor predeterminado es 1.</p></li>
 </ul>
-<section id="References">
-<h3>References<a class="headerlink" href="#References" title="Enlazar permanentemente con este título">¶</a></h3>
+<section id="Referencias">
+<h3>Referencias<a class="headerlink" href="#Referencias" title="Enlazar permanentemente con este título">¶</a></h3>
 <p>[1] P. Kl. Barkoutsos, G. Nannicini, A. Robert, I. Tavernelli, and S. Woerner, <em>Improving Variational Quantum Optimization using CVaR</em>, Quantum <strong>4</strong>, 256 (2020).</p>
 <p>[2] N. Earnest, C. Tornow, and D. J. Egger, <em>Pulse-efficient circuit transpilation for quantum applications on cross-resonance-based hardware</em>, Phys. Rev. Research <strong>3</strong>, 043088 (2021).</p>
 </section>
 </section>
-<section id="Running-the-QAOA-runtime-program">
-<h2>Running the QAOA runtime program<a class="headerlink" href="#Running-the-QAOA-runtime-program" title="Enlazar permanentemente con este título">¶</a></h2>
-<p>We now show how to use the QAOA runtime program with a five qubit example.</p>
-<p>Here, we show how to directly call the program on the cloud. However, Qiskit Optimization provides the <code class="docutils literal notranslate"><span class="pre">QAOAClient</span></code> which seamlessly fits in the Qiskit Optimization workflow and can be used as a direct replacement of your local <code class="docutils literal notranslate"><span class="pre">QAOA</span></code> algorithm. This <code class="docutils literal notranslate"><span class="pre">QAOAClient</span></code> is discussed below in this tutorial.</p>
+<section id="Ejecución-del-programa-QAOA-runtime">
+<h2>Ejecución del programa QAOA runtime<a class="headerlink" href="#Ejecución-del-programa-QAOA-runtime" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>Ahora mostramos cómo usar el programa QAOA runtime con un ejemplo de cinco qubits.</p>
+<p>Aquí, mostramos cómo llamar directamente al programa en la nube. Sin embargo, Qiskit Optimization proporciona el <code class="docutils literal notranslate"><span class="pre">QAOAClient</span></code> que se adapta perfectamente al flujo de trabajo de Qiskit Optimization y se puede utilizar como un reemplazo directo de su algoritmo local de <code class="docutils literal notranslate"><span class="pre">QAOA</span></code>. Este <code class="docutils literal notranslate"><span class="pre">QAOAClient</span></code> se analiza a continuación en este tutorial.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -669,7 +668,7 @@ weight.</p></li>
 </pre></div>
 </div>
 </div>
-<p>Now, we run the program using the provider.</p>
+<p>Ahora, ejecutamos el programa usando el proveedor.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -700,7 +699,7 @@ Job id: c6t07edkoh6fa69ud39g
 Bob status: JobStatus.DONE
 </pre></div></div>
 </div>
-<p>Once the job has successfully executed we can retrieve the result from the job. The result object contains information on the optimization. For self consistency it also contains the inputs to the QAOA program that are accessible through <code class="docutils literal notranslate"><span class="pre">result[&quot;inputs&quot;]</span></code>. The value under <code class="docutils literal notranslate"><span class="pre">&quot;inputs&quot;</span></code> is a dictionary with the keys described above.</p>
+<p>Una vez que el trabajo (job) se ha ejecutado con éxito, podemos recuperar el resultado del trabajo. El objeto de resultado contiene información sobre la optimización. Para mantener la coherencia, también contiene las entradas al programa QAOA a las que se puede acceder a través de <code class="docutils literal notranslate"><span class="pre">result[&quot;inputs&quot;]</span></code>. El valor debajo de <code class="docutils literal notranslate"><span class="pre">&quot;inputs&quot;</span></code> es un diccionario con las claves descritas anteriormente.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -709,7 +708,7 @@ Bob status: JobStatus.DONE
 </pre></div>
 </div>
 </div>
-<p>Of particular interest is the energy that was measured on the hardware at each iteration as well as the returned eigenstate. For this example we assume that the energy of the cost operator that we minimized corresponds to an instance of a MaxCut problem.</p>
+<p>De particular interés es la energía que se midió en el hardware en cada iteración, así como el estado propio devuelto. Para este ejemplo, asumimos que la energía del operador de costo que minimizamos corresponde a una instancia de un problema de MaxCut.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -795,9 +794,9 @@ Text(0, 0.5, &#39;Probability&#39;)
 </div>
 </div>
 </section>
-<section id="Qiskit-optimization">
-<h2>Qiskit optimization<a class="headerlink" href="#Qiskit-optimization" title="Enlazar permanentemente con este título">¶</a></h2>
-<p>The functionality discussed above is implemented in Qiskit-optimization where the QAOA-runtime is accessible through the <code class="docutils literal notranslate"><span class="pre">runtime</span></code> module. We now show how to use this module with the <code class="docutils literal notranslate"><span class="pre">QAOAClient</span></code>.</p>
+<section id="Optimización-de-Qiskit">
+<h2>Optimización de Qiskit<a class="headerlink" href="#Optimización-de-Qiskit" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>La funcionalidad discutida anteriormente se implementa en Qiskit-optimization donde se puede acceder al QAOA-runtime a través del módulo <code class="docutils literal notranslate"><span class="pre">runtime</span></code>. Ahora mostramos cómo usar este módulo con el <code class="docutils literal notranslate"><span class="pre">QAOAClient</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
@@ -877,9 +876,9 @@ status: SUCCESS
 </pre></div></div>
 </div>
 </section>
-<section id="Appendix-A:-Pulse-efficient-transpilation">
-<h2>Appendix A: Pulse-efficient transpilation<a class="headerlink" href="#Appendix-A:-Pulse-efficient-transpilation" title="Enlazar permanentemente con este título">¶</a></h2>
-<p>The QAOA runtime program can leverage a pulse-efficient transpilation which minimizes the number of single-qubit pulses and makes use of the cross-resonance scaling methodology applicable to the echoed-cross-resonance gates of IBM Quantum Systems. For completeness we here show the pass manager that is implemented.</p>
+<section id="Apéndice-A:-Transpilación-con-pulso-eficiente">
+<h2>Apéndice A: Transpilación con pulso eficiente<a class="headerlink" href="#Apéndice-A:-Transpilación-con-pulso-eficiente" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>El programa de QAOA runtime puede aprovechar una transpilación con pulso eficiente la cual minimiza el número de pulsos de un solo qubit y hace uso de la metodología de escalado de resonancia cruzada aplicable a las compuertas de resonancia cruzada con eco de IBM Quantum Systems. Para completar, aquí mostramos el administrador de pases que está implementado.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
@@ -912,7 +911,7 @@ status: SUCCESS
 </pre></div>
 </div>
 </div>
-<p>The pulse efficient pass is implemented using transpiler passes from qiskit. It requires knowledge of the pulse-enabled backend to attached scaled cross-resonance gates to the <code class="docutils literal notranslate"><span class="pre">RZXGate</span></code>s obtained from the KAK decomposition. These scaled gates are based on the schedules of the calibrated CNOT gates.</p>
+<p>El pase de pulso eficiente se implementa utilizando pases de transpilador de Qiskit. Requiere conocimiento del backend habilitado por pulsos para las compuertas de resonancia cruzada escaladas adjuntas a las <code class="docutils literal notranslate"><span class="pre">RZXGate</span></code>s obtenidas de la descomposición KAK. Estas compuertas escaladas se basan en las planeaciones (schedules) de las compuertas CNOT calibradas.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
@@ -937,7 +936,7 @@ status: SUCCESS
 </pre></div>
 </div>
 </div>
-<p>To demonstrate the pass we construct an arbitrary circuit with blocks of two-qubit gates.</p>
+<p>Para demostrar el pase, construimos un circuito arbitrario con bloques de compuertas de dos qubits.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
@@ -1051,13 +1050,13 @@ status: SUCCESS
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
 <li><a class="reference internal" href="#">QAOA Runtime</a><ul>
-<li><a class="reference internal" href="#Preliminaries">Preliminaries</a><ul>
-<li><a class="reference internal" href="#References">References</a></li>
+<li><a class="reference internal" href="#Preliminares">Preliminares</a><ul>
+<li><a class="reference internal" href="#Referencias">Referencias</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#Running-the-QAOA-runtime-program">Running the QAOA runtime program</a></li>
-<li><a class="reference internal" href="#Qiskit-optimization">Qiskit optimization</a></li>
-<li><a class="reference internal" href="#Appendix-A:-Pulse-efficient-transpilation">Appendix A: Pulse-efficient transpilation</a></li>
+<li><a class="reference internal" href="#Ejecución-del-programa-QAOA-runtime">Ejecución del programa QAOA runtime</a></li>
+<li><a class="reference internal" href="#Optimización-de-Qiskit">Optimización de Qiskit</a></li>
+<li><a class="reference internal" href="#Apéndice-A:-Transpilación-con-pulso-eficiente">Apéndice A: Transpilación con pulso eficiente</a></li>
 </ul>
 </li>
 </ul>
