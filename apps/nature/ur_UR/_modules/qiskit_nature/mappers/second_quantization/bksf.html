@@ -363,6 +363,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">sparse_pauli</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">ferm_op</span><span class="o">.</span><span class="n">to_list</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">_operator_coefficient</span><span class="p">(</span><span class="n">term</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">continue</span>
         <span class="n">term_type</span><span class="p">,</span> <span class="n">facs</span> <span class="o">=</span> <span class="n">_analyze_term</span><span class="p">(</span><span class="n">_operator_string</span><span class="p">(</span><span class="n">term</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">facs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span><span class="p">:</span>  <span class="c1"># keep only one of h.c. pair</span>
             <span class="k">continue</span>
@@ -404,6 +406,8 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown interaction: &quot;</span><span class="p">,</span> <span class="n">term_type</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">sparse_pauli</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sparse_pauli</span> <span class="o">=</span> <span class="n">_pauli_id</span><span class="p">(</span><span class="n">edge_list</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">complex</span><span class="p">(</span><span class="mf">0.0</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">sparse_pauli</span>
 
 
@@ -455,9 +459,13 @@
     <span class="k">return</span> <span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">_pauli_id</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparsePauliOp</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_pauli_id</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">coeff</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparsePauliOp</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Return the identity for `SparsePauliOp` on `n_qubits` qubits.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">SparsePauliOp</span><span class="p">(</span><span class="n">Pauli</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">))))</span>
+    <span class="k">if</span> <span class="n">coeff</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">SparsePauliOp</span><span class="p">(</span>
+        <span class="n">Pauli</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">))),</span> <span class="p">[</span><span class="n">coeff</span><span class="p">]</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_number_operator</span><span class="p">(</span>  <span class="c1"># pylint: disable=invalid-name</span>
@@ -677,7 +685,7 @@
     <span class="sd">&quot;&quot;&quot;Return a `TermType` instance describing the type of interaction given the number of</span>
 <span class="sd">    number, raising, and lowering operators.</span>
 
-<span class="sd">    The number number operators must be 1 or 2. The number of raising operators</span>
+<span class="sd">    The number of number operators must be 1 or 2. The number of raising operators</span>
 <span class="sd">    must be equal to 0, 1 or 2, and the number of raising operators must be equal</span>
 <span class="sd">    to the number of lowering operators.</span>
 
@@ -725,7 +733,8 @@
     <span class="n">n_modes</span> <span class="o">=</span> <span class="n">fer_op</span><span class="o">.</span><span class="n">register_length</span>
     <span class="n">edge_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_modes</span><span class="p">,</span> <span class="n">n_modes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">fer_op</span><span class="o">.</span><span class="n">to_list</span><span class="p">():</span>
-        <span class="n">_add_edges_for_term</span><span class="p">(</span><span class="n">edge_matrix</span><span class="p">,</span> <span class="n">_operator_string</span><span class="p">(</span><span class="n">term</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">_operator_coefficient</span><span class="p">(</span><span class="n">term</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">_add_edges_for_term</span><span class="p">(</span><span class="n">edge_matrix</span><span class="p">,</span> <span class="n">_operator_string</span><span class="p">(</span><span class="n">term</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">edge_matrix</span>
 
 
