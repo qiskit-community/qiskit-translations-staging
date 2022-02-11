@@ -538,16 +538,16 @@ div.rendered_html tbody tr:hover {
 <section id="Introduction">
 <h2>Introduction<a class="headerlink" href="#Introduction" title="Hivatkozás erre a fejezetcímre">¶</a></h2>
 <p>An interesting class of optimization problems to be addressed by quantum computing are Quadratic Unconstrained Binary Optimization (QUBO) problems. Finding the solution to a QUBO is equivalent to finding the ground state of a corresponding Ising Hamiltonian, which is an important problem not only in optimization, but also in quantum chemistry and physics. For this translation, the binary variables taking values in <span class="math notranslate nohighlight">\(\{0, 1\}\)</span> are replaced by spin variables taking values in
-<span class="math notranslate nohighlight">\(\{-1, +1\}\)</span>, which allows to replace the resulting spin variables by Pauli Z matrices, and thus, an Ising Hamiltonian. For more details on this mapping we refer to [1].</p>
-<p>Qiskit provides automatic conversion from a suitable <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> to an Ising Hamiltonian, which then allows to leverage all the <code class="docutils literal notranslate"><span class="pre">MinimumEigenSolver</span></code> such as</p>
+<span class="math notranslate nohighlight">\(\{-1, +1\}\)</span>, which allows one to replace the resulting spin variables by Pauli Z matrices, and thus, an Ising Hamiltonian. For more details on this mapping we refer to [1].</p>
+<p>Qiskit provides automatic conversion from a suitable <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> to an Ising Hamiltonian, which then allows leveraging all the <code class="docutils literal notranslate"><span class="pre">MinimumEigenSolver</span></code> implementations, such as</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">VQE</span></code>,</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">QAOA</span></code>, or</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NumpyMinimumEigensolver</span></code> (classical exact method).</p></li>
 </ul>
-<p>Qiskit wraps the translation to an Ising Hamiltonian (in Qiskit Aqua also called <code class="docutils literal notranslate"><span class="pre">Operator</span></code>), the call to an <code class="docutils literal notranslate"><span class="pre">MinimumEigensolver</span></code> as well as the translation of the results back to <code class="docutils literal notranslate"><span class="pre">OptimizationResult</span></code> in the <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code>.</p>
-<p>In the following we first illustrate the conversion from a <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> to an <code class="docutils literal notranslate"><span class="pre">Operator</span></code> and then show how to use the <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> with different <code class="docutils literal notranslate"><span class="pre">MinimumEigensolver</span></code> to solve a given <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code>. The algorithms in Qiskit automatically try to convert a given problem to the supported problem class if possible, for instance, the <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> will automatically translate integer variables to binary variables or add a linear equality constraints as a
-quadratic penalty term to the objective. It should be mentioned that Aqua will through a <code class="docutils literal notranslate"><span class="pre">QiskitOptimizationError</span></code> if conversion of a quadratic program with integer variable is attempted.</p>
+<p>Qiskit Optimization provides a the <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> class, which wraps the translation to an Ising Hamiltonian (in Qiskit Terra also called <code class="docutils literal notranslate"><span class="pre">Operator</span></code>), the call to a <code class="docutils literal notranslate"><span class="pre">MinimumEigensolver</span></code>, and the translation of the results back to an <code class="docutils literal notranslate"><span class="pre">OptimizationResult</span></code>.</p>
+<p>In the following we first illustrate the conversion from a <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> to an <code class="docutils literal notranslate"><span class="pre">Operator</span></code> and then show how to use the <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> with different <code class="docutils literal notranslate"><span class="pre">MinimumEigensolver</span></code>s to solve a given <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code>. The algorithms in Qiskit automatically try to convert a given problem to the supported problem class if possible, for instance, the <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> will automatically translate integer variables to binary variables or add linear equality constraints as a
+quadratic penalty term to the objective. It should be mentioned that a <code class="docutils literal notranslate"><span class="pre">QiskitOptimizationError</span></code> will be thrown if conversion of a quadratic program with integer variables is attempted.</p>
 <p>The circuit depth of <code class="docutils literal notranslate"><span class="pre">QAOA</span></code> potentially has to be increased with the problem size, which might be prohibitive for near-term quantum devices. A possible workaround is Recursive QAOA, as introduced in [2]. Qiskit generalizes this concept to the <code class="docutils literal notranslate"><span class="pre">RecursiveMinimumEigenOptimizer</span></code>, which is introduced at the end of this tutorial.</p>
 <section id="References">
 <h3>References<a class="headerlink" href="#References" title="Hivatkozás erre a fejezetcímre">¶</a></h3>
@@ -615,7 +615,7 @@ End
 
 </pre></div></div>
 </div>
-<p>Next we translate this QUBO into an Ising operator. This results not only in an <code class="docutils literal notranslate"><span class="pre">Operator</span></code> but also in a constant offset to be taking into account to shift the resulting value.</p>
+<p>Next we translate this QUBO into an Ising operator. This results not only in an <code class="docutils literal notranslate"><span class="pre">Operator</span></code> but also in a constant offset to be taken into account to shift the resulting value.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
@@ -642,7 +642,7 @@ operator:
 + 0.25 * IZZ
 </pre></div></div>
 </div>
-<p>Sometimes an <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> might also directly be given in the form of an <code class="docutils literal notranslate"><span class="pre">Operator</span></code>. For such cases, Qiskit also provides a converter from an <code class="docutils literal notranslate"><span class="pre">Operator</span></code> back to a <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code>, which we illustrate in the following.</p>
+<p>Sometimes a <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> might also directly be given in the form of an <code class="docutils literal notranslate"><span class="pre">Operator</span></code>. For such cases, Qiskit also provides a translator from an <code class="docutils literal notranslate"><span class="pre">Operator</span></code> back to a <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code>, which we illustrate in the following.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
@@ -677,7 +677,7 @@ End
 
 </pre></div></div>
 </div>
-<p>This converter allows, for instance, to translate an <code class="docutils literal notranslate"><span class="pre">Operator</span></code> to a <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> and then solve the problem with other algorithms that are not based on the Ising Hamiltonian representation, such as the <code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code>.</p>
+<p>This translator allows, for instance, one to translate an <code class="docutils literal notranslate"><span class="pre">Operator</span></code> to a <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> and then solve the problem with other algorithms that are not based on the Ising Hamiltonian representation, such as the <code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code>.</p>
 </section>
 <section id="Solving-a-QUBO-with-the-MinimumEigenOptimizer">
 <h2>Solving a QUBO with the MinimumEigenOptimizer<a class="headerlink" href="#Solving-a-QUBO-with-the-MinimumEigenOptimizer" title="Hivatkozás erre a fejezetcímre">¶</a></h2>
@@ -749,7 +749,8 @@ status: SUCCESS
 </div>
 <section id="Analysis-of-Samples">
 <h3>Analysis of Samples<a class="headerlink" href="#Analysis-of-Samples" title="Hivatkozás erre a fejezetcímre">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">OptimizationResult</span></code> provides a useful information source <code class="docutils literal notranslate"><span class="pre">SolutionSample</span></code> (here denoted as <em>samples</em>). They contain information about input values <code class="docutils literal notranslate"><span class="pre">x</span></code>, objective function values <code class="docutils literal notranslate"><span class="pre">fval</span></code>, probability of obtaining that result <code class="docutils literal notranslate"><span class="pre">probability</span></code> and the solution status <code class="docutils literal notranslate"><span class="pre">status</span></code> (<code class="docutils literal notranslate"><span class="pre">SUCCESS</span></code>, <code class="docutils literal notranslate"><span class="pre">FAILURE</span></code>, <code class="docutils literal notranslate"><span class="pre">INFEASIBLE</span></code>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">OptimizationResult</span></code> provides useful information in the form of <code class="docutils literal notranslate"><span class="pre">SolutionSample</span></code>s (here denoted as <em>samples</em>). Each <code class="docutils literal notranslate"><span class="pre">SolutionSample</span></code> contains information about the input values (<code class="docutils literal notranslate"><span class="pre">x</span></code>), the corresponding objective function value (<code class="docutils literal notranslate"><span class="pre">fval</span></code>), the fraction of samples corresponding to that input (<code class="docutils literal notranslate"><span class="pre">probability</span></code>), and the solution <code class="docutils literal notranslate"><span class="pre">status</span></code> (<code class="docutils literal notranslate"><span class="pre">SUCCESS</span></code>, <code class="docutils literal notranslate"><span class="pre">FAILURE</span></code>, <code class="docutils literal notranslate"><span class="pre">INFEASIBLE</span></code>). Multiple samples corresponding to the same input are consolidated into a single <code class="docutils literal notranslate"><span class="pre">SolutionSample</span></code> (with its
+<code class="docutils literal notranslate"><span class="pre">probability</span></code> attribute being the aggregate fraction of samples represented by that <code class="docutils literal notranslate"><span class="pre">SolutionSample</span></code>).</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
@@ -866,7 +867,7 @@ SolutionSample(x=array([1., 1., 1.]), fval=4.0, probability=0.12499999999999994,
 1.9364916731037085
 </pre></div></div>
 </div>
-<p>Finally, despite all number-crunching, visualization is usually the best early-analysis approach.</p>
+<p>Finally, despite all the number-crunching, visualization is usually the best early-analysis approach.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
 </pre></div>
@@ -916,7 +917,7 @@ SolutionSample(x=array([1., 1., 1.]), fval=4.0, probability=0.12499999999999994,
 <section id="RecursiveMinimumEigenOptimizer">
 <h2>RecursiveMinimumEigenOptimizer<a class="headerlink" href="#RecursiveMinimumEigenOptimizer" title="Hivatkozás erre a fejezetcímre">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">RecursiveMinimumEigenOptimizer</span></code> takes a <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> as input and applies the recursive optimization scheme to reduce the size of the problem one variable at a time. Once the size of the generated intermediate problem is below a given threshold (<code class="docutils literal notranslate"><span class="pre">min_num_vars</span></code>), the <code class="docutils literal notranslate"><span class="pre">RecursiveMinimumEigenOptimizer</span></code> uses another solver (<code class="docutils literal notranslate"><span class="pre">min_num_vars_optimizer</span></code>), e.g., an exact classical solver such as CPLEX or the <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> based on the <code class="docutils literal notranslate"><span class="pre">NumPyMinimumEigensolver</span></code>.</p>
-<p>In the following, we show how to use the <code class="docutils literal notranslate"><span class="pre">RecursiveMinimumEigenOptimizer</span></code> using the two <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> introduced before.</p>
+<p>In the following, we show how to use the <code class="docutils literal notranslate"><span class="pre">RecursiveMinimumEigenOptimizer</span></code> using the two <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code>s introduced before.</p>
 <p>First, we construct the <code class="docutils literal notranslate"><span class="pre">RecursiveMinimumEigenOptimizer</span></code> such that it reduces the problem size from 3 variables to 1 variable and then uses the exact solver for the last variable. Then we call <code class="docutils literal notranslate"><span class="pre">solve</span></code> to optimize the considered problem.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
