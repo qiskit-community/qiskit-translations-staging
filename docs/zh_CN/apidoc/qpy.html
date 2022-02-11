@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>QPY serialization (qiskit.circuit.qpy_serialization) &mdash; Qiskit 0.34.1 文档</title>
+  <title>QPY serialization (qiskit.circuit.qpy_serialization) &mdash; Qiskit 0.34.2 文档</title>
   
 
   
@@ -418,11 +418,61 @@ Each individual circuit is composed of the following parts:</p>
 <p>There is a circuit payload for each circuit (where the total number is dictated
 by <code class="docutils literal notranslate"><span class="pre">num_circuits</span></code> in the file header). There is no padding between the
 circuits in the data.</p>
+<div class="section" id="version-4">
+<span id="qpy-version-4"></span><h3>Version 4<a class="headerlink" href="#version-4" title="永久链接至标题">¶</a></h3>
+<p>Version 4 is identical to <a class="reference internal" href="#qpy-version-3"><span class="std std-ref">Version 3</span></a> except that it adds 2 new type strings
+to the INSTRUCTION_PARAM struct, <code class="docutils literal notranslate"><span class="pre">z</span></code> to represent <code class="docutils literal notranslate"><span class="pre">None</span></code> (which is encoded as
+no data), <code class="docutils literal notranslate"><span class="pre">q</span></code> to represent a <a class="reference internal" href="../stubs/qiskit.circuit.QuantumCircuit.html#qiskit.circuit.QuantumCircuit" title="qiskit.circuit.QuantumCircuit"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a> (which is encoded as
+a QPY circuit), <code class="docutils literal notranslate"><span class="pre">r</span></code> to represent a <code class="docutils literal notranslate"><span class="pre">range</span></code> of integers (which is encoded as
+a <a class="reference internal" href="#qpy-range-pack"><span class="std std-ref">RANGE</span></a>), and <code class="docutils literal notranslate"><span class="pre">t</span></code> to represent a <code class="docutils literal notranslate"><span class="pre">tuple</span></code> (which is encoded as
+defined by <a class="reference internal" href="#qpy-tuple"><span class="std std-ref">TUPLE</span></a>). Additionally, version 4 changes the type of register
+index mapping array from <code class="docutils literal notranslate"><span class="pre">uint32_t</span></code> to <code class="docutils literal notranslate"><span class="pre">int64_t</span></code>. If the values of any of the
+array elements are negative they represent a register bit that is not present in the
+circuit.</p>
+<p>The <a class="reference internal" href="#qpy-registers"><span class="std std-ref">REGISTERS</span></a> header format has also been updated to</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">type</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">_Bool</span><span class="w"> </span><span class="n">standalone</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">size</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">name_size</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">_bool</span><span class="w"> </span><span class="n">in_circuit</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>which just adds the <code class="docutils literal notranslate"><span class="pre">in_circuit</span></code> field which represents whether the register is
+part of the circuit or not.</p>
+<div class="section" id="range">
+<span id="qpy-range-pack"></span><h4>RANGE<a class="headerlink" href="#range" title="永久链接至标题">¶</a></h4>
+<p>A RANGE is a representation of a <code class="docutils literal notranslate"><span class="pre">range</span></code> object. It is defined as:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int64_t</span><span class="w"> </span><span class="n">start</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int64_t</span><span class="w"> </span><span class="n">stop</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int64_t</span><span class="w"> </span><span class="n">step</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="tuple">
+<span id="qpy-tuple"></span><h4>TUPLE<a class="headerlink" href="#tuple" title="永久链接至标题">¶</a></h4>
+<p>A TUPLE is a reprentation of a <code class="docutils literal notranslate"><span class="pre">tuple</span></code> object. As tuples are just fixed length
+containers of arbitrary python objects their QPY can’t fully represent any tuple,
+but as long as the contents in a tuple are other QPY serializable types for
+the INSTRUCTION_PARAM payload the <code class="docutils literal notranslate"><span class="pre">tuple</span></code> object can be serialized.</p>
+<p>A tuple instruction parameter starts with a header defined as:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">size</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>followed by <code class="docutils literal notranslate"><span class="pre">size</span></code> elements that are INSTRUCTION_PARAM payloads, where each of
+these define an element in the tuple.</p>
+</div>
+</div>
 <div class="section" id="version-3">
-<span id="id2"></span><h3>Version 3<a class="headerlink" href="#version-3" title="永久链接至标题">¶</a></h3>
-<p>Version 3 of the QPY format is identical to <a class="reference internal" href="#version-2"><span class="std std-ref">Version 2</span></a> except that it defines
+<span id="qpy-version-3"></span><h3>Version 3<a class="headerlink" href="#version-3" title="永久链接至标题">¶</a></h3>
+<p>Version 3 of the QPY format is identical to <a class="reference internal" href="#qpy-version-2"><span class="std std-ref">Version 2</span></a> except that it defines
 a struct format to represent a <a class="reference internal" href="../stubs/qiskit.circuit.library.PauliEvolutionGate.html#qiskit.circuit.library.PauliEvolutionGate" title="qiskit.circuit.library.PauliEvolutionGate"><code class="xref py py-class docutils literal notranslate"><span class="pre">PauliEvolutionGate</span></code></a>
-natively in QPY. To accomplish this the <a class="reference internal" href="#custom-definition"><span class="std std-ref">CUSTOM_DEFINITIONS</span></a> struct now supports
+natively in QPY. To accomplish this the <a class="reference internal" href="#qpy-custom-definition"><span class="std std-ref">CUSTOM_DEFINITIONS</span></a> struct now supports
 a new type value <code class="docutils literal notranslate"><span class="pre">'p'</span></code> to represent a <a class="reference internal" href="../stubs/qiskit.circuit.library.PauliEvolutionGate.html#qiskit.circuit.library.PauliEvolutionGate" title="qiskit.circuit.library.PauliEvolutionGate"><code class="xref py py-class docutils literal notranslate"><span class="pre">PauliEvolutionGate</span></code></a>.
 Enties in the custom instructions tables have unique name generated that start with the
 string <code class="docutils literal notranslate"><span class="pre">&quot;###PauliEvolutionGate_&quot;</span></code> followed by a uuid string. This gate name is reservered
@@ -441,36 +491,36 @@ as follows:</p>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
-<p>This is immediately followed by <code class="docutils literal notranslate"><span class="pre">operator_count</span></code> elements defined by the <a class="reference internal" href="#pauli-sum-op"><span class="std std-ref">SPARSE_PAULI_OP_LIST_ELEM</span></a>
+<p>This is immediately followed by <code class="docutils literal notranslate"><span class="pre">operator_count</span></code> elements defined by the <a class="reference internal" href="#qpy-pauli-sum-op"><span class="std std-ref">SPARSE_PAULI_OP_LIST_ELEM</span></a>
 payload.  Following that we have <code class="docutils literal notranslate"><span class="pre">time_size</span></code> bytes representing the <code class="docutils literal notranslate"><span class="pre">time</span></code> attribute. If
 <code class="docutils literal notranslate"><span class="pre">standalone_op</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code> then there must only be a single operator. The
 encoding of these bytes is determined by the value of <code class="docutils literal notranslate"><span class="pre">time_type</span></code>. Possible values of
 <code class="docutils literal notranslate"><span class="pre">time_type</span></code> are <code class="docutils literal notranslate"><span class="pre">'f'</span></code>, <code class="docutils literal notranslate"><span class="pre">'p'</span></code>, and <code class="docutils literal notranslate"><span class="pre">'e'</span></code>. If <code class="docutils literal notranslate"><span class="pre">time_type</span></code> is <code class="docutils literal notranslate"><span class="pre">'f'</span></code> it’s a double,
 <code class="docutils literal notranslate"><span class="pre">'p'</span></code> defines a <a class="reference internal" href="../stubs/qiskit.circuit.Parameter.html#qiskit.circuit.Parameter" title="qiskit.circuit.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> object  which is represented by a
-<a class="reference internal" href="#param-struct"><span class="std std-ref">PARAMETER</span></a>, <code class="docutils literal notranslate"><span class="pre">e</span></code> defines a <a class="reference internal" href="../stubs/qiskit.circuit.ParameterExpression.html#qiskit.circuit.ParameterExpression" title="qiskit.circuit.ParameterExpression"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterExpression</span></code></a> object
-(that’s not a <a class="reference internal" href="../stubs/qiskit.circuit.Parameter.html#qiskit.circuit.Parameter" title="qiskit.circuit.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>) which is represented by a <a class="reference internal" href="#param-expr"><span class="std std-ref">PARAMETER_EXPR</span></a>.
+<a class="reference internal" href="#qpy-param-struct"><span class="std std-ref">PARAMETER</span></a>, <code class="docutils literal notranslate"><span class="pre">e</span></code> defines a <a class="reference internal" href="../stubs/qiskit.circuit.ParameterExpression.html#qiskit.circuit.ParameterExpression" title="qiskit.circuit.ParameterExpression"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterExpression</span></code></a> object
+(that’s not a <a class="reference internal" href="../stubs/qiskit.circuit.Parameter.html#qiskit.circuit.Parameter" title="qiskit.circuit.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>) which is represented by a <a class="reference internal" href="#qpy-param-expr"><span class="std std-ref">PARAMETER_EXPR</span></a>.
 Following that is <code class="docutils literal notranslate"><span class="pre">synthesis_size</span></code> bytes which is a utf8 encoded json payload representing
 the <a class="reference internal" href="../stubs/qiskit.synthesis.EvolutionSynthesis.html#qiskit.synthesis.EvolutionSynthesis" title="qiskit.synthesis.EvolutionSynthesis"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvolutionSynthesis</span></code></a> class used by the gate.</p>
 </div>
 <div class="section" id="sparse-pauli-op-list-elem">
-<span id="pauli-sum-op"></span><h4>SPARSE_PAULI_OP_LIST_ELEM<a class="headerlink" href="#sparse-pauli-op-list-elem" title="永久链接至标题">¶</a></h4>
+<span id="qpy-pauli-sum-op"></span><h4>SPARSE_PAULI_OP_LIST_ELEM<a class="headerlink" href="#sparse-pauli-op-list-elem" title="永久链接至标题">¶</a></h4>
 <p>This represents an instance of <a class="reference internal" href="../stubs/qiskit.opflow.primitive_ops.PauliSumOp.html#qiskit.opflow.primitive_ops.PauliSumOp" title="qiskit.opflow.primitive_ops.PauliSumOp"><code class="xref py py-class docutils literal notranslate"><span class="pre">PauliSumOp</span></code></a>.</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">pauli_op_size</span><span class="p">;</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
-<p>which is immediately followed by <code class="docutils literal notranslate"><span class="pre">pauli_op_size</span></code> bytes which are .npy format <a class="footnote-reference brackets" href="#f2" id="id3">2</a>
+<p>which is immediately followed by <code class="docutils literal notranslate"><span class="pre">pauli_op_size</span></code> bytes which are .npy format <a class="footnote-reference brackets" href="#f2" id="id2">2</a>
 data which represents the <a class="reference internal" href="../stubs/qiskit.quantum_info.SparsePauliOp.html#qiskit.quantum_info.SparsePauliOp" title="qiskit.quantum_info.SparsePauliOp"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparsePauliOp</span></code></a>.</p>
 <p>Version 3 of the QPY format also defines a struct format to represent a
 <code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterVectorElement</span></code> as a distinct subclass from
 a <a class="reference internal" href="../stubs/qiskit.circuit.Parameter.html#qiskit.circuit.Parameter" title="qiskit.circuit.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>. This adds a new parameter type char <code class="docutils literal notranslate"><span class="pre">'v'</span></code>
 to represent a <code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterVectorElement</span></code> which is now
 supported as a type string value for an INSTRUCTION_PARAM. The payload for these
-parameters are defined below as <a class="reference internal" href="#param-vector"><span class="std std-ref">PARAMETER_VECTOR_ELEMENT</span></a>.</p>
+parameters are defined below as <a class="reference internal" href="#qpy-param-vector"><span class="std std-ref">PARAMETER_VECTOR_ELEMENT</span></a>.</p>
 </div>
 <div class="section" id="parameter-vector-element">
-<span id="param-vector"></span><h4>PARAMETER_VECTOR_ELEMENT<a class="headerlink" href="#parameter-vector-element" title="永久链接至标题">¶</a></h4>
+<span id="qpy-param-vector"></span><h4>PARAMETER_VECTOR_ELEMENT<a class="headerlink" href="#parameter-vector-element" title="永久链接至标题">¶</a></h4>
 <p>A PARAMETER_VECTOR_ELEMENT represents a <code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterVectorElement</span></code>
 object the data for a INSTRUCTION_PARAM. The contents of the PARAMETER_VECTOR_ELEMENT are
 defined as:</p>
@@ -486,12 +536,12 @@ defined as:</p>
 the parameter’s vector name.</p>
 </div>
 <div class="section" id="parameter-expr">
-<span id="param-expr-v3"></span><h4>PARAMETER_EXPR<a class="headerlink" href="#parameter-expr" title="永久链接至标题">¶</a></h4>
+<span id="qpy-param-expr-v3"></span><h4>PARAMETER_EXPR<a class="headerlink" href="#parameter-expr" title="永久链接至标题">¶</a></h4>
 <p>Additionally, since QPY format version v3 distinguishes between a
 <a class="reference internal" href="../stubs/qiskit.circuit.Parameter.html#qiskit.circuit.Parameter" title="qiskit.circuit.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> and <code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterVectorElement</span></code>
 the payload for a <a class="reference internal" href="../stubs/qiskit.circuit.ParameterExpression.html#qiskit.circuit.ParameterExpression" title="qiskit.circuit.ParameterExpression"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterExpression</span></code></a> needs to be updated
 to distinguish between the types. The following is the modified payload format
-which is mostly identical to the format in Version 1 and <a class="reference internal" href="#version-2"><span class="std std-ref">Version 2</span></a> but just
+which is mostly identical to the format in Version 1 and <a class="reference internal" href="#qpy-version-2"><span class="std std-ref">Version 2</span></a> but just
 modifies the <code class="docutils literal notranslate"><span class="pre">map_elements</span></code> struct to include a symbol type field.</p>
 <p>A PARAMETER_EXPR represents a <a class="reference internal" href="../stubs/qiskit.circuit.ParameterExpression.html#qiskit.circuit.ParameterExpression" title="qiskit.circuit.ParameterExpression"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterExpression</span></code></a>
 object that the data for an INSTRUCTION_PARAM. The contents of a PARAMETER_EXPR
@@ -517,9 +567,9 @@ parameter expression. Following that is a symbol map which contains
 for the element. If it’s <code class="docutils literal notranslate"><span class="pre">p</span></code> it represents a <a class="reference internal" href="../stubs/qiskit.circuit.Parameter.html#qiskit.circuit.Parameter" title="qiskit.circuit.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>
 and if it’s <code class="docutils literal notranslate"><span class="pre">v</span></code> it represents a <code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterVectorElement</span></code>.
 The map element struct is immediately followed by the symbol map key payload, if
-<code class="docutils literal notranslate"><span class="pre">symbol_type</span></code> is <code class="docutils literal notranslate"><span class="pre">p</span></code> then it is followed immediately by a <a class="reference internal" href="#param-struct"><span class="std std-ref">PARAMETER</span></a>
+<code class="docutils literal notranslate"><span class="pre">symbol_type</span></code> is <code class="docutils literal notranslate"><span class="pre">p</span></code> then it is followed immediately by a <a class="reference internal" href="#qpy-param-struct"><span class="std std-ref">PARAMETER</span></a>
 object (both the struct and utf8 name bytes) and if <code class="docutils literal notranslate"><span class="pre">symbol_type</span></code> is <code class="docutils literal notranslate"><span class="pre">v</span></code>
-then the struct is imediately followed by <a class="reference internal" href="#param-vector"><span class="std std-ref">PARAMETER_VECTOR_ELEMENT</span></a> (both the struct
+then the struct is imediately followed by <a class="reference internal" href="#qpy-param-vector"><span class="std std-ref">PARAMETER_VECTOR_ELEMENT</span></a> (both the struct
 and utf8 name bytes). That is followed by <code class="docutils literal notranslate"><span class="pre">size</span></code> bytes for the
 data of the symbol. The data format is dependent on the value of <code class="docutils literal notranslate"><span class="pre">type</span></code>. If
 <code class="docutils literal notranslate"><span class="pre">type</span></code> is <code class="docutils literal notranslate"><span class="pre">p</span></code> then it represents a <a class="reference internal" href="../stubs/qiskit.circuit.Parameter.html#qiskit.circuit.Parameter" title="qiskit.circuit.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> and
@@ -528,14 +578,14 @@ size will be 0, the value will just be the same as the key. Similarly if the
 and size will be 0 as the value will just be the same as the key. If
 <code class="docutils literal notranslate"><span class="pre">type</span></code> is <code class="docutils literal notranslate"><span class="pre">f</span></code> then it represents a double precision float. If <code class="docutils literal notranslate"><span class="pre">type</span></code> is
 <code class="docutils literal notranslate"><span class="pre">c</span></code> it represents a double precision complex, which is represented by the
-<a class="reference internal" href="#complex"><span class="std std-ref">COMPLEX</span></a>. Finally, if type is <code class="docutils literal notranslate"><span class="pre">i</span></code> it represents an integer which is an
+<a class="reference internal" href="#qpy-complex"><span class="std std-ref">COMPLEX</span></a>. Finally, if type is <code class="docutils literal notranslate"><span class="pre">i</span></code> it represents an integer which is an
 <code class="docutils literal notranslate"><span class="pre">int64_t</span></code>.</p>
 </div>
 </div>
 <div class="section" id="version-2">
-<span id="id4"></span><h3>Version 2<a class="headerlink" href="#version-2" title="永久链接至标题">¶</a></h3>
+<span id="qpy-version-2"></span><h3>Version 2<a class="headerlink" href="#version-2" title="永久链接至标题">¶</a></h3>
 <p>Version 2 of the QPY format is identical to version 1 except for the HEADER
-section is slightly different. You can refer to the <a class="reference internal" href="#version-1"><span class="std std-ref">Version 1</span></a> section
+section is slightly different. You can refer to the <a class="reference internal" href="#qpy-version-1"><span class="std std-ref">Version 1</span></a> section
 for the details on the rest of the payload format.</p>
 <div class="section" id="header">
 <h4>HEADER<a class="headerlink" href="#header" title="永久链接至标题">¶</a></h4>
@@ -565,9 +615,9 @@ object  which is represented by a PARAM struct (see below), <code class="docutil
 </div>
 </div>
 <div class="section" id="version-1">
-<span id="id5"></span><h3>Version 1<a class="headerlink" href="#version-1" title="永久链接至标题">¶</a></h3>
-<div class="section" id="id6">
-<h4>HEADER<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h4>
+<span id="qpy-version-1"></span><h3>Version 1<a class="headerlink" href="#version-1" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id3">
+<h4>HEADER<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h4>
 <p>The contents of HEADER as defined as a C struct are:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">name_size</span><span class="p">;</span><span class="w"></span>
@@ -588,11 +638,11 @@ of the circuit.</p>
 <h4>METADATA<a class="headerlink" href="#metadata" title="永久链接至标题">¶</a></h4>
 <p>The METADATA field is a UTF8 encoded JSON string. After reading the HEADER
 (which is a fixed size at the start of the QPY file) and the <code class="docutils literal notranslate"><span class="pre">name</span></code> string
-you then read the`metadata_size`` number of bytes and parse the JSON to get
+you then read the <code class="docutils literal notranslate"><span class="pre">metadata_size</span></code> number of bytes and parse the JSON to get
 the metadata for the circuit.</p>
 </div>
 <div class="section" id="registers">
-<h4>REGISTERS<a class="headerlink" href="#registers" title="永久链接至标题">¶</a></h4>
+<span id="qpy-registers"></span><h4>REGISTERS<a class="headerlink" href="#registers" title="永久链接至标题">¶</a></h4>
 <p>The contents of REGISTERS is a number of REGISTER object. If num_registers is
 &gt; 0 then after reading METADATA you read that number of REGISTER structs defined
 as:</p>
@@ -607,9 +657,15 @@ as:</p>
 <p><code class="docutils literal notranslate"><span class="pre">type</span></code> can be <code class="docutils literal notranslate"><span class="pre">'q'</span></code> or <code class="docutils literal notranslate"><span class="pre">'c'</span></code>.</p>
 <p>Immediately following the REGISTER struct is the utf8 encoded register name of
 size <code class="docutils literal notranslate"><span class="pre">name_size</span></code>. After the <code class="docutils literal notranslate"><span class="pre">name</span></code> utf8 bytes there is then an array of
-uint32_t values of size <code class="docutils literal notranslate"><span class="pre">size</span></code> that contains a map of the register’s index to
+int64_t values of size <code class="docutils literal notranslate"><span class="pre">size</span></code> that contains a map of the register’s index to
 the circuit’s qubit index. For example, array element 0’s value is the index
 of the <code class="docutils literal notranslate"><span class="pre">register[0]</span></code>’s position in the containing circuit’s qubits list.</p>
+<div class="admonition note">
+<p class="admonition-title">备注</p>
+<p>Prior to QPY <a class="reference internal" href="#qpy-version-4"><span class="std std-ref">Version 4</span></a> the type of array elements was uint32_t. This was changed
+to enable negative values which represent bits in the array not present in the
+circuit</p>
+</div>
 <p>The standalone boolean determines whether the register is constructed as a
 standalone register that was added to the circuit or was created from existing
 bits. A register is considered standalone if it has bits constructed solely
@@ -627,7 +683,7 @@ as part of it, for example:</p>
 <p><code class="docutils literal notranslate"><span class="pre">qr</span></code> would have <code class="docutils literal notranslate"><span class="pre">standalone</span></code> set to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </div>
 <div class="section" id="custom-definitions">
-<span id="custom-definition"></span><h4>CUSTOM_DEFINITIONS<a class="headerlink" href="#custom-definitions" title="永久链接至标题">¶</a></h4>
+<span id="qpy-custom-definition"></span><h4>CUSTOM_DEFINITIONS<a class="headerlink" href="#custom-definitions" title="永久链接至标题">¶</a></h4>
 <p>This section specifies custom definitions for any of the instructions in the circuit.</p>
 <p>CUSTOM_DEFINITION_HEADER contents are defined as:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
@@ -706,20 +762,20 @@ of these).</p>
 The <code class="docutils literal notranslate"><span class="pre">type</span></code> field can be <code class="docutils literal notranslate"><span class="pre">'i'</span></code>, <code class="docutils literal notranslate"><span class="pre">'f'</span></code>, <code class="docutils literal notranslate"><span class="pre">'p'</span></code>, <code class="docutils literal notranslate"><span class="pre">'e'</span></code>, <code class="docutils literal notranslate"><span class="pre">'s'</span></code>, <code class="docutils literal notranslate"><span class="pre">'c'</span></code>
 or <code class="docutils literal notranslate"><span class="pre">'n'</span></code> which dictate the format. For <code class="docutils literal notranslate"><span class="pre">'i'</span></code> it’s an integer, <code class="docutils literal notranslate"><span class="pre">'f'</span></code> it’s
 a double, <code class="docutils literal notranslate"><span class="pre">'s'</span></code> if it’s a string (encoded as utf8), <code class="docutils literal notranslate"><span class="pre">'c'</span></code> is a complex and
-the data is represented by the struct format in the <a class="reference internal" href="#param-expr"><span class="std std-ref">PARAMETER_EXPR</span></a> section.
+the data is represented by the struct format in the <a class="reference internal" href="#qpy-param-expr"><span class="std std-ref">PARAMETER_EXPR</span></a> section.
 <code class="docutils literal notranslate"><span class="pre">'p'</span></code> defines a <a class="reference internal" href="../stubs/qiskit.circuit.Parameter.html#qiskit.circuit.Parameter" title="qiskit.circuit.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> object  which is
-represented by a <a class="reference internal" href="#param-struct"><span class="std std-ref">PARAMETER</span></a> struct, <code class="docutils literal notranslate"><span class="pre">e</span></code> defines a
+represented by a <a class="reference internal" href="#qpy-param-struct"><span class="std std-ref">PARAMETER</span></a> struct, <code class="docutils literal notranslate"><span class="pre">e</span></code> defines a
 <a class="reference internal" href="../stubs/qiskit.circuit.ParameterExpression.html#qiskit.circuit.ParameterExpression" title="qiskit.circuit.ParameterExpression"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterExpression</span></code></a> object (that’s not a
-<a class="reference internal" href="../stubs/qiskit.circuit.Parameter.html#qiskit.circuit.Parameter" title="qiskit.circuit.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>) which is represented by a <a class="reference internal" href="#param-expr"><span class="std std-ref">PARAMETER_EXPR</span></a>
-struct (on QPY format <a class="reference internal" href="#version-3"><span class="std std-ref">Version 3</span></a> the format is tweak slightly see:
-<a class="reference internal" href="#param-expr-v3"><span class="std std-ref">PARAMETER_EXPR</span></a>), <code class="docutils literal notranslate"><span class="pre">'n'</span></code> represents an object from numpy (either an
-<code class="docutils literal notranslate"><span class="pre">ndarray</span></code> or a numpy type) which means the data is .npy format <a class="footnote-reference brackets" href="#f2" id="id7">2</a> data,
-and in QPY <a class="reference internal" href="#version-3"><span class="std std-ref">Version 3</span></a> <code class="docutils literal notranslate"><span class="pre">'v'</span></code> represents a
+<a class="reference internal" href="../stubs/qiskit.circuit.Parameter.html#qiskit.circuit.Parameter" title="qiskit.circuit.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>) which is represented by a <a class="reference internal" href="#qpy-param-expr"><span class="std std-ref">PARAMETER_EXPR</span></a>
+struct (on QPY format <a class="reference internal" href="#qpy-version-3"><span class="std std-ref">Version 3</span></a> the format is tweak slightly see:
+<a class="reference internal" href="#qpy-param-expr-v3"><span class="std std-ref">PARAMETER_EXPR</span></a>), <code class="docutils literal notranslate"><span class="pre">'n'</span></code> represents an object from numpy (either an
+<code class="docutils literal notranslate"><span class="pre">ndarray</span></code> or a numpy type) which means the data is .npy format <a class="footnote-reference brackets" href="#f2" id="id4">2</a> data,
+and in QPY <a class="reference internal" href="#qpy-version-3"><span class="std std-ref">Version 3</span></a> <code class="docutils literal notranslate"><span class="pre">'v'</span></code> represents a
 <code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterVectorElement</span></code> which is represented by a
-<a class="reference internal" href="#param-vector"><span class="std std-ref">PARAMETER_VECTOR_ELEMENT</span></a> struct.</p>
+<a class="reference internal" href="#qpy-param-vector"><span class="std std-ref">PARAMETER_VECTOR_ELEMENT</span></a> struct.</p>
 </div>
 <div class="section" id="parameter">
-<span id="param-struct"></span><h4>PARAMETER<a class="headerlink" href="#parameter" title="永久链接至标题">¶</a></h4>
+<span id="qpy-param-struct"></span><h4>PARAMETER<a class="headerlink" href="#parameter" title="永久链接至标题">¶</a></h4>
 <p>A PARAMETER represents a <a class="reference internal" href="../stubs/qiskit.circuit.Parameter.html#qiskit.circuit.Parameter" title="qiskit.circuit.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> object the data for
 a INSTRUCTION_PARAM. The contents of the PARAMETER are defined as:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
@@ -731,8 +787,8 @@ a INSTRUCTION_PARAM. The contents of the PARAMETER are defined as:</p>
 <p>which is immediately followed by <code class="docutils literal notranslate"><span class="pre">name_size</span></code> utf8 bytes representing the
 parameter name.</p>
 </div>
-<div class="section" id="param-expr">
-<span id="id8"></span><h4>PARAMETER_EXPR<a class="headerlink" href="#param-expr" title="永久链接至标题">¶</a></h4>
+<div class="section" id="qpy-param-expr">
+<span id="id5"></span><h4>PARAMETER_EXPR<a class="headerlink" href="#qpy-param-expr" title="永久链接至标题">¶</a></h4>
 <p>A PARAMETER_EXPR represents a <a class="reference internal" href="../stubs/qiskit.circuit.ParameterExpression.html#qiskit.circuit.ParameterExpression" title="qiskit.circuit.ParameterExpression"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterExpression</span></code></a>
 object that the data for an INSTRUCTION_PARAM. The contents of a PARAMETER_EXPR
 are defined as:</p>
@@ -759,11 +815,11 @@ data of the symbol. The data format is dependent on the value of <code class="do
 <code class="docutils literal notranslate"><span class="pre">type</span></code> is <code class="docutils literal notranslate"><span class="pre">p</span></code> then it represents a <a class="reference internal" href="../stubs/qiskit.circuit.Parameter.html#qiskit.circuit.Parameter" title="qiskit.circuit.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> and
 size will be 0, the value will just be the same as the key. If
 <code class="docutils literal notranslate"><span class="pre">type</span></code> is <code class="docutils literal notranslate"><span class="pre">f</span></code> then it represents a double precision float. If <code class="docutils literal notranslate"><span class="pre">type</span></code> is
-<code class="docutils literal notranslate"><span class="pre">c</span></code> it represents a double precision complex, which is represented by <a class="reference internal" href="#complex"><span class="std std-ref">COMPLEX</span></a>.
+<code class="docutils literal notranslate"><span class="pre">c</span></code> it represents a double precision complex, which is represented by <a class="reference internal" href="#qpy-complex"><span class="std std-ref">COMPLEX</span></a>.
 Finally, if type is <code class="docutils literal notranslate"><span class="pre">i</span></code> it represents an integer which is an <code class="docutils literal notranslate"><span class="pre">int64_t</span></code>.</p>
 </div>
 <div class="section" id="complex">
-<span id="id9"></span><h4>COMPLEX<a class="headerlink" href="#complex" title="永久链接至标题">¶</a></h4>
+<span id="qpy-complex"></span><h4>COMPLEX<a class="headerlink" href="#complex" title="永久链接至标题">¶</a></h4>
 <p>When representing a double precision complex value in QPY the following
 struct is used:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
@@ -772,15 +828,15 @@ struct is used:</p>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
-<p>this matches the internal C representation of Python’s complex type. <a class="footnote-reference brackets" href="#f3" id="id10">3</a></p>
+<p>this matches the internal C representation of Python’s complex type. <a class="footnote-reference brackets" href="#f3" id="id6">3</a></p>
 <dl class="footnote brackets">
 <dt class="label" id="f1"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
 <dd><p><a class="reference external" href="https://tools.ietf.org/html/rfc1700">https://tools.ietf.org/html/rfc1700</a></p>
 </dd>
-<dt class="label" id="f2"><span class="brackets">2</span><span class="fn-backref">(<a href="#id3">1</a>,<a href="#id7">2</a>)</span></dt>
+<dt class="label" id="f2"><span class="brackets">2</span><span class="fn-backref">(<a href="#id2">1</a>,<a href="#id4">2</a>)</span></dt>
 <dd><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.lib.format.html">https://numpy.org/doc/stable/reference/generated/numpy.lib.format.html</a></p>
 </dd>
-<dt class="label" id="f3"><span class="brackets"><a class="fn-backref" href="#id10">3</a></span></dt>
+<dt class="label" id="f3"><span class="brackets"><a class="fn-backref" href="#id6">3</a></span></dt>
 <dd><p><a class="reference external" href="https://docs.python.org/3/c-api/complex.html#c.Py_complex">https://docs.python.org/3/c-api/complex.html#c.Py_complex</a></p>
 </dd>
 </dl>
@@ -814,7 +870,7 @@ struct is used:</p>
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      最后更新于 2022/02/09.
+      最后更新于 2022/02/11.
 
     </p>
   </div>
@@ -840,6 +896,11 @@ struct is used:</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#qpy-format">QPY Format</a><ul>
+<li><a class="reference internal" href="#version-4">Version 4</a><ul>
+<li><a class="reference internal" href="#range">RANGE</a></li>
+<li><a class="reference internal" href="#tuple">TUPLE</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#version-3">Version 3</a><ul>
 <li><a class="reference internal" href="#pauli-evolution">PAULI_EVOLUTION</a></li>
 <li><a class="reference internal" href="#sparse-pauli-op-list-elem">SPARSE_PAULI_OP_LIST_ELEM</a></li>
@@ -852,13 +913,13 @@ struct is used:</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#version-1">Version 1</a><ul>
-<li><a class="reference internal" href="#id6">HEADER</a></li>
+<li><a class="reference internal" href="#id3">HEADER</a></li>
 <li><a class="reference internal" href="#metadata">METADATA</a></li>
 <li><a class="reference internal" href="#registers">REGISTERS</a></li>
 <li><a class="reference internal" href="#custom-definitions">CUSTOM_DEFINITIONS</a></li>
 <li><a class="reference internal" href="#instructions">INSTRUCTIONS</a></li>
 <li><a class="reference internal" href="#parameter">PARAMETER</a></li>
-<li><a class="reference internal" href="#param-expr">PARAMETER_EXPR</a></li>
+<li><a class="reference internal" href="#qpy-param-expr">PARAMETER_EXPR</a></li>
 <li><a class="reference internal" href="#complex">COMPLEX</a></li>
 </ul>
 </li>

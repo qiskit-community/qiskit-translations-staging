@@ -37,5 +37,6 @@
    .. autoattribute:: operation_names
    .. autoattribute:: operations
    .. autoattribute:: options
+   .. autoattribute:: provider
    .. autoattribute:: target
    .. autoattribute:: version

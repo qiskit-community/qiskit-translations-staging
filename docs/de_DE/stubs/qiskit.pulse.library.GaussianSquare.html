@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GaussianSquare &mdash; Qiskit 0.34.1 Dokumentation</title>
+  <title>GaussianSquare &mdash; Qiskit 0.34.2 Dokumentation</title>
   
 
   
@@ -347,19 +347,25 @@
 <dt class="sig sig-object py" id="qiskit.pulse.library.GaussianSquare">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GaussianSquare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">risefall_sigma_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit_amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qiskit/pulse/library/parametric_pulses.html#GaussianSquare"><span class="viewcode-link"><span class="pre">[Quellcode]</span></span></a><a class="headerlink" href="#qiskit.pulse.library.GaussianSquare" title="Link zu dieser Definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">qiskit.pulse.library.parametric_pulses.ParametricPulse</span></code></p>
-<dl class="simple">
-<dt>A square pulse with a Gaussian shaped risefall on both sides. Either risefall_sigma_ratio</dt><dd><p>or width parameter has to be specified.</p>
-</dd>
-</dl>
-<p>If risefall_sigma_ratio is not None and width is None:</p>
-<p><span class="math notranslate nohighlight">\(risefall = risefall\)</span> _ <span class="math notranslate nohighlight">\(to\)</span> _ <span class="math notranslate nohighlight">\(sigma * sigma\)</span></p>
-<p><span class="math notranslate nohighlight">\(width = duration - 2 * risefall\)</span></p>
-<p>If width is not None and risefall_sigma_ratio is None:</p>
+<p>A square pulse with a Gaussian shaped risefall on both sides lifted such that
+its first sample is zero.</p>
+<p>Either the <code class="docutils literal notranslate"><span class="pre">risefall_sigma_ratio</span></code> or <code class="docutils literal notranslate"><span class="pre">width</span></code> parameter has to be specified.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">risefall_sigma_ratio</span></code> is not None and <code class="docutils literal notranslate"><span class="pre">width</span></code> is None:</p>
 <div class="math notranslate nohighlight">
-\[risefall = (duration - width) / 2\]</div>
-<p>In both cases, the pulse is defined as:</p>
+\[\begin{split}\text{risefall} &amp;= \text{risefall_sigma_ratio} \times \text{sigma}\\
+\text{width} &amp;= \text{duration} - 2 \times \text{risefall}\end{split}\]</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">width</span></code> is not None and <code class="docutils literal notranslate"><span class="pre">risefall_sigma_ratio</span></code> is None:</p>
 <div class="math notranslate nohighlight">
-\[ \begin{align}\begin{aligned}0 &lt;= x &lt; risefall\\f(x) = amp * exp( -(1/2) * (x - risefall)^2 / sigma^2 )\\risefall &lt;= x &lt; risefall + width\\f(x) = amp\\risefall + width &lt;= x &lt; duration\\f(x) = amp * exp( -(1/2) * (x - (risefall + width))^2 / sigma^2 )\end{aligned}\end{align} \]</div>
+\[\text{risefall} = \frac{\text{duration} - \text{width}}{2}\]</div>
+<p>In both cases, the lifted gaussian square pulse <span class="math notranslate nohighlight">\(f'(x)\)</span> is defined as:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}f'(x) &amp;= \begin{cases}            \exp\biggl(-\frac12 \frac{(x - \text{risefall})^2}{\text{sigma}^2}\biggr)                &amp; x &lt; \text{risefall}\\
+    1                &amp; \text{risefall} \le x &lt; \text{risefall} + \text{width}\\
+    \exp\biggl(-\frac12                    \frac{{\bigl(x - (\text{risefall} + \text{width})\bigr)}^2}                          {\text{sigma}^2}                    \biggr)                &amp; \text{risefall} + \text{width} \le x        \end{cases}\\
+f(x) &amp;= \text{amp} \times \frac{f'(x) - f'(-1)}{1-f'(-1)},            \quad 0 \le x &lt; \text{duration}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(f'(x)\)</span> is the gaussian square waveform without lifting or amplitude scaling.</p>
+<p>This pulse would be more accurately named as <code class="docutils literal notranslate"><span class="pre">LiftedGaussianSquare</span></code>, however, for historical
+and practical DSP reasons it has the name <code class="docutils literal notranslate"><span class="pre">GaussianSquare</span></code>.</p>
 <p>Initialize the gaussian square pulse.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameter</dt>
@@ -498,7 +504,7 @@ amplitude is constrained to 1.</p></li>
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Zuletzt aktualisiert am 2022/02/09.
+      Zuletzt aktualisiert am 2022/02/11.
 
     </p>
   </div>

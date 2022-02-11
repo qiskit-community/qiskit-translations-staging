@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.providers.aer.noise.passes.local_noise_pass &mdash; Qiskit 0.34.1 說明文件</title>
+  <title>qiskit.providers.aer.noise.passes.local_noise_pass &mdash; Qiskit 0.34.2 說明文件</title>
   
 
   
@@ -350,13 +350,14 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span>
 
-<span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Instruction</span>
+<span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Instruction</span><span class="p">,</span> <span class="n">QuantumCircuit</span>
 <span class="kn">from</span> <span class="nn">qiskit.dagcircuit</span> <span class="kn">import</span> <span class="n">DAGCircuit</span>
+<span class="kn">from</span> <span class="nn">qiskit.converters</span> <span class="kn">import</span> <span class="n">circuit_to_dag</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler</span> <span class="kn">import</span> <span class="n">TransformationPass</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.exceptions</span> <span class="kn">import</span> <span class="n">TranspilerError</span>
 <span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">QuantumError</span><span class="p">,</span> <span class="n">ReadoutError</span>
 
-<span class="n">InstructionLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">Instruction</span><span class="p">,</span> <span class="n">QuantumError</span><span class="p">]</span>
+<span class="n">InstructionLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">Instruction</span><span class="p">,</span> <span class="n">QuantumError</span><span class="p">,</span> <span class="n">QuantumCircuit</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="LocalNoisePass"><a class="viewcode-back" href="../../../../../../stubs/qiskit.providers.aer.noise.LocalNoisePass.html#qiskit.providers.aer.noise.LocalNoisePass">[文件]</a><span class="k">class</span> <span class="nc">LocalNoisePass</span><span class="p">(</span><span class="n">TransformationPass</span><span class="p">):</span>
@@ -436,31 +437,52 @@
 
             <span class="n">qubits</span> <span class="o">=</span> <span class="p">[</span><span class="n">qubit_indices</span><span class="p">[</span><span class="n">q</span><span class="p">]</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">]</span>
             <span class="n">new_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_func</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">qubits</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="n">new_op</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Edge case where we are replacing a node with nothing (removing node)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method</span> <span class="o">==</span> <span class="s2">&quot;replace&quot;</span><span class="p">:</span>
                     <span class="n">dag</span><span class="o">.</span><span class="n">remove_op_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
                 <span class="k">continue</span>
+
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_op</span><span class="p">,</span> <span class="n">ReadoutError</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span><span class="s2">&quot;Insertions of ReadoutError is not yet supported.&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_op</span><span class="p">,</span> <span class="n">Instruction</span><span class="p">):</span>
+
+            <span class="c1"># Initialize new node dag</span>
+            <span class="n">new_dag</span> <span class="o">=</span> <span class="n">DAGCircuit</span><span class="p">()</span>
+            <span class="n">new_dag</span><span class="o">.</span><span class="n">add_qubits</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span>
+            <span class="n">new_dag</span><span class="o">.</span><span class="n">add_clbits</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">cargs</span><span class="p">)</span>
+
+            <span class="c1"># If appending re-apply original op node first</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method</span> <span class="o">==</span> <span class="s2">&quot;append&quot;</span><span class="p">:</span>
+                <span class="n">new_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span>
+
+            <span class="c1"># If the new op is not a QuantumCircuit or Instruction, attempt</span>
+            <span class="c1"># to conver to an Instruction</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_op</span><span class="p">,</span> <span class="p">(</span><span class="n">QuantumCircuit</span><span class="p">,</span> <span class="n">Instruction</span><span class="p">)):</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">new_op</span> <span class="o">=</span> <span class="n">new_op</span><span class="o">.</span><span class="n">to_instruction</span><span class="p">()</span>
                 <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">att_err</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
                         <span class="s2">&quot;Function must return an object implementing &#39;to_instruction&#39; method.&quot;</span>
                     <span class="p">)</span> <span class="kn">from</span> <span class="nn">att_err</span>
+
+            <span class="c1"># Validate the instruction matches the number of qubits and clbits of the node</span>
             <span class="k">if</span> <span class="n">new_op</span><span class="o">.</span><span class="n">num_qubits</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Number of qubits of generated op </span><span class="si">{</span><span class="n">new_op</span><span class="o">.</span><span class="n">num_qubits</span><span class="si">}</span><span class="s2"> != &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span><span class="si">}</span><span class="s2"> that of a reference op </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
 
-            <span class="n">new_dag</span> <span class="o">=</span> <span class="n">DAGCircuit</span><span class="p">()</span>
-            <span class="n">new_dag</span><span class="o">.</span><span class="n">add_qubits</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span>
-            <span class="n">new_dag</span><span class="o">.</span><span class="n">add_clbits</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">cargs</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method</span> <span class="o">==</span> <span class="s2">&quot;append&quot;</span><span class="p">:</span>
-                <span class="n">new_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">,</span> <span class="n">cargs</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">cargs</span><span class="p">)</span>
-            <span class="n">new_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">new_op</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span>
+            <span class="c1"># Add the noise op returned by the function</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_op</span><span class="p">,</span> <span class="n">QuantumCircuit</span><span class="p">):</span>
+                <span class="c1"># If the new op is a quantum circuit, compose its DAG with the new dag</span>
+                <span class="c1"># so that it is unrolled rather than added as an opaque instruction</span>
+                <span class="n">new_dag</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">circuit_to_dag</span><span class="p">(</span><span class="n">new_op</span><span class="p">),</span> <span class="n">qubits</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">,</span> <span class="n">clbits</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">cargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Otherwise append the instruction returned by the function</span>
+                <span class="n">new_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">new_op</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">,</span> <span class="n">cargs</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">cargs</span><span class="p">)</span>
+
+            <span class="c1"># If prepending reapply original op node last</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method</span> <span class="o">==</span> <span class="s2">&quot;prepend&quot;</span><span class="p">:</span>
                 <span class="n">new_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">,</span> <span class="n">cargs</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">cargs</span><span class="p">)</span>
 
@@ -484,7 +506,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      最後更新於 2022/02/09。
+      最後更新於 2022/02/11。
 
     </p>
   </div>

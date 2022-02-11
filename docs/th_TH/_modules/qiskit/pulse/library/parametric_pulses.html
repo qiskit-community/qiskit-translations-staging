@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.pulse.library.parametric_pulses &mdash; Qiskit 0.34.1 documentation</title>
+  <title>qiskit.pulse.library.parametric_pulses &mdash; Qiskit 0.34.2 documentation</title>
   
 
   
@@ -437,12 +437,18 @@
 
 
 <div class="viewcode-block" id="Gaussian"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.library.Gaussian.html#qiskit.pulse.library.Gaussian">[docs]</a><span class="k">class</span> <span class="nc">Gaussian</span><span class="p">(</span><span class="n">ParametricPulse</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A truncated pulse envelope shaped according to the Gaussian function whose mean is centered</span>
-<span class="sd">    at the center of the pulse (duration / 2):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A lifted and truncated pulse envelope shaped according to the Gaussian function whose</span>
+<span class="sd">    mean is centered at the center of the pulse (duration / 2):</span>
 
 <span class="sd">    .. math::</span>
 
-<span class="sd">        f(x) = amp * exp( -(1/2) * (x - duration/2)^2 / sigma^2 )  ,  0 &lt;= x &lt; duration</span>
+<span class="sd">        f&#39;(x) &amp;= \exp\Bigl( -\frac12 \frac{{(x - \text{duration}/2)}^2}{\text{sigma}^2} \Bigr)\\</span>
+<span class="sd">        f(x) &amp;= \text{amp} \times \frac{f&#39;(x) - f&#39;(-1)}{1-f&#39;(-1)}, \quad 0 \le x &lt; \text{duration}</span>
+
+<span class="sd">    where :math:`f&#39;(x)` is the gaussian waveform without lifting or amplitude scaling.</span>
+
+<span class="sd">    This pulse would be more accurately named as ``LiftedGaussian``, however, for historical</span>
+<span class="sd">    and practical DSP reasons it has the name ``Gaussian``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -508,36 +514,45 @@
 
 
 <div class="viewcode-block" id="GaussianSquare"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.library.GaussianSquare.html#qiskit.pulse.library.GaussianSquare">[docs]</a><span class="k">class</span> <span class="nc">GaussianSquare</span><span class="p">(</span><span class="n">ParametricPulse</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A square pulse with a Gaussian shaped risefall on both sides. Either risefall_sigma_ratio</span>
-<span class="sd">     or width parameter has to be specified.</span>
+    <span class="c1"># Not a raw string because we need to be able to split lines.</span>
+    <span class="sd">&quot;&quot;&quot;A square pulse with a Gaussian shaped risefall on both sides lifted such that</span>
+<span class="sd">    its first sample is zero.</span>
 
-<span class="sd">    If risefall_sigma_ratio is not None and width is None:</span>
+<span class="sd">    Either the ``risefall_sigma_ratio`` or ``width`` parameter has to be specified.</span>
 
-<span class="sd">    :math:`risefall = risefall` _ :math:`to` _ :math:`sigma * sigma`</span>
-
-<span class="sd">    :math:`width = duration - 2 * risefall`</span>
-
-<span class="sd">    If width is not None and risefall_sigma_ratio is None:</span>
+<span class="sd">    If ``risefall_sigma_ratio`` is not None and ``width`` is None:</span>
 
 <span class="sd">    .. math::</span>
 
-<span class="sd">        risefall = (duration - width) / 2</span>
+<span class="sd">        \\text{risefall} &amp;= \\text{risefall_sigma_ratio} \\times \\text{sigma}\\\\</span>
+<span class="sd">        \\text{width} &amp;= \\text{duration} - 2 \\times \\text{risefall}</span>
 
-<span class="sd">    In both cases, the pulse is defined as:</span>
+<span class="sd">    If ``width`` is not None and ``risefall_sigma_ratio`` is None:</span>
+
+<span class="sd">    .. math:: \\text{risefall} = \\frac{\\text{duration} - \\text{width}}{2}</span>
+
+<span class="sd">    In both cases, the lifted gaussian square pulse :math:`f&#39;(x)` is defined as:</span>
 
 <span class="sd">    .. math::</span>
 
-<span class="sd">        0 &lt;= x &lt; risefall</span>
+<span class="sd">        f&#39;(x) &amp;= \\begin{cases}\</span>
+<span class="sd">            \\exp\\biggl(-\\frac12 \\frac{(x - \\text{risefall})^2}{\\text{sigma}^2}\\biggr)\</span>
+<span class="sd">                &amp; x &lt; \\text{risefall}\\\\</span>
+<span class="sd">            1\</span>
+<span class="sd">                &amp; \\text{risefall} \\le x &lt; \\text{risefall} + \\text{width}\\\\</span>
+<span class="sd">            \\exp\\biggl(-\\frac12\</span>
+<span class="sd">                    \\frac{{\\bigl(x - (\\text{risefall} + \\text{width})\\bigr)}^2}\</span>
+<span class="sd">                          {\\text{sigma}^2}\</span>
+<span class="sd">                    \\biggr)\</span>
+<span class="sd">                &amp; \\text{risefall} + \\text{width} \\le x\</span>
+<span class="sd">        \\end{cases}\\\\</span>
+<span class="sd">        f(x) &amp;= \\text{amp} \\times \\frac{f&#39;(x) - f&#39;(-1)}{1-f&#39;(-1)},\</span>
+<span class="sd">            \\quad 0 \\le x &lt; \\text{duration}</span>
 
-<span class="sd">        f(x) = amp * exp( -(1/2) * (x - risefall)^2 / sigma^2 )</span>
+<span class="sd">    where :math:`f&#39;(x)` is the gaussian square waveform without lifting or amplitude scaling.</span>
 
-<span class="sd">        risefall &lt;= x &lt; risefall + width</span>
-
-<span class="sd">        f(x) = amp</span>
-
-<span class="sd">        risefall + width &lt;= x &lt; duration</span>
-
-<span class="sd">        f(x) = amp * exp( -(1/2) * (x - (risefall + width))^2 / sigma^2 )</span>
+<span class="sd">    This pulse would be more accurately named as ``LiftedGaussianSquare``, however, for historical</span>
+<span class="sd">    and practical DSP reasons it has the name ``GaussianSquare``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -659,21 +674,26 @@
 
 
 <div class="viewcode-block" id="Drag"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.library.Drag.html#qiskit.pulse.library.Drag">[docs]</a><span class="k">class</span> <span class="nc">Drag</span><span class="p">(</span><span class="n">ParametricPulse</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;The Derivative Removal by Adiabatic Gate (DRAG) pulse is a standard Gaussian pulse</span>
-<span class="sd">    with an additional Gaussian derivative component. It is designed to reduce the frequency</span>
-<span class="sd">    spectrum of a normal gaussian pulse near the :math:`|1\rangle` - :math:`|2\rangle` transition,</span>
-<span class="sd">    reducing the chance of leakage to the :math:`|2\rangle` state.</span>
+    <span class="sd">&quot;&quot;&quot;The Derivative Removal by Adiabatic Gate (DRAG) pulse is a standard Gaussian pulse</span>
+<span class="sd">    with an additional Gaussian derivative component and lifting applied.</span>
+
+<span class="sd">    It is designed to reduce the frequency spectrum of a normal gaussian pulse near</span>
+<span class="sd">    the :math:`|1\\rangle\\leftrightarrow|2\\rangle` transition,</span>
+<span class="sd">    reducing the chance of leakage to the :math:`|2\\rangle` state.</span>
 
 <span class="sd">    .. math::</span>
 
-<span class="sd">        f(x) = Gaussian + 1j * beta * d/dx [Gaussian]</span>
-<span class="sd">             = Gaussian + 1j * beta * (-(x - duration/2) / sigma^2) [Gaussian]</span>
+<span class="sd">        g(x) &amp;= \\exp\\Bigl(-\\frac12 \\frac{(x - \\text{duration}/2)^2}{\\text{sigma}^2}\\Bigr)\\\\</span>
+<span class="sd">        f&#39;(x) &amp;= g(x) + 1j \\times \\text{beta} \\times \\frac{\\mathrm d}{\\mathrm{d}x} g(x)\\\\</span>
+<span class="sd">              &amp;= g(x) + 1j \\times \\text{beta} \\times\</span>
+<span class="sd">                    \\Bigl(-\\frac{x - \\text{duration}/2}{\\text{sigma}^2}\\Bigr)g(x)\\\\</span>
+<span class="sd">        f(x) &amp;= \\text{amp}\\times\\frac{f&#39;(x)-f&#39;(-1)}{1-f&#39;(-1)}, \\quad 0 \\le x &lt; \\text{duration}</span>
 
-<span class="sd">    where &#39;Gaussian&#39; is:</span>
+<span class="sd">    where :math:`g(x)` is a standard unlifted gaussian waveform and</span>
+<span class="sd">    :math:`f&#39;(x)` is the DRAG waveform without lifting or amplitude scaling.</span>
 
-<span class="sd">    .. math::</span>
-
-<span class="sd">        Gaussian(x, amp, sigma) = amp * exp( -(1/2) * (x - duration/2)^2 / sigma^2 )</span>
+<span class="sd">    This pulse would be more accurately named as ``LiftedDrag``, however, for historical</span>
+<span class="sd">    and practical DSP reasons it has the name ``Drag``.</span>
 
 <span class="sd">    References:</span>
 <span class="sd">        1. |citation1|_</span>
@@ -880,7 +900,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Last updated on 2022/02/09.
+      Last updated on 2022/02/11.
 
     </p>
   </div>

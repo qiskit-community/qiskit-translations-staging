@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.opflow.state_fns.cvar_measurement &mdash; Qiskit 0.34.1 Dokumentation</title>
+  <title>qiskit.opflow.state_fns.cvar_measurement &mdash; Qiskit 0.34.2 Dokumentation</title>
   
 
   
@@ -357,7 +357,7 @@
 <span class="kn">from</span> <span class="nn">qiskit.opflow.exceptions</span> <span class="kn">import</span> <span class="n">OpflowError</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow.list_ops</span> <span class="kn">import</span> <span class="n">ListOp</span><span class="p">,</span> <span class="n">SummedOp</span><span class="p">,</span> <span class="n">TensoredOp</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow.operator_base</span> <span class="kn">import</span> <span class="n">OperatorBase</span>
-<span class="kn">from</span> <span class="nn">qiskit.opflow.primitive_ops</span> <span class="kn">import</span> <span class="n">PauliOp</span>
+<span class="kn">from</span> <span class="nn">qiskit.opflow.primitive_ops</span> <span class="kn">import</span> <span class="n">PauliOp</span><span class="p">,</span> <span class="n">PauliSumOp</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow.state_fns.circuit_state_fn</span> <span class="kn">import</span> <span class="n">CircuitStateFn</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow.state_fns.dict_state_fn</span> <span class="kn">import</span> <span class="n">DictStateFn</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow.state_fns.operator_state_fn</span> <span class="kn">import</span> <span class="n">OperatorStateFn</span>
@@ -696,27 +696,25 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">PauliOp</span><span class="p">):</span>
         <span class="c1"># every X component must be False</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="c1"># For sums (PauliSumOp and SummedOp), we cover the case of sums of diagonal paulis, but don&#39;t</span>
+    <span class="c1"># raise since there might be summand canceling the non-diagonal parts. That case is checked</span>
+    <span class="c1"># in the inefficient matrix check at the bottom.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">PauliSumOp</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">x</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">SummedOp</span><span class="p">):</span>
-        <span class="c1"># cover the case of sums of diagonal paulis, but don&#39;t raise since there might be summands</span>
-        <span class="c1"># canceling the non-diagonal parts</span>
-
-        <span class="c1"># ignoring mypy since we know that all operators are PauliOps</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">SummedOp</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">PauliOp</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">operator</span><span class="o">.</span><span class="n">oplist</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">ListOp</span><span class="p">):</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">ListOp</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">_check_is_diagonal</span><span class="p">))</span>
 
     <span class="c1"># cannot efficiently check if a operator is diagonal, converting to matrix</span>
     <span class="n">matrix</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">to_matrix</span><span class="p">()</span>
-
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">matrix</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">matrix</span><span class="p">))):</span>
-        <span class="k">return</span> <span class="kc">True</span>
-    <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">matrix</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">matrix</span><span class="p">)))</span>
 </pre></div>
 
              </article>
@@ -734,7 +732,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Zuletzt aktualisiert am 2022/02/09.
+      Zuletzt aktualisiert am 2022/02/11.
 
     </p>
   </div>

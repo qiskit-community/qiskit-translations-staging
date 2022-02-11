@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.circuit.qpy_serialization &mdash; documentación de Qiskit - 0.34.1</title>
+  <title>qiskit.circuit.qpy_serialization &mdash; documentación de Qiskit - 0.34.2</title>
   
 
   
@@ -436,14 +436,80 @@
 <span class="sd">by ``num_circuits`` in the file header). There is no padding between the</span>
 <span class="sd">circuits in the data.</span>
 
-<span class="sd">.. _version_3:</span>
+<span class="sd">.. _qpy_version_4:</span>
+
+<span class="sd">Version 4</span>
+<span class="sd">=========</span>
+
+<span class="sd">Version 4 is identical to :ref:`qpy_version_3` except that it adds 2 new type strings</span>
+<span class="sd">to the INSTRUCTION_PARAM struct, ``z`` to represent ``None`` (which is encoded as</span>
+<span class="sd">no data), ``q`` to represent a :class:`.QuantumCircuit` (which is encoded as</span>
+<span class="sd">a QPY circuit), ``r`` to represent a ``range`` of integers (which is encoded as</span>
+<span class="sd">a :ref:`qpy_range_pack`), and ``t`` to represent a ``tuple`` (which is encoded as</span>
+<span class="sd">defined by :ref:`qpy_tuple`). Additionally, version 4 changes the type of register</span>
+<span class="sd">index mapping array from ``uint32_t`` to ``int64_t``. If the values of any of the</span>
+<span class="sd">array elements are negative they represent a register bit that is not present in the</span>
+<span class="sd">circuit.</span>
+
+<span class="sd">The :ref:`qpy_registers` header format has also been updated to</span>
+
+<span class="sd">.. code-block:: c</span>
+
+<span class="sd">    struct {</span>
+<span class="sd">        char type;</span>
+<span class="sd">        _Bool standalone;</span>
+<span class="sd">        uint32_t size;</span>
+<span class="sd">        uint16_t name_size;</span>
+<span class="sd">        _bool in_circuit;</span>
+<span class="sd">    }</span>
+
+<span class="sd">which just adds the ``in_circuit`` field which represents whether the register is</span>
+<span class="sd">part of the circuit or not.</span>
+
+<span class="sd">.. _qpy_range_pack:</span>
+
+<span class="sd">RANGE</span>
+<span class="sd">-----</span>
+
+<span class="sd">A RANGE is a representation of a ``range`` object. It is defined as:</span>
+
+<span class="sd">.. code-block:: c</span>
+
+<span class="sd">    struct {</span>
+<span class="sd">        int64_t start;</span>
+<span class="sd">        int64_t stop;</span>
+<span class="sd">        int64_t step;</span>
+<span class="sd">    }</span>
+
+<span class="sd">.. _qpy_tuple:</span>
+
+<span class="sd">TUPLE</span>
+<span class="sd">-----</span>
+
+<span class="sd">A TUPLE is a reprentation of a ``tuple`` object. As tuples are just fixed length</span>
+<span class="sd">containers of arbitrary python objects their QPY can&#39;t fully represent any tuple,</span>
+<span class="sd">but as long as the contents in a tuple are other QPY serializable types for</span>
+<span class="sd">the INSTRUCTION_PARAM payload the ``tuple`` object can be serialized.</span>
+
+<span class="sd">A tuple instruction parameter starts with a header defined as:</span>
+
+<span class="sd">.. code-block:: c</span>
+
+<span class="sd">    struct {</span>
+<span class="sd">        uint64_t size;</span>
+<span class="sd">    }</span>
+
+<span class="sd">followed by ``size`` elements that are INSTRUCTION_PARAM payloads, where each of</span>
+<span class="sd">these define an element in the tuple.</span>
+
+<span class="sd">.. _qpy_version_3:</span>
 
 <span class="sd">Version 3</span>
 <span class="sd">=========</span>
 
-<span class="sd">Version 3 of the QPY format is identical to :ref:`version_2` except that it defines</span>
+<span class="sd">Version 3 of the QPY format is identical to :ref:`qpy_version_2` except that it defines</span>
 <span class="sd">a struct format to represent a :class:`~qiskit.circuit.library.PauliEvolutionGate`</span>
-<span class="sd">natively in QPY. To accomplish this the :ref:`custom_definition` struct now supports</span>
+<span class="sd">natively in QPY. To accomplish this the :ref:`qpy_custom_definition` struct now supports</span>
 <span class="sd">a new type value ``&#39;p&#39;`` to represent a :class:`~qiskit.circuit.library.PauliEvolutionGate`.</span>
 <span class="sd">Enties in the custom instructions tables have unique name generated that start with the</span>
 <span class="sd">string ``&quot;###PauliEvolutionGate_&quot;`` followed by a uuid string. This gate name is reservered</span>
@@ -468,18 +534,18 @@
 <span class="sd">        uint64_t synthesis_size;</span>
 <span class="sd">    }</span>
 
-<span class="sd">This is immediately followed by ``operator_count`` elements defined by the :ref:`pauli_sum_op`</span>
+<span class="sd">This is immediately followed by ``operator_count`` elements defined by the :ref:`qpy_pauli_sum_op`</span>
 <span class="sd">payload.  Following that we have ``time_size`` bytes representing the ``time`` attribute. If</span>
 <span class="sd">``standalone_op`` is ``True`` then there must only be a single operator. The</span>
 <span class="sd">encoding of these bytes is determined by the value of ``time_type``. Possible values of</span>
 <span class="sd">``time_type`` are ``&#39;f&#39;``, ``&#39;p&#39;``, and ``&#39;e&#39;``. If ``time_type`` is ``&#39;f&#39;`` it&#39;s a double,</span>
 <span class="sd">``&#39;p&#39;`` defines a :class:`~qiskit.circuit.Parameter` object  which is represented by a</span>
-<span class="sd">:ref:`param_struct`, ``e`` defines a :class:`~qiskit.circuit.ParameterExpression` object</span>
-<span class="sd">(that&#39;s not a :class:`~qiskit.circuit.Parameter`) which is represented by a :ref:`param_expr`.</span>
+<span class="sd">:ref:`qpy_param_struct`, ``e`` defines a :class:`~qiskit.circuit.ParameterExpression` object</span>
+<span class="sd">(that&#39;s not a :class:`~qiskit.circuit.Parameter`) which is represented by a :ref:`qpy_param_expr`.</span>
 <span class="sd">Following that is ``synthesis_size`` bytes which is a utf8 encoded json payload representing</span>
 <span class="sd">the :class:`.EvolutionSynthesis` class used by the gate.</span>
 
-<span class="sd">.. _pauli_sum_op:</span>
+<span class="sd">.. _qpy_pauli_sum_op:</span>
 
 <span class="sd">SPARSE_PAULI_OP_LIST_ELEM</span>
 <span class="sd">-------------------------</span>
@@ -501,9 +567,9 @@
 <span class="sd">a :class:`~qiskit.circuit.Parameter`. This adds a new parameter type char ``&#39;v&#39;``</span>
 <span class="sd">to represent a :class:`~qiskit.circuit.ParameterVectorElement` which is now</span>
 <span class="sd">supported as a type string value for an INSTRUCTION_PARAM. The payload for these</span>
-<span class="sd">parameters are defined below as :ref:`param_vector`.</span>
+<span class="sd">parameters are defined below as :ref:`qpy_param_vector`.</span>
 
-<span class="sd">.. _param_vector:</span>
+<span class="sd">.. _qpy_param_vector:</span>
 
 
 <span class="sd">PARAMETER_VECTOR_ELEMENT</span>
@@ -525,7 +591,7 @@
 <span class="sd">which is immediately followed by ``vector_name_size`` utf8 bytes representing</span>
 <span class="sd">the parameter&#39;s vector name.</span>
 
-<span class="sd">.. _param_expr_v3:</span>
+<span class="sd">.. _qpy_param_expr_v3:</span>
 
 
 <span class="sd">PARAMETER_EXPR</span>
@@ -535,7 +601,7 @@
 <span class="sd">:class:`~qiskit.circuit.Parameter` and :class:`~qiskit.circuit.ParameterVectorElement`</span>
 <span class="sd">the payload for a :class:`~qiskit.circuit.ParameterExpression` needs to be updated</span>
 <span class="sd">to distinguish between the types. The following is the modified payload format</span>
-<span class="sd">which is mostly identical to the format in Version 1 and :ref:`version_2` but just</span>
+<span class="sd">which is mostly identical to the format in Version 1 and :ref:`qpy_version_2` but just</span>
 <span class="sd">modifies the ``map_elements`` struct to include a symbol type field.</span>
 
 <span class="sd">A PARAMETER_EXPR represents a :class:`~qiskit.circuit.ParameterExpression`</span>
@@ -566,9 +632,9 @@
 <span class="sd">for the element. If it&#39;s ``p`` it represents a :class:`~qiskit.circuit.Parameter`</span>
 <span class="sd">and if it&#39;s ``v`` it represents a :class:`~qiskit.circuit.ParameterVectorElement`.</span>
 <span class="sd">The map element struct is immediately followed by the symbol map key payload, if</span>
-<span class="sd">``symbol_type`` is ``p`` then it is followed immediately by a :ref:`param_struct`</span>
+<span class="sd">``symbol_type`` is ``p`` then it is followed immediately by a :ref:`qpy_param_struct`</span>
 <span class="sd">object (both the struct and utf8 name bytes) and if ``symbol_type`` is ``v``</span>
-<span class="sd">then the struct is imediately followed by :ref:`param_vector` (both the struct</span>
+<span class="sd">then the struct is imediately followed by :ref:`qpy_param_vector` (both the struct</span>
 <span class="sd">and utf8 name bytes). That is followed by ``size`` bytes for the</span>
 <span class="sd">data of the symbol. The data format is dependent on the value of ``type``. If</span>
 <span class="sd">``type`` is ``p`` then it represents a :class:`~qiskit.circuit.Parameter` and</span>
@@ -577,16 +643,16 @@
 <span class="sd">and size will be 0 as the value will just be the same as the key. If</span>
 <span class="sd">``type`` is ``f`` then it represents a double precision float. If ``type`` is</span>
 <span class="sd">``c`` it represents a double precision complex, which is represented by the</span>
-<span class="sd">:ref:`complex`. Finally, if type is ``i`` it represents an integer which is an</span>
+<span class="sd">:ref:`qpy_complex`. Finally, if type is ``i`` it represents an integer which is an</span>
 <span class="sd">``int64_t``.</span>
 
-<span class="sd">.. _version_2:</span>
+<span class="sd">.. _qpy_version_2:</span>
 
 <span class="sd">Version 2</span>
 <span class="sd">=========</span>
 
 <span class="sd">Version 2 of the QPY format is identical to version 1 except for the HEADER</span>
-<span class="sd">section is slightly different. You can refer to the :ref:`version_1` section</span>
+<span class="sd">section is slightly different. You can refer to the :ref:`qpy_version_1` section</span>
 <span class="sd">for the details on the rest of the payload format.</span>
 
 <span class="sd">HEADER</span>
@@ -618,7 +684,7 @@
 <span class="sd">:class:`~qiskit.circuit.Parameter`) which is represented by a PARAM_EXPR struct</span>
 <span class="sd">(see below).</span>
 
-<span class="sd">.. _version_1:</span>
+<span class="sd">.. _qpy_version_1:</span>
 
 <span class="sd">Version 1</span>
 <span class="sd">=========</span>
@@ -649,8 +715,10 @@
 
 <span class="sd">The METADATA field is a UTF8 encoded JSON string. After reading the HEADER</span>
 <span class="sd">(which is a fixed size at the start of the QPY file) and the ``name`` string</span>
-<span class="sd">you then read the`metadata_size`` number of bytes and parse the JSON to get</span>
+<span class="sd">you then read the ``metadata_size`` number of bytes and parse the JSON to get</span>
 <span class="sd">the metadata for the circuit.</span>
+
+<span class="sd">.. _qpy_registers:</span>
 
 <span class="sd">REGISTERS</span>
 <span class="sd">---------</span>
@@ -672,9 +740,15 @@
 
 <span class="sd">Immediately following the REGISTER struct is the utf8 encoded register name of</span>
 <span class="sd">size ``name_size``. After the ``name`` utf8 bytes there is then an array of</span>
-<span class="sd">uint32_t values of size ``size`` that contains a map of the register&#39;s index to</span>
+<span class="sd">int64_t values of size ``size`` that contains a map of the register&#39;s index to</span>
 <span class="sd">the circuit&#39;s qubit index. For example, array element 0&#39;s value is the index</span>
 <span class="sd">of the ``register[0]``&#39;s position in the containing circuit&#39;s qubits list.</span>
+
+<span class="sd">.. note::</span>
+
+<span class="sd">    Prior to QPY :ref:`qpy_version_4` the type of array elements was uint32_t. This was changed</span>
+<span class="sd">    to enable negative values which represent bits in the array not present in the</span>
+<span class="sd">    circuit</span>
 
 <span class="sd">The standalone boolean determines whether the register is constructed as a</span>
 <span class="sd">standalone register that was added to the circuit or was created from existing</span>
@@ -693,7 +767,7 @@
 <span class="sd">``qr`` would have ``standalone`` set to ``False``.</span>
 
 
-<span class="sd">.. _custom_definition:</span>
+<span class="sd">.. _qpy_custom_definition:</span>
 
 <span class="sd">CUSTOM_DEFINITIONS</span>
 <span class="sd">------------------</span>
@@ -793,19 +867,19 @@
 <span class="sd">The ``type`` field can be ``&#39;i&#39;``, ``&#39;f&#39;``, ``&#39;p&#39;``, ``&#39;e&#39;``, ``&#39;s&#39;``, ``&#39;c&#39;``</span>
 <span class="sd">or ``&#39;n&#39;`` which dictate the format. For ``&#39;i&#39;`` it&#39;s an integer, ``&#39;f&#39;`` it&#39;s</span>
 <span class="sd">a double, ``&#39;s&#39;`` if it&#39;s a string (encoded as utf8), ``&#39;c&#39;`` is a complex and</span>
-<span class="sd">the data is represented by the struct format in the :ref:`param_expr` section.</span>
+<span class="sd">the data is represented by the struct format in the :ref:`qpy_param_expr` section.</span>
 <span class="sd">``&#39;p&#39;`` defines a :class:`~qiskit.circuit.Parameter` object  which is</span>
-<span class="sd">represented by a :ref:`param_struct` struct, ``e`` defines a</span>
+<span class="sd">represented by a :ref:`qpy_param_struct` struct, ``e`` defines a</span>
 <span class="sd">:class:`~qiskit.circuit.ParameterExpression` object (that&#39;s not a</span>
-<span class="sd">:class:`~qiskit.circuit.Parameter`) which is represented by a :ref:`param_expr`</span>
-<span class="sd">struct (on QPY format :ref:`version_3` the format is tweak slightly see:</span>
-<span class="sd">:ref:`param_expr_v3`), ``&#39;n&#39;`` represents an object from numpy (either an</span>
+<span class="sd">:class:`~qiskit.circuit.Parameter`) which is represented by a :ref:`qpy_param_expr`</span>
+<span class="sd">struct (on QPY format :ref:`qpy_version_3` the format is tweak slightly see:</span>
+<span class="sd">:ref:`qpy_param_expr_v3`), ``&#39;n&#39;`` represents an object from numpy (either an</span>
 <span class="sd">``ndarray`` or a numpy type) which means the data is .npy format [#f2]_ data,</span>
-<span class="sd">and in QPY :ref:`version_3` ``&#39;v&#39;`` represents a</span>
+<span class="sd">and in QPY :ref:`qpy_version_3` ``&#39;v&#39;`` represents a</span>
 <span class="sd">:class:`~qiskit.circuit.ParameterVectorElement` which is represented by a</span>
-<span class="sd">:ref:`param_vector` struct.</span>
+<span class="sd">:ref:`qpy_param_vector` struct.</span>
 
-<span class="sd">.. _param_struct:</span>
+<span class="sd">.. _qpy_param_struct:</span>
 
 <span class="sd">PARAMETER</span>
 <span class="sd">---------</span>
@@ -823,7 +897,7 @@
 <span class="sd">which is immediately followed by ``name_size`` utf8 bytes representing the</span>
 <span class="sd">parameter name.</span>
 
-<span class="sd">.. _param_expr:</span>
+<span class="sd">.. _qpy_param_expr:</span>
 
 <span class="sd">PARAMETER_EXPR</span>
 <span class="sd">--------------</span>
@@ -859,10 +933,10 @@
 <span class="sd">``type`` is ``p`` then it represents a :class:`~qiskit.circuit.Parameter` and</span>
 <span class="sd">size will be 0, the value will just be the same as the key. If</span>
 <span class="sd">``type`` is ``f`` then it represents a double precision float. If ``type`` is</span>
-<span class="sd">``c`` it represents a double precision complex, which is represented by :ref:`complex`.</span>
+<span class="sd">``c`` it represents a double precision complex, which is represented by :ref:`qpy_complex`.</span>
 <span class="sd">Finally, if type is ``i`` it represents an integer which is an ``int64_t``.</span>
 
-<span class="sd">.. _complex:</span>
+<span class="sd">.. _qpy_complex:</span>
 
 <span class="sd">COMPLEX</span>
 <span class="sd">-------</span>
@@ -905,6 +979,7 @@
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">library</span>
 <span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">circuit</span> <span class="k">as</span> <span class="n">circuit_mod</span>
 <span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">extensions</span>
+<span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">controlflow</span>
 <span class="kn">from</span> <span class="nn">qiskit.extensions</span> <span class="kn">import</span> <span class="n">quantum_initializer</span>
 <span class="kn">from</span> <span class="nn">qiskit.version</span> <span class="kn">import</span> <span class="n">__version__</span>
 <span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">QiskitError</span>
@@ -977,9 +1052,13 @@
 
 
 <span class="c1"># REGISTER binary format</span>
+<span class="n">REGISTER_V4</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;REGISTER&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;standalone&quot;</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">,</span> <span class="s2">&quot;name_size&quot;</span><span class="p">,</span> <span class="s2">&quot;in_circuit&quot;</span><span class="p">])</span>
+<span class="n">REGISTER_V4_PACK</span> <span class="o">=</span> <span class="s2">&quot;!1c?IH?&quot;</span>
+<span class="n">REGISTER_V4_SIZE</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">REGISTER_V4_PACK</span><span class="p">)</span>
 <span class="n">REGISTER</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;REGISTER&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;standalone&quot;</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">,</span> <span class="s2">&quot;name_size&quot;</span><span class="p">])</span>
 <span class="n">REGISTER_PACK</span> <span class="o">=</span> <span class="s2">&quot;!1c?IH&quot;</span>
 <span class="n">REGISTER_SIZE</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">REGISTER_PACK</span><span class="p">)</span>
+
 
 <span class="c1"># INSTRUCTION binary format</span>
 <span class="n">INSTRUCTION</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span>
@@ -1042,6 +1121,14 @@
 <span class="n">SPARSE_PAULI_OP_LIST_ELEM</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;SPARSE_PAULI_OP_LIST_ELEMENT&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">])</span>
 <span class="n">SPARSE_PAULI_OP_LIST_ELEM_PACK</span> <span class="o">=</span> <span class="s2">&quot;!Q&quot;</span>
 <span class="n">SPARSE_PAULI_OP_LIST_ELEM_SIZE</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">SPARSE_PAULI_OP_LIST_ELEM_PACK</span><span class="p">)</span>
+<span class="c1"># Range</span>
+<span class="n">RANGE</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;RANGE&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;stop&quot;</span><span class="p">,</span> <span class="s2">&quot;step&quot;</span><span class="p">])</span>
+<span class="n">RANGE_PACK</span> <span class="o">=</span> <span class="s2">&quot;!qqq&quot;</span>
+<span class="n">RANGE_PACK_SIZE</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">RANGE_PACK</span><span class="p">)</span>
+<span class="c1"># Tuple</span>
+<span class="n">TUPLE</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;TUPLE&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;num_elements&quot;</span><span class="p">])</span>
+<span class="n">TUPLE_PACK</span> <span class="o">=</span> <span class="s2">&quot;!Q&quot;</span>
+<span class="n">TUPLE_PACK_SIZE</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">TUPLE_PACK</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_read_header_v2</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">vectors</span><span class="p">):</span>
@@ -1107,9 +1194,27 @@
         <span class="n">bit_indices_raw</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">REGISTER_ARRAY_PACK</span><span class="p">))</span>
         <span class="n">bit_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">REGISTER_ARRAY_PACK</span><span class="p">,</span> <span class="n">bit_indices_raw</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">register</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;q&quot;</span><span class="p">:</span>
-            <span class="n">registers</span><span class="p">[</span><span class="s2">&quot;q&quot;</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">standalone</span><span class="p">,</span> <span class="n">bit_indices</span><span class="p">)</span>
+            <span class="n">registers</span><span class="p">[</span><span class="s2">&quot;q&quot;</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">standalone</span><span class="p">,</span> <span class="n">bit_indices</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">registers</span><span class="p">[</span><span class="s2">&quot;c&quot;</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">standalone</span><span class="p">,</span> <span class="n">bit_indices</span><span class="p">)</span>
+            <span class="n">registers</span><span class="p">[</span><span class="s2">&quot;c&quot;</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">standalone</span><span class="p">,</span> <span class="n">bit_indices</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">registers</span>
+
+
+<span class="k">def</span> <span class="nf">_read_registers_v4</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">num_registers</span><span class="p">):</span>
+    <span class="n">registers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;q&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="p">{}}</span>
+    <span class="k">for</span> <span class="n">_reg</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_registers</span><span class="p">):</span>
+        <span class="n">register_raw</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">REGISTER_V4_SIZE</span><span class="p">)</span>
+        <span class="n">register</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">REGISTER_V4_PACK</span><span class="p">,</span> <span class="n">register_raw</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">register</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
+        <span class="n">standalone</span> <span class="o">=</span> <span class="n">register</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">REGISTER_ARRAY_PACK</span> <span class="o">=</span> <span class="s2">&quot;!</span><span class="si">%s</span><span class="s2">q&quot;</span> <span class="o">%</span> <span class="n">register</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">in_circuit</span> <span class="o">=</span> <span class="n">register</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">bit_indices_raw</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">REGISTER_ARRAY_PACK</span><span class="p">))</span>
+        <span class="n">bit_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">REGISTER_ARRAY_PACK</span><span class="p">,</span> <span class="n">bit_indices_raw</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">register</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;q&quot;</span><span class="p">:</span>
+            <span class="n">registers</span><span class="p">[</span><span class="s2">&quot;q&quot;</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">standalone</span><span class="p">,</span> <span class="n">bit_indices</span><span class="p">,</span> <span class="n">in_circuit</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">registers</span><span class="p">[</span><span class="s2">&quot;c&quot;</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">standalone</span><span class="p">,</span> <span class="n">bit_indices</span><span class="p">,</span> <span class="n">in_circuit</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">registers</span>
 
 
@@ -1211,6 +1316,53 @@
     <span class="k">return</span> <span class="n">ParameterExpression</span><span class="p">(</span><span class="n">symbol_map</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
 
 
+<span class="k">def</span> <span class="nf">_read_instruction_param</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">vectors</span><span class="p">):</span>
+    <span class="n">param_raw</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">INSTRUCTION_PARAM_SIZE</span><span class="p">)</span>
+    <span class="n">param</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">INSTRUCTION_PARAM_PACK</span><span class="p">,</span> <span class="n">param_raw</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">type_str</span> <span class="o">=</span> <span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
+    <span class="n">param</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;i&quot;</span><span class="p">:</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;q&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;f&quot;</span><span class="p">:</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;d&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;c&quot;</span><span class="p">:</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="o">*</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">COMPLEX_PACK</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;n&quot;</span><span class="p">:</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">container</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;s&quot;</span><span class="p">:</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;p&quot;</span><span class="p">:</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">_read_parameter</span><span class="p">(</span><span class="n">container</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">param</span> <span class="o">=</span> <span class="n">_read_parameter_expression</span><span class="p">(</span><span class="n">container</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">param</span> <span class="o">=</span> <span class="n">_read_parameter_expression_v3</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">vectors</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">_read_parameter_vec</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">vectors</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;q&quot;</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
+            <span class="n">param</span> <span class="o">=</span> <span class="n">_read_circuit</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">RANGE_PACK</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;t&quot;</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">as</span> <span class="n">container</span><span class="p">:</span>
+            <span class="n">num_elements</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">TUPLE_PACK</span><span class="p">,</span> <span class="n">container</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">TUPLE_PACK_SIZE</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">param</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">_read_instruction_param</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">vectors</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_elements</span><span class="p">)</span>
+            <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid parameter type: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">type_str</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">param</span>
+
+
 <span class="k">def</span> <span class="nf">_read_instruction</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">circuit</span><span class="p">,</span> <span class="n">registers</span><span class="p">,</span> <span class="n">custom_instructions</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">vectors</span><span class="p">):</span>
     <span class="n">instruction_raw</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">INSTRUCTION_SIZE</span><span class="p">)</span>
     <span class="n">instruction</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">INSTRUCTION_PACK</span><span class="p">,</span> <span class="n">instruction_raw</span><span class="p">)</span>
@@ -1262,36 +1414,7 @@
         <span class="n">cargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clbit_indices</span><span class="p">[</span><span class="n">carg</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
     <span class="c1"># Load Parameters</span>
     <span class="k">for</span> <span class="n">_param</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_params</span><span class="p">):</span>
-        <span class="n">param_raw</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">INSTRUCTION_PARAM_SIZE</span><span class="p">)</span>
-        <span class="n">param</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">INSTRUCTION_PARAM_PACK</span><span class="p">,</span> <span class="n">param_raw</span><span class="p">)</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="n">type_str</span> <span class="o">=</span> <span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
-        <span class="n">param</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;i&quot;</span><span class="p">:</span>
-            <span class="n">param</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;q&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;f&quot;</span><span class="p">:</span>
-            <span class="n">param</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;d&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;c&quot;</span><span class="p">:</span>
-            <span class="n">param</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="o">*</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">COMPLEX_PACK</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
-        <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;n&quot;</span><span class="p">:</span>
-            <span class="n">container</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-            <span class="n">param</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">container</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;s&quot;</span><span class="p">:</span>
-            <span class="n">param</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;p&quot;</span><span class="p">:</span>
-            <span class="n">container</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-            <span class="n">param</span> <span class="o">=</span> <span class="n">_read_parameter</span><span class="p">(</span><span class="n">container</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span>
-            <span class="n">container</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">version</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
-                <span class="n">param</span> <span class="o">=</span> <span class="n">_read_parameter_expression</span><span class="p">(</span><span class="n">container</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">param</span> <span class="o">=</span> <span class="n">_read_parameter_expression_v3</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">vectors</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span>
-            <span class="n">container</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-            <span class="n">param</span> <span class="o">=</span> <span class="n">_read_parameter_vec</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">vectors</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid parameter type: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">type_str</span><span class="p">)</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">_read_instruction_param</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">vectors</span><span class="p">)</span>
         <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
     <span class="c1"># Load Gate object</span>
     <span class="n">gate_class</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1317,15 +1440,22 @@
         <span class="n">gate_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">extensions</span><span class="p">,</span> <span class="n">gate_name</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">quantum_initializer</span><span class="p">,</span> <span class="n">gate_name</span><span class="p">):</span>
         <span class="n">gate_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">quantum_initializer</span><span class="p">,</span> <span class="n">gate_name</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">controlflow</span><span class="p">,</span> <span class="n">gate_name</span><span class="p">):</span>
+        <span class="n">gate_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">controlflow</span><span class="p">,</span> <span class="n">gate_name</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Invalid instruction type: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">gate_name</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">gate_name</span> <span class="o">==</span> <span class="s2">&quot;Initialize&quot;</span><span class="p">:</span>
-        <span class="n">gate</span> <span class="o">=</span> <span class="n">gate_class</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gate_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;IfElseOp&quot;</span><span class="p">,</span> <span class="s2">&quot;WhileLoopOp&quot;</span><span class="p">}:</span>
+        <span class="n">gate</span> <span class="o">=</span> <span class="n">gate_class</span><span class="p">(</span><span class="n">condition_tuple</span><span class="p">,</span> <span class="o">*</span><span class="n">params</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">gate_name</span> <span class="o">==</span> <span class="s2">&quot;Barrier&quot;</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">qargs</span><span class="p">)]</span>
-        <span class="n">gate</span> <span class="o">=</span> <span class="n">gate_class</span><span class="p">(</span><span class="o">*</span><span class="n">params</span><span class="p">)</span>
-    <span class="n">gate</span><span class="o">.</span><span class="n">condition</span> <span class="o">=</span> <span class="n">condition_tuple</span>
+        <span class="k">if</span> <span class="n">gate_name</span> <span class="o">==</span> <span class="s2">&quot;Initialize&quot;</span><span class="p">:</span>
+            <span class="n">gate</span> <span class="o">=</span> <span class="n">gate_class</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">gate_name</span> <span class="o">==</span> <span class="s2">&quot;Barrier&quot;</span><span class="p">:</span>
+                <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">qargs</span><span class="p">)]</span>
+            <span class="k">elif</span> <span class="n">gate_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;BreakLoopOp&quot;</span><span class="p">,</span> <span class="s2">&quot;ContinueLoopOp&quot;</span><span class="p">}:</span>
+                <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">qargs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">cargs</span><span class="p">)]</span>
+            <span class="n">gate</span> <span class="o">=</span> <span class="n">gate_class</span><span class="p">(</span><span class="o">*</span><span class="n">params</span><span class="p">)</span>
+        <span class="n">gate</span><span class="o">.</span><span class="n">condition</span> <span class="o">=</span> <span class="n">condition_tuple</span>
     <span class="k">if</span> <span class="n">label_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">gate</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gate</span><span class="p">,</span> <span class="n">Instruction</span><span class="p">):</span>
@@ -1338,7 +1468,7 @@
     <span class="p">(</span><span class="n">type_str</span><span class="p">,</span> <span class="n">num_qubits</span><span class="p">,</span> <span class="n">num_clbits</span><span class="p">,</span> <span class="n">definition</span><span class="p">)</span> <span class="o">=</span> <span class="n">custom_instructions</span><span class="p">[</span><span class="n">gate_name</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;i&quot;</span><span class="p">:</span>
         <span class="n">inst_obj</span> <span class="o">=</span> <span class="n">Instruction</span><span class="p">(</span><span class="n">gate_name</span><span class="p">,</span> <span class="n">num_qubits</span><span class="p">,</span> <span class="n">num_clbits</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">definition</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">definition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">inst_obj</span><span class="o">.</span><span class="n">definition</span> <span class="o">=</span> <span class="n">definition</span>
     <span class="k">elif</span> <span class="n">type_str</span> <span class="o">==</span> <span class="s2">&quot;g&quot;</span><span class="p">:</span>
         <span class="n">inst_obj</span> <span class="o">=</span> <span class="n">Gate</span><span class="p">(</span><span class="n">gate_name</span><span class="p">,</span> <span class="n">num_qubits</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
@@ -1451,6 +1581,77 @@
         <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
 
+<span class="k">def</span> <span class="nf">_write_instruction_parameter</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+    <span class="n">container</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;i&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;q&quot;</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">&quot;&lt;q&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;f&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;d&quot;</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">&quot;&lt;d&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;s&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">ParameterVectorElement</span><span class="p">):</span>
+        <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;v&quot;</span>
+        <span class="n">_write_parameter_vec</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+        <span class="n">container</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">):</span>
+        <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;p&quot;</span>
+        <span class="n">_write_parameter</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+        <span class="n">container</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">):</span>
+        <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;e&quot;</span>
+        <span class="n">_write_parameter_expression</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+        <span class="n">container</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">complex</span><span class="p">):</span>
+        <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;c&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">COMPLEX_PACK</span><span class="p">,</span> <span class="n">param</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">param</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">COMPLEX_PACK</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">complexfloating</span><span class="p">)):</span>
+        <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;n&quot;</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+        <span class="n">container</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">param</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;z&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">QuantumCircuit</span><span class="p">):</span>
+        <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;q&quot;</span>
+        <span class="n">_write_circuit</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">range</span><span class="p">):</span>
+        <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;r&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">RANGE_PACK</span><span class="p">,</span> <span class="n">param</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">param</span><span class="o">.</span><span class="n">stop</span><span class="p">,</span> <span class="n">param</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;t&quot;</span>
+        <span class="n">num_elements</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+        <span class="n">container</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">TUPLE_PACK</span><span class="p">,</span> <span class="n">num_elements</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+            <span class="n">_write_instruction_parameter</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid parameter type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">param</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">instruction_param_raw</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">INSTRUCTION_PARAM_PACK</span><span class="p">,</span> <span class="n">type_key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">),</span> <span class="n">size</span><span class="p">)</span>
+    <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">instruction_param_raw</span><span class="p">)</span>
+    <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">container</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
 <span class="k">def</span> <span class="nf">_write_instruction</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">instruction_tuple</span><span class="p">,</span> <span class="n">custom_instructions</span><span class="p">,</span> <span class="n">index_map</span><span class="p">):</span>
     <span class="n">gate_class_name</span> <span class="o">=</span> <span class="n">instruction_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
     <span class="k">if</span> <span class="p">(</span>
@@ -1459,6 +1660,7 @@
             <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">circuit_mod</span><span class="p">,</span> <span class="n">gate_class_name</span><span class="p">)</span>
             <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">extensions</span><span class="p">,</span> <span class="n">gate_class_name</span><span class="p">)</span>
             <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">quantum_initializer</span><span class="p">,</span> <span class="n">gate_class_name</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">controlflow</span><span class="p">,</span> <span class="n">gate_class_name</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="ow">or</span> <span class="n">gate_class_name</span> <span class="o">==</span> <span class="s2">&quot;Gate&quot;</span>
         <span class="ow">or</span> <span class="n">gate_class_name</span> <span class="o">==</span> <span class="s2">&quot;Instruction&quot;</span>
@@ -1515,55 +1717,7 @@
         <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">instruction_arg_raw</span><span class="p">)</span>
     <span class="c1"># Encode instruction params</span>
     <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">instruction_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
-        <span class="n">container</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-            <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;i&quot;</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;q&quot;</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
-            <span class="n">size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">&quot;&lt;q&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
-            <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;f&quot;</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;d&quot;</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
-            <span class="n">size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">&quot;&lt;d&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;s&quot;</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
-            <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">ParameterVectorElement</span><span class="p">):</span>
-            <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;v&quot;</span>
-            <span class="n">_write_parameter_vec</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
-            <span class="n">container</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-            <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">):</span>
-            <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;p&quot;</span>
-            <span class="n">_write_parameter</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
-            <span class="n">container</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-            <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">):</span>
-            <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;e&quot;</span>
-            <span class="n">_write_parameter_expression</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
-            <span class="n">container</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-            <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">complex</span><span class="p">):</span>
-            <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;c&quot;</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">COMPLEX_PACK</span><span class="p">,</span> <span class="n">param</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">param</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
-            <span class="n">size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">COMPLEX_PACK</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">complexfloating</span><span class="p">)):</span>
-            <span class="n">type_key</span> <span class="o">=</span> <span class="s2">&quot;n&quot;</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
-            <span class="n">container</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-            <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Invalid parameter type </span><span class="si">{</span><span class="n">instruction_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> for gate </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">param</span><span class="p">)</span><span class="si">}</span><span class="s2">,&quot;</span>
-            <span class="p">)</span>
-        <span class="n">instruction_param_raw</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">INSTRUCTION_PARAM_PACK</span><span class="p">,</span> <span class="n">type_key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">),</span> <span class="n">size</span><span class="p">)</span>
-        <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">instruction_param_raw</span><span class="p">)</span>
-        <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="n">container</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">_write_instruction_parameter</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_write_pauli_evolution_gate</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">evolution_gate</span><span class="p">):</span>
@@ -1674,7 +1828,7 @@
     <span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">num_qubits</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">num_qubits</span>
     <span class="n">num_clbits</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">num_clbits</span>
-    <span class="k">if</span> <span class="n">instruction</span><span class="o">.</span><span class="n">definition</span> <span class="ow">or</span> <span class="n">type_str</span> <span class="o">==</span> <span class="sa">b</span><span class="s2">&quot;p&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">instruction</span><span class="o">.</span><span class="n">definition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">type_str</span> <span class="o">==</span> <span class="sa">b</span><span class="s2">&quot;p&quot;</span><span class="p">:</span>
         <span class="n">has_definition</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">definition_buffer</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">type_str</span> <span class="o">==</span> <span class="sa">b</span><span class="s2">&quot;p&quot;</span><span class="p">:</span>
@@ -1750,7 +1904,7 @@
     <span class="n">header</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span>
         <span class="n">FILE_HEADER_PACK</span><span class="p">,</span>
         <span class="sa">b</span><span class="s2">&quot;QISKIT&quot;</span><span class="p">,</span>
-        <span class="mi">3</span><span class="p">,</span>
+        <span class="mi">4</span><span class="p">,</span>
         <span class="n">version_parts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
         <span class="n">version_parts</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
         <span class="n">version_parts</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
@@ -1790,38 +1944,88 @@
             <span class="n">global_phase_data</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;unsupported global phase type </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">global_phase</span><span class="p">))</span>
-    <span class="n">header_raw</span> <span class="o">=</span> <span class="n">HEADER_V2</span><span class="p">(</span>
-        <span class="n">name_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">circuit_name</span><span class="p">),</span>
-        <span class="n">global_phase_type</span><span class="o">=</span><span class="n">global_phase_type</span><span class="p">,</span>
-        <span class="n">global_phase_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">global_phase_data</span><span class="p">),</span>
-        <span class="n">num_qubits</span><span class="o">=</span><span class="n">circuit</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">,</span>
-        <span class="n">num_clbits</span><span class="o">=</span><span class="n">circuit</span><span class="o">.</span><span class="n">num_clbits</span><span class="p">,</span>
-        <span class="n">metadata_size</span><span class="o">=</span><span class="n">metadata_size</span><span class="p">,</span>
-        <span class="n">num_registers</span><span class="o">=</span><span class="n">num_registers</span><span class="p">,</span>
-        <span class="n">num_instructions</span><span class="o">=</span><span class="n">num_instructions</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">header</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">HEADER_V2_PACK</span><span class="p">,</span> <span class="o">*</span><span class="n">header_raw</span><span class="p">)</span>
-    <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
-    <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">circuit_name</span><span class="p">)</span>
-    <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">global_phase_data</span><span class="p">)</span>
-    <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">metadata_raw</span><span class="p">)</span>
+
     <span class="n">qubit_indices</span> <span class="o">=</span> <span class="p">{</span><span class="n">bit</span><span class="p">:</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">bit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">qubits</span><span class="p">)}</span>
     <span class="n">clbit_indices</span> <span class="o">=</span> <span class="p">{</span><span class="n">bit</span><span class="p">:</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">bit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">clbits</span><span class="p">)}</span>
-    <span class="k">if</span> <span class="n">num_registers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">reg</span> <span class="ow">in</span> <span class="n">circuit</span><span class="o">.</span><span class="n">qregs</span><span class="p">:</span>
+    <span class="n">processed_qubit_indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">processed_clbit_indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">process_qregs</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">qregs</span><span class="p">,</span> <span class="n">in_circuit</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">reg</span> <span class="ow">in</span> <span class="n">qregs</span><span class="p">:</span>
             <span class="n">standalone</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">bit</span><span class="o">.</span><span class="n">_register</span> <span class="ow">is</span> <span class="n">reg</span> <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">reg</span><span class="p">)</span>
             <span class="n">reg_name</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
-            <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">REGISTER_PACK</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;q&quot;</span><span class="p">,</span> <span class="n">standalone</span><span class="p">,</span> <span class="n">reg</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">reg_name</span><span class="p">)))</span>
-            <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">reg_name</span><span class="p">)</span>
-            <span class="n">REGISTER_ARRAY_PACK</span> <span class="o">=</span> <span class="s2">&quot;!</span><span class="si">%s</span><span class="s2">I&quot;</span> <span class="o">%</span> <span class="n">reg</span><span class="o">.</span><span class="n">size</span>
-            <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">REGISTER_ARRAY_PACK</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">qubit_indices</span><span class="p">[</span><span class="n">bit</span><span class="p">]</span> <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">reg</span><span class="p">)))</span>
-        <span class="k">for</span> <span class="n">reg</span> <span class="ow">in</span> <span class="n">circuit</span><span class="o">.</span><span class="n">cregs</span><span class="p">:</span>
+            <span class="n">buf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">REGISTER_V4_PACK</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;q&quot;</span><span class="p">,</span> <span class="n">standalone</span><span class="p">,</span> <span class="n">reg</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">reg_name</span><span class="p">),</span> <span class="n">in_circuit</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">buf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">reg_name</span><span class="p">)</span>
+            <span class="n">REGISTER_ARRAY_PACK</span> <span class="o">=</span> <span class="s2">&quot;!</span><span class="si">%s</span><span class="s2">q&quot;</span> <span class="o">%</span> <span class="n">reg</span><span class="o">.</span><span class="n">size</span>
+            <span class="n">bit_indices</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">reg</span><span class="p">:</span>
+                <span class="n">bit_index</span> <span class="o">=</span> <span class="n">qubit_indices</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">bit</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">bit_index</span> <span class="ow">in</span> <span class="n">processed_qubit_indices</span><span class="p">:</span>
+                    <span class="n">bit_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="k">if</span> <span class="n">bit_index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">processed_qubit_indices</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">bit_index</span><span class="p">)</span>
+                <span class="n">bit_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bit_index</span><span class="p">)</span>
+            <span class="n">buf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">REGISTER_ARRAY_PACK</span><span class="p">,</span> <span class="o">*</span><span class="n">bit_indices</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">process_cregs</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">cregs</span><span class="p">,</span> <span class="n">in_circuit</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">reg</span> <span class="ow">in</span> <span class="n">cregs</span><span class="p">:</span>
             <span class="n">standalone</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">bit</span><span class="o">.</span><span class="n">_register</span> <span class="ow">is</span> <span class="n">reg</span> <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">reg</span><span class="p">)</span>
             <span class="n">reg_name</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
-            <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">REGISTER_PACK</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="n">standalone</span><span class="p">,</span> <span class="n">reg</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">reg_name</span><span class="p">)))</span>
-            <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">reg_name</span><span class="p">)</span>
-            <span class="n">REGISTER_ARRAY_PACK</span> <span class="o">=</span> <span class="s2">&quot;!</span><span class="si">%s</span><span class="s2">I&quot;</span> <span class="o">%</span> <span class="n">reg</span><span class="o">.</span><span class="n">size</span>
-            <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">REGISTER_ARRAY_PACK</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">clbit_indices</span><span class="p">[</span><span class="n">bit</span><span class="p">]</span> <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">reg</span><span class="p">)))</span>
+            <span class="n">buf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">REGISTER_V4_PACK</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="n">standalone</span><span class="p">,</span> <span class="n">reg</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">reg_name</span><span class="p">),</span> <span class="n">in_circuit</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">buf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">reg_name</span><span class="p">)</span>
+            <span class="n">REGISTER_ARRAY_PACK</span> <span class="o">=</span> <span class="s2">&quot;!</span><span class="si">%s</span><span class="s2">q&quot;</span> <span class="o">%</span> <span class="n">reg</span><span class="o">.</span><span class="n">size</span>
+            <span class="n">bit_indices</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">reg</span><span class="p">:</span>
+                <span class="n">bit_index</span> <span class="o">=</span> <span class="n">clbit_indices</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">bit</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="c1"># If index already in circuit treat it as non-existent (since it indicates dual</span>
+                <span class="c1"># register membership and the bit is already being reconstructed</span>
+                <span class="k">if</span> <span class="n">bit_index</span> <span class="ow">in</span> <span class="n">processed_clbit_indices</span><span class="p">:</span>
+                    <span class="n">bit_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="k">if</span> <span class="n">bit_index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">processed_clbit_indices</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">bit_index</span><span class="p">)</span>
+                <span class="n">bit_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bit_index</span><span class="p">)</span>
+            <span class="n">buf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">REGISTER_ARRAY_PACK</span><span class="p">,</span> <span class="o">*</span><span class="n">bit_indices</span><span class="p">))</span>
+
+    <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span> <span class="k">as</span> <span class="n">reg_buf</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">num_registers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">process_qregs</span><span class="p">(</span><span class="n">reg_buf</span><span class="p">,</span> <span class="n">circuit</span><span class="o">.</span><span class="n">qregs</span><span class="p">)</span>
+            <span class="n">process_cregs</span><span class="p">(</span><span class="n">reg_buf</span><span class="p">,</span> <span class="n">circuit</span><span class="o">.</span><span class="n">cregs</span><span class="p">)</span>
+        <span class="c1"># process dangling registers (those not added to circuit)</span>
+        <span class="n">qreg_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">circuit</span><span class="o">.</span><span class="n">qubits</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">bit</span><span class="o">.</span><span class="n">_register</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">bit</span><span class="o">.</span><span class="n">_register</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">circuit</span><span class="o">.</span><span class="n">qregs</span><span class="p">:</span>
+                <span class="n">qreg_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">bit</span><span class="o">.</span><span class="n">_register</span><span class="p">)</span>
+        <span class="n">process_qregs</span><span class="p">(</span><span class="n">reg_buf</span><span class="p">,</span> <span class="n">qreg_set</span><span class="p">,</span> <span class="n">in_circuit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">num_registers</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">qreg_set</span><span class="p">)</span>
+        <span class="n">creg_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">circuit</span><span class="o">.</span><span class="n">clbits</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">bit</span><span class="o">.</span><span class="n">_register</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">bit</span><span class="o">.</span><span class="n">_register</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">circuit</span><span class="o">.</span><span class="n">cregs</span><span class="p">:</span>
+                <span class="n">creg_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">bit</span><span class="o">.</span><span class="n">_register</span><span class="p">)</span>
+        <span class="n">process_cregs</span><span class="p">(</span><span class="n">reg_buf</span><span class="p">,</span> <span class="n">creg_set</span><span class="p">,</span> <span class="n">in_circuit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">num_registers</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">creg_set</span><span class="p">)</span>
+        <span class="c1"># Write circuit header</span>
+        <span class="n">header_raw</span> <span class="o">=</span> <span class="n">HEADER_V2</span><span class="p">(</span>
+            <span class="n">name_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">circuit_name</span><span class="p">),</span>
+            <span class="n">global_phase_type</span><span class="o">=</span><span class="n">global_phase_type</span><span class="p">,</span>
+            <span class="n">global_phase_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">global_phase_data</span><span class="p">),</span>
+            <span class="n">num_qubits</span><span class="o">=</span><span class="n">circuit</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">,</span>
+            <span class="n">num_clbits</span><span class="o">=</span><span class="n">circuit</span><span class="o">.</span><span class="n">num_clbits</span><span class="p">,</span>
+            <span class="n">metadata_size</span><span class="o">=</span><span class="n">metadata_size</span><span class="p">,</span>
+            <span class="n">num_registers</span><span class="o">=</span><span class="n">num_registers</span><span class="p">,</span>
+            <span class="n">num_instructions</span><span class="o">=</span><span class="n">num_instructions</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">HEADER_V2_PACK</span><span class="p">,</span> <span class="o">*</span><span class="n">header_raw</span><span class="p">)</span>
+        <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+        <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">circuit_name</span><span class="p">)</span>
+        <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">global_phase_data</span><span class="p">)</span>
+        <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">metadata_raw</span><span class="p">)</span>
+        <span class="c1"># Write header payload</span>
+        <span class="n">file_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">reg_buf</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+
     <span class="n">instruction_buffer</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
     <span class="n">custom_instructions</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">index_map</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1923,7 +2127,10 @@
     <span class="n">out_registers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;q&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="p">{}}</span>
     <span class="k">if</span> <span class="n">num_registers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">circ</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">global_phase</span><span class="o">=</span><span class="n">global_phase</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
-        <span class="n">registers</span> <span class="o">=</span> <span class="n">_read_registers</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">num_registers</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">registers</span> <span class="o">=</span> <span class="n">_read_registers</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">num_registers</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">registers</span> <span class="o">=</span> <span class="n">_read_registers_v4</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">num_registers</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">bit_type_label</span><span class="p">,</span> <span class="n">bit_type</span><span class="p">,</span> <span class="n">reg_type</span> <span class="ow">in</span> <span class="p">[</span>
             <span class="p">(</span><span class="s2">&quot;q&quot;</span><span class="p">,</span> <span class="n">Qubit</span><span class="p">,</span> <span class="n">QuantumRegister</span><span class="p">),</span>
@@ -1932,17 +2139,30 @@
             <span class="n">register_bits</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="c1"># Add quantum registers and bits</span>
             <span class="k">for</span> <span class="n">register_name</span> <span class="ow">in</span> <span class="n">registers</span><span class="p">[</span><span class="n">bit_type_label</span><span class="p">]:</span>
-                <span class="n">standalone</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">registers</span><span class="p">[</span><span class="n">bit_type_label</span><span class="p">][</span><span class="n">register_name</span><span class="p">]</span>
+                <span class="n">standalone</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">in_circuit</span> <span class="o">=</span> <span class="n">registers</span><span class="p">[</span><span class="n">bit_type_label</span><span class="p">][</span><span class="n">register_name</span><span class="p">]</span>
+                <span class="n">indices_defined</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="c1"># If a register has no bits in the circuit skip it</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">indices_defined</span><span class="p">:</span>
+                    <span class="k">continue</span>
                 <span class="k">if</span> <span class="n">standalone</span><span class="p">:</span>
-                    <span class="n">start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+                    <span class="n">start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">indices_defined</span><span class="p">)</span>
                     <span class="n">count</span> <span class="o">=</span> <span class="n">start</span>
                     <span class="n">out_of_order</span> <span class="o">=</span> <span class="kc">False</span>
                     <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">out_of_order</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="k">continue</span>
                         <span class="k">if</span> <span class="ow">not</span> <span class="n">out_of_order</span> <span class="ow">and</span> <span class="n">index</span> <span class="o">!=</span> <span class="n">count</span><span class="p">:</span>
                             <span class="n">out_of_order</span> <span class="o">=</span> <span class="kc">True</span>
                         <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
                         <span class="k">if</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">register_bits</span><span class="p">:</span>
+                            <span class="c1"># If we have a bit in the position already it&#39;s been</span>
+                            <span class="c1"># added by an earlier register in the circuit</span>
+                            <span class="c1"># otherwise it&#39;s invalid qpy</span>
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">in_circuit</span><span class="p">:</span>
+                                <span class="k">continue</span>
                             <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;Duplicate register bits found&quot;</span><span class="p">)</span>
+
                         <span class="n">register_bits</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
 
                     <span class="n">num_reg_bits</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
@@ -1951,21 +2171,29 @@
                     <span class="n">reg</span> <span class="o">=</span> <span class="n">reg_type</span><span class="p">(</span><span class="n">num_reg_bits</span><span class="p">,</span> <span class="n">register_name</span><span class="p">)</span>
                     <span class="c1"># If any bits from qreg are out of order in the circuit handle</span>
                     <span class="c1"># is case</span>
-                    <span class="k">if</span> <span class="n">out_of_order</span><span class="p">:</span>
-                        <span class="n">sorted_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
-                        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">sorted_indices</span><span class="p">:</span>
-                            <span class="n">pos</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">out_of_order</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">in_circuit</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span>
+                            <span class="nb">enumerate</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                        <span class="p">):</span>
                             <span class="k">if</span> <span class="n">bit_type_label</span> <span class="o">==</span> <span class="s2">&quot;q&quot;</span><span class="p">:</span>
                                 <span class="n">bit_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">circ</span><span class="o">.</span><span class="n">qubits</span><span class="p">)</span>
                             <span class="k">else</span><span class="p">:</span>
                                 <span class="n">bit_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">circ</span><span class="o">.</span><span class="n">clbits</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="n">bit_len</span><span class="p">:</span>
+                                <span class="c1"># If we have a bit in the position already it&#39;s been</span>
+                                <span class="c1"># added by an earlier register in the circuit</span>
+                                <span class="c1"># otherwise it&#39;s invalid qpy</span>
+                                <span class="k">if</span> <span class="ow">not</span> <span class="n">in_circuit</span><span class="p">:</span>
+                                    <span class="k">continue</span>
+                                <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;Duplicate register bits found&quot;</span><span class="p">)</span>
                             <span class="c1"># Fill any holes between the current register bit and the</span>
                             <span class="c1"># next one</span>
                             <span class="k">if</span> <span class="n">pos</span> <span class="o">&gt;</span> <span class="n">bit_len</span><span class="p">:</span>
                                 <span class="n">bits</span> <span class="o">=</span> <span class="p">[</span><span class="n">bit_type</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pos</span> <span class="o">-</span> <span class="n">bit_len</span><span class="p">)]</span>
                                 <span class="n">circ</span><span class="o">.</span><span class="n">add_bits</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span>
                             <span class="n">circ</span><span class="o">.</span><span class="n">add_bits</span><span class="p">([</span><span class="n">reg</span><span class="p">[</span><span class="n">index</span><span class="p">]])</span>
-                        <span class="n">circ</span><span class="o">.</span><span class="n">add_register</span><span class="p">(</span><span class="n">reg</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">in_circuit</span><span class="p">:</span>
+                            <span class="n">circ</span><span class="o">.</span><span class="n">add_register</span><span class="p">(</span><span class="n">reg</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">bit_type_label</span> <span class="o">==</span> <span class="s2">&quot;q&quot;</span><span class="p">:</span>
                             <span class="n">bit_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">circ</span><span class="o">.</span><span class="n">qubits</span><span class="p">)</span>
@@ -1976,7 +2204,8 @@
                         <span class="k">if</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">circ</span><span class="o">.</span><span class="n">qubits</span><span class="p">):</span>
                             <span class="n">bits</span> <span class="o">=</span> <span class="p">[</span><span class="n">bit_type</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span> <span class="o">-</span> <span class="n">bit_len</span><span class="p">)]</span>
                             <span class="n">circ</span><span class="o">.</span><span class="n">add_bits</span><span class="p">(</span><span class="n">bit_len</span><span class="p">)</span>
-                        <span class="n">circ</span><span class="o">.</span><span class="n">add_register</span><span class="p">(</span><span class="n">reg</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">in_circuit</span><span class="p">:</span>
+                            <span class="n">circ</span><span class="o">.</span><span class="n">add_register</span><span class="p">(</span><span class="n">reg</span><span class="p">)</span>
                         <span class="n">out_registers</span><span class="p">[</span><span class="n">bit_type_label</span><span class="p">][</span><span class="n">register_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">reg</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
@@ -1995,7 +2224,8 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">bits</span> <span class="o">=</span> <span class="p">[</span><span class="n">circ</span><span class="o">.</span><span class="n">clbits</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">]</span>
                     <span class="n">reg</span> <span class="o">=</span> <span class="n">reg_type</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">register_name</span><span class="p">,</span> <span class="n">bits</span><span class="o">=</span><span class="n">bits</span><span class="p">)</span>
-                    <span class="n">circ</span><span class="o">.</span><span class="n">add_register</span><span class="p">(</span><span class="n">reg</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">in_circuit</span><span class="p">:</span>
+                        <span class="n">circ</span><span class="o">.</span><span class="n">add_register</span><span class="p">(</span><span class="n">reg</span><span class="p">)</span>
                     <span class="n">out_registers</span><span class="p">[</span><span class="n">bit_type_label</span><span class="p">][</span><span class="n">register_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">reg</span>
         <span class="c1"># If we don&#39;t have sufficient bits in the circuit after adding</span>
         <span class="c1"># all the registers add more bits to fill the circuit</span>
@@ -2045,7 +2275,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Actualizado por última vez en 2022/02/09.
+      Actualizado por última vez en 2022/02/11.
 
     </p>
   </div>

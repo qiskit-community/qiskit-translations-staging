@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Drag &mdash; Documentação Qiskit 0.34.1</title>
+  <title>Drag &mdash; Documentação Qiskit 0.34.2</title>
   
 
   
@@ -348,15 +348,19 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Drag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit_amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qiskit/pulse/library/parametric_pulses.html#Drag"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#qiskit.pulse.library.Drag" title="Link permanente para esta definição">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">qiskit.pulse.library.parametric_pulses.ParametricPulse</span></code></p>
 <p>The Derivative Removal by Adiabatic Gate (DRAG) pulse is a standard Gaussian pulse
-with an additional Gaussian derivative component. It is designed to reduce the frequency
-spectrum of a normal gaussian pulse near the <span class="math notranslate nohighlight">\(|1\rangle\)</span> - <span class="math notranslate nohighlight">\(|2\rangle\)</span> transition,
+with an additional Gaussian derivative component and lifting applied.</p>
+<p>It is designed to reduce the frequency spectrum of a normal gaussian pulse near
+the <span class="math notranslate nohighlight">\(|1\rangle\leftrightarrow|2\rangle\)</span> transition,
 reducing the chance of leakage to the <span class="math notranslate nohighlight">\(|2\rangle\)</span> state.</p>
 <div class="math notranslate nohighlight">
-\[f(x) = Gaussian + 1j * beta * d/dx [Gaussian]
-     = Gaussian + 1j * beta * (-(x - duration/2) / sigma^2) [Gaussian]\]</div>
-<p>where “Gaussian” is:</p>
-<div class="math notranslate nohighlight">
-\[Gaussian(x, amp, sigma) = amp * exp( -(1/2) * (x - duration/2)^2 / sigma^2 )\]</div>
+\[\begin{split}g(x) &amp;= \exp\Bigl(-\frac12 \frac{(x - \text{duration}/2)^2}{\text{sigma}^2}\Bigr)\\
+f'(x) &amp;= g(x) + 1j \times \text{beta} \times \frac{\mathrm d}{\mathrm{d}x} g(x)\\
+      &amp;= g(x) + 1j \times \text{beta} \times                    \Bigl(-\frac{x - \text{duration}/2}{\text{sigma}^2}\Bigr)g(x)\\
+f(x) &amp;= \text{amp}\times\frac{f'(x)-f'(-1)}{1-f'(-1)}, \quad 0 \le x &lt; \text{duration}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(g(x)\)</span> is a standard unlifted gaussian waveform and
+<span class="math notranslate nohighlight">\(f'(x)\)</span> is the DRAG waveform without lifting or amplitude scaling.</p>
+<p>This pulse would be more accurately named as <code class="docutils literal notranslate"><span class="pre">LiftedDrag</span></code>, however, for historical
+and practical DSP reasons it has the name <code class="docutils literal notranslate"><span class="pre">Drag</span></code>.</p>
 <p class="rubric">References</p>
 <ol class="arabic simple">
 <li><p><a class="reference external" href="https://link.aps.org/doi/10.1103/PhysRevA.83.012308"><em>Gambetta, J. M., Motzoi, F., Merkel, S. T. &amp; Wilhelm, F. K.
@@ -493,7 +497,7 @@ amplitude is constrained to 1.</p></li>
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Última actualização em 2022/02/09.
+      Última actualização em 2022/02/11.
 
     </p>
   </div>

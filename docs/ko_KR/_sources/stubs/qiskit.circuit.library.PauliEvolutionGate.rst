@@ -13,7 +13,6 @@
       :nosignatures:
       :toctree: ../stubs/
 
-      ~PauliEvolutionGate.inverse
       ~PauliEvolutionGate.validate_parameter
 
 

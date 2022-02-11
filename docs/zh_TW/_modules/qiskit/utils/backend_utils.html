@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.utils.backend_utils &mdash; Qiskit 0.34.1 說明文件</title>
+  <title>qiskit.utils.backend_utils &mdash; Qiskit 0.34.2 說明文件</title>
   
 
   
@@ -370,6 +370,25 @@
 <span class="n">_PROVIDER_CHECK</span> <span class="o">=</span> <span class="n">ProviderCheck</span><span class="p">()</span>
 
 
+<span class="k">def</span> <span class="nf">_get_backend_interface_version</span><span class="p">(</span><span class="n">backend</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get the backend version int.&quot;&quot;&quot;</span>
+    <span class="n">backend_interface_version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="c1"># Handle deprecated BaseBackend based backends which have a version()</span>
+    <span class="c1"># method</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend_interface_version</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">backend_interface_version</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">backend_interface_version</span>
+
+
+<span class="k">def</span> <span class="nf">_get_backend_provider</span><span class="p">(</span><span class="n">backend</span><span class="p">):</span>
+    <span class="n">backend_interface_version</span> <span class="o">=</span> <span class="n">_get_backend_interface_version</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">backend_interface_version</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">provider</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">provider</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">provider</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">provider</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">provider</span>
+
+
 <div class="viewcode-block" id="has_ibmq"><a class="viewcode-back" href="../../../stubs/qiskit.utils.has_ibmq.html#qiskit.utils.has_ibmq">[文件]</a><span class="k">def</span> <span class="nf">has_ibmq</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Check if IBMQ is installed&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">_PROVIDER_CHECK</span><span class="o">.</span><span class="n">checked_ibmq</span><span class="p">:</span>
@@ -414,7 +433,7 @@
     <span class="k">if</span> <span class="n">has_aer</span><span class="p">():</span>
         <span class="kn">from</span> <span class="nn">qiskit.providers.aer</span> <span class="kn">import</span> <span class="n">AerProvider</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="o">.</span><span class="n">provider</span><span class="p">(),</span> <span class="n">AerProvider</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_get_backend_provider</span><span class="p">(</span><span class="n">backend</span><span class="p">),</span> <span class="n">AerProvider</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">True</span>
         <span class="kn">from</span> <span class="nn">qiskit.providers.aer.backends.aerbackend</span> <span class="kn">import</span> <span class="n">AerBackend</span>
 
@@ -433,7 +452,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">qiskit.providers.basicaer</span> <span class="kn">import</span> <span class="n">BasicAerProvider</span>
 
-    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="o">.</span><span class="n">provider</span><span class="p">(),</span> <span class="n">BasicAerProvider</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_get_backend_provider</span><span class="p">(</span><span class="n">backend</span><span class="p">),</span> <span class="n">BasicAerProvider</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">is_ibmq_provider</span><span class="p">(</span><span class="n">backend</span><span class="p">):</span>
@@ -447,7 +466,7 @@
     <span class="k">if</span> <span class="n">has_ibmq</span><span class="p">():</span>
         <span class="kn">from</span> <span class="nn">qiskit.providers.ibmq.accountprovider</span> <span class="kn">import</span> <span class="n">AccountProvider</span>
 
-        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="o">.</span><span class="n">provider</span><span class="p">(),</span> <span class="n">AccountProvider</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_get_backend_provider</span><span class="p">(</span><span class="n">backend</span><span class="p">),</span> <span class="n">AccountProvider</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="kc">False</span>
 
@@ -480,7 +499,13 @@
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">AerSimulator</span><span class="p">)</span> <span class="ow">and</span> <span class="n">backend</span><span class="o">.</span><span class="n">name</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;aer_simulator_statevector&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">True</span>
-    <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">name</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;statevector&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">backend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">backend_interface_version</span> <span class="o">=</span> <span class="n">_get_backend_interface_version</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">backend_interface_version</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">name</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;statevector&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;statevector&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">is_simulator_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">):</span>
@@ -492,7 +517,10 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        bool: True is a simulator</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span><span class="o">.</span><span class="n">simulator</span>
+    <span class="n">backend_interface_version</span> <span class="o">=</span> <span class="n">_get_backend_interface_version</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">backend_interface_version</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span><span class="o">.</span><span class="n">simulator</span>
+    <span class="k">return</span> <span class="kc">False</span>
 
 
 <span class="k">def</span> <span class="nf">is_local_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">):</span>
@@ -504,7 +532,10 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        bool: True is a local backend</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span><span class="o">.</span><span class="n">local</span>
+    <span class="n">backend_interface_version</span> <span class="o">=</span> <span class="n">_get_backend_interface_version</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">backend_interface_version</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span><span class="o">.</span><span class="n">local</span>
+    <span class="k">return</span> <span class="kc">False</span>
 
 
 <span class="k">def</span> <span class="nf">is_aer_qasm</span><span class="p">(</span><span class="n">backend</span><span class="p">):</span>
@@ -553,7 +584,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      最後更新於 2022/02/09。
+      最後更新於 2022/02/11。
 
     </p>
   </div>

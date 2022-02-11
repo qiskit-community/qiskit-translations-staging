@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.synthesis.evolution.product_formula &mdash; Qiskit 0.34.1 documentation</title>
+  <title>qiskit.synthesis.evolution.product_formula &mdash; Qiskit 0.34.2 documentation</title>
   
 
   
@@ -474,6 +474,8 @@
 
 <span class="k">def</span> <span class="nf">_single_qubit_evolution</span><span class="p">(</span><span class="n">pauli</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
     <span class="n">definition</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="n">pauli</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)</span>
+    <span class="c1"># Note that all phases are removed from the pauli label and are only in the coefficients.</span>
+    <span class="c1"># That&#39;s because the operators we evolved have all been translated to a SparsePauliOp.</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">pauli_i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">pauli</span><span class="o">.</span><span class="n">to_label</span><span class="p">())):</span>
         <span class="k">if</span> <span class="n">pauli_i</span> <span class="o">==</span> <span class="s2">&quot;X&quot;</span><span class="p">:</span>
             <span class="n">definition</span><span class="o">.</span><span class="n">rx</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">time</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
@@ -486,8 +488,10 @@
 
 
 <span class="k">def</span> <span class="nf">_two_qubit_evolution</span><span class="p">(</span><span class="n">pauli</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">cx_structure</span><span class="p">):</span>
-    <span class="c1"># get the Paulis and the qubits they act on</span>
-    <span class="n">labels_as_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">pauli</span><span class="o">.</span><span class="n">to_label</span><span class="p">()))</span>
+    <span class="c1"># Get the Paulis and the qubits they act on.</span>
+    <span class="c1"># Note that all phases are removed from the pauli label and are only in the coefficients.</span>
+    <span class="c1"># That&#39;s because the operators we evolved have all been translated to a SparsePauliOp.</span>
+    <span class="n">labels_as_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">pauli</span><span class="o">.</span><span class="n">to_label</span><span class="p">())))</span>
     <span class="n">qubits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">labels_as_array</span> <span class="o">!=</span> <span class="s2">&quot;I&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">labels_as_array</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">qubits</span><span class="p">])</span>
 
@@ -501,9 +505,9 @@
     <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="n">labels</span> <span class="o">==</span> <span class="s2">&quot;Z&quot;</span><span class="p">):</span>  <span class="c1"># RZZ</span>
         <span class="n">definition</span><span class="o">.</span><span class="n">rzz</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">time</span><span class="p">,</span> <span class="n">qubits</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">qubits</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">elif</span> <span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Z&quot;</span> <span class="ow">and</span> <span class="n">labels</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;X&quot;</span><span class="p">:</span>  <span class="c1"># RZX</span>
-        <span class="n">definition</span><span class="o">.</span><span class="n">rzx</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">time</span><span class="p">,</span> <span class="n">qubits</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">qubits</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="k">elif</span> <span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;X&quot;</span> <span class="ow">and</span> <span class="n">labels</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Z&quot;</span><span class="p">:</span>  <span class="c1"># RXZ</span>
         <span class="n">definition</span><span class="o">.</span><span class="n">rzx</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">time</span><span class="p">,</span> <span class="n">qubits</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">qubits</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;X&quot;</span> <span class="ow">and</span> <span class="n">labels</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Z&quot;</span><span class="p">:</span>  <span class="c1"># RXZ</span>
+        <span class="n">definition</span><span class="o">.</span><span class="n">rzx</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">time</span><span class="p">,</span> <span class="n">qubits</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">qubits</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>  <span class="c1"># all the others are not native in Qiskit, so use default the decomposition</span>
         <span class="n">definition</span> <span class="o">=</span> <span class="n">_multi_qubit_evolution</span><span class="p">(</span><span class="n">pauli</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">cx_structure</span><span class="p">)</span>
 
@@ -522,6 +526,8 @@
 
     <span class="c1"># determine qubit to do the rotation on</span>
     <span class="n">target</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># Note that all phases are removed from the pauli label and are only in the coefficients.</span>
+    <span class="c1"># That&#39;s because the operators we evolved have all been translated to a SparsePauliOp.</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">pauli_i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">pauli</span><span class="o">.</span><span class="n">to_label</span><span class="p">())):</span>
         <span class="k">if</span> <span class="n">pauli_i</span> <span class="o">!=</span> <span class="s2">&quot;I&quot;</span><span class="p">:</span>
             <span class="n">target</span> <span class="o">=</span> <span class="n">i</span>
@@ -673,7 +679,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Last updated on 2022/02/09.
+      Last updated on 2022/02/11.
 
     </p>
   </div>
