@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>最小固有値オプティマイザー (Minimum Eigen Optimizer) &mdash; Qiskit Optimization 0.3.0 ドキュメント</title>
+  <title>最小固有値オプティマイザー (Minimum Eigen Optimizer) &mdash; Qiskit Optimization 0.3.1 ドキュメント</title>
   
 
   
@@ -176,7 +176,7 @@
               
               
                 <div class="version">
-                  0.3.0
+                  0.3.1
                 </div>
               
             
@@ -539,15 +539,14 @@ div.rendered_html tbody tr:hover {
 <h2>はじめに<a class="headerlink" href="#はじめに" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p>An interesting class of optimization problems to be addressed by quantum computing are Quadratic Unconstrained Binary Optimization (QUBO) problems. Finding the solution to a QUBO is equivalent to finding the ground state of a corresponding Ising Hamiltonian, which is an important problem not only in optimization, but also in quantum chemistry and physics. For this translation, the binary variables taking values in <span class="math notranslate nohighlight">\(\{0, 1\}\)</span> are replaced by spin variables taking values in
 <span class="math notranslate nohighlight">\(\{-1, +1\}\)</span>, which allows one to replace the resulting spin variables by Pauli Z matrices, and thus, an Ising Hamiltonian. For more details on this mapping we refer to [1].</p>
-<p>Qiskit provides automatic conversion from a suitable <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> to an Ising Hamiltonian, which then allows leveraging all the <code class="docutils literal notranslate"><span class="pre">MinimumEigenSolver</span></code> implementations, such as</p>
+<p>Qiskitは、適切な <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> からイジング・ハミルトニアンへの自動変換を提供します。これにより、次のようなすべての <code class="docutils literal notranslate"><span class="pre">MinimumEigenSolver</span></code> を活用できます。</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">VQE</span></code> 、</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">QAOA</span></code> 、または</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NumpyMinimumEigensolver</span></code> （古典的な正確な方法）。</p></li>
 </ul>
 <p>Qiskit Optimization provides a the <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> class, which wraps the translation to an Ising Hamiltonian (in Qiskit Terra also called <code class="docutils literal notranslate"><span class="pre">Operator</span></code>), the call to a <code class="docutils literal notranslate"><span class="pre">MinimumEigensolver</span></code>, and the translation of the results back to an <code class="docutils literal notranslate"><span class="pre">OptimizationResult</span></code>.</p>
-<p>In the following we first illustrate the conversion from a <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> to an <code class="docutils literal notranslate"><span class="pre">Operator</span></code> and then show how to use the <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> with different <code class="docutils literal notranslate"><span class="pre">MinimumEigensolver</span></code>s to solve a given <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code>. The algorithms in Qiskit automatically try to convert a given problem to the supported problem class if possible, for instance, the <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> will automatically translate integer variables to binary variables or add linear equality constraints as a
-quadratic penalty term to the objective. It should be mentioned that a <code class="docutils literal notranslate"><span class="pre">QiskitOptimizationError</span></code> will be thrown if conversion of a quadratic program with integer variables is attempted.</p>
+<p>以下では、まず、<code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> から <code class="docutils literal notranslate"><span class="pre">Operator</span></code> への変換を示します。次に、与えられた <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> を解くのに、<code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> を異なる <code class="docutils literal notranslate"><span class="pre">MinimumEigensolver</span></code> にどう使うのかを示します。Qiskitのアルゴリズムは、与えられた問題を、可能であればサポートされている問題クラスに自動的に変換しようとします。例えば、<code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> は整数変数をバイナリー変数に自動的に変換したり、線形等価制約を2次ペナルティ項として目的関数に追加したりします。整数変数を持つ二次計画問題を変換しようとすると、Aqua は <code class="docutils literal notranslate"><span class="pre">QiskitOptimizationError</span></code> を投げることに注意してください。</p>
 <p><code class="docutils literal notranslate"><span class="pre">QAOA</span></code> の回路の深さは、問題の大きさに応じて必然的に増加する可能性があり、これは近未来の量子デバイスにとっては障害となる可能性があります。考えられる回避策として、 [2] で紹介されている再帰QAOAがあります。このチュートリアルの最後で紹介しますが、Qiskit はこの概念を`RecursiveMinimumEigenOptimizer` に一般化しています。</p>
 <section id="参考文献">
 <h3>参考文献<a class="headerlink" href="#参考文献" title="このヘッドラインへのパーマリンク">¶</a></h3>
@@ -615,7 +614,7 @@ End
 
 </pre></div></div>
 </div>
-<p>Next we translate this QUBO into an Ising operator. This results not only in an <code class="docutils literal notranslate"><span class="pre">Operator</span></code> but also in a constant offset to be taken into account to shift the resulting value.</p>
+<p>次に、このQUBOをIsingオペレータに変換します。 変換の結果は、<code class="docutils literal notranslate"><span class="pre">Operator</span></code> だけではなく、結果の値をシフトするのに考慮すべき定数オフセットにもなります。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
@@ -642,7 +641,7 @@ operator:
 + 0.25 * IZZ
 </pre></div></div>
 </div>
-<p>Sometimes a <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> might also directly be given in the form of an <code class="docutils literal notranslate"><span class="pre">Operator</span></code>. For such cases, Qiskit also provides a translator from an <code class="docutils literal notranslate"><span class="pre">Operator</span></code> back to a <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code>, which we illustrate in the following.</p>
+<p>ときには、<code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> が <code class="docutils literal notranslate"><span class="pre">Operator</span></code> の形でも直接与えられる場合があります。 このような場合、Qiskit は <code class="docutils literal notranslate"><span class="pre">Operator</span></code> から <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> に戻す変換機能を備えています。これについては以下で説明します。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
@@ -677,7 +676,7 @@ End
 
 </pre></div></div>
 </div>
-<p>This translator allows, for instance, one to translate an <code class="docutils literal notranslate"><span class="pre">Operator</span></code> to a <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> and then solve the problem with other algorithms that are not based on the Ising Hamiltonian representation, such as the <code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code>.</p>
+<p>このコンバーターにより、例えば、<code class="docutils literal notranslate"><span class="pre">Operator</span></code> を <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> に変換して、イジング・ハミルトニアン表現に基づいていない他のアルゴリズム（例えば <code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code> ）で問題を解くことができます。</p>
 </section>
 <section id="MinimumEigenOptimizer-で-QUBO-を解く">
 <h2>MinimumEigenOptimizer で QUBO を解く<a class="headerlink" href="#MinimumEigenOptimizer-で-QUBO-を解く" title="このヘッドラインへのパーマリンク">¶</a></h2>
@@ -867,7 +866,7 @@ SolutionSample(x=array([1., 1., 1.]), fval=4.0, probability=0.12499999999999994,
 1.9364916731037085
 </pre></div></div>
 </div>
-<p>Finally, despite all the number-crunching, visualization is usually the best early-analysis approach.</p>
+<p>最後に、あらゆる数値処理を差し置いて、可視化は通常最適な早期分析アプローチです。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
 </pre></div>
@@ -917,7 +916,7 @@ SolutionSample(x=array([1., 1., 1.]), fval=4.0, probability=0.12499999999999994,
 <section id="RecursiveMinimumEigenOptimizer">
 <h2>RecursiveMinimumEigenOptimizer<a class="headerlink" href="#RecursiveMinimumEigenOptimizer" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">RecursiveMinimumEigenOptimizer</span></code> は入力として <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> を取り、再帰的な最適化スキームを適用して、問題のサイズを一度に1変数ずつ小さくします。 生成された中間問題のサイズが与えられたしきい値 (<code class="docutils literal notranslate"><span class="pre">min_num_vars</span></code>) を下回ると、<code class="docutils literal notranslate"><span class="pre">RecursiveMinimumEigenOptimizer</span></code> は別のソルバー(<code class="docutils literal notranslate"><span class="pre">min_num_vars_optimizer</span></code>)を使用します。（例えば <code class="docutils literal notranslate"><span class="pre">NumPyMinimumEigensolver</span></code> に基づく、CPLEXや <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> などの厳密な古典ソルバーなど）</p>
-<p>In the following, we show how to use the <code class="docutils literal notranslate"><span class="pre">RecursiveMinimumEigenOptimizer</span></code> using the two <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code>s introduced before.</p>
+<p>以下では、以前に導入した 2 つの <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> を使用して <code class="docutils literal notranslate"><span class="pre">RecursiveMinimumEigenOptimizer</span></code> を使用する方法を示します。</p>
 <p>最初に <code class="docutils literal notranslate"><span class="pre">RecursiveMinimumEigenOptimizer</span></code> を構築し、問題サイズを3つの変数から1つの変数に縮小し、最後の変数に正確なソルバーを使用します。 次に、検討された問題を最適化するために <code class="docutils literal notranslate"><span class="pre">solve</span></code> を呼び出します。</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:

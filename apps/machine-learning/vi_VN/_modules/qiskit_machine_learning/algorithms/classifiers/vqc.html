@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_machine_learning.algorithms.classifiers.vqc &mdash; Tài liệu Qiskit Machine Learning 0.3.0</title>
+  <title>qiskit_machine_learning.algorithms.classifiers.vqc &mdash; Tài liệu Qiskit Machine Learning 0.3.1</title>
   
 
   
@@ -197,7 +197,7 @@
               
               
                 <div class="version">
-                  0.3.0
+                  0.3.1
                 </div>
               
             
@@ -310,7 +310,7 @@
 <span class="c1"># Any modifications or derivative works of this code must retain this</span>
 <span class="c1"># copyright notice, and modified files need to carry a notice indicating</span>
 <span class="c1"># that they have been altered from the originals.</span>
-<span class="sd">&quot;&quot;&quot;An implementation of quantum neural network classifier.&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;An implementation of variational quantum classifier.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -328,7 +328,17 @@
 
 
 <div class="viewcode-block" id="VQC"><a class="viewcode-back" href="../../../../stubs/qiskit_machine_learning.algorithms.VQC.html#qiskit_machine_learning.algorithms.VQC">[docs]</a><span class="k">class</span> <span class="nc">VQC</span><span class="p">(</span><span class="n">NeuralNetworkClassifier</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Quantum neural network classifier.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Variational quantum classifier.</span>
+
+<span class="sd">    The variational quantum classifier is a variational algorithm where the</span>
+<span class="sd">    measured expectation value is interpreted as the output of a classifier.</span>
+
+<span class="sd">    Only supports one-hot encoded labels;</span>
+<span class="sd">    e.g., data like ``[1, 0, 0]``, ``[0, 1, 0]``, ``[0, 0, 1]``.</span>
+
+<span class="sd">    Multi-label classification is not supported;</span>
+<span class="sd">    e.g., data like ``[1, 1, 0]``, ``[0, 1, 1]``, ``[1, 0, 1]``, ``[1, 1, 1]``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -456,12 +466,12 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            X: The input data.</span>
-<span class="sd">            y: The target values.</span>
+<span class="sd">            y: The target values. Required to be one-hot encoded.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            self: returns a trained classifier.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">num_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">num_classes</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">cast</span><span class="p">(</span><span class="n">CircuitQNN</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neural_network</span><span class="p">)</span><span class="o">.</span><span class="n">set_interpret</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_get_interpret</span><span class="p">(</span><span class="n">num_classes</span><span class="p">),</span> <span class="n">num_classes</span>
         <span class="p">)</span>
