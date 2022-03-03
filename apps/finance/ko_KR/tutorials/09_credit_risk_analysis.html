@@ -544,18 +544,18 @@ div.rendered_html tbody tr:hover {
 <li><p><a class="reference external" href="https://www.nature.com/articles/s41534-019-0130-6">Quantum Risk Analysis. Stefan Woerner, Daniel J. Egger.</a> [Woerner2019]</p></li>
 <li><p><a class="reference external" href="https://arxiv.org/abs/1907.03044">Credit Risk Analysis using Quantum Computers. Egger et al. (2019)</a> [Egger2019]</p></li>
 </ul>
-<p>A general introduction to QAE can be found in the following paper:</p>
+<p>QAE에 대한 일반적인 소개는 다음 논문에서 확인할 수 있다.</p>
 <ul class="simple">
 <li><p><a class="reference external" href="http://arxiv.org/abs/quant-ph/0005055">Quantum Amplitude Amplification and Estimation. Gilles Brassard et al.</a></p></li>
 </ul>
-<p>The structure of the tutorial is as follows:</p>
+<p>본 튜토리얼의 구조는 다음과 같다.</p>
 <ol class="arabic simple">
-<li><p><a class="reference external" href="#Problem-Definition">Problem Definition</a></p></li>
-<li><p><a class="reference external" href="#Uncertainty-Model">Uncertainty Model</a></p></li>
-<li><p><a class="reference external" href="#Expected-Loss">Expected Loss</a></p></li>
-<li><p><a class="reference external" href="#Cumulative-Distribution-Function">Cumulative Distribution Function</a></p></li>
-<li><p><a class="reference external" href="#Value-at-Risk">Value at Risk</a></p></li>
-<li><p><a class="reference external" href="#Conditional-Value-at-Risk">Conditional Value at Risk</a></p></li>
+<li><p><a class="reference external" href="#Problem-Definition">문제 정의</a></p></li>
+<li><p><a class="reference external" href="#Uncertainty-Model">불확실성 모델</a></p></li>
+<li><p><a class="reference external" href="#Expected-Loss">기대 손실</a></p></li>
+<li><p><a class="reference external" href="#Cumulative-Distribution-Function">누적 분포 함수 (CDF)</a></p></li>
+<li><p><a class="reference external" href="#Value-at-Risk">최대예상손실액 (VaR)</a></p></li>
+<li><p><a class="reference external" href="#Conditional-Value-at-Risk">조건부 최대예상손실액 (CVaR)</a></p></li>
 </ol>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
@@ -572,21 +572,21 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 </section>
-<section id="Problem-Definition">
-<h2>Problem Definition<a class="headerlink" href="#Problem-Definition" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<section id="문제-정의">
+<h2>문제 정의<a class="headerlink" href="#문제-정의" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>이 튜토리얼에서는 :math:의 K 자산 포트폴리오의 신용 위험을 분석하고자 합니다. 모든 자산 ( :math:’k’) 의 디폴트 확률은 <a href="#id1"><span class="problematic" id="id2">*</span></a>Gaussian 조건부 독립 * 모델을 따르며, 즉 표준 정규 분포에 이어서 잠재적인 무작위 변수 ( :math:’Z’) 로부터 샘플링된 값 :math:’z’ 가 제공되며, 자산 :math:’k’ 의 디폴트 확률은 다음과 같이 주어진다.</p>
 <div class="math notranslate nohighlight">
 \[p_k(z) = F\left( \frac{F^{-1}(p_k^0) - \sqrt{\rho_k}z}{\sqrt{1 - \rho_k}} \right)\]</div>
 <p>여기서 <span class="math notranslate nohighlight">\(F\)</span>rho_k`는 :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>Z`에 대한 자산 :math:<a href="#id3"><span class="problematic" id="id4">`</span></a>k`의 기본 확률에 대한 민감도이다. 따라서 :math:<a href="#id5"><span class="problematic" id="id6">`</span></a>Z`의 구체적인 실현이 주어지면 개별 기본 이벤트는 서로 독립적 인 것으로 간주된다.</p>
 <p>We are interested in analyzing risk measures of the total loss</p>
 <div class="math notranslate nohighlight">
-\[L = \sum_{k=1}^K \lambda_k X_k(Z)\]</div>
+\[L = \sum_ {k= 1} ^ K \lambda_k X_k (Z)\]</div>
 <p>여기서 <span class="math notranslate nohighlight">\(\lambda_k\)</span> 는 자산 <span class="math notranslate nohighlight">\(k\)</span> 의 <em>부도시 손실률</em> 을 의미하며, <span class="math notranslate nohighlight">\(Z\)</span> 가 주어졌을 때 <span class="math notranslate nohighlight">\(X_k(Z)\)</span> 는 자산 <span class="math notranslate nohighlight">\(k\)</span> 의 기본 사건을 나타내는 베르누이 변수를 의미한다. 더 정확히 말하면, 우리는 기대값 <span class="math notranslate nohighlight">\(\mathbb{E}[L]\)</span>, <span class="math notranslate nohighlight">\(L\)</span> 의 최대손실금액 (Value at Risk, VaR), 그리고 <span class="math notranslate nohighlight">\(L\)</span> 의 Expected Shortfall이라고도 불리는 조건부 최대손실금액 (Conditional Value at Risk, CVaR)에 관심이 있다. 여기서 VaR과 CVaR은 다음과 같이 정의된다:</p>
 <div class="math notranslate nohighlight">
 \[\text{VaR}_{\alpha}(L) = \inf \{ x \mid \mathbb{P}[L &lt;= x] \geq 1 - \alpha \}\]</div>
-<p>with confidence level <span class="math notranslate nohighlight">\(\alpha \in [0, 1]\)</span>, and</p>
+<p>신뢰수준 <span class="math notranslate nohighlight">\(\alpha \in [0, 1]\)</span>, 및</p>
 <div class="math notranslate nohighlight">
-\[\text{CVaR}_{\alpha}(L) = \mathbb{E}[ L \mid L \geq \text{VaR}_{\alpha}(L) ].\]</div>
+\[\text{CVaR}_ {\alpha} (L) = \mathbb{E}[L \mid L \geq \text{VaR}_ {\alpha} (L)].\]</div>
 <p>고려된 모델에 대한 자세한 내용은 예를 들어 <a class="reference external" href="https://arxiv.org/abs/1412.1183">Regulatory Capital Modeling for Credit Risk. Marek Rutkowski, Silvio Tarca</a> 를 참조하라</p>
 <p>문제는 다음 매개 변수에 의해 정의된다.-<span class="math notranslate nohighlight">\(Z\)</span>, 즉, Z는 <span class="math notranslate nohighlight">\(2^{n_z}\)</span>{-z_{max}, …, + z_{max}}`-각 자산의 기본 기본 확률 <span class="math notranslate nohighlight">\(p_0^k \in (0, 1)\)</span>, <span class="math notranslate nohighlight">\(k = 1, ..., K\)</span>-다음에 대한 기본 확률의 민감도 <span class="math notranslate nohighlight">\(Z\)</span>, <span class="math notranslate nohighlight">\(\rho_k \in [0, 1)\)</span>-자산에 대한 기본 손실 <span class="math notranslate nohighlight">\(k\)</span>, <span class="math notranslate nohighlight">\(\lambda_k\)</span>alpha in [0, 1]`.</p>
 <div class="nbinput nblast docutils container">
@@ -606,8 +606,8 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 </section>
-<section id="Uncertainty-Model">
-<h2>Uncertainty Model<a class="headerlink" href="#Uncertainty-Model" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<section id="불확실성-모델">
+<h2>불확실성 모델<a class="headerlink" href="#불확실성-모델" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>이제 불확실성 모델을로드하는 회로를 구성합니다. 이것은 표준 정규 분포에 따라 <span class="math notranslate nohighlight">\(Z\)</span> 큐비트의 레지스터에 양자 상태를 생성함으로써 달성 할 수 있다. 그런 다음이 상태는 <span class="math notranslate nohighlight">\(K\)</span> 큐 비트의 두 번째 큐 비트 레지스터에서 단일 큐 비트 Y 회전을 제어하는 ​​데 사용된다. 여기서 큐비트 <span class="math notranslate nohighlight">\(k\)</span> 상태는 기본 이벤트를 나타낸다. 자산의 <span class="math notranslate nohighlight">\(k\)</span>. 결과 양자 상태는 다음과 같이 쓸 수 있다.</p>
 <div class="math notranslate nohighlight">
 \[ |\Psi\rangle = \sum_{i=0}^{2^{n_z}-1} \sqrt{p_z^i} |z_i \rangle \bigotimes_{k=1}^K
@@ -797,8 +797,8 @@ Conditional Value at Risk CVaR[L]: 3.0000
 <img alt="../_images/tutorials_09_credit_risk_analysis_14_0.svg" src="../_images/tutorials_09_credit_risk_analysis_14_0.svg" /></div>
 </div>
 </section>
-<section id="Expected-Loss">
-<h2>Expected Loss<a class="headerlink" href="#Expected-Loss" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<section id="예상-손실">
+<h2>예상 손실<a class="headerlink" href="#예상-손실" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>예상 손실을 추정하기 위해 먼저 가중치 합계 연산자를 적용하여 총 손실에 대한 개별 손실을 합산합니다.</p>
 <div class="math notranslate nohighlight">
 \[* mathcal{S}: |x_1, ..., x_K \rangle_K | 0\rangle_{n_S} \mapsto |x_1, ..., x_K \rangle_K | \lambda_1x_1+...+\lambda_K x_K\rangle_{n_S}.\]</div>
@@ -995,7 +995,7 @@ Confidence interval:    [0.6587, 0.6878]
 \[ \sum_{L = 0}^{x} \sqrt{p_{L}}|L\rangle_{n_s}|1\rangle +
 \sum_{L = x+1}^{2^{n_s}-1} \sqrt{p_{L}}|L\rangle_{n_s}|0\rangle,\]</div>
 <p>여기서 우리는 불확실성 모델의 세부사항들을 제시하는 대신에 합산된 손실 값들 및 대응하는 확률들을 추정한다.</p>
-<p>CDF(<span class="math notranslate nohighlight">\(x\)</span>) 는 객관적인 큐비트와 QAE 에서 <span class="math notranslate nohighlight">\(|1\rangle\)</span> 을 측정하는 확률과 동일하며, QAE는 그것을 추정하는데 직접 사용될 수 있다.</p>
+<p>CDF(<span class="math notranslate nohighlight">\(x\)</span>) 는 목적 큐비트와 QAE 에서 <span class="math notranslate nohighlight">\(|1\rangle\)</span> 을 측정하는 확률과 동일하며, QAE는 그것을 추정하는데 직접 사용될 수 있다.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
@@ -1575,9 +1575,9 @@ Estimated CVaR: 3.3836
               <ul>
 <li><a class="reference internal" href="#">신용 위험 분석</a><ul>
 <li><a class="reference internal" href="#소개">소개</a></li>
-<li><a class="reference internal" href="#Problem-Definition">Problem Definition</a></li>
-<li><a class="reference internal" href="#Uncertainty-Model">Uncertainty Model</a></li>
-<li><a class="reference internal" href="#Expected-Loss">Expected Loss</a></li>
+<li><a class="reference internal" href="#문제-정의">문제 정의</a></li>
+<li><a class="reference internal" href="#불확실성-모델">불확실성 모델</a></li>
+<li><a class="reference internal" href="#예상-손실">예상 손실</a></li>
 <li><a class="reference internal" href="#누적-분포-함수">누적 분포 함수</a></li>
 <li><a class="reference internal" href="#최대예상손실액-(Value-at-Risk)">최대예상손실액 (Value at Risk)</a></li>
 <li><a class="reference internal" href="#최대예상손실액-(Value-at-Risk)-조건부">최대예상손실액 (Value at Risk) 조건부</a></li>
