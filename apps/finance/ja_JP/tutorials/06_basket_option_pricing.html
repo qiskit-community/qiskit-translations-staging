@@ -578,7 +578,7 @@ div.rendered_html tbody tr:hover {
 <p>ここで <span class="math notranslate nohighlight">\(p_{i_1\ldots i_d}\)</span> は、切り捨てられ離散化された分布を与える確率を表し、 <span class="math notranslate nohighlight">\(i_j\)</span> はアフィン写像で得られた正しい区間です。</p>
 <div class="math notranslate nohighlight">
 \[\{0, \ldots, 2^{n_j}-1\} \ni i_j \mapsto \frac{\text{high}_j - \text{low}_j}{2^{n_j} - 1} * i_j + \text{low}_j \in [\text{low}_j, \text{high}_j].\]</div>
-<p>簡単のため、株価はどちらも独立同分布とします。この仮定は以下のパラメータ化を単純にするだけのものであり、簡単に緩和することができ、多変量分布でも関連します。現在の実装で唯一の重要な仮定は、異なる次元の離散化グリッドが同じステップサイズであるということです。</p>
+<p>簡単のため、株価はどちらも独立同分布とします。この仮定は以下のパラメーター化を単純にするだけのものであり、より複雑で相関のある多変量分布に容易に緩和することができます。現在の実装で唯一の重要な仮定は、異なる次元の離散化グリッドが同じステップサイズであるということです。</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -649,7 +649,7 @@ div.rendered_html tbody tr:hover {
 </section>
 <section id="ペイオフ関数">
 <h2>ペイオフ関数<a class="headerlink" href="#ペイオフ関数" title="このヘッドラインへのパーマリンク">¶</a></h2>
-<p>ペイオフ関数は、満期時のスポット価格合計 <span class="math notranslate nohighlight">\((S_T^1 + S_T^2)\)</span> がストライクプライス <span class="math notranslate nohighlight">\(K\)</span> よりも小さい間ゼロであり、その後線形に増加します。実装は、初め加重合計演算子で補助量子ビットにスポット価格の合計を計算し、その後コンパレーターを使用して、もし <span class="math notranslate nohighlight">\((S_T^1 + S_T^2) \geq K\)</span> ならば補助量子ビットを <span class="math notranslate nohighlight">\(\big|0\rangle\)</span> から <span class="math notranslate nohighlight">\(\big|1\rangle\)</span> にフリップします。この補助量子ビットはペイオフ関数の線形部分を制御するのに使われます。</p>
+<p>ペイオフ関数は、満期時のスポット価格合計 <span class="math notranslate nohighlight">\((S_T^1 + S_T^2)\)</span> がストライクプライス <span class="math notranslate nohighlight">\(K\)</span> よりも小さい間ゼロであり、その後線形に増加します。実装は、はじめに加重合計演算子で補助量子ビットにスポット価格の合計を計算し、その後コンパレーターを使用して、もし <span class="math notranslate nohighlight">\((S_T^1 + S_T^2) \geq K\)</span> ならば補助量子ビットを <span class="math notranslate nohighlight">\(\big|0\rangle\)</span> から <span class="math notranslate nohighlight">\(\big|1\rangle\)</span> にフリップします。この補助量子ビットはペイオフ関数の線形部分を制御するのに使われます。</p>
 <p>線形部分自体は次のように近似されます。 小さい <span class="math notranslate nohighlight">\(|y|\)</span> に対して <span class="math notranslate nohighlight">\(\sin^2(y + \pi/4) \approx y + 1/2\)</span> という事実を利用します。 したがって、与えられた近似再スケーリング係数 <span class="math notranslate nohighlight">\(c_\text{approx} \in [0, 1]\)</span> および <span class="math notranslate nohighlight">\(x \in [0, 1]\)</span> に対して、次を考えます。</p>
 <div class="math notranslate nohighlight">
 \[\sin^2( \pi/2 * c_\text{approx} * ( x - 1/2 ) + \pi/4) \approx \pi/2 * c_\text{approx} * ( x - 1/2 ) + 1/2\]</div>
@@ -657,7 +657,7 @@ div.rendered_html tbody tr:hover {
 <p>次のように機能する演算子を簡単に構築できます</p>
 <div class="math notranslate nohighlight">
 \[\big|x\rangle \big|0\rangle \mapsto \big|x\rangle \left( \cos(a*x+b) \big|0\rangle + \sin(a*x+b) \big|1\rangle \right),\]</div>
-<p>制御 Y 回転を用いています。</p>
+<p>制御 Y-回転を用います。</p>
 <p>最終的には、 <span class="math notranslate nohighlight">\(\sin^2(a*x+b)\)</span> に対応する最後の量子ビットで <span class="math notranslate nohighlight">\(\big|1\rangle\)</span> を測定する確率に関心があります。 上記の近似と合わせて、対象の値を近似できます。小さい <span class="math notranslate nohighlight">\(c_\text{approx}\)</span> を選択するほど、近似は良くなります。 ただし、 <span class="math notranslate nohighlight">\(c_\text{approx}\)</span> でスケーリングされたプロパティを推定しているため、それに応じて評価量子ビットの数 <span class="math notranslate nohighlight">\(m\)</span> を調整する必要があります。</p>
 <p>近似の詳細については、次を参照してください： <a class="reference external" href="https://arxiv.org/abs/1806.06893">Quantum Risk Analysis. Woerner, Egger. 2018.</a></p>
 <p>(現在実装中の) 加重合計演算子は整数のみを合計することができるため、結果を推定するために元の範囲から表現可能な範囲に写像し、結果を解釈する前に逆写像する必要があります。このマッピングは不確定性モデルのコンテキストに出てきたアフィン写像に一致します。</p>
