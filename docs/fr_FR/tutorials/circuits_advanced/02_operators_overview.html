@@ -639,7 +639,7 @@ Operator([[0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
 <p>L’objet <code class="docutils literal notranslate"><span class="pre">operator</span></code> contient la matrice ainsi que les dimensions d’entrée et de sortie d’un système ou d’un sous-système.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> : Permet d’accéder à la matrice Numpy sous-jacente en utilisant la propriété <cite>Operator.data</cite>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dim</span></code> : Renvoie les dimensions d’entrée et de sortie de l’opérateur en utilisant la propriété <code class="docutils literal notranslate"><span class="pre">Operator.dim</span></code>. <em>Note : la sortie est un couple `(input_dim, output_dim)`, qui correspond aux dimensions –en ordre inverse : colonnes,lignes– de la matrice sous-jacente.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dims</span></code>: To return the total input and output dimension of the operator, we may use the <code class="docutils literal notranslate"><span class="pre">Operator.dim</span></code> property. <em>Note: the output is returned as a tuple</em> <code class="docutils literal notranslate"><span class="pre">(input_dim,</span> <span class="pre">output_dim)</span></code>, <em>which is the reverse of the shape of the underlying matrix.</em></p></li>
 </ul>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -792,7 +792,7 @@ Dimension of input system 1: (3,)
 <ul class="simple">
 <li><p>les objets de type <cite>Pauli</cite></p></li>
 <li><p>les objets <code class="docutils literal notranslate"><span class="pre">Gate</span></code> et <code class="docutils literal notranslate"><span class="pre">Instruction</span></code></p></li>
-<li><p>ainsi que les objets <code class="docutils literal notranslate"><span class="pre">QuantumCircuits</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">QuantumCircuit</span></code> objects</p></li>
 </ul>
 <p>Il est à noter que dans le dernier cas l’utilisation de la classe <code class="docutils literal notranslate"><span class="pre">operator</span></code> permet de calculer la matrice unitaire correspondant à un circuit quantique sans avoir besoin d’utiliser un émulateur. Si le circuit contient une operation non supportée la fonction retournera une exception. Ces opérations sont : la mesure, la mise à zero, les opérations conditionnelles, ou toute autre porte qui n’est pas définie par une matrice unitaire ou qui ne peut pas être décomposée en portes définies par une matrice unitaire.</p>
 <div class="nbinput docutils container">
@@ -978,8 +978,7 @@ c: 2/══════════════╩══╩═
 <p>Les opérateurs peuvent être combinés au moyen de différentes méthodes.</p>
 <div class="section" id="Produit-Tensoriel">
 <h3>Produit Tensoriel<a class="headerlink" href="#Produit-Tensoriel" title="Lien permanent vers ce titre">¶</a></h3>
-<p>Deux opérateurs <span class="math notranslate nohighlight">\(A\)</span> et <span class="math notranslate nohighlight">\(B\)</span> peuvent être combinés en un opérateur qui est le produit tensoriel <span class="math notranslate nohighlight">\(A\otimes B\)</span> en utilisant la fonction <code class="docutils literal notranslate"><span class="pre">Operator.tensor()</span></code>.
-Si <span class="math notranslate nohighlight">\(A\)</span> et <span class="math notranslate nohighlight">\(B\)</span> sont des opérateurs chacun sur un seul qubit alors <code class="docutils literal notranslate"><span class="pre">A.tensor(B)</span></code> = <span class="math notranslate nohighlight">\(A\otimes B\)</span> correspondra à l’application de la matrice <span class="math notranslate nohighlight">\(B\)</span> sur le sous système 0, et la matrice <span class="math notranslate nohighlight">\(A\)</span> sur le sous système 1.</p>
+<p>Two operators <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(B\)</span> may be combined into a tensor product operator <span class="math notranslate nohighlight">\(A\otimes B\)</span> using the <code class="docutils literal notranslate"><span class="pre">Operator.tensor</span></code> function. Note that if both <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(B\)</span> are single-qubit operators, then <code class="docutils literal notranslate"><span class="pre">A.tensor(B)</span></code> = <span class="math notranslate nohighlight">\(A\otimes B\)</span> will have the subsystems indexed as matrix <span class="math notranslate nohighlight">\(B\)</span> on subsystem 0, and matrix <span class="math notranslate nohighlight">\(A\)</span> on subsystem 1.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
@@ -1006,7 +1005,7 @@ Operator([[ 0.+0.j,  0.+0.j,  1.+0.j,  0.+0.j],
 </div>
 <div class="section" id="Expansion-Tensorielle">
 <h3>Expansion Tensorielle<a class="headerlink" href="#Expansion-Tensorielle" title="Lien permanent vers ce titre">¶</a></h3>
-<p>Une opération très proche de la précédente est <code class="docutils literal notranslate"><span class="pre">Operator.expand</span></code> qui agit de la même manière que le produit tensoriel, mais dans l’ordre inverse. C’est à dire que pour deux opérateurs <span class="math notranslate nohighlight">\(A\)</span> et <span class="math notranslate nohighlight">\(B\)</span> l’expansion <cite>A.expand(B)</cite> = <span class="math notranslate nohighlight">\(B\otimes A\)</span> correspondra à l’application de la matrice <span class="math notranslate nohighlight">\(A\)</span> sur le sous système 0, et la matrice <span class="math notranslate nohighlight">\(B\)</span> sur le sous système 1.</p>
+<p>A closely related operation is <code class="docutils literal notranslate"><span class="pre">Operator.expand</span></code>, which acts like a tensor product but in the reverse order. Hence, for two operators <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(B\)</span> we have <code class="docutils literal notranslate"><span class="pre">A.expand(B)</span></code> = <span class="math notranslate nohighlight">\(B\otimes A\)</span> where the subsystems indexed as matrix <span class="math notranslate nohighlight">\(A\)</span> on subsystem 0, and matrix <span class="math notranslate nohighlight">\(B\)</span> on subsystem 1.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
@@ -1081,7 +1080,7 @@ Operator([[ 0.+0.j, -1.+0.j],
 <div class="section" id="Composition-de-sous-systèmes">
 <h3>Composition de sous-systèmes<a class="headerlink" href="#Composition-de-sous-systèmes" title="Lien permanent vers ce titre">¶</a></h3>
 <p>On peut noter que dans les compositions vues précédemment, la dimension totale de sortie du premier opérateur <span class="math notranslate nohighlight">\(A\)</span> est égale à la dimension totale d’entrée de l’opérateur <span class="math notranslate nohighlight">\(B\)</span> (et de même, la dimension de sortie de <span class="math notranslate nohighlight">\(B\)</span> doit être égale à la dimension de l’entrée de <span class="math notranslate nohighlight">\(A\)</span> lorsque l’on utilise la composition avec l’option <code class="docutils literal notranslate"><span class="pre">front=True</span></code>).</p>
-<p>Il est également possible d’effectuer les compositions sur un sous système d’un opérateur plus grand en utilisant l’argument de mot clef <code class="docutils literal notranslate"><span class="pre">qargs</span></code> (kwarq) de la méthode compose (avec ou sans l’utilisation de <code class="docutils literal notranslate"><span class="pre">front=True</span></code>). Dans ce cas, les dimensions correspondant aux sous systèmes faisant l’objet de la composition doivent se correspondre. <em>Note : l’opérateur du plus petit sous système doit être passé en argument de la méthode ``compose`` appliquée au système</em></p>
+<p>We can also compose a smaller operator with a selection of subsystems on a larger operator using the <code class="docutils literal notranslate"><span class="pre">qargs</span></code> kwarg of <code class="docutils literal notranslate"><span class="pre">compose</span></code>, either with or without <code class="docutils literal notranslate"><span class="pre">front=True</span></code>. In this case, the relevant input and output dimensions of the subsystems being composed must match. <em>Note that the smaller operator must always be the argument of</em> <code class="docutils literal notranslate"><span class="pre">compose</span></code> <em>method.</em></p>
 <p>Par exemple, pour composer une porte à deux qubits dans un opérateur à trois qubits :</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
@@ -1346,7 +1345,7 @@ Process fidelity = 1.0
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Mis à jour le 2022/03/05.
+      Mis à jour le 2022/03/07.
 
     </p>
   </div>

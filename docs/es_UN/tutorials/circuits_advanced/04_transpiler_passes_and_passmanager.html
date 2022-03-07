@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Pases al Transpilador y administrador de pases &mdash; documentación de Qiskit - 0.34.2</title>
+  <title>Pases al Transpilador y Administrador de Pases &mdash; documentación de Qiskit - 0.34.2</title>
   
 
   
@@ -305,7 +305,7 @@
       </li>
 
         
-      <li>Pases al Transpilador y administrador de pases</li>
+      <li>Pases al Transpilador y Administrador de Pases</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
@@ -587,12 +587,12 @@ div.rendered_html tbody tr:hover {
 <p class="admonition-title">Nota</p>
 <p>Esta página ha sido generada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-tutorials/blob/master/tutorials/circuits_advanced/04_transpiler_passes_and_passmanager.ipynb">tutorials/circuits_advanced/04_transpiler_passes_and_passmanager.ipynb</a>.</p>
 </div>
-<div class="section" id="Pases-al-Transpilador-y-administrador-de-pases">
-<h1>Pases al Transpilador y administrador de pases<a class="headerlink" href="#Pases-al-Transpilador-y-administrador-de-pases" title="Enlazar permanentemente con este título">¶</a></h1>
+<div class="section" id="Pases-al-Transpilador-y-Administrador-de-Pases">
+<h1>Pases al Transpilador y Administrador de Pases<a class="headerlink" href="#Pases-al-Transpilador-y-Administrador-de-Pases" title="Enlazar permanentemente con este título">¶</a></h1>
 <div class="section" id="Introducción">
 <h2>Introducción<a class="headerlink" href="#Introducción" title="Enlazar permanentemente con este título">¶</a></h2>
-<p>Un componente central de Qiskit Terra es el transpilador, el cual está diseñado para modularidad y extensibilidad. El objetivo es lograr escribir fácilmente transformaciones de circuitos (conocidos como <strong>pases</strong> al transpilador), y combinarlos con otros pases existentes. Cuáles pases son conectados y en qué orden tiene un efecto substancial en el resultado final. Este camino es determinado por un <strong>administrador de pases</strong>, el cual ordena los pases y también permite que los pases se comuniquen entre sí, proporcionándoles un espacio compartido. De esta manera, el transpilador abre la puerta a investigación a circuitos cuánticos de optimización agresivos.</p>
-<p>En este cuaderno revisaremos los pases integrados en Qiskit, como usar el administrador de pases y el desarrollo de un pase al transpilador simple. Para poder hacer esto último, primero tenemos que introducir la representación interna de los circuitos cuánticos en Qiskit, en la forma de Grafos Acíclicos Dirigidos o <strong>DAG</strong>. Después, ilustraremos un simple pase de intercambio de mapeo, el cual transforma un circuito de entrada a uno compatible con un dispositivo cuántico con conectividad limitada.</p>
+<p>Un componente central de Qiskit Terra es el transpilador, el cual está diseñado para modularidad y extensibilidad. El objetivo es lograr escribir fácilmente transformaciones de circuitos (conocidos como <strong>pases</strong> al transpilador), y combinarlos con otros pases existentes. Cuáles pases son conectados y en qué orden tiene un efecto substancial en el resultado final. Este camino es determinado por un <strong>administrador de pases</strong>, el cual ordena los pases y también permite que los pases se comuniquen entre sí, proporcionándoles un espacio compartido. De esta manera, el transpilador abre la puerta a la investigación sobre la optimización agresiva de los circuitos cuánticos.</p>
+<p>En este cuaderno, analizamos los pases incorporados, cómo usar el administrador de pases y desarrollamos un pase personalizado simple de transpilador. Para hacer esto último, primero tenemos que introducir la representación interna de los circuitos cuánticos en Qiskit, en la forma de Grafos Acíclicos Dirigidos o <strong>DAG</strong> (Directed Acyclic Graph). Después, ilustramos un pase de mapeo de intercambio simple, el cual transforma un circuito de entrada para que sea compatible con un dispositivo cuántico de conectividad limitada.</p>
 <p><strong>Antes de comenzar</strong>: Es posible que necesites instalar las librerías <code class="docutils literal notranslate"><span class="pre">pydot</span></code> y <code class="docutils literal notranslate"><span class="pre">graphviz</span></code> para las rutinas de graficado de DAG. Si usas Anaconda Python, puedes instalar ambos con el comando <code class="docutils literal notranslate"><span class="pre">conda</span></code>. Si usas el intérprete de Python nativo a tu sistema, puedes instalar <code class="docutils literal notranslate"><span class="pre">pydot</span></code> con el comando <code class="docutils literal notranslate"><span class="pre">pip</span></code>, y <code class="docutils literal notranslate"><span class="pre">graphviz</span></code> con el administrador de paquetes nativo a tu sistema (por ejemplo, <code class="docutils literal notranslate"><span class="pre">yum</span></code>, <code class="docutils literal notranslate"><span class="pre">apt</span></code>, <code class="docutils literal notranslate"><span class="pre">dnf</span></code>, <code class="docutils literal notranslate"><span class="pre">brew</span></code>, etc.).</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
@@ -713,8 +713,8 @@ div.rendered_html tbody tr:hover {
 </pre></div></div>
 </div>
 </div>
-<div class="section" id="Diferentes-variantes-del-mismo-pase">
-<h2>Diferentes variantes del mismo pase<a class="headerlink" href="#Diferentes-variantes-del-mismo-pase" title="Enlazar permanentemente con este título">¶</a></h2>
+<div class="section" id="Diferentes-Variantes-del-Mismo-Pase">
+<h2>Diferentes Variantes del Mismo Pase<a class="headerlink" href="#Diferentes-Variantes-del-Mismo-Pase" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>Puede haber diferentes pases que hagan lo mismo, pero de diferente manera. Por ejemplo, los pases <code class="docutils literal notranslate"><span class="pre">TrivialLayout</span></code>, <code class="docutils literal notranslate"><span class="pre">DenseLayout</span></code> y <code class="docutils literal notranslate"><span class="pre">NoiseAdaptiveLayout</span></code> escogen una disposición (enlace entre qubits virtuales a qubits físicos), pero usan diferentes algoritmos y objetivos. Similarmente, los pases <code class="docutils literal notranslate"><span class="pre">BasicSwap</span></code>, <code class="docutils literal notranslate"><span class="pre">LookaheadSwap</span></code> y <code class="docutils literal notranslate"><span class="pre">StochasticSwap</span></code> insertan intercambios para hacer a los circuitos compatibles con un mapa de acoplamiento. La modularidad del transpilador permite hacer cambios a los pases y ejecutarlos fácilmente.</p>
 <p>A continuación, mostramos todos los pases de intercambio aplicados a un mismo circuito, para transformarlo para que coincida con una topología de cadena lineal. Las diferencias en rendimiento son evidentes, donde <code class="docutils literal notranslate"><span class="pre">StochasticSwap</span></code> es claramente el mejor. Sin embargo, esto puede variar dependiendo del circuito de entrada.</p>
 <div class="nbinput nblast docutils container">
@@ -815,15 +815,15 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 </div>
-<div class="section" id="Administradores-de-pases-Preestablecidos">
-<h2>Administradores de pases Preestablecidos<a class="headerlink" href="#Administradores-de-pases-Preestablecidos" title="Enlazar permanentemente con este título">¶</a></h2>
-<p>Qiskit tiene varios administradores de pases predefinidos, que corresponden a varios niveles de optimización logrados a través de diferentes caminos de pases. Actualmente se soportan <code class="docutils literal notranslate"><span class="pre">optimization_level</span></code> de 0 a 3; entre más alto sea el número, más se optimizará, con un coste de mayor tiempo de cálculo. Escoger un administrador de pases puede tomar prueba y error, ya que depende mucho de que circuito se va a transpilar y que backend es el objetivo.</p>
+<div class="section" id="Administradores-de-Pases-Preestablecidos">
+<h2>Administradores de Pases Preestablecidos<a class="headerlink" href="#Administradores-de-Pases-Preestablecidos" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>Qiskit viene con varios administradores de pases predefinidos, que corresponden a varios niveles de optimización logrados a través de diferentes canalizaciones de pases. Actualmente, se soportan <code class="docutils literal notranslate"><span class="pre">optimization_level</span></code> de 0 a 3; entre más alto sea el número, más se optimizará, a expensas de un mayor tiempo. Elegir un buen administrador de pases puede requerir prueba y error, ya que depende en gran medida del circuito que se transpila y el backend al que se dirige.</p>
 <p>Aquí ilustramos los diferentes niveles viendo el circuito de síntesis del estado. Inicializamos 4 qubits en un estado arbitrario y intentamos optimizar el circuito que logre esto.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">optimization_level=0</span></code>: mapea el circuito al backend, sin optimización explicita (excepto por las optimizaciones que se hagan al mapear).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">optimization_level=1</span></code>: mapea el circuito, pero también hace optimizaciones pequeñas colapsando compuertas adyacentes.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">optimization_level=2</span></code>: hace optimizaciones medianas, incluyendo acomodos adaptivos al ruido y un procedimiento de cancelación de compuertas basado en las relaciones conmutativas de las compuertas.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">optimization_level=3</span></code>: hace grandes optimizaciones, que además de los niveles anteriores, hace una resintetización de bloques de compuertas de dos qubits en el circuito.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimization_level=1</span></code>: mapea el circuito, pero también hace optimizaciones ligeras colapsando compuertas adyacentes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimization_level=2</span></code>: optimización media, incluye un diseño adaptable al ruido y un procedimiento de cancelación de compuerta basado en las relaciones de conmutación de compuerta.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimization_level=3</span></code>: optimización intensa, que además de los pasos anteriores, hace una resíntesis de bloques de compuertas de dos qubits en el circuito.</p></li>
 </ul>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
@@ -993,7 +993,7 @@ depth =  38
 </div>
 <div class="section" id="Introducción-al-DAG">
 <h2>Introducción al DAG<a class="headerlink" href="#Introducción-al-DAG" title="Enlazar permanentemente con este título">¶</a></h2>
-<p>En Qiskit representamos los circuitos internamente usando Grafos Acíclicos Dirigidos (DAG). La ventaja de esta representación sobre una lista de los estados puros (es decir un <em>netlist</em>) es que el flujo de información entre las operaciones es explicita, lo cual facilita los pases para hacer decisiones de transformaciones sin cambiar la semántica del circuito.</p>
+<p>En Qiskit representamos a los circuitos internamente usando Grafos Acíclicos Dirigidos (Directed Acyclic Graph, DAG). La ventaja de esta representación sobre una lista pura de compuertas (es decir, <em>netlist</em>) es que el flujo de información entre operaciones es explícito, lo que facilita que los pases tomen decisiones de transformación sin cambiar la semántica del circuito.</p>
 <p>Empecemos por construir un circuito simple y examinar su DAG.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
@@ -1173,11 +1173,11 @@ node condition:  (ClassicalRegister(3, &#39;c&#39;), 2)
 </div>
 </div>
 </div>
-<div class="section" id="Implementación-de-un-pase-de-BasicMapper">
-<h2>Implementación de un pase de BasicMapper<a class="headerlink" href="#Implementación-de-un-pase-de-BasicMapper" title="Enlazar permanentemente con este título">¶</a></h2>
+<div class="section" id="Implementación-de-un-Pase-BasicMapper">
+<h2>Implementación de un Pase BasicMapper<a class="headerlink" href="#Implementación-de-un-Pase-BasicMapper" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>Ahora que estamos familiarizados con el DAG, usémoslo para escribir un pase al transpilador. Aquí vamos a implementar un pase básico para mapear un circuito arbitrario a un dispositivo con conectividad de qubits limitada. Llamamos a esto un BasicMapper. Este pase también está incluido en Qiskit Terra.</p>
 <p>La primera cosa que hay que hacer al escribir un pase al transpilador es decidir si la clase del pase deriva de <code class="docutils literal notranslate"><span class="pre">TransformationPass</span></code> o <code class="docutils literal notranslate"><span class="pre">AnalysisPass</span></code>. Los pases de transformación modifican el circuito, mientras que los pases de análisis solo recopilan información acerca de un circuito (para ser usada por otros pases). Luego, se implementa el método <code class="docutils literal notranslate"><span class="pre">run(dag)</span></code>, que ejecuta la tarea principal. Finalmente, el pase se registra en el módulo <code class="docutils literal notranslate"><span class="pre">qiskit.transpiler.passes</span></code>.</p>
-<p>Este pase funciona de la siguiente manera: atraviesa el DAG capa por capa (cada capa es un grupo de operaciones que no actúa en qubits independientes, entonces, en teoría todas las operaciones en una capa pueden ser ejecutadas independientemente). Para cada operación, si no cumple ya las restricciones del mapa de acoplamiento, el pase identifica un camino e inserta swaps acorde al camino para poder acercar dos qubits.</p>
+<p>Este pase funciona de la siguiente manera: atraviesa el DAG capa por capa (cada capa es un grupo de operaciones que no actúa en qubits independientes, entonces, en teoría, todas las operaciones en una capa pueden ser ejecutadas independientemente). Para cada operación, si no cumple ya las restricciones del mapa de acoplamiento, el pase identifica una ruta de intercambio e inserta swaps para acercar los dos qubits entre sí.</p>
 <p>Sigue los comentarios del código para más detalles.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
@@ -1367,16 +1367,16 @@ node condition:  (ClassicalRegister(3, &#39;c&#39;), 2)
 <img alt="../../_images/tutorials_circuits_advanced_04_transpiler_passes_and_passmanager_49_0.png" src="../../_images/tutorials_circuits_advanced_04_transpiler_passes_and_passmanager_49_0.png" />
 </div>
 </div>
-<p>Tenga en cuenta que este pase solo inserta los swaps necesarios para hacer que todas las interacciones entre dos qubits se ajusten al mapa de acoplamiento del dispositivo. No se preocupa, por ejemplo, de la dirección de las interacciones, o el conjunto de compuertas nativo soportado por el dispositivo. Esta es una filosofía de diseño del transpilador de Qiskit: cada pase realiza una acción pequeña y bien definida, y la optimización agresiva de circuitos es lograda por el administrador de pases mediante una combinación de múltiples pases.</p>
+<p>Ten en cuenta que este pase solo inserta los swaps necesarios para hacer que todas las interacciones entre dos qubits se ajusten al mapa de acoplamiento del dispositivo. No se preocupa, por ejemplo, de la dirección de las interacciones, o el conjunto de compuertas nativo soportado por el dispositivo. Esta es una filosofía de diseño del transpilador de Qiskit: cada pase realiza una acción pequeña y bien definida, y la optimización agresiva de circuitos es lograda por el administrador de pases mediante una combinación de múltiples pases.</p>
 </div>
 <div class="section" id="Logging-del-Transpilador">
 <h2>Logging del Transpilador<a class="headerlink" href="#Logging-del-Transpilador" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>Debido a la complejidad de las operaciones internas que el transpilador está realizando, es probable que termines en una situación donde te gustaría depurar un problema o simplemente entender más de lo que está pasando dentro del transpilador cuando lo llamas. Para facilitar esto, el transpilador emite mensajes de registro como parte de su funcionamiento normal. Este registro utiliza el módulo <code class="docutils literal notranslate"><span class="pre">logging</span></code> de la biblioteca estándar de Python para emitir los mensajes de registro. El logging estándar de Python se utilizó porque permite que los registros de Qiskit-Terra se integren de manera estándar con otras aplicaciones y bibliotecas.</p>
 <p>Para una introducción más a fondo del logging de Python, consulte la <a class="reference external" href="https://docs.python.org/3/library/logging.html">documentación oficial</a> y los tutoriales y libros de código enlazados ahí.</p>
 <div class="alert alert-block alert-success"><p>Nota: la mayoría de las funciones del módulo logging usadas aquí ajustan configuraciones globales. Si corres comandos de esta sección puede que afecte las salidas de otras celdas si son ejecutadas en diferente orden.</p>
-</div><div class="section" id="Configuración-de-la-librería-Logging-estándar-de-Python">
-<h3>Configuración de la librería Logging estándar de Python<a class="headerlink" href="#Configuración-de-la-librería-Logging-estándar-de-Python" title="Enlazar permanentemente con este título">¶</a></h3>
-<p>Por defecto, el Logging Estándar de Python solo imprime mensajes de registro a los niveles de registro <code class="docutils literal notranslate"><span class="pre">WARNING</span></code>, <code class="docutils literal notranslate"><span class="pre">ERROR</span></code>, o <code class="docutils literal notranslate"><span class="pre">CRITICAL</span></code>. Ya que ninguno de los registros emitidos por el transpilador usa estos niveles de registro (todos son informativos) tienes que configurar la librería logging.</p>
+</div><div class="section" id="Configuración-de-la-Biblioteca-Estándar-de-Python-Logging">
+<h3>Configuración de la Biblioteca Estándar de Python Logging<a class="headerlink" href="#Configuración-de-la-Biblioteca-Estándar-de-Python-Logging" title="Enlazar permanentemente con este título">¶</a></h3>
+<p>Por defecto, el Logging Estándar de Python solo imprime mensajes en los niveles de registro <code class="docutils literal notranslate"><span class="pre">WARNING</span></code>, <code class="docutils literal notranslate"><span class="pre">ERROR</span></code>, o <code class="docutils literal notranslate"><span class="pre">CRITICAL</span></code>. Ya que ninguno de los registros emitidos por el transpilador usa estos niveles de registro (todos son informativos) tienes que configurar logging.</p>
 <p>La forma más sencilla de hacer esto es simplemente ejecutar:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
@@ -1388,9 +1388,9 @@ node condition:  (ClassicalRegister(3, &#39;c&#39;), 2)
 </pre></div>
 </div>
 </div>
-<p>La función <code class="docutils literal notranslate"><span class="pre">basicConfig()</span></code> (ver la documentación aquí: <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.basicConfig">https://docs.python.org/3/library/logging.html#logging.basicConfig</a>) configura un manipulador de raíz y un formateador. También especificamos el <a class="reference external" href="https://docs.python.org/3/library/logging.html#levels">nivel de registro</a> para mostrar con el kwarg <code class="docutils literal notranslate"><span class="pre">level</span></code>. Configurarlo a un nivel también va a hacer que incluya los niveles más altos. Por ejemplo, si lo configuras al nivel <code class="docutils literal notranslate"><span class="pre">'INFO'</span></code> además del nivel <code class="docutils literal notranslate"><span class="pre">INFO</span></code> esto también va a incluir los niveles de registro <code class="docutils literal notranslate"><span class="pre">WARNING</span></code>, <code class="docutils literal notranslate"><span class="pre">ERROR</span></code>, and <code class="docutils literal notranslate"><span class="pre">CRITICAL</span></code>.</p>
+<p>La función <code class="docutils literal notranslate"><span class="pre">basicConfig()</span></code> (ver la documentación aquí: <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.basicConfig">https://docs.python.org/3/library/logging.html#logging.basicConfig</a>) configura un controlador raíz y un formateador. También especificamos el <a class="reference external" href="https://docs.python.org/3/library/logging.html#levels">nivel de registro</a> a mostrar con el kwarg <code class="docutils literal notranslate"><span class="pre">level</span></code>. Configurarlo a un nivel también va a hacer que incluya los niveles más altos. Por ejemplo, si lo configuras al nivel <code class="docutils literal notranslate"><span class="pre">'INFO'</span></code> además del nivel <code class="docutils literal notranslate"><span class="pre">INFO</span></code> esto también va a incluir los niveles de registro <code class="docutils literal notranslate"><span class="pre">WARNING</span></code>, <code class="docutils literal notranslate"><span class="pre">ERROR</span></code>, and <code class="docutils literal notranslate"><span class="pre">CRITICAL</span></code>.</p>
 <p>Ahora el entorno de python de este cuaderno se configura para emitir mensajes de registro a stderr cuando corras el transpilador. Por ejemplo:</p>
-<div class="alert alert-block alert-success"><p>Nota: basicConfig() solo va a funcionar cuando se ejecute por primera vez. Detecta si un manipulador de raíz y un formateador ya han sido configurados (utilizando una corrida anterior de basicConfig() o de otra manera) y no hace nada si ya fueron configurados. Ajustes adicionales tendrán que ser hechos interactuando con el manipulador directamente.</p>
+<div class="alert alert-block alert-success"><p>Nota: basicConfig() solo va a funcionar cuando se ejecute por primera vez. Detecta si un controlador raíz y un formateador ya han sido configurados (ya sea mediante una llamada anterior a basicConfig() o de otra manera) y no hace nada si ya fueron configurados. Ajustes adicionales tendrán que interactuar directamente con el controlador.</p>
 </div><div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
@@ -1485,11 +1485,11 @@ INFO:qiskit.transpiler.runningpassmanager:Pass: CXCancellation - 0.07939 (ms)
 INFO:qiskit.compiler.transpile:Total Transpile Time - 75.43111 (ms)
 </pre></div></div>
 </div>
-<p>Como puedes ver claramente aquí, al ejecutar <code class="docutils literal notranslate"><span class="pre">transpile()</span></code> ahora imprime dos tipos de mensaje de registro. El primero está al nivel de registro <code class="docutils literal notranslate"><span class="pre">INFO</span></code> y proviene del administrador de pases. Estos muestran cada pase que fue ejecutado y que tanto tardaron. El segundo está al nivel de registro <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> y proviene del pase StochasticSwap y describe la operación interna de ese pase. Es útil para depurar problemas en la operación del pase.</p>
+<p>Como puedes ver claramente aquí, al ejecutar <code class="docutils literal notranslate"><span class="pre">transpile()</span></code> ahora imprime 2 tipos de mensaje de registro. El primero está al nivel de registro <code class="docutils literal notranslate"><span class="pre">INFO</span></code> y proviene del administrador de pases. Estos indican cada pase que se ejecutó y cuánto tiempo tomó. El segundo está al nivel de registro <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> y proviene del pase StochasticSwap y describe la operación interna de ese pase. Es útil para depurar problemas en la operación del pase.</p>
 </div>
 <div class="section" id="Ajustando-el-nivel-de-registro-para-el-transpilador">
 <h3>Ajustando el nivel de registro para el transpilador<a class="headerlink" href="#Ajustando-el-nivel-de-registro-para-el-transpilador" title="Enlazar permanentemente con este título">¶</a></h3>
-<p>El transpilador qiskit usa un solo espacio de nombres <code class="docutils literal notranslate"><span class="pre">qiskit.transpiler</span></code>, como lo usa <code class="docutils literal notranslate"><span class="pre">logging.getLogger('qiskit.transpiler')</span></code>. Esto hace que sea muy fácil ajustar el nivel de registro solo para el transpilador. Por ejemplo, si solo desea ver los mensajes de registro en el nivel INFO o superior, puede ejecutar:</p>
+<p>El transpilador qiskit usa un solo espacio de nombres <code class="docutils literal notranslate"><span class="pre">qiskit.transpiler</span></code>, como lo usa <code class="docutils literal notranslate"><span class="pre">logging.getLogger('qiskit.transpiler')</span></code>. Esto hace que sea muy fácil ajustar el nivel de registro solamente para el transpilador. Por ejemplo, si solo desea ver los mensajes de registro en el nivel INFO o superior, puede ejecutar:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
@@ -1537,9 +1537,9 @@ INFO:qiskit.compiler.transpile:Total Transpile Time - 38.27548 (ms)
 </pre></div></div>
 </div>
 </div>
-<div class="section" id="Configuración-del-logging-para-lidiar-con-la-ejecución-paralela">
-<h3>Configuración del logging para lidiar con la ejecución paralela<a class="headerlink" href="#Configuración-del-logging-para-lidiar-con-la-ejecución-paralela" title="Enlazar permanentemente con este título">¶</a></h3>
-<p>Cuando se ejecuta el transpilador con múltiples circuitos, por defecto estos circuitos se transpilan en paralelo. Si desea hacerlo con el logging habilitado y poder entender el mensaje de salida, se necesitan algunos pasos adicionales.</p>
+<div class="section" id="Configuración-del-registro-para-lidiar-con-la-ejecución-en-paralelo">
+<h3>Configuración del registro para lidiar con la ejecución en paralelo<a class="headerlink" href="#Configuración-del-registro-para-lidiar-con-la-ejecución-en-paralelo" title="Enlazar permanentemente con este título">¶</a></h3>
+<p>Cuando se ejecuta el transpilador con múltiples circuitos, por defecto estos circuitos se transpilan en paralelo. Si deseas hacerlo con el logging (registro) habilitado y poder entender el mensaje de salida, se necesitan algunos pasos adicionales.</p>
 <p>Si habilitas el logging como se hizo arriba, y pasas <code class="docutils literal notranslate"><span class="pre">transpile()</span></code> a múltiples circuitos obtendrás resultados que son difíciles de descifrar. Por ejemplo:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
@@ -1702,7 +1702,7 @@ INFO:qiskit.compiler.transpile:Total Transpile Time - 195.16397 (ms)
 </pre></div>
 </div>
 </div>
-<p>Ahora, vuelva a ejecutar <code class="docutils literal notranslate"><span class="pre">transpile()</span></code> y vea el nuevo formateador de registro.</p>
+<p>Luego, vuelve a ejecutar <code class="docutils literal notranslate"><span class="pre">transpile()</span></code> y observa el nuevo formateador de registro.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
 </pre></div>
@@ -1902,7 +1902,7 @@ qiskit.compiler.transpile - MainProcess - INFO: Total Transpile Time - 172.73402
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Actualizado por última vez en 2022/03/05.
+      Actualizado por última vez en 2022/03/07.
 
     </p>
   </div>
@@ -1921,17 +1921,17 @@ qiskit.compiler.transpile - MainProcess - INFO: Total Transpile Time - 172.73402
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Pases al Transpilador y administrador de pases</a><ul>
+<li><a class="reference internal" href="#">Pases al Transpilador y Administrador de Pases</a><ul>
 <li><a class="reference internal" href="#Introducción">Introducción</a></li>
 <li><a class="reference internal" href="#Objeto-PassManager">Objeto PassManager</a></li>
-<li><a class="reference internal" href="#Diferentes-variantes-del-mismo-pase">Diferentes variantes del mismo pase</a></li>
-<li><a class="reference internal" href="#Administradores-de-pases-Preestablecidos">Administradores de pases Preestablecidos</a></li>
+<li><a class="reference internal" href="#Diferentes-Variantes-del-Mismo-Pase">Diferentes Variantes del Mismo Pase</a></li>
+<li><a class="reference internal" href="#Administradores-de-Pases-Preestablecidos">Administradores de Pases Preestablecidos</a></li>
 <li><a class="reference internal" href="#Introducción-al-DAG">Introducción al DAG</a></li>
-<li><a class="reference internal" href="#Implementación-de-un-pase-de-BasicMapper">Implementación de un pase de BasicMapper</a></li>
+<li><a class="reference internal" href="#Implementación-de-un-Pase-BasicMapper">Implementación de un Pase BasicMapper</a></li>
 <li><a class="reference internal" href="#Logging-del-Transpilador">Logging del Transpilador</a><ul>
-<li><a class="reference internal" href="#Configuración-de-la-librería-Logging-estándar-de-Python">Configuración de la librería Logging estándar de Python</a></li>
+<li><a class="reference internal" href="#Configuración-de-la-Biblioteca-Estándar-de-Python-Logging">Configuración de la Biblioteca Estándar de Python Logging</a></li>
 <li><a class="reference internal" href="#Ajustando-el-nivel-de-registro-para-el-transpilador">Ajustando el nivel de registro para el transpilador</a></li>
-<li><a class="reference internal" href="#Configuración-del-logging-para-lidiar-con-la-ejecución-paralela">Configuración del logging para lidiar con la ejecución paralela</a></li>
+<li><a class="reference internal" href="#Configuración-del-registro-para-lidiar-con-la-ejecución-en-paralelo">Configuración del registro para lidiar con la ejecución en paralelo</a></li>
 </ul>
 </li>
 </ul>
