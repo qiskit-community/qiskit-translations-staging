@@ -589,9 +589,9 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="section" id="Construyendo-Planificadores-de-Pulso">
 <h1>Construyendo Planificadores de Pulso<a class="headerlink" href="#Construyendo-Planificadores-de-Pulso" title="Enlazar permanentemente con este título">¶</a></h1>
-<p>Las compuertas de pulso definen una representación exacta de bajo nivel para una compuerta de circuito. Se puede implementar una sola operación con un programa de pulsos, que se compone de múltiples instrucciones de bajo nivel. Para obtener más información sobre las compuertas de pulso, consulte la documentación <a class="reference internal" href="05_pulse_gates.html"><span class="doc">aquí</span></a>. Esta página detalla cómo crear programas de pulso.</p>
+<p>Las compuertas de pulso definen una representación exacta de bajo nivel para una compuerta de circuito. Se puede implementar una sola operación con un programa de pulsos, que se compone de múltiples instrucciones de bajo nivel. Para obtener más información sobre las compuertas de pulso, consulta la documentación <a class="reference internal" href="05_pulse_gates.html"><span class="doc">aquí</span></a>. Esta página detalla cómo crear programas de pulso.</p>
 <p>Nota: Para los dispositivos IBM, los programas de pulso se utilizan como subrutinas para describir compuertas. Anteriormente, algunos dispositivos aceptaban programas completos en este formato, pero esto dejará de estar disponible en diciembre de 2021. Es posible que otros proveedores aún acepten programas completos en este formato. Independientemente de cómo se use el programa, la sintaxis para construir el programa es la misma. ¡Sigue leyendo para aprender!</p>
-<p>Los planificadores de pulso, que se llaman <code class="docutils literal notranslate"><span class="pre">Schedule</span></code>s, describen las secuencias de instrucciones para la electrónica de control. Construimos <code class="docutils literal notranslate"><span class="pre">Schedule</span></code>s usando el Constructor de Pulso. Es fácil inicializar un planificador:</p>
+<p>Los programas de pulso, que se llaman <code class="docutils literal notranslate"><span class="pre">Schedule</span></code>s, describen las secuencias de instrucciones para la electrónica de control. Construimos <code class="docutils literal notranslate"><span class="pre">Schedule</span></code>s usando el Constructor de Pulso (Pulse Builder). Es fácil inicializar un planificador:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -615,7 +615,7 @@ div.rendered_html tbody tr:hover {
 Schedule(, name=&#34;my_example&#34;)
 </pre></div></div>
 </div>
-<p>Puedes ver que aún no hay instrucciones. La siguiente sección de esta página explicará cada una de las instrucciones que podrías agregar a un planificador, y la última sección describirá varios <em>contextos de alineación</em>, que determinan cómo se colocan las instrucciones en el tiempo entre ellas.</p>
+<p>Puedes ver que aún no hay instrucciones. La siguiente sección de esta página explicará cada una de las instrucciones que podrías agregar a un planificador, y la última sección describirá varios <em>contextos de alineación</em>, que determinan cómo se colocan las instrucciones en el tiempo en relación con las otras.</p>
 </div>
 <div class="section" id="Instrucciones-de-Schedule">
 <h1>Instrucciones de <code class="docutils literal notranslate"><span class="pre">Schedule</span></code><a class="headerlink" href="#Instrucciones-de-Schedule" title="Enlazar permanentemente con este título">¶</a></h1>
@@ -630,7 +630,7 @@ Schedule(, name=&#34;my_example&#34;)
 <p>Los <strong>Canales</strong> son etiquetas para las líneas de señal desde el hardware de control hasta el chip cuántico.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">DriveChannel</span></code>s son usados típicamente para <em>dirigir</em> rotaciones de un solo qubit,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ControlChannel</span></code>s son usados típicamente para compuertas multiqubit o líneas de dirección para qubits ajustables,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ControlChannel</span></code>s son usados típicamente para compuertas multiqubit o líneas de dirección adicionales para qubits ajustables,</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">MeasureChannel</span></code>s son específicos para transmitir pulsos que estimulan la lectura, y</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">AdquireChannel</span></code>s se utilizan para activar los digitizadores que recolectan señales de lectura.</p></li>
 </ul>
@@ -646,7 +646,7 @@ Schedule(, name=&#34;my_example&#34;)
 </pre></div>
 </div>
 </div>
-<p>El pulso <code class="docutils literal notranslate"><span class="pre">Schedule</span></code> es independiente del backend en el que se ejecuta. Sin embargo, podemos construir nuestro programa en un contexto que sea consciente del backend objetivo suministrándolo a <code class="docutils literal notranslate"><span class="pre">pulse.build</span></code>. Cuando sea posible, debes proporcionar un backend. Al usar los accesos de canal <code class="docutils literal notranslate"><span class="pre">pulse.&lt;type&gt;_channel(&lt;idx&gt;)</span></code> podemos asegurarnos de que solo estamos utilizando recursos disponibles del dispositivo.</p>
+<p>El pulso <code class="docutils literal notranslate"><span class="pre">Schedule</span></code> es independiente del backend en el que se ejecuta. Sin embargo, podemos construir nuestro programa en un contexto que sea consciente del backend objetivo suministrándolo a <code class="docutils literal notranslate"><span class="pre">pulse.build</span></code>. Cuando sea posible, debes proporcionar un backend. Al usar los accesores del canal <code class="docutils literal notranslate"><span class="pre">pulse.&lt;type&gt;_channel(&lt;idx&gt;)</span></code> podemos asegurarnos de que solo estamos utilizando recursos disponibles del dispositivo.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -685,7 +685,7 @@ Schedule(, name=&#34;my_example&#34;)
 </pre></div>
 </div>
 </div>
-<p>Eso es todo al respecto. Cualquier instrucción agregada después de este retraso en el mismo canal se ejecutará cinco pasos de tiempo más tarde de lo que lo habría hecho sin este retraso.</p>
+<p>Eso es todo al respecto. Cualquier instrucción agregada después de este retraso en el mismo canal se ejecutarán cinco pasos de tiempo más tarde de lo que lo habría hecho sin este retraso.</p>
 </div>
 <div class="section" id="play">
 <h2><code class="docutils literal notranslate"><span class="pre">play</span></code><a class="headerlink" href="#play" title="Enlazar permanentemente con este título">¶</a></h2>
@@ -698,11 +698,11 @@ Schedule(, name=&#34;my_example&#34;)
 <div class="section" id="Pulsos">
 <h3>Pulsos<a class="headerlink" href="#Pulsos" title="Enlazar permanentemente con este título">¶</a></h3>
 <p>Un <code class="docutils literal notranslate"><span class="pre">Pulse</span></code> especifica un pulso <em>envolvente</em> arbitrario. La frecuencia de modulación y la fase de la forma de onda de salida están controladas por las instrucciones <code class="docutils literal notranslate"><span class="pre">set_frequency</span></code> y <code class="docutils literal notranslate"><span class="pre">shift_phase</span></code>, que cubriremos a continuación.</p>
-<p>La siguiente imagen puede proporcionar una idea de por qué se especifican por separado. Piensa en los pulsos que describen sus envolventes como entrada a un generador de forma de onda arbitraria (arbitrary waveform generator, AWG), un instrumento de laboratorio común; esto se muestra en la imagen de la izquierda. Observa que la frecuencia de muestreo limitada discretiza la señal. La señal producida por el AWG se puede mezclar con un generador de onda sinusoidal continua. La frecuencia de su salida se controla mediante instrucciones al generador de onda sinusoidal; vea la imagen de en medio. Finalmente, la señal enviada al qubit se muestra en el lado derecho de la imagen de abajo.</p>
+<p>La siguiente imagen puede proporcionar una idea de por qué se especifican por separado. Piensa en los pulsos que describen sus envolventes como entrada a un generador de form de onda arbitraria (arbitrary waveform generator, AWG), un instrumento de laboratorio común; esto se muestra en la imagen de la izquierda. Observa que la frecuencia de muestreo limitada discretiza la señal. La señal producida por el AWG se puede mezclar con un generador de onda sinusoidal continua. La frecuencia de su salida se controla mediante instrucciones al generador de onda sinusoidal; observa la imagen de en medio. Finalmente, la señal enviada al qubit se muestra en el lado derecho de la imagen de abajo.</p>
 <p><strong>Nota</strong>: El hardware puede implementarse de otras formas, pero si mantenemos las instrucciones separadas, evitamos perder información explícita, como el valor de la frecuencia de modulación.</p>
 <p><img alt="alt text" src="../../_images/pulse_modulation.png" /></p>
 <p>Disponemos de muchos métodos para construir pulsos. Nuestra <code class="docutils literal notranslate"><span class="pre">library</span></code> dentro de Qiskit Pulse contiene métodos útiles para construir <code class="docutils literal notranslate"><span class="pre">Pulse</span></code>s. Tomemos, por ejemplo, un pulso Gaussiano simple – un pulso con su envolvente descrita por una función Gaussiana muestreada. Elegimos arbitrariamente una amplitud de 1, desviación estándar <span class="math notranslate nohighlight">\(\sigma\)</span> de 10 y 128 puntos de muestra.</p>
-<p><strong>Nota</strong>: La norma de amplitud se limita arbitrariamente a <code class="docutils literal notranslate"><span class="pre">1.0</span></code>. Cada sistema de backend también puede imponer restricciones adicionales, por ejemplo, un tamaño de pulso mínimo de 64. Estas restricciones adicionales, si están disponibles, se proporcionarían a través de la <code class="docutils literal notranslate"><span class="pre">BackendConfiguration</span></code> que se describe aquí.</p>
+<p><strong>Nota</strong>: La norma de la amplitud está limitada arbitrariamente a <code class="docutils literal notranslate"><span class="pre">1.0</span></code>. Cada sistema de backend también puede imponer restricciones adicionales, por ejemplo, un tamaño de pulso mínimo de 64. Estas restricciones adicionales, si están disponibles, se proporcionarían a través de la <code class="docutils literal notranslate"><span class="pre">BackendConfiguration</span></code> que se describe aquí.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -877,11 +877,11 @@ Schedule(, name=&#34;my_example&#34;)
 </div>
 <div class="section" id="Constructor-de-Pulso">
 <h1>Constructor de Pulso<a class="headerlink" href="#Constructor-de-Pulso" title="Enlazar permanentemente con este título">¶</a></h1>
-<p>Aquí, repasaremos las características más importantes del Constructor de Pulso para aprender a crear planificadores. Esto no es exhaustivo; Para obtener más detalles sobre lo que puede hacer con el Constructor de Pulso, consulte la <a class="reference external" href="https://qiskit.org/documentation/apidoc/pulse.html">Referencia de la API de Pulse</a>.</p>
+<p>Aquí, repasaremos las características más importantes del Constructor de Pulso para aprender a crear planificadores. Esto no es exhaustivo; Para obtener más detalles sobre lo que puede hacer con el Constructor de Pulso, consulta la <a class="reference external" href="https://qiskit.org/documentation/apidoc/pulse.html">referencia de la API de Pulse</a>.</p>
 <div class="section" id="Contextos-de-alineación">
 <h2>Contextos de alineación<a class="headerlink" href="#Contextos-de-alineación" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>El constructor tiene contextos de alineación que influyen en cómo se construye un planificador. Los contextos también se pueden anidar. Pruébalos y usa <code class="docutils literal notranslate"><span class="pre">.draw()</span></code> para ver cómo se alinean los pulsos.</p>
-<p>Independientemente del contexto de alineación, la duración del planificador resultante es lo más breve posible, al incluir todas las instrucciones y seguir las reglas de alineación. Esto todavía permite algunos grados de libertad para planificar instrucciones fuera del «camino más largo». Los ejemplos siguientes ilustran esto.</p>
+<p>Independientemente del contexto de alineación, la duración del planificador resultante es lo más breve posible, al incluir todas las instrucciones y seguir las reglas de alineación. Esto todavía permite algunos grados de libertad para planificar instrucciones fuera del “camino más largo”. Los ejemplos siguientes ilustran esto.</p>
 </div>
 <div class="section" id="align_left">
 <h2><code class="docutils literal notranslate"><span class="pre">align_left</span></code><a class="headerlink" href="#align_left" title="Enlazar permanentemente con este título">¶</a></h2>
@@ -913,7 +913,7 @@ Schedule(, name=&#34;my_example&#34;)
 </div>
 <div class="section" id="align_right">
 <h2><code class="docutils literal notranslate"><span class="pre">align_right</span></code><a class="headerlink" href="#align_right" title="Enlazar permanentemente con este título">¶</a></h2>
-<p>Como era de esperarse, <code class="docutils literal notranslate"><span class="pre">align_right</span></code> hace lo contrario de <code class="docutils literal notranslate"><span class="pre">align_left</span></code>. Elegirá <code class="docutils literal notranslate"><span class="pre">t=100</span></code> en el ejemplo anterior para comenzar el pulso Gaussiano en <code class="docutils literal notranslate"><span class="pre">D0</span></code>. La izquierda y la derecha también se denominan a veces planificación «lo antes posible» y «lo más tarde posible», respectivamente.</p>
+<p>Como era de esperarse, <code class="docutils literal notranslate"><span class="pre">align_right</span></code> hace lo contrario de <code class="docutils literal notranslate"><span class="pre">align_left</span></code>. Elegirá <code class="docutils literal notranslate"><span class="pre">t=100</span></code> en el ejemplo anterior para comenzar el pulso Gaussiano en <code class="docutils literal notranslate"><span class="pre">D0</span></code>. La izquierda y la derecha también se denominan a veces planificación “lo antes posible” y “lo más tarde posible”, respectivamente.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
@@ -994,7 +994,7 @@ Schedule(, name=&#34;my_example&#34;)
 </div>
 <div class="section" id="Desplazamientos-de-fase-y-frecuencia">
 <h2>Desplazamientos de fase y frecuencia<a class="headerlink" href="#Desplazamientos-de-fase-y-frecuencia" title="Enlazar permanentemente con este título">¶</a></h2>
-<p>Podemos usar el constructor para ayudarnos a compensar temporalmente la frecuencia o fase de nuestros pulsos en un canal.</p>
+<p>Podemos usar el constructor para ayudarnos a desplazar temporalmente la frecuencia o fase de nuestros pulsos en un canal.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
@@ -1017,7 +1017,7 @@ Schedule(, name=&#34;my_example&#34;)
 <img alt="../../_images/tutorials_circuits_advanced_06_building_pulse_schedules_36_0.png" src="../../_images/tutorials_circuits_advanced_06_building_pulse_schedules_36_0.png" />
 </div>
 </div>
-<p>Te recomendamos que visites la <a class="reference external" href="https://qiskit.org/documentation/apidoc/pulse.html">Referencia de la API de Pulse</a> para aprender más.</p>
+<p>Te recomendamos que visites la <a class="reference external" href="https://qiskit.org/documentation/apidoc/pulse.html">referencia de la API de Pulse</a> para aprender más.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
@@ -1060,7 +1060,7 @@ Schedule(, name=&#34;my_example&#34;)
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Actualizado por última vez en 2022/03/07.
+      Actualizado por última vez en 2022/03/09.
 
     </p>
   </div>
