@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Qiskit Aer: Simulación de pulso de dos qubits usando un modelo de oscilador Duffing &mdash; documentación de Qiskit - 0.34.2</title>
+  <title>Qiskit Aer: Simulación de pulsos de dos qubits usando un modelo de oscilador de Duffing &mdash; documentación de Qiskit - 0.34.2</title>
   
 
   
@@ -305,7 +305,7 @@
       </li>
 
         
-      <li>Qiskit Aer: Simulación de pulso de dos qubits usando un modelo de oscilador Duffing</li>
+      <li>Qiskit Aer: Simulación de pulsos de dos qubits usando un modelo de oscilador de Duffing</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
@@ -587,8 +587,8 @@ div.rendered_html tbody tr:hover {
 <p class="admonition-title">Nota</p>
 <p>Esta página fue generada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-tutorials/blob/master/tutorials/circuits_advanced/09_pulse_simulator_duffing_model.ipynb">tutorials/circuits_advanced/09_pulse_simulator_duffing_model.ipynb</a>.</p>
 </div>
-<div class="section" id="Qiskit-Aer:-Simulación-de-pulso-de-dos-qubits-usando-un-modelo-de-oscilador-Duffing">
-<h1>Qiskit Aer: Simulación de pulso de dos qubits usando un modelo de oscilador Duffing<a class="headerlink" href="#Qiskit-Aer:-Simulación-de-pulso-de-dos-qubits-usando-un-modelo-de-oscilador-Duffing" title="Enlazar permanentemente con este título">¶</a></h1>
+<div class="section" id="Qiskit-Aer:-Simulación-de-pulsos-de-dos-qubits-usando-un-modelo-de-oscilador-de-Duffing">
+<h1>Qiskit Aer: Simulación de pulsos de dos qubits usando un modelo de oscilador de Duffing<a class="headerlink" href="#Qiskit-Aer:-Simulación-de-pulsos-de-dos-qubits-usando-un-modelo-de-oscilador-de-Duffing" title="Enlazar permanentemente con este título">¶</a></h1>
 <p>Este cuaderno muestra cómo utilizar el simulador de pulso Qiskit Aer, que simula experimentos especificados como objetos <code class="docutils literal notranslate"><span class="pre">Schedule</span></code> de pulso a nivel Hamiltoniano. El simulador resuelve la ecuación de Schrodinger para un modelo Hamiltoniano específico y un <code class="docutils literal notranslate"><span class="pre">Schedule</span></code> de pulso en el marco del Hamiltoniano de deriva.</p>
 <p>En particular, en este tutorial:</p>
 <ul class="simple">
@@ -600,11 +600,11 @@ div.rendered_html tbody tr:hover {
 <div class="section" id="1.-Introducción">
 <h2>1. Introducción<a class="headerlink" href="#1.-Introducción" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>Las secciones principales proceden de la siguiente manera.</p>
-<div class="section" id="Sección-3:-Modelo-de-oscilador-Duffing">
-<h3>Sección 3: Modelo de oscilador Duffing<a class="headerlink" href="#Sección-3:-Modelo-de-oscilador-Duffing" title="Enlazar permanentemente con este título">¶</a></h3>
+<div class="section" id="Sección-3:-Modelo-de-oscilador-de-Duffing">
+<h3>Sección 3: Modelo de oscilador de Duffing<a class="headerlink" href="#Sección-3:-Modelo-de-oscilador-de-Duffing" title="Enlazar permanentemente con este título">¶</a></h3>
 <p>Para simular un sistema físico, es necesario especificar un modelo. En este cuaderno, modelaremos qubits superconductores como una colección de <em>osciladores Duffing</em>. El modelo se especifica en términos de los siguientes parámetros:</p>
 <ul class="simple">
-<li><p>Cada oscilador Duffing es especificado por una frecuencia <span class="math notranslate nohighlight">\(\nu\)</span>, una anarmonicidad <span class="math notranslate nohighlight">\(\alpha\)</span>, y una fuerza de dirección <span class="math notranslate nohighlight">\(r\)</span>, que resultan en los términos Hamiltonianos:</p></li>
+<li><p>Cada oscilador de Duffing es especificado por una frecuencia <span class="math notranslate nohighlight">\(\nu\)</span>, una anarmonicidad <span class="math notranslate nohighlight">\(\alpha\)</span>, y una fuerza de dirección (drive) <span class="math notranslate nohighlight">\(r\)</span>, que resultan en los términos Hamiltonianos:</p></li>
 </ul>
 <div class="math notranslate nohighlight">
 \[\begin{equation}
@@ -629,8 +629,8 @@ div.rendered_html tbody tr:hover {
 <p>Una vez definido el modelo, calibraremos pulsos <span class="math notranslate nohighlight">\(\pi\)</span> en cada qubit. Un pulso <span class="math notranslate nohighlight">\(\pi\)</span> se define como un pulso en el canal de dirección de un qubit que “voltea” el qubit; es decir, lleva el estado fundamental al primer estado excitado y el primer estado excitado al estado fundamental.</p>
 <p>Experimentalmente encontraremos un pulso <span class="math notranslate nohighlight">\(\pi\)</span> para cada qubit usando el siguiente procedimiento:</p>
 <ul class="simple">
-<li><p>Se establece una forma de pulso fija; en este caso, será un pulso gaussiano.</p></li>
-<li><p>Se ejecuta una secuencia de experimentos, cada uno de los cuales consta de un pulso gaussiano en el qubit, seguido de una medición, y cada experimento de la secuencia tiene una amplitud posteriormente mayor para el pulso gaussiano.</p></li>
+<li><p>Se establece una forma de pulso fija; en este caso, será un pulso Gaussiano.</p></li>
+<li><p>Se ejecuta una secuencia de experimentos, cada uno de los cuales consta de un pulso Gaussiano en el qubit, seguido de una medición, y cada experimento de la secuencia tiene una amplitud posteriormente mayor para el pulso Gaussiano.</p></li>
 <li><p>Los datos de medición se ajustan y se encuentra la amplitud de pulso que invierte completamente el qubit (es decir, la amplitud del pulso <span class="math notranslate nohighlight">\(\pi\)</span>).</p></li>
 </ul>
 <p><strong>En el código:</strong> Usando Ignis construiremos objetos <code class="docutils literal notranslate"><span class="pre">Schedule</span></code> para los experimentos anteriores, luego ajustaremos los datos para encontrar las amplitudes de pulso <span class="math notranslate nohighlight">\(\pi\)</span>.</p>
@@ -641,7 +641,7 @@ div.rendered_html tbody tr:hover {
 <p>Para observar la conducción por resonancia cruzada, usaremos experimentos muy similares al caso de calibración de pulso <span class="math notranslate nohighlight">\(\pi\)</span>:</p>
 <ul class="simple">
 <li><p>Inicialmente, el qubit <span class="math notranslate nohighlight">\(1\)</span> se deja en el estado fundamental o se conduce a su primer estado excitado usando el pulso <span class="math notranslate nohighlight">\(\pi\)</span> que se encuentra en la Sección 4.</p></li>
-<li><p>Se ejecuta una secuencia de experimentos, cada uno de los cuales consta de un pulso gaussiano en el qubit <span class="math notranslate nohighlight">\(1\)</span> dirigido a la frecuencia del qubit <span class="math notranslate nohighlight">\(0\)</span>, seguido de una medición de ambos qubits, y cada experimento de la secuencia tiene subsecuentemente una mayor amplitud para el pulso gaussiano.</p></li>
+<li><p>Se ejecuta una secuencia de experimentos, cada uno de los cuales consta de un pulso Gaussiano en el qubit <span class="math notranslate nohighlight">\(1\)</span> dirigido a la frecuencia del qubit <span class="math notranslate nohighlight">\(0\)</span>, seguido de una medición de ambos qubits, y cada experimento de la secuencia tiene subsecuentemente una mayor amplitud para el pulso Gaussiano.</p></li>
 </ul>
 <p><strong>En el código:</strong> Se construyen funciones para definir los experimentos y visualizar los datos, incluida una visualización de la trayectoria del qubit objetivo en la esfera de Bloch.</p>
 </div>
@@ -676,7 +676,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>Importaciones para el simulador de pulsos Qiskit:</p>
+<p>Importaciones para el simulador de pulsos de Qiskit:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -690,8 +690,8 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 </div>
-<div class="section" id="3.-Modelo-de-sistema-de-oscilador-Duffing">
-<h2>3. Modelo de sistema de oscilador Duffing<a class="headerlink" href="#3.-Modelo-de-sistema-de-oscilador-Duffing" title="Enlazar permanentemente con este título">¶</a></h2>
+<div class="section" id="3.-Modelo-de-sistema-de-oscilador-de-Duffing">
+<h2>3. Modelo de sistema de oscilador de Duffing<a class="headerlink" href="#3.-Modelo-de-sistema-de-oscilador-de-Duffing" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>Se puede construir un objeto que representa un modelo para una colección de osciladores Duffing usando la función <code class="docutils literal notranslate"><span class="pre">duffing_system_model</span></code>. Aquí construimos un modelo de oscilador <span class="math notranslate nohighlight">\(2\)</span> Duffing con dimensión de corte <span class="math notranslate nohighlight">\(3\)</span>.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -735,11 +735,11 @@ div.rendered_html tbody tr:hover {
 </div>
 <p>La función <code class="docutils literal notranslate"><span class="pre">duffing_system_model</span></code> devuelve un objeto <code class="docutils literal notranslate"><span class="pre">PulseSystemModel</span></code>, que es un objeto general para almacenar la información del modelo requerido para la simulación con el <code class="docutils literal notranslate"><span class="pre">PulseSimulator</span></code>.</p>
 </div>
-<div class="section" id="4-Calibrando-pulsos-\pi-en-cada-qubit-usando-Ignis">
-<h2>4 Calibrando pulsos <span class="math notranslate nohighlight">\(\pi\)</span> en cada qubit usando Ignis<a class="headerlink" href="#4-Calibrando-pulsos-\pi-en-cada-qubit-usando-Ignis" title="Enlazar permanentemente con este título">¶</a></h2>
+<div class="section" id="4-Calibración-de-pulsos-\pi-en-cada-qubit-usando-Ignis">
+<h2>4 Calibración de pulsos <span class="math notranslate nohighlight">\(\pi\)</span> en cada qubit usando Ignis<a class="headerlink" href="#4-Calibración-de-pulsos-\pi-en-cada-qubit-usando-Ignis" title="Enlazar permanentemente con este título">¶</a></h2>
 <p>Como se describe en la introducción, ahora calibramos pulsos <span class="math notranslate nohighlight">\(\pi\)</span> en cada qubit en <code class="docutils literal notranslate"><span class="pre">two_qubit_model</span></code>. Los experimentos en este procedimiento de calibración se conocen como <em>experimentos Rabi</em>, y los datos que observaremos se conocen como <em>oscilaciones Rabi</em>.</p>
-<div class="section" id="4.1-Construir-los-planificadorers">
-<h3>4.1 Construir los planificadorers<a class="headerlink" href="#4.1-Construir-los-planificadorers" title="Enlazar permanentemente con este título">¶</a></h3>
+<div class="section" id="4.1-Construcción-de-los-planificadorers">
+<h3>4.1 Construcción de los planificadorers<a class="headerlink" href="#4.1-Construcción-de-los-planificadorers" title="Enlazar permanentemente con este título">¶</a></h3>
 <p>Construimos los planificadores utilizando la función <code class="docutils literal notranslate"><span class="pre">rabi_schedules</span></code> en Ignis. Para ello, necesitamos proporcionar un <code class="docutils literal notranslate"><span class="pre">InstructionScheduleMap</span></code> que contenga un planificador de medición.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
@@ -807,8 +807,8 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 </div>
-<div class="section" id="4.2-Simular-los-experimentos-de-Rabi">
-<h3>4.2 Simular los experimentos de Rabi<a class="headerlink" href="#4.2-Simular-los-experimentos-de-Rabi" title="Enlazar permanentemente con este título">¶</a></h3>
+<div class="section" id="4.2-Simulación-de-los-experimentos-de-Rabi">
+<h3>4.2 Simulación de los experimentos de Rabi<a class="headerlink" href="#4.2-Simulación-de-los-experimentos-de-Rabi" title="Enlazar permanentemente con este título">¶</a></h3>
 <p>Para simular los experimentos Rabi, ensambla la lista de <code class="docutils literal notranslate"><span class="pre">Schedule</span></code> en un qobj. Al ensamblarla, pasa el <code class="docutils literal notranslate"><span class="pre">PulseSimulator</span></code> como el backend.</p>
 <p>Aquí, queremos utilizar osciladores locales con frecuencias calculadas automáticamente a partir del modelo Hamiltoniano de Duffing.</p>
 <div class="nbinput nblast docutils container">
@@ -852,7 +852,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="section" id="4.3-Ajustar-y-graficar-los-datos">
 <h3>4.3 Ajustar y graficar los datos<a class="headerlink" href="#4.3-Ajustar-y-graficar-los-datos" title="Enlazar permanentemente con este título">¶</a></h3>
-<p>A continuación, usamos <code class="docutils literal notranslate"><span class="pre">RabiFitter</span></code> de Ignis para adaptar los datos, extrae la amplitud del pulso <span class="math notranslate nohighlight">\(\pi\)</span>, y luego grafica los datos.</p>
+<p>A continuación, usamos <code class="docutils literal notranslate"><span class="pre">RabiFitter</span></code> de Ignis para ajustar los datos, extraer la amplitud del pulso <span class="math notranslate nohighlight">\(\pi\)</span>, y luego graficar los datos.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
@@ -885,16 +885,16 @@ Pi Amp: 0.611280
 <img alt="../../_images/tutorials_circuits_advanced_09_pulse_simulator_duffing_model_23_1.png" src="../../_images/tutorials_circuits_advanced_09_pulse_simulator_duffing_model_23_1.png" />
 </div>
 </div>
-<p>Se grafican los datos promediados IQ para observar cada qubit. Observa que aquí, cada qubit oscila entre el estado 0 y 1. La amplitud a la que un qubit dado alcanza el pico de la oscilación es la deseada amplitud de un pulso <span class="math notranslate nohighlight">\(\pi\)</span>.</p>
+<p>Se grafican los datos IQ promediados para observar cada qubit. Observa que aquí, cada qubit oscila entre el estado 0 y 1. La amplitud a la que un qubit dado alcanza el pico de la oscilación es la amplitud de un pulso <span class="math notranslate nohighlight">\(\pi\)</span> deseada.</p>
 </div>
 </div>
-<div class="section" id="5.-Oscilaciones-por-impulso-de-resonancia-cruzada">
-<h2>5. Oscilaciones por impulso de resonancia cruzada<a class="headerlink" href="#5.-Oscilaciones-por-impulso-de-resonancia-cruzada" title="Enlazar permanentemente con este título">¶</a></h2>
-<p>A continuación, simulamos los efectos de un impulso de resonancia cruzada en el qubit <span class="math notranslate nohighlight">\(1\)</span> con el qubit <span class="math notranslate nohighlight">\(0\)</span> como objetivo, observando que la trayectoria y las oscilaciones del qubit <span class="math notranslate nohighlight">\(0\)</span> <em>depende</em> del estado del qubit <span class="math notranslate nohighlight">\(1\)</span>.</p>
+<div class="section" id="5.-Oscilaciones-desde-el-impulso-de-resonancia-cruzada">
+<h2>5. Oscilaciones desde el impulso de resonancia cruzada<a class="headerlink" href="#5.-Oscilaciones-desde-el-impulso-de-resonancia-cruzada" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>A continuación, simulamos los efectos de un direccionamiento (impulso o drive) de resonancia cruzada en el qubit <span class="math notranslate nohighlight">\(1\)</span> con el qubit <span class="math notranslate nohighlight">\(0\)</span> como objetivo, observando que la trayectoria y las oscilaciones del qubit <span class="math notranslate nohighlight">\(0\)</span> <em>depende</em> del estado del qubit <span class="math notranslate nohighlight">\(1\)</span>.</p>
 <p><strong>Nota:</strong> Esta sección depende de las calibraciones del pulso <span class="math notranslate nohighlight">\(\pi\)</span> de la Sección 2.</p>
-<div class="section" id="5.1-Índices-de-resonancia-cruzada-ControlChannel">
-<h3>5.1 Índices de resonancia cruzada <code class="docutils literal notranslate"><span class="pre">ControlChannel</span></code><a class="headerlink" href="#5.1-Índices-de-resonancia-cruzada-ControlChannel" title="Enlazar permanentemente con este título">¶</a></h3>
-<p>Conducir el qubit <span class="math notranslate nohighlight">\(1\)</span> a la frecuencia del qubit <span class="math notranslate nohighlight">\(0\)</span> requiere el uso de un pulso <code class="docutils literal notranslate"><span class="pre">ControlChannel</span></code>. La función de generación de modelo <code class="docutils literal notranslate"><span class="pre">duffing_system_model</span></code>, configura automáticamente <code class="docutils literal notranslate"><span class="pre">ControlChannels</span></code> para realizar controles de resonancia cruzada entre pares de qubits acoplados. El índice del <code class="docutils literal notranslate"><span class="pre">ControlChannels</span></code> para realizar un control de resonancia cruzada en particular se puede recuperar utilizando el método de clase <code class="docutils literal notranslate"><span class="pre">control_channel_index</span></code> en el objeto <code class="docutils literal notranslate"><span class="pre">PulseSystemModel</span></code> regresado. Por ejemplo, para obtener el índice <code class="docutils literal notranslate"><span class="pre">ControlChannel</span></code> correspondiente a una unidad CR en el qubit 1 con el objetivo 0, llama a la función <code class="docutils literal notranslate"><span class="pre">control_channel_index</span></code> con la tupla <code class="docutils literal notranslate"><span class="pre">(1,0)</span></code>:</p>
+<div class="section" id="5.1-Índices-de-ControlChannel-de-resonancia-cruzada">
+<h3>5.1 Índices de <code class="docutils literal notranslate"><span class="pre">ControlChannel</span></code> de resonancia cruzada<a class="headerlink" href="#5.1-Índices-de-ControlChannel-de-resonancia-cruzada" title="Enlazar permanentemente con este título">¶</a></h3>
+<p>Direccionar (impulsar o driving) el qubit <span class="math notranslate nohighlight">\(1\)</span> a la frecuencia del qubit <span class="math notranslate nohighlight">\(0\)</span> requiere el uso de un pulso <code class="docutils literal notranslate"><span class="pre">ControlChannel</span></code>. La función de generación de modelo <code class="docutils literal notranslate"><span class="pre">duffing_system_model</span></code>, configura automáticamente <code class="docutils literal notranslate"><span class="pre">ControlChannels</span></code> para realizar controles de resonancia cruzada entre pares de qubits acoplados. El índice del <code class="docutils literal notranslate"><span class="pre">ControlChannel</span></code> para ejecutar un direccionamiento de resonancia cruzada en particular se puede recuperar utilizando el método de clase <code class="docutils literal notranslate"><span class="pre">control_channel_index</span></code> en el objeto <code class="docutils literal notranslate"><span class="pre">PulseSystemModel</span></code> devuelto. Por ejemplo, para obtener el índice del <code class="docutils literal notranslate"><span class="pre">ControlChannel</span></code> correspondiente a un direccionamiento CR en el qubit 1 con el objetivo 0, llama a la función <code class="docutils literal notranslate"><span class="pre">control_channel_index</span></code> con la tupla <code class="docutils literal notranslate"><span class="pre">(1,0)</span></code>:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
@@ -912,11 +912,11 @@ Pi Amp: 0.611280
 1
 </pre></div></div>
 </div>
-<p>Por lo tanto, para realizar un control de resonancia cruzada en qubit <span class="math notranslate nohighlight">\(1\)</span> con el qubit <span class="math notranslate nohighlight">\(0\)</span> como objetivo, usa <code class="docutils literal notranslate"><span class="pre">ControlChannel(1)</span></code>. Esto se utilizará al construir objetos <code class="docutils literal notranslate"><span class="pre">Schedule</span></code> en esta sección.</p>
+<p>Por lo tanto, para realizar un impulso (direccionamiento o drive) de resonancia cruzada en el qubit <span class="math notranslate nohighlight">\(1\)</span> con el qubit <span class="math notranslate nohighlight">\(0\)</span> como objetivo, usa <code class="docutils literal notranslate"><span class="pre">ControlChannel(1)</span></code>. Esto se utilizará al construir objetos <code class="docutils literal notranslate"><span class="pre">Schedule</span></code> en esta sección.</p>
 </div>
 <div class="section" id="5.2-Funciones-para-generar-la-lista-de-experimentos-y-analizar-el-resultado">
 <h3>5.2 Funciones para generar la lista de experimentos y analizar el resultado<a class="headerlink" href="#5.2-Funciones-para-generar-la-lista-de-experimentos-y-analizar-el-resultado" title="Enlazar permanentemente con este título">¶</a></h3>
-<p>Primero, definimos la función <code class="docutils literal notranslate"><span class="pre">cr_drive_experiments</span></code>, que, dados los índices de control (drive) y objetivo (target), y la opción de comenzar con el qubit de control en el estado fundamental o en el estado excitado, regresa una lista de experimentos para observar las oscilaciones.</p>
+<p>Primero, definimos la función <code class="docutils literal notranslate"><span class="pre">cr_drive_experiments</span></code>, que, dados los índices de dirección (drive) y objetivo (target), y la opción de comenzar con el qubit de direccionamiento en el estado fundamental o en el estado excitado, regresa una lista de experimentos para observar las oscilaciones.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
@@ -1098,11 +1098,11 @@ Pi Amp: 0.611280
 </div>
 </div>
 </div>
-<div class="section" id="5.3-Controla-el-qubit-1-para-observar-las-oscilaciones-CR-en-el-qubit-0">
-<h3>5.3 Controla el qubit 1 para observar las oscilaciones CR en el qubit 0<a class="headerlink" href="#5.3-Controla-el-qubit-1-para-observar-las-oscilaciones-CR-en-el-qubit-0" title="Enlazar permanentemente con este título">¶</a></h3>
+<div class="section" id="5.3-Direccionar-el-qubit-1-para-observar-las-oscilaciones-CR-en-el-qubit-0">
+<h3>5.3 Direccionar el qubit 1 para observar las oscilaciones CR en el qubit 0<a class="headerlink" href="#5.3-Direccionar-el-qubit-1-para-observar-las-oscilaciones-CR-en-el-qubit-0" title="Enlazar permanentemente con este título">¶</a></h3>
 <div class="section" id="Qubit-1-en-el-estado-fundamental">
 <h4>Qubit 1 en el estado fundamental<a class="headerlink" href="#Qubit-1-en-el-estado-fundamental" title="Enlazar permanentemente con este título">¶</a></h4>
-<p>Primero, controlamos con el qubit 0 y el qubit 1 en el estado fundamental.</p>
+<p>Primero, direccionamos tanto con el qubit 0 como con el qubit 1 en el estado fundamental.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
@@ -1144,7 +1144,7 @@ Pi Amp: 0.611280
 <img alt="../../_images/tutorials_circuits_advanced_09_pulse_simulator_duffing_model_36_0.png" src="../../_images/tutorials_circuits_advanced_09_pulse_simulator_duffing_model_36_0.png" />
 </div>
 </div>
-<p>Observa que el qubit 1 permanece en el estado fundamental, mientras que las excitaciones se activan en el qubit 0.</p>
+<p>Observa que el qubit 1 permanece en el estado fundamental, mientras que las excitaciones son impulsadas en el qubit 0.</p>
 <p>También podemos observar la trayectoria del qubit 0 en la esfera de Bloch:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
@@ -1174,7 +1174,7 @@ Pi Amp: 0.611280
 </div>
 <div class="section" id="Qubit-1-en-el-primer-estado-excitado">
 <h4>Qubit 1 en el primer estado excitado<a class="headerlink" href="#Qubit-1-en-el-primer-estado-excitado" title="Enlazar permanentemente con este título">¶</a></h4>
-<p>A continuación, volvemos a usar al el qubit 1 como control CR con el qubit 0 como objetivo, pero ahora comenzamos cada experimento cambiando el qubit 1 al primer estado excitado.</p>
+<p>A continuación, nuevamente ejecutamos un direccionamiento CR en el qubit 1 con el qubit 0 como objetivo, pero ahora comenzamos cada experimento cambiando el qubit 1 al primer estado excitado.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
@@ -1215,8 +1215,8 @@ Pi Amp: 0.611280
 <img alt="../../_images/tutorials_circuits_advanced_09_pulse_simulator_duffing_model_41_0.png" src="../../_images/tutorials_circuits_advanced_09_pulse_simulator_duffing_model_41_0.png" />
 </div>
 </div>
-<p>Observe que ahora el qubit 1 está en el estado excitado, mientras que las oscilaciones están siendo impulsadas nuevamente en el qubit 0, ahora a una velocidad diferente a la anterior.</p>
-<p>Nuevamente, observe la trayectoria del qubit 0 en la esfera de Bloch:</p>
+<p>Observa que ahora el qubit 1 está en el estado excitado, mientras que las oscilaciones están siendo impulsadas nuevamente en el qubit 0, ahora a una tasa diferente a la anterior.</p>
+<p>Nuevamente, observa la trayectoria del qubit 0 en la esfera de Bloch:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
@@ -1242,7 +1242,7 @@ Pi Amp: 0.611280
 <img alt="../../_images/tutorials_circuits_advanced_09_pulse_simulator_duffing_model_43_1.png" src="../../_images/tutorials_circuits_advanced_09_pulse_simulator_duffing_model_43_1.png" />
 </div>
 </div>
-<p>Aquí vemos que el qubit 0 toma una trayectoria <em>diferente</em> en la esfera de Bloch cuando el qubit 1 está en estado excitado. Esto es lo que permite operaciones controladas entre dos qubits.</p>
+<p>Aquí vemos que el qubit 0 toma una trayectoria <em>diferente</em> en la esfera de Bloch cuando el qubit 1 está en el estado excitado. Esto es lo que permite operaciones controladas entre dos qubits.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
@@ -1296,7 +1296,7 @@ Pi Amp: 0.611280
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Actualizado por última vez en 2022/03/10.
+      Actualizado por última vez en 2022/03/14.
 
     </p>
   </div>
@@ -1315,25 +1315,25 @@ Pi Amp: 0.611280
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Qiskit Aer: Simulación de pulso de dos qubits usando un modelo de oscilador Duffing</a><ul>
+<li><a class="reference internal" href="#">Qiskit Aer: Simulación de pulsos de dos qubits usando un modelo de oscilador de Duffing</a><ul>
 <li><a class="reference internal" href="#1.-Introducción">1. Introducción</a><ul>
-<li><a class="reference internal" href="#Sección-3:-Modelo-de-oscilador-Duffing">Sección 3: Modelo de oscilador Duffing</a></li>
+<li><a class="reference internal" href="#Sección-3:-Modelo-de-oscilador-de-Duffing">Sección 3: Modelo de oscilador de Duffing</a></li>
 <li><a class="reference internal" href="#Sección-4:-calibración-de-pulso-\pi-usando-Ignis">Sección 4: calibración de pulso <span class="math notranslate nohighlight">\(\pi\)</span> usando Ignis</a></li>
 <li><a class="reference internal" href="#Sección-5:-Oscilaciones-de-resonancia-cruzada">Sección 5: Oscilaciones de resonancia cruzada</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#2.-Importaciones">2. Importaciones</a></li>
-<li><a class="reference internal" href="#3.-Modelo-de-sistema-de-oscilador-Duffing">3. Modelo de sistema de oscilador Duffing</a></li>
-<li><a class="reference internal" href="#4-Calibrando-pulsos-\pi-en-cada-qubit-usando-Ignis">4 Calibrando pulsos <span class="math notranslate nohighlight">\(\pi\)</span> en cada qubit usando Ignis</a><ul>
-<li><a class="reference internal" href="#4.1-Construir-los-planificadorers">4.1 Construir los planificadorers</a></li>
-<li><a class="reference internal" href="#4.2-Simular-los-experimentos-de-Rabi">4.2 Simular los experimentos de Rabi</a></li>
+<li><a class="reference internal" href="#3.-Modelo-de-sistema-de-oscilador-de-Duffing">3. Modelo de sistema de oscilador de Duffing</a></li>
+<li><a class="reference internal" href="#4-Calibración-de-pulsos-\pi-en-cada-qubit-usando-Ignis">4 Calibración de pulsos <span class="math notranslate nohighlight">\(\pi\)</span> en cada qubit usando Ignis</a><ul>
+<li><a class="reference internal" href="#4.1-Construcción-de-los-planificadorers">4.1 Construcción de los planificadorers</a></li>
+<li><a class="reference internal" href="#4.2-Simulación-de-los-experimentos-de-Rabi">4.2 Simulación de los experimentos de Rabi</a></li>
 <li><a class="reference internal" href="#4.3-Ajustar-y-graficar-los-datos">4.3 Ajustar y graficar los datos</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#5.-Oscilaciones-por-impulso-de-resonancia-cruzada">5. Oscilaciones por impulso de resonancia cruzada</a><ul>
-<li><a class="reference internal" href="#5.1-Índices-de-resonancia-cruzada-ControlChannel">5.1 Índices de resonancia cruzada <code class="docutils literal notranslate"><span class="pre">ControlChannel</span></code></a></li>
+<li><a class="reference internal" href="#5.-Oscilaciones-desde-el-impulso-de-resonancia-cruzada">5. Oscilaciones desde el impulso de resonancia cruzada</a><ul>
+<li><a class="reference internal" href="#5.1-Índices-de-ControlChannel-de-resonancia-cruzada">5.1 Índices de <code class="docutils literal notranslate"><span class="pre">ControlChannel</span></code> de resonancia cruzada</a></li>
 <li><a class="reference internal" href="#5.2-Funciones-para-generar-la-lista-de-experimentos-y-analizar-el-resultado">5.2 Funciones para generar la lista de experimentos y analizar el resultado</a></li>
-<li><a class="reference internal" href="#5.3-Controla-el-qubit-1-para-observar-las-oscilaciones-CR-en-el-qubit-0">5.3 Controla el qubit 1 para observar las oscilaciones CR en el qubit 0</a><ul>
+<li><a class="reference internal" href="#5.3-Direccionar-el-qubit-1-para-observar-las-oscilaciones-CR-en-el-qubit-0">5.3 Direccionar el qubit 1 para observar las oscilaciones CR en el qubit 0</a><ul>
 <li><a class="reference internal" href="#Qubit-1-en-el-estado-fundamental">Qubit 1 en el estado fundamental</a></li>
 <li><a class="reference internal" href="#Qubit-1-en-el-primer-estado-excitado">Qubit 1 en el primer estado excitado</a></li>
 </ul>
