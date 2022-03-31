@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ADMM 옵티마이저 &mdash; Qiskit Optimization 0.3.1 문서</title>
+  <title>ADMM 옵티마이저 &mdash; Qiskit Optimization 0.3.2 문서</title>
   
 
   
@@ -180,7 +180,7 @@
               
               
                 <div class="version">
-                  0.3.1
+                  0.3.2
                 </div>
               
             
@@ -544,7 +544,7 @@ div.rendered_html tbody tr:hover {
 <p>ADMM 옵티마이저는 물류, 재무 및 운영 과학에서 종종 발생하는 혼합-이진 제약 최적화 문제 (이하 MBCO) 의 클래스를 해결할 수 있다. 특히 ADMM 옵티마이저는 다음과 같은 최적화 문제 <span class="math notranslate nohighlight">\((P)\)</span> 를 해결할 수 있다.</p>
 <div class="math notranslate nohighlight">
 \[\min_{x \in \mathcal{X},u\in\mathcal{U} \subseteq \mathbb{R}^l } \quad q(x) + \varphi(u),\]</div>
-<p>subject to the constraints:</p>
+<p>다음과 같은 제약 조건이 따른다:</p>
 <div class="math notranslate nohighlight">
 \[\mathrm{s.t.:~} \quad G x = b, \quad  g(x) \leq 0, \quad \ell(x, u) \leq 0,\]</div>
 <p>해당 기능적 가정과 함께</p>
@@ -556,22 +556,22 @@ div.rendered_html tbody tr:hover {
 <li><p>기능 <span class="math notranslate nohighlight">\(\ell: \mathbb{R}^n\times \mathbb{R}^l \to \mathbb{R}\)</span> 는 <span class="math notranslate nohighlight">\(x, u\)</span> 에서 <em>공동</em> 볼록(convex) 합니다.</p></li>
 </ol>
 <p>MBO 문제를 해결하기 위해 [1]은 Alternating Direction Method of Multipliers (ADMM) [2]에 기초한 <span class="math notranslate nohighlight">\((P)\)</span> 에 대한 발견적 교수법을 제안했다. ADMM은 convex optimzation의 오랜 이력을 지닌 연산자 분할 알고리즘이며, 볼록부 가정이 유지된다는 전제 하에 잔류, 객관 및 이중 변수 수렴 특성을 갖는 것으로 알려져 있다.</p>
-<p>The method of [1] (referred to as 3-ADMM-H) leverages the ADMM operator-splitting procedure to devise a decomposition for certain classes of MBOs into:</p>
+<p>[1] 의 방법(3-ADMM-H라고 함) 은 ADMM 연산자 분할 절차를 활용하여 특정 클래스의 MBO를 다음과 같이 분해한다:</p>
 <ul class="simple">
-<li><p>a QUBO subproblem to be solved by on the quantum device via variational algorithms, such as VQE or QAOA;</p></li>
-<li><p>continuous convex constrained subproblem, which can be efficiently solved with classical optimization solvers.</p></li>
+<li><p>VQE 또는 QAOA와 같은 다양한 알고리즘들을 통해 양자 장치에서 해결해야 할 QUBO 하위 문제;</p></li>
+<li><p>고전적인 최적화 해석기(Solver)로 효율적으로 해결될 수 있는 연속적인 볼록 제약(convex constrained) 부분문제(subproblem)</p></li>
 </ul>
 <p>알고리즘 3-ADMM-H는 다음과 같이 작동한다:</p>
 <ol class="arabic simple" start="0">
 <li><p>초기화 단계(매개변수, QUBO 및 convex solver 설정)</p></li>
-<li><p>For each ADMM iterations ($k = 1, 2, <span class="math">\ldots</span>, $) until termination:</p>
+<li><p>계산이 종료될때까지 각 ADMM 반복에 대해 ($k = 1, 2, <span class="math">\ldots</span>, $):</p>
 <ul class="simple">
 <li><p>적절히 정의된 QUBO 하위 문제를 (고전적 또는 양자 solver) 로 해결;</p></li>
 <li><p>적절히 정의된 convex 문제 (고전적 solver) 로 해결;</p></li>
-<li><p>Update the dual variables.</p></li>
+<li><p>이중 변수를 업데이트한다.</p></li>
 </ul>
 </li>
-<li><p>Return optimizers and cost.</p></li>
+<li><p>옵티마이저 및 비용을 반환한다.</p></li>
 </ol>
 <p>알고리즘의 수렴, 실현 가능성 및 최적성에 대한 포괄적인 논의는 [1] 에서 확인할 수 있다. 2개의 ADMM 블록, 즉, QUBO 하위 문제와 연속 convex 제약 하위 문제를 가진 변형 모델도 [1] 에 도입된다.</p>
 </section>
@@ -612,11 +612,11 @@ div.rendered_html tbody tr:hover {
 <p>이 튜토리얼의 후반부에서 사용하려는 모든 알고리즘을 먼저 초기화한다.</p>
 <p>QUBO 문제를 해결하기 위해 다음 중 하나를 선택할 수 있다.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> using different <code class="docutils literal notranslate"><span class="pre">MinimumEigensolver</span></code>, such as <code class="docutils literal notranslate"><span class="pre">VQE</span></code>, <code class="docutils literal notranslate"><span class="pre">QAOA</span></code> or <code class="docutils literal notranslate"><span class="pre">NumpyMinimumEigensolver</span></code> (classical)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> 는 <code class="docutils literal notranslate"><span class="pre">VQE</span></code>, <code class="docutils literal notranslate"><span class="pre">QAOA</span></code>, 또는 <code class="docutils literal notranslate"><span class="pre">NumpyMinimumEigensolver</span></code> (고전적) 와 같은 다른 <code class="docutils literal notranslate"><span class="pre">MinimumEigensolver</span></code> 를 이용한다.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CplexOptimizer</span></code> (classical, if CPLEX is installed)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CplexOptimizer</span></code> (고전적, CPLEX가 설치된 경우)</p></li>
 </ul>
-<p>and to solve the convex continuous problems we can choose between the following classical solvers:</p>
+<p>그리고 볼록한(convex) 연속 함수 문제를 풀기 위해 다음의 해석기(solver)중에서 선택할 수 있다:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">CplexOptimizer</span></code> (CPLEX가 설치된 경우)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CobylaOptimizer</span></code></p></li>
@@ -697,8 +697,8 @@ End
 </pre></div></div>
 </div>
 </section>
-<section id="Classical-Solution">
-<h2>Classical Solution<a class="headerlink" href="#Classical-Solution" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<section id="고전적인-솔루션">
+<h2>고전적인 솔루션<a class="headerlink" href="#고전적인-솔루션" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>3-ADMM-H는 QUBO 하위 문제를 해결하귀 위한 QUBO 최적화 프로그램과 연속 볼록(convex) 제약 하위 문제를 해결하기 위한 연속 최적화 프로그램이 필요하다. 우리는 먼저 고전적이고 정확한 QUBO 솔버로서 <code class="docutils literal notranslate"><span class="pre">NumPyMinimumEigenSolver</span></code> 와 함께 <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> 를 사용하고 연속 볼록 솔버로서 <code class="docutils literal notranslate"><span class="pre">CobylaOptimizer</span></code> 를 사용한다는 문제를 고전적으로 해결한다. 3-ADMM-H는 Qiskit에서 사용할 수 있는 다른 적합한 솔버를 지원한다. 예를 들어, VQE, QAOA 및 Grover Optimizer는 나중에 설명된 대로 양자 해결사로 호출될 수 있다. CPLEX를 설치하면 QUBO와 볼록(convex) 볼록 솔버로 <code class="docutils literal notranslate"><span class="pre">CplexOptimizer</span></code> 를 사용할 수 있다.</p>
 <section id="매개변수">
 <h3>매개변수<a class="headerlink" href="#매개변수" title="이 표제에 대한 퍼머링크">¶</a></h3>
@@ -714,8 +714,8 @@ End
 </div>
 </div>
 </section>
-<section id="Calling-3-ADMM-H-algorithm">
-<h3>Calling 3-ADMM-H algorithm<a class="headerlink" href="#Calling-3-ADMM-H-algorithm" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<section id="3-ADMM-H-알고리즘-호출">
+<h3>3-ADMM-H 알고리즘 호출<a class="headerlink" href="#3-ADMM-H-알고리즘-호출" title="이 표제에 대한 퍼머링크">¶</a></h3>
 <p>3-ADMM-H 알고리즘을 호출하기 위해 <code class="docutils literal notranslate"><span class="pre">ADMMOptimizer</span></code> 클래스의 인스턴스를 만들어야 한다. 이는 ADMM-특정 파라미터 및 하위 문제점 최적화 프로그램을 컨스트럭터에 개별적으로 취한다. 반환된 솔루션은 <code class="docutils literal notranslate"><span class="pre">OptimizationResult</span></code> 클래스의 인스턴스이다.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
@@ -746,8 +746,8 @@ End
 </div>
 </div>
 </section>
-<section id="Classical-Solver-Result">
-<h3>Classical Solver Result<a class="headerlink" href="#Classical-Solver-Result" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<section id="고전적인-해석기(Solver)-결과">
+<h3>고전적인 해석기(Solver) 결과<a class="headerlink" href="#고전적인-해석기(Solver)-결과" title="이 표제에 대한 퍼머링크">¶</a></h3>
 <p>이어서, 3-ADMM-H 용액을 인쇄하고 가시화할 수 있다. 솔루션의 <code class="docutils literal notranslate"><span class="pre">x</span></code> 속성은 각각, 2진 결정 변수들의 값들 및 연속적인 결정 변수들의 값들을 포함한다. <code class="docutils literal notranslate"><span class="pre">fval</span></code> 은 해법의 객관적 가치이다.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -767,7 +767,7 @@ x=[1. 0. 0. 2.]
 fval=1.00
 </pre></div></div>
 </div>
-<p>Solution statistics can be accessed in the <code class="docutils literal notranslate"><span class="pre">state</span></code> field and visualized. We here display the convergence of 3-ADMM-H, in terms of primal residuals.</p>
+<p>솔루션 통계는 <code class="docutils literal notranslate"><span class="pre">state</span></code> 필드에서 액세스할 수 있으며 시각화할 수 있다. 여기서는 3-ADMM-H의 수렴을 원시 잔차(primal residual) 로 표시한다.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -788,8 +788,8 @@ fval=1.00
 </div>
 </section>
 </section>
-<section id="Quantum-Solution">
-<h2>Quantum Solution<a class="headerlink" href="#Quantum-Solution" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<section id="양자-솔루션">
+<h2>양자 솔루션<a class="headerlink" href="#양자-솔루션" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>이제 QAOA와 같은 최적화 문제점을 QAOA 최적화 프로그램으로 해결하여 시뮬레이트된 양자 디바이스에서 실행한다. 첫 번째로, 고유 해결사 QAOA의 전형적인 최적화 프로그램을 선택해야 한다. 그런 다음, 시뮬레이션 백엔드가 설정된다. 마지막으로 고유해결자(eigensolver) 는 <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> 클래스로 포장된다. <code class="docutils literal notranslate"><span class="pre">ADMMOptimizer</span></code> 의 새로운 인스턴스는 QUBO 최적기로서 QAOA로 채워져있다.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -818,8 +818,8 @@ fval=1.00
 </pre></div>
 </div>
 </div>
-<section id="Quantum-Solver-Results">
-<h3>Quantum Solver Results<a class="headerlink" href="#Quantum-Solver-Results" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<section id="양자-해석기(Solver)-결과">
+<h3>양자 해석기(Solver) 결과<a class="headerlink" href="#양자-해석기(Solver)-결과" title="이 표제에 대한 퍼머링크">¶</a></h3>
 <p>여기서 우리는 양자 해결기로부터 얻어진 결과를 제공한다. 위의 예에서 보듯이 <code class="docutils literal notranslate"><span class="pre">x</span></code> 는 해법을 뜻하기 때문에 <code class="docutils literal notranslate"><span class="pre">fval</span></code> 은 객관적인 가치를 위한 것이다.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
@@ -942,14 +942,14 @@ fval=1.00
 <li><a class="reference internal" href="#참조">참조</a></li>
 <li><a class="reference internal" href="#초기화">초기화</a></li>
 <li><a class="reference internal" href="#예제">예제</a></li>
-<li><a class="reference internal" href="#Classical-Solution">Classical Solution</a><ul>
+<li><a class="reference internal" href="#고전적인-솔루션">고전적인 솔루션</a><ul>
 <li><a class="reference internal" href="#매개변수">매개변수</a></li>
-<li><a class="reference internal" href="#Calling-3-ADMM-H-algorithm">Calling 3-ADMM-H algorithm</a></li>
-<li><a class="reference internal" href="#Classical-Solver-Result">Classical Solver Result</a></li>
+<li><a class="reference internal" href="#3-ADMM-H-알고리즘-호출">3-ADMM-H 알고리즘 호출</a></li>
+<li><a class="reference internal" href="#고전적인-해석기(Solver)-결과">고전적인 해석기(Solver) 결과</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#Quantum-Solution">Quantum Solution</a><ul>
-<li><a class="reference internal" href="#Quantum-Solver-Results">Quantum Solver Results</a></li>
+<li><a class="reference internal" href="#양자-솔루션">양자 솔루션</a><ul>
+<li><a class="reference internal" href="#양자-해석기(Solver)-결과">양자 해석기(Solver) 결과</a></li>
 </ul>
 </li>
 </ul>

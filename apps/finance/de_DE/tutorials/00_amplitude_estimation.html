@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quantum Amplitude Estimation &mdash; Qiskit Finance 0.3.1 Dokumentation</title>
+  <title>Quanten-Amplituten-Abschätzung &mdash; Qiskit Finance 0.3.1 Dokumentation</title>
   
 
   
@@ -255,7 +255,7 @@
         
           <li><a href="index.html">Finance Tutorials</a> &gt;</li>
         
-      <li>Quantum Amplitude Estimation</li>
+      <li>Quanten-Amplituten-Abschätzung</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
@@ -535,31 +535,31 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">Bemerkung</p>
-<p>This page was generated from <a class="reference external" href="https://github.com/Qiskit/qiskit-finance/blob/stable/0.3/docs/tutorials/00_amplitude_estimation.ipynb">docs/tutorials/00_amplitude_estimation.ipynb</a>.</p>
+<p>Diese Seite wurde aus ` docs/tutorials/00_amplitude_estimation.ipynb ` __ generiert.</p>
 </div>
-<section id="Quantum-Amplitude-Estimation">
-<h1>Quantum Amplitude Estimation<a class="headerlink" href="#Quantum-Amplitude-Estimation" title="Link zu dieser Überschrift">¶</a></h1>
-<p>Given an operator <span class="math notranslate nohighlight">\(\mathcal{A}\)</span> that acts as</p>
+<section id="Quanten-Amplituten-Abschätzung">
+<h1>Quanten-Amplituten-Abschätzung<a class="headerlink" href="#Quanten-Amplituten-Abschätzung" title="Link zu dieser Überschrift">¶</a></h1>
+<p>Bei einem gegebenen Operator <span class="math notranslate nohighlight">\(\mathcal{A}\)</span> , der als</p>
 <div class="math notranslate nohighlight">
 \[\mathcal{A}|0\rangle = \sqrt{1 - a}|\Psi_0\rangle + \sqrt{a}|\Psi_1\rangle\]</div>
-<p>Quantum Amplitude Estimation (QAE) is the task of finding an estimate for the amplitude <span class="math notranslate nohighlight">\(a\)</span> of the state <span class="math notranslate nohighlight">\(|\Psi_1\rangle\)</span>:</p>
+<p>Quantum-Amplituden-Estimation (QAE) ist die Aufgabe eine Schätzung für die Amplitude <span class="math notranslate nohighlight">\(a\)</span> des Zustands <span class="math notranslate nohighlight">\(|\Psi_1\rangle\)</span> zu finden:</p>
 <div class="math notranslate nohighlight">
 \[a = |\langle\Psi_1 | \Psi_1\rangle|^2.\]</div>
-<p>This task has first been investigated by Brassard et al. [1] in 2000 and their algorithm uses a combination of the Grover operator</p>
+<p>Diese Aufgabe wurde zuerst von Brassard et al.[1] im Jahr 2000 untersucht. Der Algorithmus verwendet eine Kombination des Grover-Operators</p>
 <div class="math notranslate nohighlight">
 \[\mathcal{Q} = \mathcal{A}\mathcal{S}_0\mathcal{A}^\dagger\mathcal{S}_{\Psi_1}\]</div>
-<p>where <span class="math notranslate nohighlight">\(\mathcal{S}_0\)</span> and <span class="math notranslate nohighlight">\(\mathcal{S}_{\Psi_1}\)</span> are reflections about the <span class="math notranslate nohighlight">\(|0\rangle\)</span> and <span class="math notranslate nohighlight">\(|\Psi_1\rangle\)</span> states, respectively, and phase estimation. However this algorithm, called <code class="docutils literal notranslate"><span class="pre">AmplitudeEstimation</span></code> in Qiskit, requires large circuits and is computationally expensive. Therefore, other variants of QAE have been proposed, which we will showcase in this tutorial for a simple example.</p>
-<p>In our example, <span class="math notranslate nohighlight">\(\mathcal{A}\)</span> describes a Bernoulli random variable with (assumed to be unknown) success probability <span class="math notranslate nohighlight">\(p\)</span>:</p>
+<p>wobei <span class="math notranslate nohighlight">\(\mathcal{S}_0\)</span>mathcal{S}_{Psi_1}` Reflexionen über die Zustände <span class="math notranslate nohighlight">\(|0\rangle\)</span> und <span class="math notranslate nohighlight">\(|\Psi_1\rangle\)</span> sind, beziehungsweise Phasenschätzung. Dieser Algorithmus, genannt <code class="docutils literal notranslate"><span class="pre">AmplitudeEstimation</span></code> benötigt in Qiskit jedoch große Schaltkreise und ist rechnerisch teuer. Daher wurden andere Varianten der QAE vorgeschlagen, die in diesem Tutorial für ein einfaches Beispiel gezeigt werden.</p>
+<p>In unserem Beispiel beschreibt <span class="math notranslate nohighlight">\(\mathcal{A}\)</span>:</p>
 <div class="math notranslate nohighlight">
 \[\mathcal{A}|0\rangle = \sqrt{1 - p}|0\rangle + \sqrt{p}|1\rangle.\]</div>
-<p>On a quantum computer, we can model this operator with a rotation around the <span class="math notranslate nohighlight">\(Y\)</span>-axis of a single qubit</p>
+<p>Auf einem Quantencomputer können wir diesen Operator mit einer Drehung um die :math:` Y <a href="#id1"><span class="problematic" id="id2">`</span></a>-Achse eines einzelnen Qubits modellieren</p>
 <div class="math notranslate nohighlight">
 \[\mathcal{A} = R_Y(\theta_p), \theta_p = 2\sin^{-1}(\sqrt{p}).\]</div>
-<p>The Grover operator for this case is particularly simple</p>
+<p>Der Grover Operator ist für diesen Fall besonders einfach</p>
 <div class="math notranslate nohighlight">
 \[\mathcal{Q} = R_Y(2\theta_p),\]</div>
-<p>whose powers are very easy to calculate: <span class="math notranslate nohighlight">\(\mathcal{Q}^k = R_Y(2k\theta_p)\)</span>.</p>
-<p>We’ll fix the probability we want to estimate to <span class="math notranslate nohighlight">\(p = 0.2\)</span>.</p>
+<p>deren Exponenten sehr einfach zu berechnen sind: <span class="math notranslate nohighlight">\(\mathcal{Q}^k = R_Y(2k\theta_p)\)</span>.</p>
+<p>Wir schätzen die Wahrscheinlichkeit auf <span class="math notranslate nohighlight">\(p = 0.2\)</span> ab.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -568,7 +568,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>Now we can define circuits for <span class="math notranslate nohighlight">\(\mathcal{A}\)</span> and <span class="math notranslate nohighlight">\(\mathcal{Q}\)</span>.</p>
+<p>Jetzt werden die Schaltkreise für <span class="math notranslate nohighlight">\(\mathcal{A}\)</span> and <span class="math notranslate nohighlight">\(\mathcal{Q}\)</span> definiert.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -613,10 +613,10 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<section id="Qiskit’s-Amplitude-Estimation-workflow">
-<h2>Qiskit’s Amplitude Estimation workflow<a class="headerlink" href="#Qiskit’s-Amplitude-Estimation-workflow" title="Link zu dieser Überschrift">¶</a></h2>
+<section id="Qiskit's-Amplituden-Estimations-Workflow">
+<h2>Qiskit’s Amplituden Estimations Workflow<a class="headerlink" href="#Qiskit's-Amplituden-Estimations-Workflow" title="Link zu dieser Überschrift">¶</a></h2>
 <p>Qiskit implements several QAE algorithms that all derive from the <code class="docutils literal notranslate"><span class="pre">AmplitudeEstimator</span></code> interface. In the initializer we specify algorithm specific settings and the <code class="docutils literal notranslate"><span class="pre">estimate</span></code> method, which does all the work, takes an <code class="docutils literal notranslate"><span class="pre">EstimationProblem</span></code> as input and returns an <code class="docutils literal notranslate"><span class="pre">AmplitudeEstimationResult</span></code> object. Since all QAE variants follow the same interface, we can use them all to solve the same problem instance.</p>
-<p>Next, we’ll run all different QAE algorithms. To do so, we first define the estimation problem which will contain the <span class="math notranslate nohighlight">\(\mathcal{A}\)</span> and <span class="math notranslate nohighlight">\(\mathcal{Q}\)</span> operators as well as how to identify the <span class="math notranslate nohighlight">\(|\Psi_1\rangle\)</span> state, which in this simple example is just <span class="math notranslate nohighlight">\(|1\rangle\)</span>.</p>
+<p>Als nächstes werden alle anderen QAE-Algorithmen usgeführt. Dafür wird zunächst das Abschätzungs-Problem mit den Operatoren <span class="math notranslate nohighlight">\(\mathcal{A}\)</span> und <span class="math notranslate nohighlight">\(\mathcal{Q}\)</span>, sowie eine Angabe zur Identifikation von <span class="math notranslate nohighlight">\(|\Psi_1\rangle\)</span>, hier <span class="math notranslate nohighlight">\(|1\rangle\)</span>, definiert.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -645,8 +645,8 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 </section>
-<section id="Canonical-AE">
-<h2>Canonical AE<a class="headerlink" href="#Canonical-AE" title="Link zu dieser Überschrift">¶</a></h2>
+<section id="Kanonisches-AE">
+<h2>Kanonisches AE<a class="headerlink" href="#Kanonisches-AE" title="Link zu dieser Überschrift">¶</a></h2>
 <p>Now let’s solve this with the original QAE implementation by Brassard et al. [1].</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
@@ -661,7 +661,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>With the algorithm defined, we can call the <code class="docutils literal notranslate"><span class="pre">estimate</span></code> method and provide it with the problem to solve.</p>
+<p>Mit dem definierten Algorithmus kann die <code class="docutils literal notranslate"><span class="pre">estimate</span></code>-Methode aufgerufen werden um das Problem zu lösen.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -670,7 +670,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>The estimate is available in the <code class="docutils literal notranslate"><span class="pre">estimation</span></code> key:</p>
+<p>Die Schätzung ist unter dem <code class="docutils literal notranslate"><span class="pre">estimation</span></code> key verfügbar:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -718,7 +718,7 @@ div.rendered_html tbody tr:hover {
 <img alt="../_images/tutorials_00_amplitude_estimation_18_0.png" src="../_images/tutorials_00_amplitude_estimation_18_0.png" />
 </div>
 </div>
-<p>To improve the estimate we can interpolate the measurement probabilities and compute the maximum likelihood estimator that produces this probability distribution:</p>
+<p>Um die Schätzung zu verbessern, können wir die Messwahrscheinlichkeiten interpolieren und die maximale Amplituden-Wahrscheinlichkeitsabschätzung berechnen, welche folgende Wahrscheinlichkeitsverteilung erzeugt:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
@@ -735,7 +735,7 @@ div.rendered_html tbody tr:hover {
 Interpolated MLE estimator: 0.19999999390907777
 </pre></div></div>
 </div>
-<p>We can have a look at the circuit that AE executes:</p>
+<p>AE führt folgende Schaltung aus:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
@@ -776,9 +776,9 @@ Interpolated MLE estimator: 0.19999999390907777
 </div>
 </div>
 </section>
-<section id="Iterative-Amplitude-Estimation">
-<h2>Iterative Amplitude Estimation<a class="headerlink" href="#Iterative-Amplitude-Estimation" title="Link zu dieser Überschrift">¶</a></h2>
-<p>See [2].</p>
+<section id="Iterative-Amplitudenschätzung">
+<h2>Iterative Amplitudenschätzung<a class="headerlink" href="#Iterative-Amplitudenschätzung" title="Link zu dieser Überschrift">¶</a></h2>
+<p>Siehe [2].</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
@@ -823,9 +823,9 @@ Estimate: 0.19999999999999998
 </div>
 </div>
 </section>
-<section id="Maximum-Likelihood-Amplitude-Estimation">
-<h2>Maximum Likelihood Amplitude Estimation<a class="headerlink" href="#Maximum-Likelihood-Amplitude-Estimation" title="Link zu dieser Überschrift">¶</a></h2>
-<p>See [3].</p>
+<section id="Maximale-Amplituden-Wahrscheinlichkeitsabschätzung">
+<h2>Maximale Amplituden-Wahrscheinlichkeitsabschätzung<a class="headerlink" href="#Maximale-Amplituden-Wahrscheinlichkeitsabschätzung" title="Link zu dieser Überschrift">¶</a></h2>
+<p>Siehe [3].</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
@@ -852,7 +852,7 @@ Estimate: 0.20002237175368104
 </section>
 <section id="Faster-Amplitude-Estimation">
 <h2>Faster Amplitude Estimation<a class="headerlink" href="#Faster-Amplitude-Estimation" title="Link zu dieser Überschrift">¶</a></h2>
-<p>See [4].</p>
+<p>Siehe [4].</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
@@ -888,11 +888,11 @@ Estimate: 0.20000000000000018
 </pre></div></div>
 </div>
 </section>
-<section id="References">
-<h2>References<a class="headerlink" href="#References" title="Link zu dieser Überschrift">¶</a></h2>
+<section id="Referenzen">
+<h2>Referenzen<a class="headerlink" href="#Referenzen" title="Link zu dieser Überschrift">¶</a></h2>
 <p>[1] Quantum Amplitude Amplification and Estimation. Brassard et al (2000). <a class="reference external" href="https://arxiv.org/abs/quant-ph/0005055">https://arxiv.org/abs/quant-ph/0005055</a></p>
 <p>[2] Iterative Quantum Amplitude Estimation. Grinko, D., Gacon, J., Zoufal, C., &amp; Woerner, S. (2019). <a class="reference external" href="https://arxiv.org/abs/1912.05559">https://arxiv.org/abs/1912.05559</a></p>
-<p>[3] Amplitude Estimation without Phase Estimation. Suzuki, Y., Uno, S., Raymond, R., Tanaka, T., Onodera, T., &amp; Yamamoto, N. (2019). <a class="reference external" href="https://arxiv.org/abs/1904.10246">https://arxiv.org/abs/1904.10246</a></p>
+<p>[3] Amplitude Estimation without Phase Estimation. Suzuki, Y., Uno, S., Raymond, R., Tanaka, T., Onodera, T., &amp; Yamamoto, N. (2019). <a class="reference external" href="https://arxiv.org/abs/1904.1024">https://arxiv.org/abs/1904.1024</a></p>
 <p>[4] Faster Amplitude Estimation. K. Nakaji (2020). <a class="reference external" href="https://arxiv.org/pdf/2003.02417.pdf">https://arxiv.org/pdf/2003.02417.pdf</a></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
@@ -972,13 +972,13 @@ Estimate: 0.20000000000000018
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Quantum Amplitude Estimation</a><ul>
-<li><a class="reference internal" href="#Qiskit’s-Amplitude-Estimation-workflow">Qiskit’s Amplitude Estimation workflow</a></li>
-<li><a class="reference internal" href="#Canonical-AE">Canonical AE</a></li>
-<li><a class="reference internal" href="#Iterative-Amplitude-Estimation">Iterative Amplitude Estimation</a></li>
-<li><a class="reference internal" href="#Maximum-Likelihood-Amplitude-Estimation">Maximum Likelihood Amplitude Estimation</a></li>
+<li><a class="reference internal" href="#">Quanten-Amplituten-Abschätzung</a><ul>
+<li><a class="reference internal" href="#Qiskit's-Amplituden-Estimations-Workflow">Qiskit’s Amplituden Estimations Workflow</a></li>
+<li><a class="reference internal" href="#Kanonisches-AE">Kanonisches AE</a></li>
+<li><a class="reference internal" href="#Iterative-Amplitudenschätzung">Iterative Amplitudenschätzung</a></li>
+<li><a class="reference internal" href="#Maximale-Amplituden-Wahrscheinlichkeitsabschätzung">Maximale Amplituden-Wahrscheinlichkeitsabschätzung</a></li>
 <li><a class="reference internal" href="#Faster-Amplitude-Estimation">Faster Amplitude Estimation</a></li>
-<li><a class="reference internal" href="#References">References</a></li>
+<li><a class="reference internal" href="#Referenzen">Referenzen</a></li>
 </ul>
 </li>
 </ul>

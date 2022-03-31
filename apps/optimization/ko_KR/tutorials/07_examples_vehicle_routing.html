@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>차량 라우팅 &mdash; Qiskit Optimization 0.3.1 문서</title>
+  <title>차량 라우팅 &mdash; Qiskit Optimization 0.3.2 문서</title>
   
 
   
@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
     <link rel="index" title="색인" href="../genindex.html" />
     <link rel="search" title="검색" href="../search.html" />
-    <link rel="next" title="Improving Variational Quantum Optimization using CVaR" href="08_cvar_optimization.html" />
+    <link rel="next" title="CVaR을 이용한 다양한 양자 최적화 개선" href="08_cvar_optimization.html" />
     <link rel="prev" title="최대 컷 및 외판원 문제" href="06_examples_max_cut_and_tsp.html" /> 
 
   
@@ -180,7 +180,7 @@
               
               
                 <div class="version">
-                  0.3.1
+                  0.3.2
                 </div>
               
             
@@ -542,14 +542,14 @@ div.rendered_html tbody tr:hover {
 <section id="소개">
 <h2>소개<a class="headerlink" href="#소개" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>물류는 주요 산업으로 2015년 세계적으로 8183억 달러 규모로 평가되고 있다. 대부분의 서비스 제공자들은 다수의 차량 (예를 들어, 트럭 및 컨테이너 선박), 다수의 depots 를 운영하며, 여기서 차량은 하룻밤 동안에 정차하며, 각각의 날 동안 각각의 차량과 함께 다수의 클라이언트 위치를 제공한다. 이러한 매개변수를 고려하는 많은 최적화 및 제어 문제점이 있다. 계산적으로, 주요 문제는 이동 경로, 소요 시간 또는 유사한 목적 함수를 최소화하기 위해 저장소에서 다수의 클라이언트 위치로, 다시 저장소로 이동하는 경로를 디자인하는 방법이다. 이 노트북에서는 문제의 이상화된 버전을 형식화하고, [Farhi, Goldstone, and Gutmann (2014)] 의 퀀텀 근사 최적화 접근법을 사용하여 솔루션을 공개한다.</p>
-<p>The overall workflow we demonstrate comprises:</p>
+<p>설명하고자 하는 전반적인 워크플로우(workflow) 는 다음과 같다:</p>
 <ol class="arabic simple">
 <li><p>클라이언트 위치를 설정한다. 일반적으로 이들은 데이터베이스로부터의 배달일 이전에 사용할 수 있습니다. 우리의 유스 케이스에서, 우리는 이들을 무작위로 생성한다.</p></li>
 <li><p>은 쌍별거리, 이동 시간 등을 계산한다. 우리의 경우, 우리는 “일직선으로” 유클리드 거리를 고려하는데, 이것은 아마도 가장 간단한 것일 것이다.</p></li>
 <li><p>실제 라우트를 계산합니다. 이 단계는 실제로 두 번 실행됩니다. 먼저, 고전적인 컴퓨터에서 고전적인 솔버 (IBM CPLEX) 의 실행에 의해 기준값을 얻는다. 두 번째로, 우리는 양자컴퓨터에 부분적으로 하이브리드 알고리즘을 실행합니다.</p></li>
-<li><p>visualization of the results. In our case, this is again a simplistic plot.</p></li>
+<li><p>결과를 시각화한다. 이 경우, 다시한번 간단한 도표이다.</p></li>
 </ol>
-<p>In the following, we first explain the model, before we proceed with the installation of the pre-requisites and the data loading.</p>
+<p>다음에서 사전 요구사항의 설치 및 데이터 로드를 진행하기 전에 먼저 모델을 설명한다.</p>
 </section>
 <section id="모델">
 <h2>모델<a class="headerlink" href="#모델" title="이 표제에 대한 퍼머링크">¶</a></h2>
@@ -577,31 +577,31 @@ div.rendered_html tbody tr:hover {
 <li><p>세 번째 제약조건은 부분 순환로 제거 조건으로, <span class="math notranslate nohighlight">\(u_i\)</span>, <span class="math notranslate nohighlight">\(Q,q_i \in \mathbb{R}\)</span> 이다.</p></li>
 </ul>
 </section>
-<section id="Classical-solution">
-<h2>Classical solution<a class="headerlink" href="#Classical-solution" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<section id="고전적인-솔루션">
+<h2>고전적인 솔루션<a class="headerlink" href="#고전적인-솔루션" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>예를 들어 CPLEX를 사용하여 VRP를 고전적으로 해결할 수 있다. CPLEX는branch-and-bound-and-cut 방법을 사용하여 VRP의 대략적인 솔루션을 찾는다. VRP는 이 공식에서 mixed-integer linear program (MILP) 이다. 표기법을 위해 다음과 같이 하나의 벡터로 결정 변수를 묶는다.</p>
 <div class="math notranslate nohighlight">
 \[{\bf z} = [x_{01}, x_{02}, \ldot, x_{10}, x_{12}, \ldots,x_ {n (n-1)}] ^ T,\]</div>
 <p><span class="math notranslate nohighlight">\({\bf z} \in \{0,1\}^N\)</span> 에서 <span class="math notranslate nohighlight">\(N = n (n+1)\)</span> 로 한다. 따라서 문제의 치수는 노드 수에 따라 4차적으로 확장된다. <span class="math notranslate nohighlight">\({\bf z}^*\)</span> 에 ㄷ의한 최적의 솔루션과 관련된 최적 비용 <span class="math notranslate nohighlight">\(f^*\)</span> 를 나타내자.</p>
 </section>
-<section id="Quantum-solution">
-<h2>Quantum solution<a class="headerlink" href="#Quantum-solution" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<section id="양자-솔루션">
+<h2>양자 솔루션<a class="headerlink" href="#양자-솔루션" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>여기, 우리는 파리[Farhi], 골드스톤[Goldstone] 및 구트만[Gutman] (2014) 의 양자 근사 최적화 접근법에 이어 고전적 및 양자 컴퓨팅 단계를 결합한 접근 방식을 보여준다. 특히 우리는 variational quantum eigensolve (VQE) 를 사용한다. 우리는 채택된 양자 회로의 제한된 깊이(변수 형태) 를 사용할 경우, 얻은 솔루션이 본질적으로 발견적이기 때문에 알고리즘의 속도 항상을 논하기 어렵다는 것을 강조한다. 동시에, 대상 문제에 특성과 중요성 때문에, 일부 문제 클래스에서 가치가 있을 수 있는 발견적 접근 방식을 조사할 가치가 있다.</p>
 <p>[5] 에 이어서, 알고리즘은 다음과 같이 요약될 수 있다:</p>
 <ul class="simple">
 <li><p>준비 단계:</p>
 <ul>
 <li><p>조합 문제를 동등 제한 조건에서만 이진 다항식 최적화 문제로 변환하자;</p></li>
-<li><p>Map the resulting problem into an Ising Hamiltonian (<span class="math notranslate nohighlight">\(H\)</span>) for variables <span class="math notranslate nohighlight">\({\bf z}\)</span> and basis <span class="math notranslate nohighlight">\(Z\)</span>, via penalty methods if necessary;</p></li>
+<li><p>변환된 문제를 변수 <span class="math notranslate nohighlight">\({\bf z}\)</span> 및 기저 <span class="math notranslate nohighlight">\(Z\)</span> 에 대한 이징 해밀토니안 (<span class="math notranslate nohighlight">\(H\)</span>) 으로 맵핑하고, 필요한 경우 페널티 방법을 사용한다.</p></li>
 <li><p>양자 회로 <span class="math notranslate nohighlight">\(m\)</span> 의 깊이(depth)를 선택하라. 참고로 깊이는 조정될 수 있다.</p></li>
 <li><p>제어 <span class="math notranslate nohighlight">\(\theta\)</span> 를 선택하고, <span class="math notranslate nohighlight">\(\boldsymbol\theta\)</span> 의 성분들에 의해 파라미터화된, C-위상 게이트와 단일 큐비트 Y 회전으로 만들어진 양자 회로를 사용하여 시험 함수 <span class="math notranslate nohighlight">\(|\psi(\boldsymbol\theta)\rangle\)</span> 을 만든다.</p></li>
 </ul>
 </li>
-<li><p>Algorithm steps:</p>
+<li><p>알고리즘 단계:</p>
 <ul>
 <li><p>회로 결과를 Z 단위로 샘플링하고 개별 이징(Ising) 용어의 기대값을 함께 추가하여 <span class="math notranslate nohighlight">\(C(\boldsymbol\theta) = \langle\psi(\boldsymbol\theta)\big|H\big|\psi(\boldsymbol\theta)\rangle\)</span> 평가한다. 일반적으로 <span class="math notranslate nohighlight">\(\boldsymbol\theta\)</span> 주변의 다른 제어점은 선택한 고전적인 최적화 도구에 따라 추정되어야 한다.</p></li>
-<li><p>Use a classical optimizer to choose a new set of controls.</p></li>
-<li><p>Continue until <span class="math notranslate nohighlight">\(C(\boldsymbol\theta)\)</span> reaches a minimum, close enough to the solution <span class="math notranslate nohighlight">\(\boldsymbol\theta^*\)</span>.</p></li>
+<li><p>고전적 optimizer를 사용하여 새 제어 집합을 선택한다.</p></li>
+<li><p><span class="math notranslate nohighlight">\(C(\boldsymbol\theta)\)</span> 가 솔루션 <span class="math notranslate nohighlight">\(\boldsymbol\theta^*\)</span> 에 충분히 가까워져 최소값에 도달할 때까지 계속한다.</p></li>
 <li><p>마지막 <span class="math notranslate nohighlight">\(\boldsymbol\theta\)</span> 를 사용하여 <span class="math notranslate nohighlight">\(\Big|\langle z_i\big|\psi(\boldsymbol\theta)\rangle\Big|^2\;\forall i\)</span> 분포에서 최종 표본 집합을 생성하여 답을 얻는다.</p></li>
 </ul>
 </li>
@@ -610,15 +610,15 @@ div.rendered_html tbody tr:hover {
 <div class="math notranslate nohighlight">
 \[\big|\psi(\theta)\rangle = [U_\mathrm{single}(\boldsymbol\theta) U_\mathrm{entangler}]^m \big|+\rangle\]</div>
 <p>여기서 <span class="math notranslate nohighlight">\(U_\mathrm{entangler}\)</span> 는 C-위상 게이트 (완전히 얽힌 게이트)의 집합이고, <span class="math notranslate nohighlight">\(U_\mathrm{single}(\theta) = \prod_{i=1}^N Y(\theta_{i})\)</span> 는 여기서 <span class="math notranslate nohighlight">\(N\)</span> 큐비트 수, <span class="math notranslate nohighlight">\(m\)</span> 양자 회로의 깊이(depth) 이다.</p>
-<section id="Construct-the-Ising-Hamiltonian">
-<h3>Construct the Ising Hamiltonian<a class="headerlink" href="#Construct-the-Ising-Hamiltonian" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<section id="이징-해밀토니안-(Ising-Hamiltonian)-구성">
+<h3>이징 해밀토니안 (Ising Hamiltonian) 구성<a class="headerlink" href="#이징-해밀토니안-(Ising-Hamiltonian)-구성" title="이 표제에 대한 퍼머링크">¶</a></h3>
 <p><span class="math notranslate nohighlight">\(VRP\)</span> 에서 <span class="math notranslate nohighlight">\(K=n-1\)</span> 의 경우를 고려해야만 동등 제약 조건을 가진 이진 다항식 최적화를 구성할 수 있다. 이러한 경우 부분 순환로 제거 제약 조건은 필요하지 않으며 문제는 변수 <span class="math notranslate nohighlight">\({\bf z}\)</span> 에 있다. 특히, 우리는 다음과 같이 증강된 라그랑지안(Lagrangian)를 쓸 수 있다.</p>
 <div class="math notranslate nohighlight">
 \[(IH) \quad H = \sum_{i \sim j} w_{ij} x_{ij}  + A \sum_{i \in \{1,\dots,n\}} \Big(\sum_{j \in \delta(i)^+} x_{ij} - 1\Big)^2 + A \sum_{i \in \{1,\dots,n\}}\Big(\sum_{j \in \delta(i)^-} x_{ji} - 1\Big)^2 +A \Big(\sum_{i \in \delta(0)^+} x_{0i} - K\Big)^2 + A\Big(\sum_{j \in \delta(0)^+} x_{j0} - K\Big)^2\]</div>
 <p>여기서 <span class="math notranslate nohighlight">\(A\)</span> 는 충분히 큰 매개변수이다.</p>
 </section>
-<section id="From-Hamiltonian-to-QP-formulation">
-<h3>From Hamiltonian to QP formulation<a class="headerlink" href="#From-Hamiltonian-to-QP-formulation" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<section id="해밀토니안으로부터-QP-수식화">
+<h3>해밀토니안으로부터 QP 수식화<a class="headerlink" href="#해밀토니안으로부터-QP-수식화" title="이 표제에 대한 퍼머링크">¶</a></h3>
 <p>벡터 <span class="math notranslate nohighlight">\({\bf z}\)</span> 에서 완성한 그래프(<span class="math notranslate nohighlight">\(\delta(i)^+ = \delta(i)^- = \{0,1,\dots,i-1,i+1,\dots,n\}\)</span>) , <span class="math notranslate nohighlight">\(H\)</span> 를 다음과 같이 작성할 수 있습니다.</p>
 <div class="math notranslate nohighlight">
 \[\min_{{\bf z}\in \{0,1\}^{n(n+1)}} {\bf w}^T {\bf z}  + A \sum_{i \in \{1,\dots,n\}} \Big({\bf e}_i \otimes {\bf 1}_n^T {\bf z} - 1\Big)^2 + A \sum_{i \in \{1,\dots,n\}}\Big({\bf v}_i^T {\bf z} - 1\Big)^2 + A \Big(({\bf e}_0 \otimes {\bf 1}_n)^T{\bf z} - K\Big)^2 + A\Big({\bf v}_0^T{\bf z} - K\Big)^2.\]</div>
@@ -634,7 +634,7 @@ div.rendered_html tbody tr:hover {
 <p>셋째 항:</p>
 <div class="math notranslate nohighlight">
 \[c = 2An +2AK^2.\]</div>
-<p>The QP formulation of the Ising Hamiltonian is ready for the use of VQE. We will solve the QP using optimization stack available in Qiskit.</p>
+<p>QP 수식화된 Ising 해밀토니안은 VQE를 사용할 수 있다. Qiskit에서 제공하는 최적화 stack을 사용하여 QP를 풀어보자.</p>
 </section>
 </section>
 <section id="참조">
@@ -686,7 +686,7 @@ div.rendered_html tbody tr:hover {
 Warning: Cplex not found.
 </pre></div></div>
 </div>
-<p>We then initialize the variables</p>
+<p>그런 다음 변수를 초기화한다.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -738,8 +738,8 @@ Warning: Cplex not found.
 </div>
 </div>
 </section>
-<section id="Classical-solution-using-IBM-ILOG-CPLEX">
-<h2>Classical solution using IBM ILOG CPLEX<a class="headerlink" href="#Classical-solution-using-IBM-ILOG-CPLEX" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<section id="IBM-ILOG-CPLEX를-사용한-고전적-솔루션">
+<h2>IBM ILOG CPLEX를 사용한 고전적 솔루션<a class="headerlink" href="#IBM-ILOG-CPLEX를-사용한-고전적-솔루션" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>고전적 솔루션의 경우 IBM ILOG CPLEX를 사용한다. CPLEX는 이 문제에 대한 정확한 해결책을 찾을 수 있다. 먼저 문제를 CPLEX가 해결할 수 있는 방식으로 인코딩하는 ClassicalOptimizer 클래스를 정의한 다음 클래스를 인스턴스화하고 해결한다.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
@@ -763,10 +763,10 @@ Warning: Cplex not found.
         <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span>
         <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span>
 
-        <span class="n">my_obj</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
-        <span class="n">my_ub</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
-        <span class="n">my_lb</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="mf">0.1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
-        <span class="n">my_ctype</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;I&quot;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)])</span> <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">my_obj</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="n">my_ub</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="n">my_lb</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="mf">0.1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="n">my_ctype</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;I&quot;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)])</span> <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
             <span class="p">[</span><span class="s2">&quot;C&quot;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
         <span class="p">)</span>
 
@@ -816,7 +816,7 @@ Warning: Cplex not found.
             <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">col</span><span class="p">,</span> <span class="n">coef</span><span class="p">])</span>
 
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-            <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span> <span class="o">+</span> <span class="n">ii</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span> <span class="o">+</span> <span class="n">ii</span><span class="p">,</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
             <span class="n">coef</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
 
             <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">col</span><span class="p">,</span> <span class="n">coef</span><span class="p">])</span>
@@ -826,7 +826,7 @@ Warning: Cplex not found.
             <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
                 <span class="k">if</span> <span class="p">(</span><span class="n">ii</span> <span class="o">!=</span> <span class="n">jj</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ii</span> <span class="o">*</span> <span class="n">jj</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
 
-                    <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="p">(</span><span class="n">jj</span> <span class="o">*</span> <span class="n">n</span><span class="p">),</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">ii</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">jj</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                    <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="p">(</span><span class="n">jj</span> <span class="o">*</span> <span class="n">n</span><span class="p">),</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">ii</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">jj</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
                     <span class="n">coef</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
                     <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">col</span><span class="p">,</span> <span class="n">coef</span><span class="p">])</span>
@@ -870,7 +870,7 @@ Number of feasible solutions = 3.0
 <span class="k">try</span><span class="p">:</span>
     <span class="n">x</span><span class="p">,</span> <span class="n">classical_cost</span> <span class="o">=</span> <span class="n">classical_optimizer</span><span class="o">.</span><span class="n">cplex_solution</span><span class="p">()</span>
     <span class="c1"># Put the solution in the z variable</span>
-    <span class="n">z</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="n">ii</span> <span class="o">//</span> <span class="n">n</span> <span class="o">!=</span> <span class="n">ii</span> <span class="o">%</span> <span class="n">n</span><span class="p">]</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="n">ii</span> <span class="o">//</span> <span class="n">n</span> <span class="o">!=</span> <span class="n">ii</span> <span class="o">%</span> <span class="n">n</span><span class="p">]</span>
     <span class="c1"># Print the solution</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
 <span class="k">except</span><span class="p">:</span>
@@ -900,7 +900,7 @@ CPLEX may be missing.
 
     <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
 
-    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">ix</span> <span class="o">=</span> <span class="n">ii</span> <span class="o">//</span> <span class="n">n</span>
@@ -925,14 +925,14 @@ CPLEX may be missing.
 </div>
 <p>CPLEX가 있는 경우 솔루션에는 별이 있는 저장소(depot) 와 화살표가 있는 차량에 대해 선택한 경로가 표시된다.</p>
 </section>
-<section id="Quantum-solution-from-the-ground-up">
-<h2>Quantum solution from the ground up<a class="headerlink" href="#Quantum-solution-from-the-ground-up" title="이 표제에 대한 퍼머링크">¶</a></h2>
-<p>For the quantum solution, we use Qiskit.</p>
-<p>First, we derive the solution from the ground up, using a class QuantumOptimizer that encodes the quantum approach to solve the problem and then we instantiate it and solve it. We define the following methods inside the class:</p>
+<section id="양자-솔루션-문제-구성">
+<h2>양자 솔루션 문제 구성<a class="headerlink" href="#양자-솔루션-문제-구성" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<p>양자 솔루션의 경우 Qiskit을 사용한다.</p>
+<p>먼저 문제를 해결하기 위해 양자적 접근 방식을 인코딩하는 QuantumOptimizer 클래스를 사용하여 처음부터 솔루션을 도출한 다음 이를 인스턴스화하고 해결한다. 클래스 내에서 다음 메서드를 정의한다.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">binary_representation</span></code> : encodes the problem <span class="math notranslate nohighlight">\((M)\)</span> into a QP terms (that’s basically linear algebra);</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">construct_problem</span></code> : constructs a QUBO optimization problem as an instance of <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code>;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">solve_problem</span></code>: solves the problem <span class="math notranslate nohighlight">\((M)\)</span> constructed at the previous step via <code class="docutils literal notranslate"><span class="pre">MinimunEigenOptimizer</span></code> by using VQE with default parameters;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">binary_representation</span></code>: 주어진 문제 <span class="math notranslate nohighlight">\((M)\)</span> 을 QP 항들로 (기본적으로 선형 대수학) 인코딩 한다;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">construct_problem</span></code> : <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> 의 인스턴스로 QUBO 최적화 문제를 구성한다;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">solve_problem</span></code>: 기본 매개변수들로 VQE를 사용하여, <code class="docutils literal notranslate"><span class="pre">MinimunEigenOptimizer</span></code> 로 이전 단계에서 구성된 문제 <span class="math notranslate nohighlight">\((M)\)</span> 을 해결한다.</p></li>
 </ul>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -958,8 +958,8 @@ CPLEX may be missing.
         <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>  <span class="c1"># A parameter of cost function</span>
 
         <span class="c1"># Determine the weights w</span>
-        <span class="n">instance_vec</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="n">w_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">instance_vec</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="n">instance_vec</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">instance_vec</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">w_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">instance_vec</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="n">instance_vec</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
         <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">w_list</span><span class="p">)):</span>
             <span class="n">w</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">w_list</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
@@ -996,7 +996,7 @@ CPLEX may be missing.
         <span class="p">)</span>
 
         <span class="c1"># c is the constant offset</span>
-        <span class="n">c</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">A</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">A</span> <span class="o">*</span> <span class="p">(</span><span class="n">K</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">A</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">A</span> <span class="o">*</span> <span class="p">(</span><span class="n">K</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="nb">max</span><span class="p">(</span><span class="n">x_sol</span><span class="p">)</span>
@@ -1040,9 +1040,9 @@ CPLEX may be missing.
 </div>
 <section id="단계-1">
 <h3>단계 1<a class="headerlink" href="#단계-1" title="이 표제에 대한 퍼머링크">¶</a></h3>
-<p>Instantiate the quantum optimizer class with parameters:</p>
+<p>quantum optimizer 클래스를 다음 변수들로 인스턴스화한다:</p>
 <ul class="simple">
-<li><p>the instance;</p></li>
+<li><p>인스턴스;</p></li>
 <li><p>노드와 차량의 수 <code class="docutils literal notranslate"><span class="pre">n``과</span> <span class="pre">``K</span></code></p></li>
 </ul>
 <div class="nbinput nblast docutils container">
@@ -1058,7 +1058,7 @@ CPLEX may be missing.
 <section id="단계-2">
 <h3>단계 2<a class="headerlink" href="#단계-2" title="이 표제에 대한 퍼머링크">¶</a></h3>
 <p>문제를 이원 공식 (IH-QP) 으로 인코딩한다.</p>
-<p>Sanity check: make sure that the binary formulation in the quantum optimizer is correct (i.e., yields the same cost given the same solution).</p>
+<p>타당성 검사(Sanity check): 양자 최적화 프로그램의 이진 공식화가 정확한지 확인한다 (즉, 동일한 솔루션에서 동일한 비용을 산출함).</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
@@ -1128,15 +1128,15 @@ Binary cost: 0
 </section>
 <section id="단계-5">
 <h3>단계 5<a class="headerlink" href="#단계-5" title="이 표제에 대한 퍼머링크">¶</a></h3>
-<p>Visualize the solution</p>
+<p>솔루션 시각화</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Put the solution in a way that is compatible with the classical variables</span>
-<span class="n">x_quantum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">x_quantum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">kk</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">):</span>
+<span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">ii</span> <span class="o">//</span> <span class="n">n</span> <span class="o">!=</span> <span class="n">ii</span> <span class="o">%</span> <span class="n">n</span><span class="p">:</span>
         <span class="n">x_quantum</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">quantum_solution</span><span class="p">[</span><span class="n">kk</span><span class="p">]</span>
         <span class="n">kk</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -1204,7 +1204,7 @@ Binary cost: 0
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="08_cvar_optimization.html" class="btn btn-neutral float-right" title="Improving Variational Quantum Optimization using CVaR" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="08_cvar_optimization.html" class="btn btn-neutral float-right" title="CVaR을 이용한 다양한 양자 최적화 개선" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
         <a href="06_examples_max_cut_and_tsp.html" class="btn btn-neutral" title="최대 컷 및 외판원 문제" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
@@ -1242,16 +1242,16 @@ Binary cost: 0
 <li><a class="reference internal" href="#">차량 라우팅</a><ul>
 <li><a class="reference internal" href="#소개">소개</a></li>
 <li><a class="reference internal" href="#모델">모델</a></li>
-<li><a class="reference internal" href="#Classical-solution">Classical solution</a></li>
-<li><a class="reference internal" href="#Quantum-solution">Quantum solution</a><ul>
-<li><a class="reference internal" href="#Construct-the-Ising-Hamiltonian">Construct the Ising Hamiltonian</a></li>
-<li><a class="reference internal" href="#From-Hamiltonian-to-QP-formulation">From Hamiltonian to QP formulation</a></li>
+<li><a class="reference internal" href="#고전적인-솔루션">고전적인 솔루션</a></li>
+<li><a class="reference internal" href="#양자-솔루션">양자 솔루션</a><ul>
+<li><a class="reference internal" href="#이징-해밀토니안-(Ising-Hamiltonian)-구성">이징 해밀토니안 (Ising Hamiltonian) 구성</a></li>
+<li><a class="reference internal" href="#해밀토니안으로부터-QP-수식화">해밀토니안으로부터 QP 수식화</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#참조">참조</a></li>
 <li><a class="reference internal" href="#초기화">초기화</a></li>
-<li><a class="reference internal" href="#Classical-solution-using-IBM-ILOG-CPLEX">Classical solution using IBM ILOG CPLEX</a></li>
-<li><a class="reference internal" href="#Quantum-solution-from-the-ground-up">Quantum solution from the ground up</a><ul>
+<li><a class="reference internal" href="#IBM-ILOG-CPLEX를-사용한-고전적-솔루션">IBM ILOG CPLEX를 사용한 고전적 솔루션</a></li>
+<li><a class="reference internal" href="#양자-솔루션-문제-구성">양자 솔루션 문제 구성</a><ul>
 <li><a class="reference internal" href="#단계-1">단계 1</a></li>
 <li><a class="reference internal" href="#단계-2">단계 2</a></li>
 <li><a class="reference internal" href="#단계-3">단계 3</a></li>

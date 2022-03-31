@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>QAOA 런타임 &mdash; Qiskit Optimization 0.3.1 문서</title>
+  <title>QAOA 런타임 &mdash; Qiskit Optimization 0.3.2 문서</title>
   
 
   
@@ -180,7 +180,7 @@
               
               
                 <div class="version">
-                  0.3.1
+                  0.3.2
                 </div>
               
             
@@ -597,11 +597,11 @@ ParameterNamespace (Values):
 | use_swap_s | None         | boolean     | False    | A boolean on whether or not to use swap strategies when transpiling. This flag is set to True by default. If this is False then the standard transpiler with the given optimization level will run. |
 </pre></div></div>
 </div>
-<p>Here, we see the different input arguments which we now elaborate on.</p>
+<p>여기서 지금 설명하고 있는 다양한 전달인자 입력값을 볼 수 있다.</p>
 <ul class="simple">
 <li><p><strong>operator</strong> 는 최소화하고자 하는 비용 연산자를 나타내므로 가장 중요한 전달인자다. QAOA의 경우 <code class="docutils literal notranslate"><span class="pre">PauliSumOp</span></code> 에 해당한다. 문제의 두 결정변수 사이에 이차항이 있을때마다 <code class="docutils literal notranslate"><span class="pre">PauliSumOp</span></code> 에 상응하는 <code class="docutils literal notranslate"><span class="pre">ZZ</span></code> 가 최소화하기를 바란다. 예를들어, <code class="docutils literal notranslate"><span class="pre">PauliSumOp.from_list([(&quot;ZIZ&quot;,</span> <span class="pre">1),</span> <span class="pre">(&quot;IZZ&quot;,</span> <span class="pre">-1),</span> <span class="pre">(&quot;ZZI&quot;,</span> <span class="pre">1)])</span></code> 는 한 모서리의 가중치가 음수인 삼각형 상에서의 Maxcut 문제에 해당될 수 있다.</p></li>
-<li><p><strong>optimizer</strong> represents the optimizer used in the closed-loop classical optimization. This will default to SPSA to deal with the noise of the hardware.</p></li>
-<li><p><strong>reps</strong> this integer is the number of QAOA layers.</p></li>
+<li><p><strong>optimizer</strong> 는 닫힌 고리(closed-loop) 의 고전적인 최적화에 사용되는 최적화 도구를 나타낸다. 이는 하드웨어의 노이즈를 처리하기 위해 기본적으로 SPSA가 사용된다.</p></li>
+<li><p>** reps** 이 정수는 QAOA 레이어 수이다.</p></li>
 <li><p><strong>initial_point</strong> 는 <cite>gamma</cite> 및 :math: <cite>beta</cite> 의 초기 값이다. 이 목록은 <cite>[gamma_1, beta_1, gamma_2, beta_2, …]</cite> 에 주어진 목록이다. 따라서 이 목록의 길이는 QAOA 깊이 (즉 <code class="docutils literal notranslate"><span class="pre">reps</span></code> 매개변수) 의 두 배가 되어야 한다.</p></li>
 <li><p><strong>shots</strong> 은 각 회로를 돌리는 총 횟수이다.</p></li>
 <li><p><strong>alpha</strong> 는 CVaR 최적화의 <cite>alpha</cite> 이다. 만약 <cite>alpha</cite> 가 1보다 작으면 최고의 <cite>alpha</cite> 샷들만이 최적화에 유지된다. 즉, 이는 <code class="docutils literal notranslate"><span class="pre">qiskit.opflow</span></code> 에서 찾을 수 있는 <code class="docutils literal notranslate"><span class="pre">CVaRExpectation(alpha,</span> <span class="pre">PauliExpectation())</span></code> 를 사용하는 것에 해당한다.</p></li>
@@ -609,7 +609,7 @@ ParameterNamespace (Values):
 <li><p>만약 <strong>use_swap_strategies</strong> 이 <code class="docutils literal notranslate"><span class="pre">True</span></code> 라면, QAOA 프로그램은 QAOA에 있는 <code class="docutils literal notranslate"><span class="pre">ZZ</span></code> 연산자의 상호 작용 특성과 프로그램이 실행될 백엔드의 결합 맵을 고려하는 교환 전략으로 QAOA 회로를 트랜스파일링 시킬 것이다. 만약 이 옵션이 False라면 QAOA 프로그램은 최적화 레벨 1을 갖는 표준 트랜스파일러로 설정될 것이다. 이 최적화 레벨은 <strong>optimization_level</strong> 입력값 옵션을 사용하여 선택할 수 있다.</p></li>
 <li><p>만약 <strong>use_pulse_efficient</strong> 이 <code class="docutils literal notranslate"><span class="pre">True</span></code> 로 설정되면, 각 QAOA 반복에서 펄스의 효율적인 트랜스파일이 실행될 것이다. 이것은 2개의 큐비트 블록을 수집하고 Cartan의 KAK 분해를 적용하여 회로의 <a href="#id1"><span class="problematic" id="id2">``</span></a>RZXGate``를 얻는다. 그런 다음 스케일링된 교차-공진 펄스가 사용된다. 자세한 내용은 아래 부록 A에 나와있다.</p></li>
 <li><p>만약 <strong>use_initial_mapping</strong> 이 <code class="docutils literal notranslate"><span class="pre">True</span></code> 라면, 비용 연산자의 파울리 연산자를 장치의 결합 맵에 더 잘 맞도록 휴리스틱 알고리즘이 실행된다. 이는 <code class="docutils literal notranslate"><span class="pre">use_swap_strategies</span></code> 옵션이 <code class="docutils literal notranslate"><span class="pre">True</span></code> 로 설정된 경우에만 적용되어 있고 완전히 연결되지 않은 문제점에 대해서만 감지된다.</p></li>
-<li><p><strong>optimization_level</strong> This is the optimization level of the Qiskit transpiler if swap strategies are not used. The default value is 1.</p></li>
+<li><p><strong>optimization_level</strong> 은 swap 전략이 사용되지 않은 경우의 Qiskit 트랜스파일러의 최적화 레벨이다. 기본값은 1이다.</p></li>
 </ul>
 <section id="참조">
 <h3>참조<a class="headerlink" href="#참조" title="이 표제에 대한 퍼머링크">¶</a></h3>
@@ -617,9 +617,9 @@ ParameterNamespace (Values):
 <p>[2] N. Earnest, C. Tornow, and D. J. Egger, <em>Pulse-efficient circuit transpilation for quantum applications on cross-resonance-based hardware</em>, Phys. Rev. Research <strong>3</strong>, 043088 (2021).</p>
 </section>
 </section>
-<section id="Running-the-QAOA-runtime-program">
-<h2>Running the QAOA runtime program<a class="headerlink" href="#Running-the-QAOA-runtime-program" title="이 표제에 대한 퍼머링크">¶</a></h2>
-<p>We now show how to use the QAOA runtime program with a five qubit example.</p>
+<section id="QAOA-런타임-프로그램-실행">
+<h2>QAOA 런타임 프로그램 실행<a class="headerlink" href="#QAOA-런타임-프로그램-실행" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<p>예제로 QAOA 프로그램을 5개의 큐비트로 사용하는 방법을 보여준다.</p>
 <p>여기서는 클라우드에서 프로그램을 직접 불러오는 방법을 보여준다. 그러나 Qiskit 최적화는 Qiskit 최적화 워크플로우에 완벽하게 맞는 <code class="docutils literal notranslate"><span class="pre">QAOAClient</span></code> 를 제공하며 로컬 <code class="docutils literal notranslate"><span class="pre">QAOA</span></code> 알고리즘을 직접 대체할 수 있다. 이 튜토리얼에서는 <code class="docutils literal notranslate"><span class="pre">QAOAClient</span></code> 에 대해 설명한다.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -659,7 +659,7 @@ ParameterNamespace (Values):
     <span class="s2">&quot;reps&quot;</span><span class="p">:</span> <span class="n">reps</span><span class="p">,</span>
     <span class="s2">&quot;optimizer&quot;</span><span class="p">:</span> <span class="n">optimizer</span><span class="p">,</span>
     <span class="s2">&quot;initial_point&quot;</span><span class="p">:</span> <span class="n">initial_point</span><span class="p">,</span>
-    <span class="s2">&quot;shots&quot;</span><span class="p">:</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">13</span><span class="p">,</span>
+    <span class="s2">&quot;shots&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="o">**</span><span class="mi">13</span><span class="p">,</span>
     <span class="c1"># Set to True when running on real backends to reduce circuit</span>
     <span class="c1"># depth by leveraging swap strategies. If False the</span>
     <span class="c1"># given optimization_level (default is 1) will be used.</span>
@@ -672,7 +672,7 @@ ParameterNamespace (Values):
 </pre></div>
 </div>
 </div>
-<p>Now, we run the program using the provider.</p>
+<p>이제 공급자를 이용하여 프로그램을 실행한다.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -752,7 +752,7 @@ Bob status: JobStatus.DONE
 
     <span class="n">state_results</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">bit_str</span><span class="p">,</span> <span class="n">amp</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;eigenstate&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">state_results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">bit_str</span><span class="p">,</span> <span class="n">get_cost</span><span class="p">(</span><span class="n">bit_str</span><span class="p">,</span> <span class="n">adj_mat</span><span class="p">),</span> <span class="n">amp</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">100</span><span class="p">))</span>
+        <span class="n">state_results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">bit_str</span><span class="p">,</span> <span class="n">get_cost</span><span class="p">(</span><span class="n">bit_str</span><span class="p">,</span> <span class="n">adj_mat</span><span class="p">),</span> <span class="n">amp</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="mi">100</span><span class="p">))</span>
 
     <span class="n">vals</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
@@ -880,8 +880,8 @@ status: SUCCESS
 </pre></div></div>
 </div>
 </section>
-<section id="Appendix-A:-Pulse-efficient-transpilation">
-<h2>Appendix A: Pulse-efficient transpilation<a class="headerlink" href="#Appendix-A:-Pulse-efficient-transpilation" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<section id="부록-A:-펄스에-효율적인(pulse-effective)-트랜스파일">
+<h2>부록 A: 펄스에 효율적인(pulse-effective) 트랜스파일<a class="headerlink" href="#부록-A:-펄스에-효율적인(pulse-effective)-트랜스파일" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>QAOA 런타임 프로그램은 단일 큐비트 펄스 수를 최소화하고 IBM Quantum Systems의 에코-교차-공진 게이트에 적용 가능한 교차-공진 스케일링 방법론을 사용하는 펄스 효율적인 트랜스파일 기능을 활용할 수 있다. 완성도를 위해 구현된 패스 관리자를 보여준다.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
@@ -940,7 +940,7 @@ status: SUCCESS
 </pre></div>
 </div>
 </div>
-<p>To demonstrate the pass we construct an arbitrary circuit with blocks of two-qubit gates.</p>
+<p>패스를 보여주기 위해 2개의 큐비트 게이트 블록들로 임의의 회로를 구성한다.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
@@ -1058,9 +1058,9 @@ status: SUCCESS
 <li><a class="reference internal" href="#참조">참조</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#Running-the-QAOA-runtime-program">Running the QAOA runtime program</a></li>
+<li><a class="reference internal" href="#QAOA-런타임-프로그램-실행">QAOA 런타임 프로그램 실행</a></li>
 <li><a class="reference internal" href="#Qiskit-최적화">Qiskit 최적화</a></li>
-<li><a class="reference internal" href="#Appendix-A:-Pulse-efficient-transpilation">Appendix A: Pulse-efficient transpilation</a></li>
+<li><a class="reference internal" href="#부록-A:-펄스에-효율적인(pulse-effective)-트랜스파일">부록 A: 펄스에 효율적인(pulse-effective) 트랜스파일</a></li>
 </ul>
 </li>
 </ul>

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>최대 컷 및 외판원 문제 &mdash; Qiskit Optimization 0.3.1 문서</title>
+  <title>최대 컷 및 외판원 문제 &mdash; Qiskit Optimization 0.3.2 문서</title>
   
 
   
@@ -180,7 +180,7 @@
               
               
                 <div class="version">
-                  0.3.1
+                  0.3.2
                 </div>
               
             
@@ -543,14 +543,14 @@ div.rendered_html tbody tr:hover {
 <h2>소개<a class="headerlink" href="#소개" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>금융과 공학과 같은 정량적 분야에서의 많은 문제들은 최적화 문제이다. 최적화 문제는 복잡한 의사결정과 전략의 정의의 핵심이다.</p>
 <p>최적화 (또는 조합 최적화) 는 유한한 또는 수적으로 무한한 세트의 잠재적 솔루션에서 최적의 솔루션을 검색하는 것을 의미한다. 최적은 일부 기준 함수와 관련하여 정의되며 최소화되거나 최대화되어야 한다. 이는 일반적으로 비용 함수 또는 목적 함수라고 합니다.</p>
-<p><strong>Typical optimization problems</strong></p>
-<p>Minimization: cost, distance, length of a traversal, weight, processing time, material, energy consumption, number of objects</p>
+<p><strong>전형적인 최적화 문제들</strong></p>
+<p>최소화: 비용, 거리, 횡단의 길이, 가중치, 처리 시간, 재료, 에너지 소비, 객체들의 수</p>
 <p>최대화율: 이익, 가치, 출력, 반환, 수율, 도구, 효율성, 용량, 오브젝트 수</p>
 <p>여기에서는 다양한 분야의 실질적으로 사람들이 관심을 갖는 최대컷 문제를 다룬다. 그리고 양자 컴퓨터에서 수동으로 매핑할 수 있는 방법과 Qiskit의 최적화 모듈이 이를 지원하는 방법을 설명한다.</p>
-<section id="Weighted-Max-Cut">
-<h3>Weighted Max-Cut<a class="headerlink" href="#Weighted-Max-Cut" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<section id="가중치를-지닌-최대-컷">
+<h3>가중치를 지닌 최대 컷<a class="headerlink" href="#가중치를-지닌-최대-컷" title="이 표제에 대한 퍼머링크">¶</a></h3>
 <p>최대 컷 (Max-Cut) 은 NP-완전 문제이며, 클러스터링, 네트워크 과학, 그리고 통계적 물리학에 응용된다. 실제 애플리케이션이 지정된 최대 컷 인스턴스로 맵핑되는 방법을 파악하려면 서로 상호작용 및 영향을 줄 수 있는 많은 사용자의 시스템을 고려해야한다. 개인들은 그래프의 꼭짓점으로 표현될 수 있고, 그들의 상호작용들은 그래프의 꼭지점 또는 모서리들 간의 쌍으로 연결된다. 이러한 표현을 사용하면 일반적인 마케팅 문제를 쉽게 모델링할 수 있다. 예를 들어, 개인이 서로의 구매 결정에 영향을 미칠 것이라고 가정하고, 서로 영향을 미칠 수 있는 지식에 대해 알고 있다고 가정한다. 그래프의 각 모서리에 지정된 가중치에 따라 영향을 모델링할 수 있다. 그런 다음 일부 개인에게 제품을 무료로 제공하는 마케팅 전략의 결과를 예측하고, 수익을 극대화하기 위해 어떤 개인들이 무료 제품을 받아야 하는 최적의 부분 집합인지 물어볼 수 있다.</p>
-<p>The formal definition of this problem is the following:</p>
+<p>이 문제의 공식적인 정의는 다음과 같다.</p>
 <p><span class="math notranslate nohighlight">\(n\)</span>-노드의 무방향 그래프가 <em>G = (V, E)</em> 이때 <em>|V| = n</em> 모서리의 가중치 <span class="math notranslate nohighlight">\(w_{ij}&gt;0\)</span>, <span class="math notranslate nohighlight">\(w_{ij}=w_{ji}\)</span>, for <span class="math notranslate nohighlight">\((i, j)\in E\)</span>. 컷은 원래 세트 V를 두 하위 집합으로 분할하는 것으로 정의된다. 이 경우 최적화할 비용 함수는 서로 다른 두 하위 집합의 가장자리 연결 지점의 가중치 합계이며 <em>crossing</em> 컷이다. <span class="math notranslate nohighlight">\(x_i=0\)</span> 혹은 <span class="math notranslate nohighlight">\(x_i=1\)</span> 을 모든 노드 <span class="math notranslate nohighlight">\(i\)</span> 에 대해 가정하면, 사용자는 글로벌 이익 함수를 최대화하려고 한다 (여기서 및 다음 덧샘연산에서 지수 0,1,…n-1에 대해 진행된다)</p>
 <div class="math notranslate nohighlight">
 \[\tilde{C}(\textbf{x}) = \sum_{i,j} w_{ij} x_i (1-x_j).\]</div>
@@ -565,12 +565,12 @@ div.rendered_html tbody tr:hover {
 \[H = \sum_i w_i Z_i + \sum_{i&lt;j} w_{ij} Z_iZ_j.\]</div>
 <p>Qiskit의 최적화 모듈은 첫 번째 수익 함수인 <span class="math notranslate nohighlight">\(\tilde{C}\)</span> 에 대해 이징모델의 Hamiltonian을 생성할 수 있다. 이것을 위해서 <span class="math notranslate nohighlight">\(\tilde{C}\)</span> 는 <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> 의 <code class="docutils literal notranslate"><span class="pre">to_ising()</span></code> 라이브러리를 사용해서 모델링 할 수 있습니다.</p>
 </section>
-<section id="Approximate-Universal-Quantum-Computing-for-Optimization-Problems">
-<h3>Approximate Universal Quantum Computing for Optimization Problems<a class="headerlink" href="#Approximate-Universal-Quantum-Computing-for-Optimization-Problems" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<section id="최적화-문제를-위한-근사적인-범용-양자-컴퓨팅">
+<h3>최적화 문제를 위한 근사적인 범용 양자 컴퓨팅<a class="headerlink" href="#최적화-문제를-위한-근사적인-범용-양자-컴퓨팅" title="이 표제에 대한 퍼머링크">¶</a></h3>
 <p>근래에는 조합 최적화 문제에 대한 해결책을 찾기 위해 양자 컴퓨터를 사용하는 것에 대해 상당한 관심이 있었다. 조합문제의 고전적 성격을 감안할 때, 최고의 고전 알고리즘에 비해 양자 컴퓨터를 사용하는 데 있어서 기하급수적인 속도 향상은 보장되지 않는다고 말할 필요가 있다. 그러나, 목표 문제의 본질과 중요성 때문에, 실제로 일부 문제 발생을 가속화할 수 있는 양자 컴퓨터에서의 경험적 접근법을 조사할 필요가 있다. 여기서는 Farhi, Goldstone 및 Gutman(2014년) 의 <em>Quantum Approximate Optimization Algorithm</em> (QAOA) 에 기반한 접근방식을 설명한다. 알고리즘의 경험적 특성을 감안할 때 <em>근사 양자 컴퓨팅</em> 의 맥락에서 알고리즘을 구성한다.</p>
-<p>The algorithm works as follows:</p>
+<p>알고리즘은 다음과 같이 작동한다:</p>
 <ol class="arabic">
-<li><p>Choose the <span class="math notranslate nohighlight">\(w_i\)</span> and <span class="math notranslate nohighlight">\(w_{ij}\)</span> in the target Ising problem. In principle, even higher powers of Z are allowed.</p></li>
+<li><p>대상 Ising 문제에서 <span class="math notranslate nohighlight">\(w_i\)</span> 와 <span class="math notranslate nohighlight">\(w_{ij}\)</span> 를 선택한다. 원칙적으로, Z의 더 높은 거듭제곱이 허용된다.</p></li>
 <li><p>양자회로 <span class="math notranslate nohighlight">\(m\)</span> 의 깊이(depth)를 선택하라. 깊이는 조정될 수 있다.</p></li>
 <li><p>컨트롤 <span class="math notranslate nohighlight">\(\theta\)</span> 를 선택하고, <span class="math notranslate nohighlight">\(\boldsymbol\theta\)</span> 의 성분들에 의해 파라미터화된, C-위상 게이트로 만들어진 양자 회로와 단일 큐비트 Y 회전으로 만들어진 양자 회로를 사용하여 시험 기능 <span class="math notranslate nohighlight">\(|\psi(\boldsymbol\theta)\rangle\)</span> 을 작성한다.</p></li>
 <li><p>평가</p>
@@ -578,8 +578,8 @@ div.rendered_html tbody tr:hover {
 \[C(\boldsymbol\theta) = \langle\psi(\boldsymbol\theta)~|H|~\psi(\boldsymbol\theta)\rangle = \sum_i w_i \langle\psi(\boldsymbol\theta)~|Z_i|~\psi(\boldsymbol\theta)\rangle+ \sum_{i&lt;j} w_{ij} \langle\psi(\boldsymbol\theta)~|Z_iZ_j|~\psi(\boldsymbol\theta)\rangle\]</div>
 <p>및 상기 Z 기반으로 상기 회로의 결과를 샘플링하고 상기 개별적인 이징 용어들의 상기 예상 값들을 함께 합산함으로써, 상기 개별적인 Ising 용어들의 상기 기대 값들을 합산하는 단계 일반적으로, 선택된 고전적 옵티마이저에 따라 <span class="math notranslate nohighlight">\(\boldsymbol\theta\)</span> 의 다른 제어 지점을 추정해야 한다.</p>
 </li>
-<li><p>Use a classical optimizer to choose a new set of controls.</p></li>
-<li><p>Continue until <span class="math notranslate nohighlight">\(C(\boldsymbol\theta)\)</span> reaches a minimum, close enough to the solution <span class="math notranslate nohighlight">\(\boldsymbol\theta^*\)</span>.</p></li>
+<li><p>고전적 optimizer를 사용하여 새 제어 세트를 선택한다.</p></li>
+<li><p><span class="math notranslate nohighlight">\(C(\boldsymbol\theta)\)</span> 가 솔루션 <span class="math notranslate nohighlight">\(\boldsymbol\theta^*\)</span> 에 충분히 가까워질때까지 계속한다.</p></li>
 <li><p>마지막 <span class="math notranslate nohighlight">\(\boldsymbol\theta\)</span> 를 사용하여 분포 <span class="math notranslate nohighlight">\(|\langle z_i~|\psi(\boldsymbol\theta)\rangle|^2\;\forall i\)</span> 에서 샘플의 최종 세트를 생성하여 응답을 얻을 수 있다.</p></li>
 </ol>
 <p>좋은 경험적 알고리즘을 발견하는 것이 적절한 시험 파장기능의 선택에 이르게 될 것이라는 것은 우리의 생각이다. 예를 들어, 얽힘이 해결하려는 문제와 가장 일치하는 시험 파동함수을 고려할 수 있거나, 또는 간단하게 얽힘의 양을 변수로 삼을수도 있다. 본 자습서에서는 다음과 같은 형식의 간단한 시험 함수</p>
@@ -684,15 +684,15 @@ div.rendered_html tbody tr:hover {
  [1. 0. 1. 0.]]
 </pre></div></div>
 </div>
-<section id="Brute-force-approach">
-<h3>Brute force approach<a class="headerlink" href="#Brute-force-approach" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<section id="Brute-force-접근법">
+<h3>Brute force 접근법<a class="headerlink" href="#Brute-force-접근법" title="이 표제에 대한 퍼머링크">¶</a></h3>
 <p>모든 가능한 :math:’ 2 ^ n ” 조합을 시도합니다. 이 예에서와 같이, :math:의 n = 4인 경우, 16개의 조합만을 다루지만, n = 1000은 1.071509e+30의 조합을 가지며, 무차별 대입법(브루트 포스)을 사용해서는 다루기 어렵다.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">best_cost_brute</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">):</span>
+<span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span><span class="p">):</span>
     <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">bin</span><span class="p">(</span><span class="n">b</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="n">n</span><span class="p">)))]</span>
     <span class="n">cost</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
@@ -741,9 +741,9 @@ Best solution = [1, 0, 1, 0] cost = 4.0
 <img alt="../_images/tutorials_06_examples_max_cut_and_tsp_8_1.svg" src="../_images/tutorials_06_examples_max_cut_and_tsp_8_1.svg" /></div>
 </div>
 </section>
-<section id="Mapping-to-the-Ising-problem">
-<h3>Mapping to the Ising problem<a class="headerlink" href="#Mapping-to-the-Ising-problem" title="이 표제에 대한 퍼머링크">¶</a></h3>
-<p>Qiskit provides functionality to generate <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> from the problem specification as well as create the corresponding Ising Hamiltonian.</p>
+<section id="Ising-문제로-매핑">
+<h3>Ising 문제로 매핑<a class="headerlink" href="#Ising-문제로-매핑" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<p>Qiskit은 문제 정의에서 <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> 를 생성할 뿐만 아니라 해당하는 Ising Hamiltonian을 생성할 수 있는 기능도 제공한다.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -828,8 +828,8 @@ status: SUCCESS
 </div>
 <p>문제가 최소화 문제로 변환되었기때문에 :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>-4`의 솔루션은 최적에 해당된다.</p>
 </section>
-<section id="Checking-that-the-full-Hamiltonian-gives-the-right-cost">
-<h3>Checking that the full Hamiltonian gives the right cost<a class="headerlink" href="#Checking-that-the-full-Hamiltonian-gives-the-right-cost" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<section id="전체-해밀토니안이-정확한-코스트를-제공하고-있는지-확인한다">
+<h3>전체 해밀토니안이 정확한 코스트를 제공하고 있는지 확인한다<a class="headerlink" href="#전체-해밀토니안이-정확한-코스트를-제공하고-있는지-확인한다" title="이 표제에 대한 퍼머링크">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -959,8 +959,8 @@ status: SUCCESS
 </div>
 </section>
 </section>
-<section id="Traveling-Salesman-Problem">
-<h2>Traveling Salesman Problem<a class="headerlink" href="#Traveling-Salesman-Problem" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<section id="외판원(traveling-salesman)-문제">
+<h2>외판원(traveling salesman) 문제<a class="headerlink" href="#외판원(traveling-salesman)-문제" title="이 표제에 대한 퍼머링크">¶</a></h2>
 <p>외판원 문제(TSP)는 2 세기 이상 컴퓨터 과학자와 수학자의 관심을 끈 악명 높은 NP- 완전한 문제 일뿐만 아니라 재무 및 마케팅과도 관련이 있다. 한마디로 말하면, 외판원은 도시를 방문하여 상품을 판매한다. 이 문제의 목표는 외판원이 모든 도시를 방문하고 고향 즉 여행을 시작한 도시로 돌아갈 수있는 가장 짧은 경로를 찾는 것이다. 이를 통해 외판원은 최소한의 시간 안에 잠재적인 매출을 극대화 할 수 있다.</p>
 <p>이 문제는 문제의 “난이도”와 실제로 발생하는 다른 조합적 최적화 문제들과 유사성을 갖기 때문에 중요하다.</p>
 <p>W.R. Hamilton은 19 세기 초에 초기 분석을 통한 수학적 공식을 제안했다. 수학적으로 이 문제는 최대 컷의 경우와 마찬가지로 그래프 네트워크를 사용해 가장 잘 요약된다. 그래프 네트워크의 외판원 문제는 각 노드를 통해 취할 수있는 가장 짧은 <em>해밀턴 사이클</em> 을 계산한다. 해밀턴 사이클은 그래프의 모든 정점을 한 번 사용하는 닫힌 경로이다. 일반적인 해결책은 알려져 있지 않으며 효율적으로 찾는 알고리즘 (예: 다항식 시간)은 존재하지 않는 것으로 예상된다.</p>
@@ -975,18 +975,18 @@ status: SUCCESS
 <p>이며 해밀토니안 사이클의 경계 조건을 :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>(p=N)equiv (p=0)`로 가정한다: 그러나 여기서는 완전히 연결된 그래프로 간주하여 패널티는 포함하지 않는다. 최소화해야 할 거리는</p>
 <div class="math notranslate nohighlight">
 \[C(\textbf{x})=\sum_{i,j}w_{ij}\sum_{p} x_{i,p}x_{j,p+1}.\]</div>
-<p>Putting this all together in a single objective function to be minimized, we get the following:</p>
+<p>이 모든 것을 최소화하기 위해 하나의 목적 함수에 모으면 다음과 같은 결과를 얻을 수 있다:</p>
 <div class="math notranslate nohighlight">
 \[C(\textbf{x})=\sum_{i,j}w_{ij}\sum_{p} x_{i,p}x_{j,p+1}+ A\sum_p\left(1- \sum_i x_{i,p}\right)^2+A\sum_i\left(1- \sum_p x_{i,p}\right)^2,\]</div>
 <p>여기서 <span class="math notranslate nohighlight">\(A\)</span> 는 자유 변수이다. 이러한 구속 조건이 만족 될 수 있도록 <span class="math notranslate nohighlight">\(A\)</span> 가 충분히 커야한다.조건을 만족하는 한 가지 방법은 <span class="math notranslate nohighlight">\(A &gt; \mathrm{max}(w_{ij})\)</span> 와 같은 <span class="math notranslate nohighlight">\(A\)</span> 를 선택하는 것이다.</p>
-<p>Once again, it is easy to map the problem in this form to a quantum computer, and the solution will be found by minimizing a Ising Hamiltonian.</p>
+<p>다시 한 번 이 형태의 문제를 양자 컴퓨터에 매핑하는 것은 쉬우며, 해밀톤안을 최소화하여 솔루션을 찾을 수 있다.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generating a graph of 3 nodes</span>
 <span class="n">n</span> <span class="o">=</span> <span class="mi">3</span>
-<span class="n">num_qubits</span> <span class="o">=</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="n">num_qubits</span> <span class="o">=</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span>
 <span class="n">tsp</span> <span class="o">=</span> <span class="n">Tsp</span><span class="o">.</span><span class="n">create_random_instance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
 <span class="n">adj_matrix</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_matrix</span><span class="p">(</span><span class="n">tsp</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;distance</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">adj_matrix</span><span class="p">)</span>
@@ -1015,7 +1015,7 @@ distance
 <img alt="../_images/tutorials_06_examples_max_cut_and_tsp_22_1.svg" src="../_images/tutorials_06_examples_max_cut_and_tsp_22_1.svg" /></div>
 </div>
 <section id="id2">
-<h3>Brute force approach<a class="headerlink" href="#id2" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<h3>Brute force 접근법<a class="headerlink" href="#id2" title="이 표제에 대한 퍼머링크">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
@@ -1086,7 +1086,7 @@ Best order from brute force = (0, 1, 2) with total distance = 202.0
 </div>
 </section>
 <section id="id3">
-<h3>Mapping to the Ising problem<a class="headerlink" href="#id3" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<h3>Ising 문제로 매핑<a class="headerlink" href="#id3" title="이 표제에 대한 퍼머링크">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
@@ -1226,7 +1226,7 @@ status: SUCCESS
 </div>
 </section>
 <section id="id4">
-<h3>Checking that the full Hamiltonian gives the right cost<a class="headerlink" href="#id4" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<h3>전체 해밀토니안이 정확한 코스트를 제공하고 있는지 확인한다<a class="headerlink" href="#id4" title="이 표제에 대한 퍼머링크">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
@@ -1449,22 +1449,22 @@ solution objective: 202.0
               <ul>
 <li><a class="reference internal" href="#">최대 컷 및 외판원 문제</a><ul>
 <li><a class="reference internal" href="#소개">소개</a><ul>
-<li><a class="reference internal" href="#Weighted-Max-Cut">Weighted Max-Cut</a></li>
-<li><a class="reference internal" href="#Approximate-Universal-Quantum-Computing-for-Optimization-Problems">Approximate Universal Quantum Computing for Optimization Problems</a></li>
+<li><a class="reference internal" href="#가중치를-지닌-최대-컷">가중치를 지닌 최대 컷</a></li>
+<li><a class="reference internal" href="#최적화-문제를-위한-근사적인-범용-양자-컴퓨팅">최적화 문제를 위한 근사적인 범용 양자 컴퓨팅</a></li>
 <li><a class="reference internal" href="#응용-클래스">응용 클래스</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#최대-컷-문제">최대 컷 문제</a><ul>
-<li><a class="reference internal" href="#Brute-force-approach">Brute force approach</a></li>
-<li><a class="reference internal" href="#Mapping-to-the-Ising-problem">Mapping to the Ising problem</a></li>
-<li><a class="reference internal" href="#Checking-that-the-full-Hamiltonian-gives-the-right-cost">Checking that the full Hamiltonian gives the right cost</a></li>
+<li><a class="reference internal" href="#Brute-force-접근법">Brute force 접근법</a></li>
+<li><a class="reference internal" href="#Ising-문제로-매핑">Ising 문제로 매핑</a></li>
+<li><a class="reference internal" href="#전체-해밀토니안이-정확한-코스트를-제공하고-있는지-확인한다">전체 해밀토니안이 정확한 코스트를 제공하고 있는지 확인한다</a></li>
 <li><a class="reference internal" href="#양자-컴퓨터에서-실행하기">양자 컴퓨터에서 실행하기</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#Traveling-Salesman-Problem">Traveling Salesman Problem</a><ul>
-<li><a class="reference internal" href="#id2">Brute force approach</a></li>
-<li><a class="reference internal" href="#id3">Mapping to the Ising problem</a></li>
-<li><a class="reference internal" href="#id4">Checking that the full Hamiltonian gives the right cost</a></li>
+<li><a class="reference internal" href="#외판원(traveling-salesman)-문제">외판원(traveling salesman) 문제</a><ul>
+<li><a class="reference internal" href="#id2">Brute force 접근법</a></li>
+<li><a class="reference internal" href="#id3">Ising 문제로 매핑</a></li>
+<li><a class="reference internal" href="#id4">전체 해밀토니안이 정확한 코스트를 제공하고 있는지 확인한다</a></li>
 <li><a class="reference internal" href="#id5">양자 컴퓨터에서 실행하기</a></li>
 </ul>
 </li>
