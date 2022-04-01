@@ -21,7 +21,6 @@
       ~Initialize.gates_to_uncompute
       ~Initialize.inverse
       ~Initialize.is_parameterized
-      ~Initialize.mirror
       ~Initialize.qasm
       ~Initialize.repeat
       ~Initialize.reverse_ops
@@ -37,5 +36,8 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

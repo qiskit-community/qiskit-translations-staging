@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passmanager &mdash; Qiskit 0.34.2 दिग्दर्शिका</title>
+  <title>qiskit.transpiler.passmanager &mdash; Qiskit 0.35.0 दिग्दर्शिका</title>
   
 
   
@@ -354,7 +354,6 @@
 
 <span class="kn">import</span> <span class="nn">dill</span>
 
-<span class="kn">from</span> <span class="nn">qiskit.visualization</span> <span class="kn">import</span> <span class="n">pass_manager_drawer</span>
 <span class="kn">from</span> <span class="nn">qiskit.tools.parallel</span> <span class="kn">import</span> <span class="n">parallel_map</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
 <span class="kn">from</span> <span class="nn">.basepasses</span> <span class="kn">import</span> <span class="n">BasePass</span>
@@ -505,8 +504,13 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">passes</span><span class="p">,</span> <span class="n">BasePass</span><span class="p">):</span>
             <span class="n">passes</span> <span class="o">=</span> <span class="p">[</span><span class="n">passes</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">pass_</span> <span class="ow">in</span> <span class="n">passes</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pass_</span><span class="p">,</span> <span class="n">BasePass</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> is not a pass instance&quot;</span> <span class="o">%</span> <span class="n">pass_</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pass_</span><span class="p">,</span> <span class="n">FlowController</span><span class="p">):</span>
+                <span class="c1"># Normalize passes in nested FlowController</span>
+                <span class="n">PassManager</span><span class="o">.</span><span class="n">_normalize_passes</span><span class="p">(</span><span class="n">pass_</span><span class="o">.</span><span class="n">passes</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pass_</span><span class="p">,</span> <span class="n">BasePass</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> is not a BasePass or FlowController instance &quot;</span> <span class="o">%</span> <span class="n">pass_</span><span class="o">.</span><span class="vm">__class__</span>
+                <span class="p">)</span>
         <span class="k">return</span> <span class="n">passes</span>
 
 <div class="viewcode-block" id="PassManager.run"><a class="viewcode-back" href="../../../stubs/qiskit.transpiler.PassManager.run.html#qiskit.transpiler.PassManager.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
@@ -634,6 +638,8 @@
 <span class="sd">        Raises:</span>
 <span class="sd">            ImportError: when nxpd or pydot not installed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">qiskit.visualization</span> <span class="kn">import</span> <span class="n">pass_manager_drawer</span>
+
         <span class="k">return</span> <span class="n">pass_manager_drawer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="n">raw</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PassManager.passes"><a class="viewcode-back" href="../../../stubs/qiskit.transpiler.PassManager.passes.html#qiskit.transpiler.PassManager.passes">[docs]</a>    <span class="k">def</span> <span class="nf">passes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">BasePass</span><span class="p">]]:</span>
@@ -668,7 +674,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      अंतिम बार सम्पादित 2022/03/24.
+      अंतिम बार सम्पादित 2022/04/01.
 
     </p>
   </div>

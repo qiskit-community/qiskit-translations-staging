@@ -20,7 +20,6 @@
       ~SaveExpectationValue.copy
       ~SaveExpectationValue.inverse
       ~SaveExpectationValue.is_parameterized
-      ~SaveExpectationValue.mirror
       ~SaveExpectationValue.qasm
       ~SaveExpectationValue.repeat
       ~SaveExpectationValue.reverse_ops
@@ -36,5 +35,8 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

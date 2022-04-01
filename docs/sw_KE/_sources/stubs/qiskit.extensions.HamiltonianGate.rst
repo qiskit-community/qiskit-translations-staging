@@ -23,7 +23,6 @@
       ~HamiltonianGate.copy
       ~HamiltonianGate.inverse
       ~HamiltonianGate.is_parameterized
-      ~HamiltonianGate.mirror
       ~HamiltonianGate.power
       ~HamiltonianGate.qasm
       ~HamiltonianGate.repeat
@@ -42,5 +41,8 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

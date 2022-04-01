@@ -41,6 +41,8 @@
 
    .. autoattribute:: destabilizer
    .. autoattribute:: dim
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
    .. autoattribute:: num_qubits
    .. autoattribute:: qargs
    .. autoattribute:: stabilizer

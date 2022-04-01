@@ -27,6 +27,8 @@
    .. autoattribute:: duration
    .. autoattribute:: label
    .. autoattribute:: name
+   .. autoattribute:: num_clbits
    .. autoattribute:: num_ctrl_qubits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

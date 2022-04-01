@@ -22,7 +22,6 @@
       ~ClassicalFunction.copy
       ~ClassicalFunction.inverse
       ~ClassicalFunction.is_parameterized
-      ~ClassicalFunction.mirror
       ~ClassicalFunction.power
       ~ClassicalFunction.qasm
       ~ClassicalFunction.repeat
@@ -44,7 +43,10 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
    .. autoattribute:: network
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: qregs
    .. autoattribute:: scopes

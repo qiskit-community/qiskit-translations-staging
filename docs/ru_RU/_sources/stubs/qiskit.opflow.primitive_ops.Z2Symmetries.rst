@@ -29,3 +29,4 @@ Z2Symmetries
    .. autoattribute:: sq_paulis
    .. autoattribute:: symmetries
    .. autoattribute:: tapering_values
+   .. autoattribute:: tol

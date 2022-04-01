@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.target &mdash; документация Qiskit 0.34.2</title>
+  <title>qiskit.transpiler.target &mdash; документация Qiskit 0.35.0</title>
   
 
   
@@ -365,6 +365,10 @@
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.instruction_durations</span> <span class="kn">import</span> <span class="n">InstructionDurations</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.timing_constraints</span> <span class="kn">import</span> <span class="n">TimingConstraints</span>
 
+<span class="c1"># import QubitProperties here to provide convenience alias for building a</span>
+<span class="c1"># full target</span>
+<span class="kn">from</span> <span class="nn">qiskit.providers.backend</span> <span class="kn">import</span> <span class="n">QubitProperties</span>  <span class="c1"># pylint: disable=unused-import</span>
+
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
@@ -507,6 +511,7 @@
         <span class="s2">&quot;aquire_alignment&quot;</span><span class="p">,</span>
         <span class="s2">&quot;_non_global_basis&quot;</span><span class="p">,</span>
         <span class="s2">&quot;_non_global_strict_basis&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;qubit_properties&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -518,6 +523,7 @@
         <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">pulse_alignment</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">aquire_alignment</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">qubit_properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a new Target object</span>
@@ -546,6 +552,17 @@
 <span class="sd">                resolution of measure instruction starting time. Measure</span>
 <span class="sd">                instruction should start at time which is a multiple of the</span>
 <span class="sd">                alignment value.</span>
+<span class="sd">            qubit_properties (list): A list of :class:`~.QubitProperties`</span>
+<span class="sd">                objects defining the characteristics of each qubit on the</span>
+<span class="sd">                target device. If specified the length of this list must match</span>
+<span class="sd">                the number of qubits in the target, where the index in the list</span>
+<span class="sd">                matches the qubit number the properties are defined for. If some</span>
+<span class="sd">                qubits don&#39;t have properties available you can set that entry to</span>
+<span class="sd">                ``None``</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If both ``num_qubits`` and ``qubit_properties`` are both</span>
+<span class="sd">            defined and the value of ``num_qubits`` differs from the length of</span>
+<span class="sd">            ``qubit_properties``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span> <span class="o">=</span> <span class="n">num_qubits</span>
         <span class="c1"># A mapping of gate name -&gt; gate instance</span>
@@ -565,6 +582,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">aquire_alignment</span> <span class="o">=</span> <span class="n">aquire_alignment</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_non_global_basis</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_non_global_strict_basis</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">qubit_properties</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">qubit_properties</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">qubit_properties</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;The value of num_qubits specified does not match the &quot;</span>
+                        <span class="s2">&quot;length of the input qubit_properties list&quot;</span>
+                    <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qubit_properties</span> <span class="o">=</span> <span class="n">qubit_properties</span>
 
 <div class="viewcode-block" id="Target.add_instruction"><a class="viewcode-back" href="../../../stubs/qiskit.transpiler.Target.add_instruction.html#qiskit.transpiler.Target.add_instruction">[документация]</a>    <span class="k">def</span> <span class="nf">add_instruction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add a new instruction to the :class:`~qiskit.transpiler.Target`</span>
@@ -805,7 +832,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_name_map</span><span class="p">[</span><span class="n">instruction</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="Target.operations_for_qargs"><a class="viewcode-back" href="../../../stubs/qiskit.transpiler.Target.operations_for_qargs.html#qiskit.transpiler.Target.operations_for_qargs">[документация]</a>    <span class="k">def</span> <span class="nf">operations_for_qargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the operation class object for a specified qarg</span>
+        <span class="sd">&quot;&quot;&quot;Get the operation class object for a specified qargs tuple</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            qargs (tuple): A qargs tuple of the qubits to get the gates that apply</span>
@@ -821,6 +848,46 @@
         <span class="k">if</span> <span class="n">qargs</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qarg_gate_map</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">qargs</span><span class="si">}</span><span class="s2"> not in target.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_gate_name_map</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qarg_gate_map</span><span class="p">[</span><span class="n">qargs</span><span class="p">]]</span></div>
+
+<div class="viewcode-block" id="Target.operation_names_for_qargs"><a class="viewcode-back" href="../../../stubs/qiskit.transpiler.Target.operation_names_for_qargs.html#qiskit.transpiler.Target.operation_names_for_qargs">[документация]</a>    <span class="k">def</span> <span class="nf">operation_names_for_qargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the operation names for a specified qargs tuple</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            qargs (tuple): A qargs tuple of the qubits to get the gates that apply</span>
+<span class="sd">                to it. For example, ``(0,)`` will return the set of all</span>
+<span class="sd">                instructions that apply to qubit 0.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            set: The set of operation names that apply to the specified</span>
+<span class="sd">            `qargs``.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            KeyError: If qargs is not in target</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">qargs</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qarg_gate_map</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">qargs</span><span class="si">}</span><span class="s2"> not in target.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qarg_gate_map</span><span class="p">[</span><span class="n">qargs</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Target.instruction_supported"><a class="viewcode-back" href="../../../stubs/qiskit.transpiler.Target.instruction_supported.html#qiskit.transpiler.Target.instruction_supported">[документация]</a>    <span class="k">def</span> <span class="nf">instruction_supported</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation_name</span><span class="p">,</span> <span class="n">qargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return whether the instruction (operation + qubits) is supported by the target</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            operation_name (str): The name of the operation for the instruction</span>
+<span class="sd">            qargs (tuple): The tuple of qubit indices for the instruction</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: Returns ``True`` if the instruction is supported and ``False`` if it isn&#39;t.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Case a list if passed in by mistake</span>
+        <span class="n">qargs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">qargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">operation_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_map</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">qargs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_map</span><span class="p">[</span><span class="n">operation_name</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_map</span><span class="p">[</span><span class="n">operation_name</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="kc">None</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_map</span><span class="p">[</span><span class="n">operation_name</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_name_map</span><span class="p">[</span><span class="n">operation_name</span><span class="p">]</span><span class="o">.</span><span class="n">num_qubits</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">qargs</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+                    <span class="n">x</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">qargs</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">operation_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1070,7 +1137,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Обновлено: 2022/03/24.
+      Обновлено: 2022/04/01.
 
     </p>
   </div>

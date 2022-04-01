@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.layout.dense_layout &mdash; documentación de Qiskit - 0.34.2</title>
+  <title>qiskit.transpiler.passes.layout.dense_layout &mdash; documentación de Qiskit - 0.35.0</title>
   
 
   
@@ -352,12 +352,13 @@
 
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="k">as</span> <span class="nn">sp</span>
-<span class="kn">import</span> <span class="nn">scipy.sparse.csgraph</span> <span class="k">as</span> <span class="nn">cs</span>
+<span class="kn">import</span> <span class="nn">retworkx</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.layout</span> <span class="kn">import</span> <span class="n">Layout</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.basepasses</span> <span class="kn">import</span> <span class="n">AnalysisPass</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.exceptions</span> <span class="kn">import</span> <span class="n">TranspilerError</span>
+
+<span class="kn">from</span> <span class="nn">qiskit._accelerate.dense_layout</span> <span class="kn">import</span> <span class="n">best_subset</span>  <span class="c1"># pylint: disable=import-error</span>
 
 
 <div class="viewcode-block" id="DenseLayout"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.DenseLayout.html#qiskit.transpiler.passes.DenseLayout">[documentos]</a><span class="k">class</span> <span class="nc">DenseLayout</span><span class="p">(</span><span class="n">AnalysisPass</span><span class="p">):</span>
@@ -372,20 +373,33 @@
 <span class="sd">        by being set in `property_set`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coupling_map</span><span class="p">,</span> <span class="n">backend_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coupling_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">backend_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;DenseLayout initializer.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            coupling_map (Coupling): directed graph representing a coupling map.</span>
 <span class="sd">            backend_prop (BackendProperties): backend properties object</span>
+<span class="sd">            target (Target): A target representing the target backend.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span> <span class="o">=</span> <span class="n">coupling_map</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backend_prop</span> <span class="o">=</span> <span class="n">backend_prop</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cx_mat</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">meas_arr</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_cx</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_meas</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="n">num_qubits</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adjacency_matrix</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">num_qubits</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">num_qubits</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">build_coupling_map</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">adjacency_matrix</span> <span class="o">=</span> <span class="n">retworkx</span><span class="o">.</span><span class="n">adjacency_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error_mat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_error</span> <span class="o">=</span> <span class="n">_build_error_matrix</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="p">:</span>
+                <span class="n">num_qubits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">adjacency_matrix</span> <span class="o">=</span> <span class="n">retworkx</span><span class="o">.</span><span class="n">adjacency_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error_mat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_error</span> <span class="o">=</span> <span class="n">_build_error_matrix</span><span class="p">(</span>
+                <span class="n">num_qubits</span><span class="p">,</span> <span class="n">backend_prop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backend_prop</span><span class="p">,</span> <span class="n">coupling_map</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span>
+            <span class="p">)</span>
 
 <div class="viewcode-block" id="DenseLayout.run"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.DenseLayout.run.html#qiskit.transpiler.passes.DenseLayout.run">[documentos]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run the DenseLayout pass on `dag`.</span>
@@ -399,50 +413,28 @@
 <span class="sd">        Raises:</span>
 <span class="sd">            TranspilerError: if dag wider than self.coupling_map</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">num_dag_qubits</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">qreg</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">qreg</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">qregs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
+                <span class="s2">&quot;A coupling_map or target with constrained qargs is necessary to run the pass.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">num_dag_qubits</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">qubits</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">num_dag_qubits</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">size</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span><span class="s2">&quot;Number of qubits greater than device.&quot;</span><span class="p">)</span>
+        <span class="n">num_cx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">num_meas</span> <span class="o">=</span> <span class="mi">0</span>
 
-        <span class="c1"># Get avg number of cx and meas per qubit</span>
-        <span class="n">ops</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">count_ops</span><span class="p">()</span>
-        <span class="k">if</span> <span class="s2">&quot;cx&quot;</span> <span class="ow">in</span> <span class="n">ops</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">num_cx</span> <span class="o">=</span> <span class="n">ops</span><span class="p">[</span><span class="s2">&quot;cx&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="s2">&quot;measure&quot;</span> <span class="ow">in</span> <span class="n">ops</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">num_meas</span> <span class="o">=</span> <span class="n">ops</span><span class="p">[</span><span class="s2">&quot;measure&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">num_cx</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">num_meas</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Get avg number of cx and meas per qubit</span>
+            <span class="n">ops</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">count_ops</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s2">&quot;cx&quot;</span> <span class="ow">in</span> <span class="n">ops</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">num_cx</span> <span class="o">=</span> <span class="n">ops</span><span class="p">[</span><span class="s2">&quot;cx&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;measure&quot;</span> <span class="ow">in</span> <span class="n">ops</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">num_meas</span> <span class="o">=</span> <span class="n">ops</span><span class="p">[</span><span class="s2">&quot;measure&quot;</span><span class="p">]</span>
 
-        <span class="c1"># Compute the sparse cx_err matrix and meas array</span>
-        <span class="n">device_qubits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend_prop</span><span class="p">:</span>
-            <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">cols</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">cx_err</span> <span class="o">=</span> <span class="p">[]</span>
-
-            <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">get_edges</span><span class="p">():</span>
-                <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">gates</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">gate</span><span class="o">.</span><span class="n">qubits</span> <span class="o">==</span> <span class="n">edge</span><span class="p">:</span>
-                        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                        <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-                        <span class="n">cx_err</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gate</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-                        <span class="k">break</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">continue</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">cx_mat</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">coo_matrix</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">cx_err</span><span class="p">,</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">device_qubits</span><span class="p">,</span> <span class="n">device_qubits</span><span class="p">)</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
-
-            <span class="c1"># Set measurement array</span>
-            <span class="n">meas_err</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">qubit_data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">qubits</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">qubit_data</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;readout_error&quot;</span><span class="p">:</span>
-                        <span class="n">meas_err</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-                        <span class="k">break</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">continue</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">meas_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">meas_err</span><span class="p">)</span>
-
-        <span class="n">best_sub</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best_subset</span><span class="p">(</span><span class="n">num_dag_qubits</span><span class="p">)</span>
+        <span class="n">best_sub</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best_subset</span><span class="p">(</span><span class="n">num_dag_qubits</span><span class="p">,</span> <span class="n">num_meas</span><span class="p">,</span> <span class="n">num_cx</span><span class="p">)</span>
         <span class="n">layout</span> <span class="o">=</span> <span class="n">Layout</span><span class="p">()</span>
         <span class="n">map_iter</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">qreg</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">qregs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
@@ -452,7 +444,7 @@
             <span class="n">layout</span><span class="o">.</span><span class="n">add_register</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">property_set</span><span class="p">[</span><span class="s2">&quot;layout&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layout</span></div>
 
-    <span class="k">def</span> <span class="nf">_best_subset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_qubits</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_best_subset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_qubits</span><span class="p">,</span> <span class="n">num_meas</span><span class="p">,</span> <span class="n">num_cx</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Computes the qubit mapping with the best connectivity.</span>
 
 <span class="sd">        Args:</span>
@@ -461,76 +453,77 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            ndarray: Array of qubits to use for best connectivity mapping.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">coo_matrix</span><span class="p">,</span> <span class="n">csgraph</span>
+
         <span class="k">if</span> <span class="n">num_qubits</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">num_qubits</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[]</span>
 
-        <span class="n">device_qubits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
-
-        <span class="n">cmap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">get_edges</span><span class="p">())</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">cmap</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
-        <span class="n">sp_cmap</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">coo_matrix</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">cmap</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">device_qubits</span><span class="p">,</span> <span class="n">device_qubits</span><span class="p">)</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
-        <span class="n">best</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">best_map</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">best_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
-        <span class="n">best_sub</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="c1"># do bfs with each node as starting point</span>
-        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sp_cmap</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="n">bfs</span> <span class="o">=</span> <span class="n">cs</span><span class="o">.</span><span class="n">breadth_first_order</span><span class="p">(</span>
-                <span class="n">sp_cmap</span><span class="p">,</span> <span class="n">i_start</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_predecessors</span><span class="o">=</span><span class="kc">False</span>
-            <span class="p">)</span>
-
-            <span class="n">connection_count</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="n">sub_graph</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">):</span>
-                <span class="n">node_idx</span> <span class="o">=</span> <span class="n">bfs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sp_cmap</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">node_idx</span><span class="p">],</span> <span class="n">sp_cmap</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">node_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]):</span>
-                    <span class="n">node</span> <span class="o">=</span> <span class="n">sp_cmap</span><span class="o">.</span><span class="n">indices</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
-                    <span class="k">for</span> <span class="n">counter</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">):</span>
-                        <span class="k">if</span> <span class="n">node</span> <span class="o">==</span> <span class="n">bfs</span><span class="p">[</span><span class="n">counter</span><span class="p">]:</span>
-                            <span class="n">connection_count</span> <span class="o">+=</span> <span class="mi">1</span>
-                            <span class="n">sub_graph</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">node_idx</span><span class="p">,</span> <span class="n">node</span><span class="p">])</span>
-                            <span class="k">break</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend_prop</span><span class="p">:</span>
-                <span class="n">curr_error</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="c1"># compute meas error for subset</span>
-                <span class="n">avg_meas_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meas_arr</span><span class="p">)</span>
-                <span class="n">meas_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meas_arr</span><span class="p">[</span><span class="n">bfs</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">num_qubits</span><span class="p">]])</span> <span class="o">-</span> <span class="n">avg_meas_err</span>
-                <span class="k">if</span> <span class="n">meas_diff</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">curr_error</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_meas</span> <span class="o">*</span> <span class="n">meas_diff</span>
-
-                <span class="n">cx_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">cx_mat</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">sub_graph</span><span class="p">])</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">is_symmetric</span><span class="p">:</span>
-                    <span class="n">cx_err</span> <span class="o">/=</span> <span class="mi">2</span>
-                <span class="n">curr_error</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cx</span> <span class="o">*</span> <span class="n">cx_err</span>
-                <span class="k">if</span> <span class="n">connection_count</span> <span class="o">&gt;=</span> <span class="n">best</span> <span class="ow">and</span> <span class="n">curr_error</span> <span class="o">&lt;</span> <span class="n">best_error</span><span class="p">:</span>
-                    <span class="n">best</span> <span class="o">=</span> <span class="n">connection_count</span>
-                    <span class="n">best_error</span> <span class="o">=</span> <span class="n">curr_error</span>
-                    <span class="n">best_map</span> <span class="o">=</span> <span class="n">bfs</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">num_qubits</span><span class="p">]</span>
-                    <span class="n">best_sub</span> <span class="o">=</span> <span class="n">sub_graph</span>
-
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">connection_count</span> <span class="o">&gt;</span> <span class="n">best</span><span class="p">:</span>
-                    <span class="n">best</span> <span class="o">=</span> <span class="n">connection_count</span>
-                    <span class="n">best_map</span> <span class="o">=</span> <span class="n">bfs</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">num_qubits</span><span class="p">]</span>
-                    <span class="n">best_sub</span> <span class="o">=</span> <span class="n">sub_graph</span>
-
-        <span class="c1"># Return a best mapping that has reduced bandwidth</span>
-        <span class="n">mapping</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">best_map</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="n">mapping</span><span class="p">[</span><span class="n">best_map</span><span class="p">[</span><span class="n">edge</span><span class="p">]]</span> <span class="o">=</span> <span class="n">edge</span>
-        <span class="n">new_cmap</span> <span class="o">=</span> <span class="p">[[</span><span class="n">mapping</span><span class="p">[</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">mapping</span><span class="p">[</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]]]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">best_sub</span><span class="p">]</span>
-        <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">new_cmap</span><span class="p">]</span>
-        <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">new_cmap</span><span class="p">]</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">best_map</span> <span class="o">=</span> <span class="n">best_subset</span><span class="p">(</span>
+            <span class="n">num_qubits</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">adjacency_matrix</span><span class="p">,</span>
+            <span class="n">num_meas</span><span class="p">,</span>
+            <span class="n">num_cx</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_use_error</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">is_symmetric</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error_mat</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
-        <span class="n">sp_sub_graph</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">coo_matrix</span><span class="p">((</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">num_qubits</span><span class="p">))</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
-        <span class="n">perm</span> <span class="o">=</span> <span class="n">cs</span><span class="o">.</span><span class="n">reverse_cuthill_mckee</span><span class="p">(</span><span class="n">sp_sub_graph</span><span class="p">)</span>
+        <span class="n">sp_sub_graph</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">((</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">num_qubits</span><span class="p">))</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+        <span class="n">perm</span> <span class="o">=</span> <span class="n">csgraph</span><span class="o">.</span><span class="n">reverse_cuthill_mckee</span><span class="p">(</span><span class="n">sp_sub_graph</span><span class="p">)</span>
         <span class="n">best_map</span> <span class="o">=</span> <span class="n">best_map</span><span class="p">[</span><span class="n">perm</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">best_map</span></div>
+
+
+<span class="k">def</span> <span class="nf">_build_error_matrix</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coupling_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">backend_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">error_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">num_qubits</span><span class="p">))</span>
+    <span class="n">use_error</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target</span><span class="o">.</span><span class="n">qargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">qargs</span> <span class="ow">in</span> <span class="n">target</span><span class="o">.</span><span class="n">qargs</span><span class="p">:</span>
+            <span class="c1"># Ignore gates over 2q DenseLayout only works with 2q</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">qargs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">ops</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">operation_names_for_qargs</span><span class="p">(</span><span class="n">qargs</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">:</span>
+                <span class="n">props</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="n">op</span><span class="p">][</span><span class="n">qargs</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">props</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">props</span><span class="o">.</span><span class="n">error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># Use max error rate to represent operation error</span>
+                    <span class="c1"># on a qubit(s). If there is more than 1 operation available</span>
+                    <span class="c1"># we don&#39;t know what will be used on the qubits eventually</span>
+                    <span class="c1"># so we take the highest error operation as a proxy for</span>
+                    <span class="c1"># the possible worst case.</span>
+                    <span class="n">error</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">props</span><span class="o">.</span><span class="n">error</span><span class="p">)</span>
+            <span class="n">max_error</span> <span class="o">=</span> <span class="n">error</span>
+            <span class="c1"># TODO: Factor in T1 and T2 to error matrix after #7736</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">qargs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">qubit</span> <span class="o">=</span> <span class="n">qargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">error_mat</span><span class="p">[</span><span class="n">qubit</span><span class="p">][</span><span class="n">qubit</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_error</span>
+                <span class="n">use_error</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">qargs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">error_mat</span><span class="p">[</span><span class="n">qargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">qargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">max_error</span>
+                <span class="n">use_error</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="n">backend_prop</span> <span class="ow">and</span> <span class="n">coupling_map</span><span class="p">:</span>
+        <span class="n">error_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nb">tuple</span><span class="p">(</span><span class="n">gate</span><span class="o">.</span><span class="n">qubits</span><span class="p">):</span> <span class="n">gate</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">backend_prop</span><span class="o">.</span><span class="n">gates</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gate</span><span class="o">.</span><span class="n">qubits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">coupling_map</span><span class="o">.</span><span class="n">get_edges</span><span class="p">():</span>
+            <span class="n">gate_error</span> <span class="o">=</span> <span class="n">error_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">gate_error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">error_mat</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">gate_error</span>
+                <span class="n">use_error</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">qubit_data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">qubits</span><span class="p">):</span>
+            <span class="c1"># Handle faulty qubits edge case</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="n">num_qubits</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">qubit_data</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;readout_error&quot;</span><span class="p">:</span>
+                    <span class="n">error_mat</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">value</span>
+                    <span class="n">use_error</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="n">error_mat</span><span class="p">,</span> <span class="n">use_error</span>
 </pre></div>
 
              </article>
@@ -548,7 +541,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Actualizado por última vez en 2022/03/24.
+      Actualizado por última vez en 2022/04/01.
 
     </p>
   </div>

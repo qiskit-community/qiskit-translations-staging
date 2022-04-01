@@ -14,13 +14,16 @@
       :toctree: ../stubs/
 
       ~SparsePauliOp.adjoint
+      ~SparsePauliOp.chop
       ~SparsePauliOp.compose
       ~SparsePauliOp.conjugate
       ~SparsePauliOp.copy
       ~SparsePauliOp.dot
+      ~SparsePauliOp.equiv
       ~SparsePauliOp.expand
       ~SparsePauliOp.from_list
       ~SparsePauliOp.from_operator
+      ~SparsePauliOp.from_sparse_list
       ~SparsePauliOp.input_dims
       ~SparsePauliOp.is_unitary
       ~SparsePauliOp.label_iter

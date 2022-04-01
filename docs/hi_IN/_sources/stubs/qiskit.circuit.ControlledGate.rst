@@ -21,7 +21,6 @@
       ~ControlledGate.copy
       ~ControlledGate.inverse
       ~ControlledGate.is_parameterized
-      ~ControlledGate.mirror
       ~ControlledGate.power
       ~ControlledGate.qasm
       ~ControlledGate.repeat
@@ -41,6 +40,8 @@
    .. autoattribute:: duration
    .. autoattribute:: label
    .. autoattribute:: name
+   .. autoattribute:: num_clbits
    .. autoattribute:: num_ctrl_qubits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

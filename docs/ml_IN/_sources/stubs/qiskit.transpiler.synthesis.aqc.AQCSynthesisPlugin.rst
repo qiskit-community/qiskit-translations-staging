@@ -28,3 +28,4 @@
    .. autoattribute:: supports_gate_lengths
    .. autoattribute:: supports_natural_direction
    .. autoattribute:: supports_pulse_optimize
+   .. autoattribute:: supports_target

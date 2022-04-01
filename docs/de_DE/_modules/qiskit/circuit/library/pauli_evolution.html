@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.circuit.library.pauli_evolution &mdash; Qiskit 0.34.2 Dokumentation</title>
+  <title>qiskit.circuit.library.pauli_evolution &mdash; Qiskit 0.35.0 Dokumentation</title>
   
 
   
@@ -351,6 +351,7 @@
 <span class="sd">&quot;&quot;&quot;A gate to implement time-evolution of operators.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.circuit.gate</span> <span class="kn">import</span> <span class="n">Gate</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.parameterexpression</span> <span class="kn">import</span> <span class="n">ParameterExpression</span>
@@ -379,6 +380,32 @@
 
 <span class="sd">        U(t) = e^{-itX} = R_X(2t).</span>
 
+<span class="sd">    **Examples:**</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        from qiskit.circuit import QuantumCircuit</span>
+<span class="sd">        from qiskit.circuit.library import PauliEvolutionGate</span>
+<span class="sd">        from qiskit.opflow import I, Z, X</span>
+
+<span class="sd">        # build the evolution gate</span>
+<span class="sd">        operator = (Z ^ Z) - 0.1 * (X ^ I)</span>
+<span class="sd">        evo = PauliEvolutionGate(operator, time=0.2)</span>
+
+<span class="sd">        # plug it into a circuit</span>
+<span class="sd">        circuit = QuantumCircuit(2)</span>
+<span class="sd">        circuit.append(evo, range(2))</span>
+<span class="sd">        print(circuit.draw())</span>
+
+<span class="sd">    The above will print (note that the ``-0.1`` coefficient is not printed!)::</span>
+
+<span class="sd">             ┌──────────────────────────┐</span>
+<span class="sd">        q_0: ┤0                         ├</span>
+<span class="sd">             │  exp(-it (ZZ + XI))(0.2) │</span>
+<span class="sd">        q_1: ┤1                         ├</span>
+<span class="sd">             └──────────────────────────┘</span>
+
+
 <span class="sd">    **References:**</span>
 
 <span class="sd">    [1] G. Li et al. Paulihedral: A Generalized Block-Wise Compiler Optimization</span>
@@ -400,22 +427,26 @@
 <span class="sd">                operators where the elements are sums of commuting operators.</span>
 <span class="sd">                For example: ``[XY + YX, ZZ + ZI + IZ, YY]``.</span>
 <span class="sd">            time: The evolution time.</span>
-<span class="sd">            label: A label for the gate to display in visualizations.</span>
+<span class="sd">            label: A label for the gate to display in visualizations. Per default, the label is</span>
+<span class="sd">                set to ``exp(-it &lt;operators&gt;)`` where ``&lt;operators&gt;`` is the sum of the Paulis.</span>
+<span class="sd">                Note that the label does not include any coefficients of the Paulis. See the</span>
+<span class="sd">                class docstring for an example.</span>
 <span class="sd">            synthesis: A synthesis strategy. If None, the default synthesis is the Lie-Trotter</span>
 <span class="sd">                product formula with a single repetition.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">operator</span> <span class="o">=</span> <span class="p">[</span><span class="n">_to_sparse_pauli_op</span><span class="p">(</span><span class="n">op</span><span class="p">)</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">operator</span><span class="p">]</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;exp(-i </span><span class="si">{</span><span class="p">[</span><span class="s1">&#39; + &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">to_labels</span><span class="p">())</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">operator</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">operator</span> <span class="o">=</span> <span class="n">_to_sparse_pauli_op</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;exp(-i </span><span class="si">{</span><span class="s1">&#39; + &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">to_labels</span><span class="p">())</span><span class="si">}</span><span class="s2">)&quot;</span>
 
         <span class="k">if</span> <span class="n">synthesis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">synthesis</span> <span class="o">=</span> <span class="n">LieTrotter</span><span class="p">()</span>
 
+        <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="n">_get_default_label</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span>
+
         <span class="n">num_qubits</span> <span class="o">=</span> <span class="n">operator</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_qubits</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">operator</span><span class="o">.</span><span class="n">num_qubits</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">num_qubits</span><span class="o">=</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">[</span><span class="n">time</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;PauliEvolution&quot;</span><span class="p">,</span> <span class="n">num_qubits</span><span class="o">=</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">[</span><span class="n">time</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">operator</span> <span class="o">=</span> <span class="n">operator</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">synthesis</span> <span class="o">=</span> <span class="n">synthesis</span>
@@ -475,7 +506,23 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported operator type for evolution: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iscomplex</span><span class="p">(</span><span class="n">sparse_pauli</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Operator contains complex coefficients, which are not supported.&quot;</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="n">sparse_pauli</span>
+
+
+<span class="k">def</span> <span class="nf">_get_default_label</span><span class="p">(</span><span class="n">operator</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;exp(-it (</span><span class="si">{</span><span class="p">[</span><span class="s1">&#39; + &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">to_labels</span><span class="p">())</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">operator</span><span class="p">]</span><span class="si">}</span><span class="s2">))&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">paulis</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;exp(-it </span><span class="si">{</span><span class="n">operator</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">to_labels</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="c1"># for just a single Pauli don&#39;t add brackets around the sum</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;exp(-it (</span><span class="si">{</span><span class="s1">&#39; + &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">to_labels</span><span class="p">())</span><span class="si">}</span><span class="s2">))&quot;</span>
+
+    <span class="k">return</span> <span class="n">label</span>
 </pre></div>
 
              </article>
@@ -493,7 +540,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Zuletzt aktualisiert am 2022/03/24.
+      Zuletzt aktualisiert am 2022/04/01.
 
     </p>
   </div>

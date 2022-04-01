@@ -21,7 +21,6 @@
       ~Gate.copy
       ~Gate.inverse
       ~Gate.is_parameterized
-      ~Gate.mirror
       ~Gate.power
       ~Gate.qasm
       ~Gate.repeat
@@ -39,5 +38,8 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.opflow.gradients.hessian &mdash; Qiskit 0.34.2 說明文件</title>
+  <title>qiskit.opflow.gradients.hessian &mdash; Qiskit 0.35.0 說明文件</title>
   
 
   
@@ -246,10 +246,10 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Frontmatter</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../qc_intro.html">Quantum computing in a nutshell</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../intro_tutorial1.html">Introduction to Qiskit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../qc_intro.html">簡短秒解量子計算</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../intro_tutorial1.html">Qiskit的簡介</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../contributing_to_qiskit.html">Contributing to Qiskit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing_to_qiskit.html">如何為 Qiskit 做出貢獻</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../configuration.html">Local Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../faq.html">常見問答</a></li>
 </ul>
@@ -257,7 +257,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/circuit_library.html">電路檔案庫</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">API References</span></p>
+<p class="caption" role="heading"><span class="caption-text">API 參考</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
@@ -355,8 +355,8 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.circuit.quantumcircuit</span> <span class="kn">import</span> <span class="n">_compare_parameters</span>
-<span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">MissingOptionalLibraryError</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">ParameterVector</span><span class="p">,</span> <span class="n">ParameterExpression</span>
+<span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">optionals</span> <span class="k">as</span> <span class="n">_optionals</span>
 <span class="kn">from</span> <span class="nn">..operator_globals</span> <span class="kn">import</span> <span class="n">Zero</span><span class="p">,</span> <span class="n">One</span>
 <span class="kn">from</span> <span class="nn">..state_fns.circuit_state_fn</span> <span class="kn">import</span> <span class="n">CircuitStateFn</span>
 <span class="kn">from</span> <span class="nn">..state_fns.state_fn</span> <span class="kn">import</span> <span class="n">StateFn</span>
@@ -371,13 +371,6 @@
 <span class="kn">from</span> <span class="nn">.hessian_base</span> <span class="kn">import</span> <span class="n">HessianBase</span>
 <span class="kn">from</span> <span class="nn">..exceptions</span> <span class="kn">import</span> <span class="n">OpflowError</span>
 <span class="kn">from</span> <span class="nn">...utils.arithmetic</span> <span class="kn">import</span> <span class="n">triu_to_dense</span>
-
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">jax</span> <span class="kn">import</span> <span class="n">grad</span><span class="p">,</span> <span class="n">jit</span>
-
-    <span class="n">_HAS_JAX</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="n">_HAS_JAX</span> <span class="o">=</span> <span class="kc">False</span>
 
 
 <div class="viewcode-block" id="Hessian"><a class="viewcode-back" href="../../../../stubs/qiskit.opflow.gradients.Hessian.html#qiskit.opflow.gradients.Hessian">[文件]</a><span class="k">class</span> <span class="nc">Hessian</span><span class="p">(</span><span class="n">HessianBase</span><span class="p">):</span>
@@ -580,38 +573,20 @@
                 <span class="p">]</span>
             <span class="p">)</span>
 
+            <span class="n">_optionals</span><span class="o">.</span><span class="n">HAS_JAX</span><span class="o">.</span><span class="n">require_now</span><span class="p">(</span><span class="s2">&quot;automatic differentiation&quot;</span><span class="p">)</span>
+            <span class="kn">from</span> <span class="nn">jax</span> <span class="kn">import</span> <span class="n">grad</span><span class="p">,</span> <span class="n">jit</span>  <span class="c1"># pylint: disable=import-error</span>
+
             <span class="k">if</span> <span class="n">operator</span><span class="o">.</span><span class="n">grad_combo_fn</span><span class="p">:</span>
                 <span class="n">first_partial_combo_fn</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">grad_combo_fn</span>
-                <span class="k">if</span> <span class="n">_HAS_JAX</span><span class="p">:</span>
-                    <span class="n">second_partial_combo_fn</span> <span class="o">=</span> <span class="n">jit</span><span class="p">(</span>
-                        <span class="n">grad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">first_partial_combo_fn</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">holomorphic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                    <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-                        <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;jax&quot;</span><span class="p">,</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;get_hessian&quot;</span><span class="p">,</span>
-                        <span class="n">msg</span><span class="o">=</span><span class="p">(</span>
-                            <span class="s2">&quot;This automatic differentiation function is based on JAX. Please &quot;</span>
-                            <span class="s2">&quot;install jax and use `import jax.numpy as jnp` instead of &quot;</span>
-                            <span class="s2">&quot;`import numpy as np` when defining a combo_fn.&quot;</span>
-                        <span class="p">),</span>
-                    <span class="p">)</span>
+
+                <span class="n">second_partial_combo_fn</span> <span class="o">=</span> <span class="n">jit</span><span class="p">(</span>
+                    <span class="n">grad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">first_partial_combo_fn</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">holomorphic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">_HAS_JAX</span><span class="p">:</span>
-                    <span class="n">first_partial_combo_fn</span> <span class="o">=</span> <span class="n">jit</span><span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">combo_fn</span><span class="p">,</span> <span class="n">holomorphic</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-                    <span class="n">second_partial_combo_fn</span> <span class="o">=</span> <span class="n">jit</span><span class="p">(</span>
-                        <span class="n">grad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">first_partial_combo_fn</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">holomorphic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                    <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-                        <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;jax&quot;</span><span class="p">,</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;get_hessian&quot;</span><span class="p">,</span>
-                        <span class="n">msg</span><span class="o">=</span><span class="p">(</span>
-                            <span class="s2">&quot;This automatic differentiation function is based on JAX. &quot;</span>
-                            <span class="s2">&quot;Please install jax and use `import jax.numpy as jnp` instead &quot;</span>
-                            <span class="s2">&quot;of `import numpy as np` when defining a combo_fn.&quot;</span>
-                        <span class="p">),</span>
-                    <span class="p">)</span>
+                <span class="n">first_partial_combo_fn</span> <span class="o">=</span> <span class="n">jit</span><span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">combo_fn</span><span class="p">,</span> <span class="n">holomorphic</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+                <span class="n">second_partial_combo_fn</span> <span class="o">=</span> <span class="n">jit</span><span class="p">(</span>
+                    <span class="n">grad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">first_partial_combo_fn</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">holomorphic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="p">)</span>
 
             <span class="c1"># For a general combo_fn F(g_0, g_1, ..., g_k)</span>
             <span class="c1"># dF/d θ0,θ1 = sum_i: (∂F/∂g_i)•(d g_i/ d θ0,θ1) + (∂F/∂^2 g_i)•(d g_i/d θ0)•(d g_i/d</span>
@@ -662,7 +637,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      最後更新於 2022/03/24。
+      最後更新於 2022/04/01。
 
     </p>
   </div>

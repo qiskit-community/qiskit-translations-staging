@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.quantum_info.operators.symplectic.sparse_pauli_op &mdash; Documentação Qiskit 0.34.2</title>
+  <title>qiskit.quantum_info.operators.symplectic.sparse_pauli_op &mdash; Documentação Qiskit 0.35.0</title>
   
 
   
@@ -338,7 +338,7 @@
   <h1>Código fonte de qiskit.quantum_info.operators.symplectic.sparse_pauli_op</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2017, 2020.</span>
+<span class="c1"># (C) Copyright IBM 2017, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -366,6 +366,7 @@
 <span class="kn">from</span> <span class="nn">qiskit.quantum_info.operators.symplectic.pauli_table</span> <span class="kn">import</span> <span class="n">PauliTable</span>
 <span class="kn">from</span> <span class="nn">qiskit.quantum_info.operators.symplectic.pauli_utils</span> <span class="kn">import</span> <span class="n">pauli_basis</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils.deprecation</span> <span class="kn">import</span> <span class="n">deprecate_function</span>
+<span class="kn">from</span> <span class="nn">qiskit._accelerate.sparse_pauli_op</span> <span class="kn">import</span> <span class="n">unordered_unique</span>  <span class="c1"># pylint: disable=import-error</span>
 
 
 <div class="viewcode-block" id="SparsePauliOp"><a class="viewcode-back" href="../../../../../stubs/qiskit.quantum_info.SparsePauliOp.html#qiskit.quantum_info.SparsePauliOp">[documentos]</a><span class="k">class</span> <span class="nc">SparsePauliOp</span><span class="p">(</span><span class="n">LinearOp</span><span class="p">):</span>
@@ -465,12 +466,26 @@
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Check if two SparsePauliOp operators are equal&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Entrywise comparison of two SparsePauliOp operators&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">coeffs</span><span class="o">.</span><span class="n">shape</span>
             <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)</span>
             <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">paulis</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">paulis</span>
         <span class="p">)</span>
+
+<div class="viewcode-block" id="SparsePauliOp.equiv"><a class="viewcode-back" href="../../../../../stubs/qiskit.quantum_info.SparsePauliOp.equiv.html#qiskit.quantum_info.SparsePauliOp.equiv">[documentos]</a>    <span class="k">def</span> <span class="nf">equiv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if two SparsePauliOp operators are equivalent.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other (SparsePauliOp): an operator object.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if the operator is equivalent to ``self``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">((</span><span class="bp">self</span> <span class="o">-</span> <span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span><span class="o">.</span><span class="n">coeffs</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">settings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
@@ -624,7 +639,10 @@
             <span class="n">z4</span><span class="p">[:,</span> <span class="n">qargs</span><span class="p">]</span> <span class="o">=</span> <span class="n">z3</span>
             <span class="n">pauli_list</span> <span class="o">=</span> <span class="n">PauliList</span><span class="p">(</span><span class="n">BasePauli</span><span class="p">(</span><span class="n">z4</span><span class="p">,</span> <span class="n">x4</span><span class="p">,</span> <span class="n">phase</span><span class="p">))</span>
 
-        <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)</span>
+        <span class="c1"># note: the following is a faster code equivalent to</span>
+        <span class="c1"># `coeffs = np.kron(self.coeffs, other.coeffs)`</span>
+        <span class="c1"># since `self.coeffs` and `other.coeffs` are both 1d arrays.</span>
+        <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">SparsePauliOp</span><span class="p">(</span><span class="n">pauli_list</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SparsePauliOp.tensor"><a class="viewcode-back" href="../../../../../stubs/qiskit.quantum_info.SparsePauliOp.tensor.html#qiskit.quantum_info.SparsePauliOp.tensor">[documentos]</a>    <span class="k">def</span> <span class="nf">tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
@@ -723,11 +741,22 @@
         <span class="k">if</span> <span class="n">rtol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">rtol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rtol</span>
 
+        <span class="c1"># Filter non-zero coefficients</span>
+        <span class="n">non_zero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">rtol</span><span class="p">))</span>
+        <span class="n">paulis_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">non_zero</span><span class="p">]</span>
+        <span class="n">paulis_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">z</span><span class="p">[</span><span class="n">non_zero</span><span class="p">]</span>
+        <span class="n">nz_coeffs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[</span><span class="n">non_zero</span><span class="p">]</span>
+
         <span class="c1"># Pack bool vectors into np.uint8 vectors by np.packbits</span>
-        <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">packbits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">256</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">packbits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">indexes</span><span class="p">,</span> <span class="n">inverses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">packbits</span><span class="p">(</span><span class="n">paulis_x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">256</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">packbits</span><span class="p">(</span><span class="n">paulis_z</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">indexes</span><span class="p">,</span> <span class="n">inverses</span> <span class="o">=</span> <span class="n">unordered_unique</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">non_zero</span><span class="p">)</span> <span class="ow">and</span> <span class="n">indexes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="c1"># No zero operator or duplicate operator</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
         <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">indexes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">inverses</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">inverses</span><span class="p">,</span> <span class="n">nz_coeffs</span><span class="p">)</span>
         <span class="c1"># Delete zero coefficient rows</span>
         <span class="n">is_zero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">rtol</span><span class="p">)</span>
         <span class="c1"># Check edge case that we deleted all Paulis</span>
@@ -739,9 +768,50 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">non_zero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">is_zero</span><span class="p">)</span>
             <span class="n">non_zero_indexes</span> <span class="o">=</span> <span class="n">indexes</span><span class="p">[</span><span class="n">non_zero</span><span class="p">]</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">non_zero_indexes</span><span class="p">]</span>
-            <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">z</span><span class="p">[</span><span class="n">non_zero_indexes</span><span class="p">]</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">paulis_x</span><span class="p">[</span><span class="n">non_zero_indexes</span><span class="p">]</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">paulis_z</span><span class="p">[</span><span class="n">non_zero_indexes</span><span class="p">]</span>
             <span class="n">coeffs</span> <span class="o">=</span> <span class="n">coeffs</span><span class="p">[</span><span class="n">non_zero</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">SparsePauliOp</span><span class="p">(</span>
+            <span class="n">PauliList</span><span class="o">.</span><span class="n">from_symplectic</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">coeffs</span><span class="p">,</span> <span class="n">ignore_pauli_phase</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="SparsePauliOp.chop"><a class="viewcode-back" href="../../../../../stubs/qiskit.quantum_info.SparsePauliOp.chop.html#qiskit.quantum_info.SparsePauliOp.chop">[documentos]</a>    <span class="k">def</span> <span class="nf">chop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-14</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set real and imaginary parts of the coefficients to 0 if ``&lt; tol`` in magnitude.</span>
+
+<span class="sd">        For example, the operator representing ``1+1e-17j X + 1e-17 Y`` with a tolerance larger</span>
+<span class="sd">        than ``1e-17`` will be reduced to ``1 X`` whereas :meth:`.SparsePauliOp.simplify` would</span>
+<span class="sd">        return ``1+1e-17j X``.</span>
+
+<span class="sd">        If a both the real and imaginary part of a coefficient is 0 after chopping, the</span>
+<span class="sd">        corresponding Pauli is removed from the operator.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tol (float): The absolute tolerance to check whether a real or imaginary part should</span>
+<span class="sd">                be set to 0.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            SparsePauliOp: This operator with chopped coefficients.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">realpart_nonzero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tol</span>
+        <span class="n">imagpart_nonzero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tol</span>
+
+        <span class="n">remaining_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">realpart_nonzero</span><span class="p">,</span> <span class="n">imagpart_nonzero</span><span class="p">)</span>
+        <span class="n">remaining_real</span> <span class="o">=</span> <span class="n">realpart_nonzero</span><span class="p">[</span><span class="n">remaining_indices</span><span class="p">]</span>
+        <span class="n">remaining_imag</span> <span class="o">=</span> <span class="n">imagpart_nonzero</span><span class="p">[</span><span class="n">remaining_indices</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">remaining_real</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># if no Paulis are left</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+            <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="n">j</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">remaining_indices</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+            <span class="n">coeffs</span><span class="o">.</span><span class="n">real</span><span class="p">[</span><span class="n">remaining_real</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="o">.</span><span class="n">real</span><span class="p">[</span><span class="n">realpart_nonzero</span><span class="p">]</span>
+            <span class="n">coeffs</span><span class="o">.</span><span class="n">imag</span><span class="p">[</span><span class="n">remaining_imag</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="o">.</span><span class="n">imag</span><span class="p">[</span><span class="n">imagpart_nonzero</span><span class="p">]</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">remaining_indices</span><span class="p">]</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">z</span><span class="p">[</span><span class="n">remaining_indices</span><span class="p">]</span>
+
         <span class="k">return</span> <span class="n">SparsePauliOp</span><span class="p">(</span>
             <span class="n">PauliList</span><span class="o">.</span><span class="n">from_symplectic</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">coeffs</span><span class="p">,</span> <span class="n">ignore_pauli_phase</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">)</span></div>
@@ -822,7 +892,7 @@
         <span class="c1"># Non-zero coefficients</span>
         <span class="n">coeffs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="c1"># Non-normalized basis factor</span>
-        <span class="n">denom</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">num_qubits</span>
+        <span class="n">denom</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">num_qubits</span>
         <span class="c1"># Compute coefficients from basis</span>
         <span class="n">basis</span> <span class="o">=</span> <span class="n">pauli_basis</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">pauli_list</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">mat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">matrix_iter</span><span class="p">()):</span>
@@ -836,15 +906,104 @@
 
 <div class="viewcode-block" id="SparsePauliOp.from_list"><a class="viewcode-back" href="../../../../../stubs/qiskit.quantum_info.SparsePauliOp.from_list.html#qiskit.quantum_info.SparsePauliOp.from_list">[documentos]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">from_list</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Construct from a list [(pauli_str, coeffs)]&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Construct from a list of Pauli strings and coefficients.</span>
+
+<span class="sd">        For example, the 5-qubit Hamiltonian</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            H = Z_1 X_4 + 2 Y_0 Y_3</span>
+
+<span class="sd">        can be constructed as</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            # via tuples and the full Pauli string</span>
+<span class="sd">            op = SparsePauliOp.from_list([(&quot;XIIZI&quot;, 1), (&quot;IYIIY&quot;, 2)])</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            obj (Iterable[Tuple[str, complex]]): The list of 2-tuples specifying the Pauli terms.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            SparsePauliOp: The SparsePauliOp representation of the Pauli terms.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            QiskitError: If the list of Paulis is empty.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">obj</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>  <span class="c1"># To convert zip or other iterable</span>
+
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>  <span class="c1"># number of Pauli terms</span>
+        <span class="k">if</span> <span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;Input Pauli list is empty.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># determine the number of qubits</span>
         <span class="n">num_qubits</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
-        <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
         <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;&lt;U</span><span class="si">{</span><span class="n">num_qubits</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
             <span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">paulis</span> <span class="o">=</span> <span class="n">PauliList</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">SparsePauliOp</span><span class="p">(</span><span class="n">paulis</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SparsePauliOp.from_sparse_list"><a class="viewcode-back" href="../../../../../stubs/qiskit.quantum_info.SparsePauliOp.from_sparse_list.html#qiskit.quantum_info.SparsePauliOp.from_sparse_list">[documentos]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_sparse_list</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">num_qubits</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Construct from a list of local Pauli strings and coefficients.</span>
+
+<span class="sd">        Each list element is a 3-tuple of a local Pauli string, indices where to apply it,</span>
+<span class="sd">        and a coefficient.</span>
+
+<span class="sd">        For example, the 5-qubit Hamiltonian</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            H = Z_1 X_4 + 2 Y_0 Y_3</span>
+
+<span class="sd">        can be constructed as</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            # via triples and local Paulis with indices</span>
+<span class="sd">            op = SparsePauliOp.from_sparse_list([(&quot;ZX&quot;, [1, 4], 1), (&quot;YY&quot;, [0, 3], 2)], num_qubits=5)</span>
+
+<span class="sd">            # equals the following construction from &quot;dense&quot; Paulis</span>
+<span class="sd">            op = SparsePauliOp.from_list([(&quot;XIIZI&quot;, 1), (&quot;IYIIY&quot;, 2)])</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            obj (Iterable[Tuple[str, List[int], complex]]): The list 3-tuples specifying the Paulis.</span>
+<span class="sd">            num_qubits (int): The number of qubits of the operator.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            SparsePauliOp: The SparsePauliOp representation of the Pauli terms.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            QiskitError: If the list of Paulis is empty.</span>
+<span class="sd">            QiskitError: If the number of qubits is incompatible with the indices of the Pauli terms.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>  <span class="c1"># To convert zip or other iterable</span>
+
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>  <span class="c1"># number of Pauli terms</span>
+        <span class="k">if</span> <span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;Input Pauli list is empty.&quot;</span><span class="p">)</span>
+
+        <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;&lt;U</span><span class="si">{</span><span class="n">num_qubits</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">paulis</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">coeff</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+            <span class="c1"># construct the full label based off the non-trivial Paulis and indices</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;I&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_qubits</span>
+            <span class="k">for</span> <span class="n">pauli</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">paulis</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="n">num_qubits</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;The number of qubits (</span><span class="si">{</span><span class="n">num_qubits</span><span class="si">}</span><span class="s2">) is smaller than a required index </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="p">)</span>
+                <span class="n">label</span><span class="p">[</span><span class="o">~</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">pauli</span>
+
+            <span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+            <span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff</span>
+
         <span class="n">paulis</span> <span class="o">=</span> <span class="n">PauliList</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">SparsePauliOp</span><span class="p">(</span><span class="n">paulis</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
@@ -971,7 +1130,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Última actualização em 2022/03/24.
+      Última actualização em 2022/04/01.
 
     </p>
   </div>

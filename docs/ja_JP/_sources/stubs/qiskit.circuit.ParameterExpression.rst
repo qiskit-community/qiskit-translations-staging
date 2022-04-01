@@ -26,6 +26,7 @@
       ~ParameterExpression.log
       ~ParameterExpression.sin
       ~ParameterExpression.subs
+      ~ParameterExpression.sympify
       ~ParameterExpression.tan
 
 

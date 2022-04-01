@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.algorithms.minimum_eigen_solvers.vqe &mdash; Documentação Qiskit 0.34.2</title>
+  <title>qiskit.algorithms.minimum_eigen_solvers.vqe &mdash; Documentação Qiskit 0.35.0</title>
   
 
   
@@ -338,7 +338,7 @@
   <h1>Código fonte de qiskit.algorithms.minimum_eigen_solvers.vqe</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2018, 2020.</span>
+<span class="c1"># (C) Copyright IBM 2018, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -358,6 +358,7 @@
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span><span class="p">,</span> <span class="n">Parameter</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">RealAmplitudes</span>
@@ -376,14 +377,30 @@
 <span class="kn">from</span> <span class="nn">qiskit.opflow.gradients</span> <span class="kn">import</span> <span class="n">GradientBase</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils.validation</span> <span class="kn">import</span> <span class="n">validate_min</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils.backend_utils</span> <span class="kn">import</span> <span class="n">is_aer_provider</span>
-<span class="kn">from</span> <span class="nn">qiskit.utils.deprecation</span> <span class="kn">import</span> <span class="n">deprecate_function</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">QuantumInstance</span><span class="p">,</span> <span class="n">algorithm_globals</span>
-<span class="kn">from</span> <span class="nn">..optimizers</span> <span class="kn">import</span> <span class="n">Optimizer</span><span class="p">,</span> <span class="n">SLSQP</span>
+<span class="kn">from</span> <span class="nn">..optimizers</span> <span class="kn">import</span> <span class="n">Optimizer</span><span class="p">,</span> <span class="n">SLSQP</span><span class="p">,</span> <span class="n">OptimizerResult</span>
 <span class="kn">from</span> <span class="nn">..variational_algorithm</span> <span class="kn">import</span> <span class="n">VariationalAlgorithm</span><span class="p">,</span> <span class="n">VariationalResult</span>
 <span class="kn">from</span> <span class="nn">.minimum_eigen_solver</span> <span class="kn">import</span> <span class="n">MinimumEigensolver</span><span class="p">,</span> <span class="n">MinimumEigensolverResult</span><span class="p">,</span> <span class="n">ListOrDict</span>
 <span class="kn">from</span> <span class="nn">..exceptions</span> <span class="kn">import</span> <span class="n">AlgorithmError</span>
+<span class="kn">from</span> <span class="nn">..aux_ops_evaluator</span> <span class="kn">import</span> <span class="n">eval_observables</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="n">OBJECTIVE</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span>
+<span class="n">GRADIENT</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
+<span class="n">RESULT</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">scipy</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">OptimizeResult</span><span class="p">,</span> <span class="n">OptimizerResult</span><span class="p">]</span>
+<span class="n">BOUNDS</span> <span class="o">=</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span>
+
+<span class="n">MINIMIZER</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span>
+    <span class="p">[</span>
+        <span class="n">OBJECTIVE</span><span class="p">,</span>  <span class="c1"># the objective function to minimize (the energy in the case of the VQE)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>  <span class="c1"># the initial point for the optimization</span>
+        <span class="n">Optional</span><span class="p">[</span><span class="n">GRADIENT</span><span class="p">],</span>  <span class="c1"># the gradient of the objective function</span>
+        <span class="n">Optional</span><span class="p">[</span><span class="n">BOUNDS</span><span class="p">],</span>  <span class="c1"># parameters bounds for the optimization</span>
+    <span class="p">],</span>
+    <span class="n">RESULT</span><span class="p">,</span>  <span class="c1"># a result object (either SciPy&#39;s or Qiskit&#39;s)</span>
+<span class="p">]</span>
 
 
 <div class="viewcode-block" id="VQE"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.VQE.html#qiskit.algorithms.VQE">[documentos]</a><span class="k">class</span> <span class="nc">VQE</span><span class="p">(</span><span class="n">VariationalAlgorithm</span><span class="p">,</span> <span class="n">MinimumEigensolver</span><span class="p">):</span>
@@ -419,12 +436,46 @@
 <span class="sd">    will default it to :math:`-2\pi`; similarly, if the ansatz returns ``None``</span>
 <span class="sd">    as the upper bound, the default value will be :math:`2\pi`.</span>
 
+<span class="sd">    The optimizer can either be one of Qiskit&#39;s optimizers, such as</span>
+<span class="sd">    :class:`~qiskit.algorithms.optimizers.SPSA` or a callable with the following signature:</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        The callable _must_ have the argument names ``fun, x0, jac, bounds`` as indicated</span>
+<span class="sd">        in the following code block.</span>
+
+<span class="sd">    .. code-block::python</span>
+
+<span class="sd">        from qiskit.algorithms.optimizers import OptimizerResult</span>
+
+<span class="sd">        def my_minimizer(fun, x0, jac=None, bounds=None) -&gt; OptimizerResult:</span>
+<span class="sd">            # Note that the callable *must* have these argument names!</span>
+<span class="sd">            # Args:</span>
+<span class="sd">            #     fun (callable): the function to minimize</span>
+<span class="sd">            #     x0 (np.ndarray): the initial point for the optimization</span>
+<span class="sd">            #     jac (callable, optional): the gradient of the objective function</span>
+<span class="sd">            #     bounds (list, optional): a list of tuples specifying the parameter bounds</span>
+
+<span class="sd">            result = OptimizerResult()</span>
+<span class="sd">            result.x = # optimal parameters</span>
+<span class="sd">            result.fun = # optimal function value</span>
+<span class="sd">            return result</span>
+
+<span class="sd">    The above signature also allows to directly pass any SciPy minimizer, for instance as</span>
+
+<span class="sd">    .. code-block::python</span>
+
+<span class="sd">        from functools import partial</span>
+<span class="sd">        from scipy.optimize import minimize</span>
+
+<span class="sd">        optimizer = partial(minimize, method=&quot;L-BFGS-B&quot;)</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">ansatz</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">QuantumCircuit</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">optimizer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Optimizer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">optimizer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">MINIMIZER</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">initial_point</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">gradient</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">GradientBase</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">expectation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ExpectationBase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -437,7 +488,8 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            ansatz: A parameterized circuit used as Ansatz for the wave function.</span>
-<span class="sd">            optimizer: A classical optimizer.</span>
+<span class="sd">            optimizer: A classical optimizer. Can either be a Qiskit optimizer or a callable</span>
+<span class="sd">                that takes an array as input and returns a Qiskit or SciPy optimization result.</span>
 <span class="sd">            initial_point: An optional initial point (i.e. initial parameter values)</span>
 <span class="sd">                for the optimizer. If ``None`` then VQE will look to the ansatz for a preferred</span>
 <span class="sd">                point and if not will simply compute a random one.</span>
@@ -636,7 +688,9 @@
         <span class="k">if</span> <span class="n">optimizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">optimizer</span> <span class="o">=</span> <span class="n">SLSQP</span><span class="p">()</span>
 
-        <span class="n">optimizer</span><span class="o">.</span><span class="n">set_max_evals_grouped</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_evals_grouped</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">Optimizer</span><span class="p">):</span>
+            <span class="n">optimizer</span><span class="o">.</span><span class="n">set_max_evals_grouped</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_evals_grouped</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
 
     <span class="nd">@property</span>
@@ -671,7 +725,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">ret</span> <span class="o">+=</span> <span class="s2">&quot;ansatz has not been set&quot;</span>
         <span class="n">ret</span> <span class="o">+=</span> <span class="s2">&quot;===============================================================</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">ret</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span><span class="o">.</span><span class="n">setting</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">):</span>
+            <span class="n">ret</span> <span class="o">+=</span> <span class="s2">&quot;Optimizer is custom callable</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span><span class="o">.</span><span class="n">setting</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">ret</span> <span class="o">+=</span> <span class="s2">&quot;===============================================================</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
@@ -761,59 +818,6 @@
     <span class="k">def</span> <span class="nf">supports_aux_operators</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
-    <span class="k">def</span> <span class="nf">_eval_aux_ops</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">parameters</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">aux_operators</span><span class="p">:</span> <span class="n">ListOrDict</span><span class="p">[</span><span class="n">OperatorBase</span><span class="p">],</span>
-        <span class="n">expectation</span><span class="p">:</span> <span class="n">ExpectationBase</span><span class="p">,</span>
-        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-12</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ListOrDict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]]:</span>
-        <span class="c1"># Create new CircuitSampler to avoid breaking existing one&#39;s caches.</span>
-        <span class="n">sampler</span> <span class="o">=</span> <span class="n">CircuitSampler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quantum_instance</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="n">list_op</span> <span class="o">=</span> <span class="n">ListOp</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">aux_operators</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">list_op</span> <span class="o">=</span> <span class="n">ListOp</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">)</span>
-
-        <span class="n">aux_op_expect</span> <span class="o">=</span> <span class="n">expectation</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
-            <span class="n">StateFn</span><span class="p">(</span><span class="n">list_op</span><span class="p">,</span> <span class="n">is_measurement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span>
-                <span class="n">CircuitStateFn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ansatz</span><span class="o">.</span><span class="n">bind_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="p">))</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">aux_op_expect_sampled</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">aux_op_expect</span><span class="p">)</span>
-
-        <span class="c1"># compute means</span>
-        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">aux_op_expect_sampled</span><span class="o">.</span><span class="n">eval</span><span class="p">())</span>
-
-        <span class="c1"># compute standard deviations</span>
-        <span class="n">variances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">expectation</span><span class="o">.</span><span class="n">compute_variance</span><span class="p">(</span><span class="n">aux_op_expect_sampled</span><span class="p">))</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variances</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">variances</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
-            <span class="c1"># when `variances` is a single value equal to 0., our expectation value is exact and we</span>
-            <span class="c1"># manually ensure the variances to be a list of the correct length</span>
-            <span class="n">variances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-        <span class="n">std_devs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variances</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantum_instance</span><span class="o">.</span><span class="n">run_config</span><span class="o">.</span><span class="n">shots</span><span class="p">)</span>
-
-        <span class="c1"># Discard values below threshold</span>
-        <span class="n">aux_op_means</span> <span class="o">=</span> <span class="n">values</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">)</span>
-        <span class="c1"># zip means and standard deviations into tuples</span>
-        <span class="n">aux_op_results</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">aux_op_means</span><span class="p">,</span> <span class="n">std_devs</span><span class="p">)</span>
-
-        <span class="c1"># Return None eigenvalues for None operators if aux_operators is a list.</span>
-        <span class="c1"># None operators are already dropped in compute_minimum_eigenvalue if aux_operators is a dict.</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="n">aux_operator_eigenvalues</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">)</span>
-            <span class="n">key_value_iterator</span> <span class="o">=</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">aux_op_results</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">aux_operator_eigenvalues</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="n">key_value_iterator</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">aux_operators</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">aux_op_results</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">key_value_iterator</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">aux_operators</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">aux_operator_eigenvalues</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-
-        <span class="k">return</span> <span class="n">aux_operator_eigenvalues</span>
-
 <div class="viewcode-block" id="VQE.compute_minimum_eigenvalue"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.VQE.compute_minimum_eigenvalue.html#qiskit.algorithms.VQE.compute_minimum_eigenvalue">[documentos]</a>    <span class="k">def</span> <span class="nf">compute_minimum_eigenvalue</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">OperatorBase</span><span class="p">,</span> <span class="n">aux_operators</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ListOrDict</span><span class="p">[</span><span class="n">OperatorBase</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MinimumEigensolverResult</span><span class="p">:</span>
@@ -872,26 +876,31 @@
 
         <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
 
-        <span class="c1"># keep this until Optimizer.optimize is removed</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">opt_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span>
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">):</span>
+            <span class="n">opt_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">(</span>  <span class="c1"># pylint: disable=not-callable</span>
                 <span class="n">fun</span><span class="o">=</span><span class="n">energy_evaluation</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">initial_point</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">gradient</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span>
             <span class="p">)</span>
-        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-            <span class="c1"># self.optimizer is an optimizer with the deprecated interface that uses</span>
-            <span class="c1"># ``optimize`` instead of ``minimize```</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;Using an optimizer that is run with the ``optimize`` method is &quot;</span>
-                <span class="s2">&quot;deprecated as of Qiskit Terra 0.19.0 and will be unsupported no &quot;</span>
-                <span class="s2">&quot;sooner than 3 months after the release date. Instead use an optimizer &quot;</span>
-                <span class="s2">&quot;providing ``minimize`` (see qiskit.algorithms.optimizers.Optimizer).&quot;</span><span class="p">,</span>
-                <span class="ne">DeprecationWarning</span><span class="p">,</span>
-                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># keep this until Optimizer.optimize is removed</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">opt_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span>
+                    <span class="n">fun</span><span class="o">=</span><span class="n">energy_evaluation</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">initial_point</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">gradient</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="c1"># self.optimizer is an optimizer with the deprecated interface that uses</span>
+                <span class="c1"># ``optimize`` instead of ``minimize```</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s2">&quot;Using an optimizer that is run with the ``optimize`` method is &quot;</span>
+                    <span class="s2">&quot;deprecated as of Qiskit Terra 0.19.0 and will be unsupported no &quot;</span>
+                    <span class="s2">&quot;sooner than 3 months after the release date. Instead use an optimizer &quot;</span>
+                    <span class="s2">&quot;providing ``minimize`` (see qiskit.algorithms.optimizers.Optimizer).&quot;</span><span class="p">,</span>
+                    <span class="ne">DeprecationWarning</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="p">)</span>
 
-            <span class="n">opt_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span>
-                <span class="nb">len</span><span class="p">(</span><span class="n">initial_point</span><span class="p">),</span> <span class="n">energy_evaluation</span><span class="p">,</span> <span class="n">gradient</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">initial_point</span>
-            <span class="p">)</span>
+                <span class="n">opt_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">initial_point</span><span class="p">),</span> <span class="n">energy_evaluation</span><span class="p">,</span> <span class="n">gradient</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">initial_point</span>
+                <span class="p">)</span>
 
         <span class="n">eval_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
 
@@ -915,7 +924,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span> <span class="o">=</span> <span class="n">result</span>
 
         <span class="k">if</span> <span class="n">aux_operators</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">aux_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_aux_ops</span><span class="p">(</span><span class="n">opt_result</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">aux_operators</span><span class="p">,</span> <span class="n">expectation</span><span class="o">=</span><span class="n">expectation</span><span class="p">)</span>
+            <span class="n">bound_ansatz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ansatz</span><span class="o">.</span><span class="n">bind_parameters</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">optimal_point</span><span class="p">)</span>
+
+            <span class="n">aux_values</span> <span class="o">=</span> <span class="n">eval_observables</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">quantum_instance</span><span class="p">,</span> <span class="n">bound_ansatz</span><span class="p">,</span> <span class="n">aux_operators</span><span class="p">,</span> <span class="n">expectation</span><span class="o">=</span><span class="n">expectation</span>
+            <span class="p">)</span>
             <span class="n">result</span><span class="o">.</span><span class="n">aux_operator_eigenvalues</span> <span class="o">=</span> <span class="n">aux_values</span>
 
         <span class="k">return</span> <span class="n">result</span></div>
@@ -986,51 +999,6 @@
 
         <span class="k">return</span> <span class="n">energy_evaluation</span></div>
 
-<div class="viewcode-block" id="VQE.get_optimal_cost"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.VQE.get_optimal_cost.html#qiskit.algorithms.VQE.get_optimal_cost">[documentos]</a>    <span class="nd">@deprecate_function</span><span class="p">(</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">The VQE.get_optimal_cost method is deprecated as of Qiskit Terra 0.18.0</span>
-<span class="sd">and will be removed no sooner than 3 months after the releasedate.</span>
-<span class="sd">This information is part of the returned result object and can be</span>
-<span class="sd">queried as VQEResult.eigenvalue.&quot;&quot;&quot;</span>
-    <span class="p">)</span>
-    <span class="k">def</span> <span class="nf">get_optimal_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Get the minimal cost or energy found by the VQE.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="o">.</span><span class="n">optimal_point</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">AlgorithmError</span><span class="p">(</span>
-                <span class="s2">&quot;Cannot return optimal cost before running the algorithm to find optimal params.&quot;</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="o">.</span><span class="n">optimal_value</span></div>
-
-<div class="viewcode-block" id="VQE.get_optimal_circuit"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.VQE.get_optimal_circuit.html#qiskit.algorithms.VQE.get_optimal_circuit">[documentos]</a>    <span class="nd">@deprecate_function</span><span class="p">(</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">The VQE.get_optimal_circuit method is deprecated as of Qiskit Terra</span>
-<span class="sd">0.18.0 and will be removed no sooner than 3 months after the releasedate.</span>
-<span class="sd">This information is part of the returned result object and can be</span>
-<span class="sd">queried as VQEResult.ansatz.bind_parameters(VQEResult.optimal_point).&quot;&quot;&quot;</span>
-    <span class="p">)</span>
-    <span class="k">def</span> <span class="nf">get_optimal_circuit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuantumCircuit</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Get the circuit with the optimal parameters.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="o">.</span><span class="n">optimal_point</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">AlgorithmError</span><span class="p">(</span>
-                <span class="s2">&quot;Cannot find optimal circuit before running the algorithm to find optimal params.&quot;</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ansatz</span><span class="o">.</span><span class="n">assign_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="o">.</span><span class="n">optimal_parameters</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="VQE.get_optimal_vector"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.VQE.get_optimal_vector.html#qiskit.algorithms.VQE.get_optimal_vector">[documentos]</a>    <span class="nd">@deprecate_function</span><span class="p">(</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">The VQE.get_optimal_vector method is deprecated as of Qiskit Terra 0.18.0</span>
-<span class="sd">and will be removed no sooner than 3 months after the releasedate.</span>
-<span class="sd">This information is part of the returned result object and can be</span>
-<span class="sd">queried as VQEResult.eigenvector.&quot;&quot;&quot;</span>
-    <span class="p">)</span>
-    <span class="k">def</span> <span class="nf">get_optimal_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;Get the simulation outcome of the optimal circuit.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="o">.</span><span class="n">optimal_parameters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">AlgorithmError</span><span class="p">(</span>
-                <span class="s2">&quot;Cannot find optimal circuit before running the algorithm to find optimal vector.&quot;</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_eigenstate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="o">.</span><span class="n">optimal_parameters</span><span class="p">)</span></div>
-
     <span class="k">def</span> <span class="nf">_get_eigenstate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">optimal_parameters</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Get the simulation outcome of the ansatz, provided with parameters.&quot;&quot;&quot;</span>
         <span class="n">optimal_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ansatz</span><span class="o">.</span><span class="n">bind_parameters</span><span class="p">(</span><span class="n">optimal_parameters</span><span class="p">)</span>
@@ -1040,21 +1008,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">state</span> <span class="o">=</span> <span class="n">state_fn</span><span class="o">.</span><span class="n">to_dict_fn</span><span class="p">()</span><span class="o">.</span><span class="n">primitive</span>  <span class="c1"># SparseVectorStateFn -&gt; DictStateFn -&gt; dict</span>
 
-        <span class="k">return</span> <span class="n">state</span>
-
-    <span class="nd">@property</span>
-    <span class="nd">@deprecate_function</span><span class="p">(</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">The VQE.optimal_params property is deprecated as of Qiskit Terra 0.18.0</span>
-<span class="sd">and will be removed no sooner than 3 months after the releasedate.</span>
-<span class="sd">This information is part of the returned result object and can be</span>
-<span class="sd">queried as VQEResult.optimal_point.&quot;&quot;&quot;</span>
-    <span class="p">)</span>
-    <span class="k">def</span> <span class="nf">optimal_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;The optimal parameters for the ansatz.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="o">.</span><span class="n">optimal_point</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">AlgorithmError</span><span class="p">(</span><span class="s2">&quot;Cannot find optimal params before running the algorithm.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ret</span><span class="o">.</span><span class="n">optimal_point</span></div>
+        <span class="k">return</span> <span class="n">state</span></div>
 
 
 <span class="k">class</span> <span class="nc">VQEResult</span><span class="p">(</span><span class="n">VariationalResult</span><span class="p">,</span> <span class="n">MinimumEigensolverResult</span><span class="p">):</span>
@@ -1147,7 +1101,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Última actualização em 2022/03/24.
+      Última actualização em 2022/04/01.
 
     </p>
   </div>

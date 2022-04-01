@@ -20,7 +20,6 @@
       ~SaveSuperOp.copy
       ~SaveSuperOp.inverse
       ~SaveSuperOp.is_parameterized
-      ~SaveSuperOp.mirror
       ~SaveSuperOp.qasm
       ~SaveSuperOp.repeat
       ~SaveSuperOp.reverse_ops
@@ -36,5 +35,8 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

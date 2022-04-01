@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.quantum_info.operators.measures &mdash; Tài liệu Qiskit 0.34.2</title>
+  <title>qiskit.quantum_info.operators.measures &mdash; Tài liệu Qiskit 0.35.0</title>
   
 
   
@@ -355,7 +355,6 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">QiskitError</span><span class="p">,</span> <span class="n">MissingOptionalLibraryError</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.gate</span> <span class="kn">import</span> <span class="n">Gate</span>
@@ -365,13 +364,7 @@
 <span class="kn">from</span> <span class="nn">qiskit.quantum_info.operators.channel</span> <span class="kn">import</span> <span class="n">Choi</span><span class="p">,</span> <span class="n">SuperOp</span>
 <span class="kn">from</span> <span class="nn">qiskit.quantum_info.states.densitymatrix</span> <span class="kn">import</span> <span class="n">DensityMatrix</span>
 <span class="kn">from</span> <span class="nn">qiskit.quantum_info.states.measures</span> <span class="kn">import</span> <span class="n">state_fidelity</span>
-
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">cvxpy</span>
-
-    <span class="n">_HAS_CVX</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="n">_HAS_CVX</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">optionals</span> <span class="k">as</span> <span class="n">_optionals</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -471,7 +464,7 @@
             <span class="n">fid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">channel</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="n">input_dim</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Tr[S] / (dim ** 2)</span>
-            <span class="n">fid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">SuperOp</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">input_dim</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">fid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">SuperOp</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">input_dim</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">fid</span><span class="p">))</span>
 
     <span class="c1"># For comparing two non-unitary channels we compute the state fidelity of</span>
@@ -615,7 +608,9 @@
 <span class="sd">        function. See the CVXPY documentation for information on available</span>
 <span class="sd">        SDP solvers.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_cvxpy_check</span><span class="p">(</span><span class="s2">&quot;`diamond_norm`&quot;</span><span class="p">)</span>  <span class="c1"># Check CVXPY is installed</span>
+    <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span>
+
+    <span class="n">cvxpy</span> <span class="o">=</span> <span class="n">_cvxpy_check</span><span class="p">(</span><span class="s2">&quot;`diamond_norm`&quot;</span><span class="p">)</span>  <span class="c1"># Check CVXPY is installed</span>
 
     <span class="n">choi</span> <span class="o">=</span> <span class="n">Choi</span><span class="p">(</span><span class="n">_input_formatter</span><span class="p">(</span><span class="n">choi</span><span class="p">,</span> <span class="n">Choi</span><span class="p">,</span> <span class="s2">&quot;diamond_norm&quot;</span><span class="p">,</span> <span class="s2">&quot;choi&quot;</span><span class="p">))</span>
 
@@ -679,10 +674,9 @@
 <span class="k">def</span> <span class="nf">_cvxpy_check</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Check that a supported CVXPY version is installed&quot;&quot;&quot;</span>
     <span class="c1"># Check if CVXPY package is installed</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">_HAS_CVX</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;CVXPY package is requried for </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">. Install with `pip install cvxpy` to use.&quot;</span>
-        <span class="p">)</span>
+    <span class="n">_optionals</span><span class="o">.</span><span class="n">HAS_CVXPY</span><span class="o">.</span><span class="n">require_now</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">cvxpy</span>  <span class="c1"># pylint: disable=import-error</span>
+
     <span class="c1"># Check CVXPY version</span>
     <span class="n">version</span> <span class="o">=</span> <span class="n">cvxpy</span><span class="o">.</span><span class="n">__version__</span>
     <span class="k">if</span> <span class="n">version</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;1&quot;</span><span class="p">:</span>
@@ -691,6 +685,7 @@
             <span class="s2">&quot;diamond_norm&quot;</span><span class="p">,</span>
             <span class="n">msg</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Incompatible CVXPY version </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2"> found.&quot;</span><span class="p">,</span>
         <span class="p">)</span>
+    <span class="k">return</span> <span class="n">cvxpy</span>
 
 
 <span class="c1"># pylint: disable=too-many-return-statements</span>
@@ -765,7 +760,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Cập nhật mới nhất vào 2022/03/24.
+      Cập nhật mới nhất vào 2022/04/01.
 
     </p>
   </div>

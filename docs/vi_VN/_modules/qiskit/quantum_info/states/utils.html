@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.quantum_info.states.utils &mdash; Tài liệu Qiskit 0.34.2</title>
+  <title>qiskit.quantum_info.states.utils &mdash; Tài liệu Qiskit 0.35.0</title>
   
 
   
@@ -353,7 +353,6 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">scipy.linalg</span> <span class="k">as</span> <span class="nn">la</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">QiskitError</span>
 <span class="kn">from</span> <span class="nn">qiskit.quantum_info.states.statevector</span> <span class="kn">import</span> <span class="n">Statevector</span>
@@ -399,13 +398,16 @@
         <span class="k">return</span> <span class="n">DensityMatrix</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">traced_shape</span><span class="o">.</span><span class="n">_dims_l</span><span class="p">)</span>
 
     <span class="c1"># Density matrix case</span>
+    <span class="c1"># Empty partial trace case.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">qargs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="c1"># Trace first subsystem to avoid coping whole density matrix</span>
     <span class="n">dims</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">dims</span><span class="p">(</span><span class="n">qargs</span><span class="p">)</span>
     <span class="n">tr_op</span> <span class="o">=</span> <span class="n">SuperOp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span> <span class="n">input_dims</span><span class="o">=</span><span class="p">[</span><span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">output_dims</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">tr_op</span><span class="p">,</span> <span class="p">[</span><span class="n">qargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
     <span class="c1"># Trace over remaining subsystems</span>
     <span class="k">for</span> <span class="n">qarg</span><span class="p">,</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">qargs</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">dims</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
-        <span class="n">tr_op</span> <span class="o">=</span> <span class="n">SuperOp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span> <span class="n">input_dims</span><span class="o">=</span><span class="p">[</span><span class="n">dim</span><span class="p">],</span> <span class="n">output_dims</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">tr_op</span> <span class="o">=</span> <span class="n">SuperOp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">input_dims</span><span class="o">=</span><span class="p">[</span><span class="n">dim</span><span class="p">],</span> <span class="n">output_dims</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">tr_op</span><span class="p">,</span> <span class="p">[</span><span class="n">qarg</span><span class="p">])</span>
     <span class="c1"># Remove traced over subsystems which are listed as dimension 1</span>
     <span class="n">ret</span><span class="o">.</span><span class="n">_op_shape</span> <span class="o">=</span> <span class="n">traced_shape</span>
@@ -486,6 +488,8 @@
 <span class="sd">        ndarray: funm (N, N) Value of the matrix function specified by func</span>
 <span class="sd">                 evaluated at `A`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">scipy.linalg</span> <span class="k">as</span> <span class="nn">la</span>
+
     <span class="n">unitary1</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">unitary2</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
     <span class="n">diag_func_singular</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">func</span><span class="p">(</span><span class="n">singular_values</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">unitary1</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">diag_func_singular</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">unitary2</span><span class="p">)</span>
@@ -506,7 +510,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Cập nhật mới nhất vào 2022/03/24.
+      Cập nhật mới nhất vào 2022/04/01.
 
     </p>
   </div>

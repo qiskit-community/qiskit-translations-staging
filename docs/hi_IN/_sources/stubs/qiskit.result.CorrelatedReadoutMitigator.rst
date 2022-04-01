@@ -24,3 +24,4 @@
    .. rubric:: Attributes
 
    .. autoattribute:: qubits
+   .. autoattribute:: settings

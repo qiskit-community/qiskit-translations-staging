@@ -90,6 +90,7 @@
       ~QuantumCircuit.p
       ~QuantumCircuit.pauli
       ~QuantumCircuit.power
+      ~QuantumCircuit.prepare_state
       ~QuantumCircuit.qasm
       ~QuantumCircuit.qbit_argument_conversion
       ~QuantumCircuit.qubit_duration

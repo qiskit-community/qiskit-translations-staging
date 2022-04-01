@@ -20,7 +20,6 @@
       ~Measure.copy
       ~Measure.inverse
       ~Measure.is_parameterized
-      ~Measure.mirror
       ~Measure.qasm
       ~Measure.repeat
       ~Measure.reverse_ops
@@ -36,5 +35,8 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

@@ -7,14 +7,6 @@
    :no-members:
    :show-inheritance:
 
-   .. rubric:: Methods Defined Here
-
-   .. autosummary::
-      :nosignatures:
-      :toctree: ../stubs/
-
-      ~C3SXGate.inverse
-
 
 
    .. rubric:: Attributes
@@ -26,6 +18,8 @@
    .. autoattribute:: duration
    .. autoattribute:: label
    .. autoattribute:: name
+   .. autoattribute:: num_clbits
    .. autoattribute:: num_ctrl_qubits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

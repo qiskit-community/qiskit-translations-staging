@@ -33,4 +33,3 @@
    .. autoattribute:: prefix
    .. autoattribute:: qregs
    .. autoattribute:: qubits
-   .. autoattribute:: reverse

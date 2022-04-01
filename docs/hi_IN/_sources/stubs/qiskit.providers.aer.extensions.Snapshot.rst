@@ -21,7 +21,6 @@
       ~Snapshot.define_snapshot_register
       ~Snapshot.inverse
       ~Snapshot.is_parameterized
-      ~Snapshot.mirror
       ~Snapshot.qasm
       ~Snapshot.repeat
       ~Snapshot.reverse_ops
@@ -37,6 +36,9 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: snapshot_type
    .. autoattribute:: unit

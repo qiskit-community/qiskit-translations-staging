@@ -20,7 +20,6 @@
       ~SaveStatevectorDict.copy
       ~SaveStatevectorDict.inverse
       ~SaveStatevectorDict.is_parameterized
-      ~SaveStatevectorDict.mirror
       ~SaveStatevectorDict.qasm
       ~SaveStatevectorDict.repeat
       ~SaveStatevectorDict.reverse_ops
@@ -36,5 +35,8 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

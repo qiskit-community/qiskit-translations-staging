@@ -20,5 +20,6 @@
 
    .. rubric:: Attributes
 
+   .. autoattribute:: CONDITIONAL_SUPPORTED
    .. autoattribute:: is_analysis_pass
    .. autoattribute:: is_transformation_pass

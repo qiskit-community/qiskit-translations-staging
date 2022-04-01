@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PauliEvolutionGate &mdash; Qiskit 0.34.2 dokumentáció</title>
+  <title>PauliEvolutionGate &mdash; Qiskit 0.35.0 dokumentáció</title>
   
 
   
@@ -359,6 +359,29 @@ the time evolution of the Pauli <span class="math notranslate nohighlight">\(X\)
 <span class="math notranslate nohighlight">\(R_X\)</span> by</p>
 <div class="math notranslate nohighlight">
 \[U(t) = e^{-itX} = R_X(2t).\]</div>
+<p><strong>Examples:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
+<span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">PauliEvolutionGate</span>
+<span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">I</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">X</span>
+
+<span class="c1"># build the evolution gate</span>
+<span class="n">operator</span> <span class="o">=</span> <span class="p">(</span><span class="n">Z</span> <span class="o">^</span> <span class="n">Z</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="p">(</span><span class="n">X</span> <span class="o">^</span> <span class="n">I</span><span class="p">)</span>
+<span class="n">evo</span> <span class="o">=</span> <span class="n">PauliEvolutionGate</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+
+<span class="c1"># plug it into a circuit</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evo</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">draw</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>The above will print (note that the <code class="docutils literal notranslate"><span class="pre">-0.1</span></code> coefficient is not printed!):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>     ┌──────────────────────────┐
+q_0: ┤0                         ├
+     │  exp(-it (ZZ + XI))(0.2) │
+q_1: ┤1                         ├
+     └──────────────────────────┘
+</pre></div>
+</div>
 <p><strong>References:</strong></p>
 <p>[1] G. Li et al. Paulihedral: A Generalized Block-Wise Compiler Optimization
 Framework For Quantum Simulation Kernels (2021).
@@ -370,14 +393,17 @@ Framework For Quantum Simulation Kernels (2021).
 operators where the elements are sums of commuting operators.
 For example: <code class="docutils literal notranslate"><span class="pre">[XY</span> <span class="pre">+</span> <span class="pre">YX,</span> <span class="pre">ZZ</span> <span class="pre">+</span> <span class="pre">ZI</span> <span class="pre">+</span> <span class="pre">IZ,</span> <span class="pre">YY]</span></code>.</p></li>
 <li><p><strong>time</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <a class="reference internal" href="qiskit.circuit.ParameterExpression.html#qiskit.circuit.ParameterExpression" title="qiskit.circuit.parameterexpression.ParameterExpression"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterExpression</span></code></a>]) – The evolution time.</p></li>
-<li><p><strong>label</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – A label for the gate to display in visualizations.</p></li>
+<li><p><strong>label</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – A label for the gate to display in visualizations. Per default, the label is
+set to <code class="docutils literal notranslate"><span class="pre">exp(-it</span> <span class="pre">&lt;operators&gt;)</span></code> where <code class="docutils literal notranslate"><span class="pre">&lt;operators&gt;</span></code> is the sum of the Paulis.
+Note that the label does not include any coefficients of the Paulis. See the
+class docstring for an example.</p></li>
 <li><p><strong>synthesis</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="qiskit.synthesis.EvolutionSynthesis.html#qiskit.synthesis.EvolutionSynthesis" title="qiskit.synthesis.evolution.evolution_synthesis.EvolutionSynthesis"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvolutionSynthesis</span></code></a>]) – A synthesis strategy. If None, the default synthesis is the Lie-Trotter
 product formula with a single repetition.</p></li>
 </ul>
 </dd>
 </dl>
 <p class="rubric">Methods Defined Here</p>
-<table class="longtable docutils align-default">
+<table class="autosummary longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
@@ -427,6 +453,24 @@ product formula with a single repetition.</p></li>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qiskit.circuit.library.PauliEvolutionGate.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#qiskit.circuit.library.PauliEvolutionGate.name" title="Hivatkozás erre a definícióra">¶</a></dt>
+<dd><p>Return the name.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qiskit.circuit.library.PauliEvolutionGate.num_clbits">
+<span class="sig-name descname"><span class="pre">num_clbits</span></span><a class="headerlink" href="#qiskit.circuit.library.PauliEvolutionGate.num_clbits" title="Hivatkozás erre a definícióra">¶</a></dt>
+<dd><p>Return the number of clbits.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qiskit.circuit.library.PauliEvolutionGate.num_qubits">
+<span class="sig-name descname"><span class="pre">num_qubits</span></span><a class="headerlink" href="#qiskit.circuit.library.PauliEvolutionGate.num_qubits" title="Hivatkozás erre a definícióra">¶</a></dt>
+<dd><p>Return the number of qubits.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -484,7 +528,7 @@ product formula with a single repetition.</p></li>
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Utolsó frissítés 2022/03/24.
+      Utolsó frissítés 2022/04/01.
 
     </p>
   </div>

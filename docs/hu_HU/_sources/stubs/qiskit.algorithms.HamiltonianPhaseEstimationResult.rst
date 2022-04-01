@@ -21,5 +21,4 @@
    .. rubric:: Attributes
 
    .. autoattribute:: most_likely_eigenvalue
-   .. autoattribute:: most_likely_phase
    .. autoattribute:: phase

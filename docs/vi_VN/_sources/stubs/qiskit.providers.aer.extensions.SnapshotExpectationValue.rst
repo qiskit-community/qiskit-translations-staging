@@ -21,7 +21,6 @@
       ~SnapshotExpectationValue.define_snapshot_register
       ~SnapshotExpectationValue.inverse
       ~SnapshotExpectationValue.is_parameterized
-      ~SnapshotExpectationValue.mirror
       ~SnapshotExpectationValue.qasm
       ~SnapshotExpectationValue.repeat
       ~SnapshotExpectationValue.reverse_ops
@@ -37,6 +36,9 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: snapshot_type
    .. autoattribute:: unit

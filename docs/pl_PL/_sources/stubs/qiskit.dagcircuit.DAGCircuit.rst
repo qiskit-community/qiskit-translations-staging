@@ -26,6 +26,7 @@
       ~DAGCircuit.collect_2q_runs
       ~DAGCircuit.collect_runs
       ~DAGCircuit.compose
+      ~DAGCircuit.copy_empty_like
       ~DAGCircuit.count_ops
       ~DAGCircuit.count_ops_longest_path
       ~DAGCircuit.depth

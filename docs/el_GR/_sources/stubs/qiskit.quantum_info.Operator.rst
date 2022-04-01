@@ -20,6 +20,7 @@
       ~Operator.dot
       ~Operator.equiv
       ~Operator.expand
+      ~Operator.from_circuit
       ~Operator.from_label
       ~Operator.input_dims
       ~Operator.is_unitary

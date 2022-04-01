@@ -21,7 +21,6 @@
       ~SnapshotDensityMatrix.define_snapshot_register
       ~SnapshotDensityMatrix.inverse
       ~SnapshotDensityMatrix.is_parameterized
-      ~SnapshotDensityMatrix.mirror
       ~SnapshotDensityMatrix.qasm
       ~SnapshotDensityMatrix.repeat
       ~SnapshotDensityMatrix.reverse_ops
@@ -37,6 +36,9 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: snapshot_type
    .. autoattribute:: unit

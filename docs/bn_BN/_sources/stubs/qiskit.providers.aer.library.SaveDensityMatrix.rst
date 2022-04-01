@@ -20,7 +20,6 @@
       ~SaveDensityMatrix.copy
       ~SaveDensityMatrix.inverse
       ~SaveDensityMatrix.is_parameterized
-      ~SaveDensityMatrix.mirror
       ~SaveDensityMatrix.qasm
       ~SaveDensityMatrix.repeat
       ~SaveDensityMatrix.reverse_ops
@@ -36,5 +35,8 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

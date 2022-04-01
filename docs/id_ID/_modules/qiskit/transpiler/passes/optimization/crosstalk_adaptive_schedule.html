@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.optimization.crosstalk_adaptive_schedule &mdash; Dokumentasi Qiskit 0.34.2</title>
+  <title>qiskit.transpiler.passes.optimization.crosstalk_adaptive_schedule &mdash; Dokumentasi Qiskit 0.35.0</title>
   
 
   
@@ -370,27 +370,24 @@
 <span class="kn">import</span> <span class="nn">operator</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">combinations</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">Real</span><span class="p">,</span> <span class="n">Bool</span><span class="p">,</span> <span class="n">Sum</span><span class="p">,</span> <span class="n">Implies</span><span class="p">,</span> <span class="n">And</span><span class="p">,</span> <span class="n">Or</span><span class="p">,</span> <span class="n">Not</span><span class="p">,</span> <span class="n">Optimize</span>
-
-    <span class="n">HAS_Z3</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="n">HAS_Z3</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.basepasses</span> <span class="kn">import</span> <span class="n">TransformationPass</span>
 <span class="kn">from</span> <span class="nn">qiskit.dagcircuit</span> <span class="kn">import</span> <span class="n">DAGCircuit</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library.standard_gates</span> <span class="kn">import</span> <span class="n">U1Gate</span><span class="p">,</span> <span class="n">U2Gate</span><span class="p">,</span> <span class="n">U3Gate</span><span class="p">,</span> <span class="n">CXGate</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Measure</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.barrier</span> <span class="kn">import</span> <span class="n">Barrier</span>
 <span class="kn">from</span> <span class="nn">qiskit.dagcircuit</span> <span class="kn">import</span> <span class="n">DAGOpNode</span>
-<span class="kn">from</span> <span class="nn">qiskit.transpiler.exceptions</span> <span class="kn">import</span> <span class="n">TranspilerError</span>
+<span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">optionals</span> <span class="k">as</span> <span class="n">_optionals</span>
 
 <span class="n">NUM_PREC</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="n">TWOQ_XTALK_THRESH</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">ONEQ_XTALK_THRESH</span> <span class="o">=</span> <span class="mi">2</span>
 
 
-<div class="viewcode-block" id="CrosstalkAdaptiveSchedule"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.CrosstalkAdaptiveSchedule.html#qiskit.transpiler.passes.CrosstalkAdaptiveSchedule">[docs]</a><span class="k">class</span> <span class="nc">CrosstalkAdaptiveSchedule</span><span class="p">(</span><span class="n">TransformationPass</span><span class="p">):</span>
+<div class="viewcode-block" id="CrosstalkAdaptiveSchedule"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.CrosstalkAdaptiveSchedule.html#qiskit.transpiler.passes.CrosstalkAdaptiveSchedule">[docs]</a><span class="nd">@_optionals</span><span class="o">.</span><span class="n">HAS_Z3</span><span class="o">.</span><span class="n">require_in_instance</span>
+<span class="k">class</span> <span class="nc">CrosstalkAdaptiveSchedule</span><span class="p">(</span><span class="n">TransformationPass</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Crosstalk mitigation through adaptive instruction scheduling.&quot;&quot;&quot;</span>
+
+    <span class="c1"># pylint: disable=import-error</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backend_prop</span><span class="p">,</span> <span class="n">crosstalk_prop</span><span class="p">,</span> <span class="n">weight_factor</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">measured_qubits</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;CrosstalkAdaptiveSchedule initializer.</span>
@@ -432,6 +429,8 @@
 <span class="sd">            ImportError: if unable to import z3 solver</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">z3</span>
+
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backend_prop</span> <span class="o">=</span> <span class="n">backend_prop</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">crosstalk_prop</span> <span class="o">=</span> <span class="n">crosstalk_prop</span>
@@ -459,7 +458,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">qubit_lifetime</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dag_overlap_set</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">xtalk_overlap_set</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">opt</span> <span class="o">=</span> <span class="n">Optimize</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opt</span> <span class="o">=</span> <span class="n">z3</span><span class="o">.</span><span class="n">Optimize</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">measured_qubits</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">measure_start</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">last_gate_on_qubit</span> <span class="o">=</span> <span class="kc">None</span>
@@ -488,19 +487,19 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">backend_prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend_prop</span>
         <span class="k">for</span> <span class="n">qid</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">qubits</span><span class="p">)):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bp_t1_time</span><span class="p">[</span><span class="n">qid</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">t1</span><span class="p">(</span><span class="n">qid</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">9</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bp_t2_time</span><span class="p">[</span><span class="n">qid</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">t2</span><span class="p">(</span><span class="n">qid</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">9</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bp_u1_dur</span><span class="p">[</span><span class="n">qid</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">gate_length</span><span class="p">(</span><span class="s2">&quot;u1&quot;</span><span class="p">,</span> <span class="n">qid</span><span class="p">))</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">9</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bp_t1_time</span><span class="p">[</span><span class="n">qid</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">t1</span><span class="p">(</span><span class="n">qid</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">9</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bp_t2_time</span><span class="p">[</span><span class="n">qid</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">t2</span><span class="p">(</span><span class="n">qid</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">9</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bp_u1_dur</span><span class="p">[</span><span class="n">qid</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">gate_length</span><span class="p">(</span><span class="s2">&quot;u1&quot;</span><span class="p">,</span> <span class="n">qid</span><span class="p">))</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">9</span>
             <span class="n">u1_err</span> <span class="o">=</span> <span class="n">backend_prop</span><span class="o">.</span><span class="n">gate_error</span><span class="p">(</span><span class="s2">&quot;u1&quot;</span><span class="p">,</span> <span class="n">qid</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">u1_err</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
                 <span class="n">u1_err</span> <span class="o">=</span> <span class="mf">0.9999</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">bp_u1_err</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">u1_err</span><span class="p">,</span> <span class="n">NUM_PREC</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bp_u2_dur</span><span class="p">[</span><span class="n">qid</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">gate_length</span><span class="p">(</span><span class="s2">&quot;u2&quot;</span><span class="p">,</span> <span class="n">qid</span><span class="p">))</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">9</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bp_u2_dur</span><span class="p">[</span><span class="n">qid</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">gate_length</span><span class="p">(</span><span class="s2">&quot;u2&quot;</span><span class="p">,</span> <span class="n">qid</span><span class="p">))</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">9</span>
             <span class="n">u2_err</span> <span class="o">=</span> <span class="n">backend_prop</span><span class="o">.</span><span class="n">gate_error</span><span class="p">(</span><span class="s2">&quot;u2&quot;</span><span class="p">,</span> <span class="n">qid</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">u2_err</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
                 <span class="n">u2_err</span> <span class="o">=</span> <span class="mf">0.9999</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">bp_u2_err</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">u2_err</span><span class="p">,</span> <span class="n">NUM_PREC</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bp_u3_dur</span><span class="p">[</span><span class="n">qid</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">gate_length</span><span class="p">(</span><span class="s2">&quot;u3&quot;</span><span class="p">,</span> <span class="n">qid</span><span class="p">))</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">9</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bp_u3_dur</span><span class="p">[</span><span class="n">qid</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">gate_length</span><span class="p">(</span><span class="s2">&quot;u3&quot;</span><span class="p">,</span> <span class="n">qid</span><span class="p">))</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">9</span>
             <span class="n">u3_err</span> <span class="o">=</span> <span class="n">backend_prop</span><span class="o">.</span><span class="n">gate_error</span><span class="p">(</span><span class="s2">&quot;u3&quot;</span><span class="p">,</span> <span class="n">qid</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">u3_err</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
                 <span class="n">u3_err</span> <span class="o">=</span> <span class="mf">0.9999</span>
@@ -510,7 +509,7 @@
                 <span class="n">q_0</span> <span class="o">=</span> <span class="n">ginfo</span><span class="o">.</span><span class="n">qubits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">q_1</span> <span class="o">=</span> <span class="n">ginfo</span><span class="o">.</span><span class="n">qubits</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
                 <span class="n">cx_tup</span> <span class="o">=</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">q_0</span><span class="p">,</span> <span class="n">q_1</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">q_0</span><span class="p">,</span> <span class="n">q_1</span><span class="p">))</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">bp_cx_dur</span><span class="p">[</span><span class="n">cx_tup</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">gate_length</span><span class="p">(</span><span class="s2">&quot;cx&quot;</span><span class="p">,</span> <span class="n">cx_tup</span><span class="p">))</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">9</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bp_cx_dur</span><span class="p">[</span><span class="n">cx_tup</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">backend_prop</span><span class="o">.</span><span class="n">gate_length</span><span class="p">(</span><span class="s2">&quot;cx&quot;</span><span class="p">,</span> <span class="n">cx_tup</span><span class="p">))</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">9</span>
                 <span class="n">cx_err</span> <span class="o">=</span> <span class="n">backend_prop</span><span class="o">.</span><span class="n">gate_error</span><span class="p">(</span><span class="s2">&quot;cx&quot;</span><span class="p">,</span> <span class="n">cx_tup</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">cx_err</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
                     <span class="n">cx_err</span> <span class="o">=</span> <span class="mf">0.9999</span>
@@ -617,13 +616,15 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Setup the variables required for Z3 optimization</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">z3</span>
+
         <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">gate_nodes</span><span class="p">():</span>
             <span class="n">t_var_name</span> <span class="o">=</span> <span class="s2">&quot;t_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_id</span><span class="p">[</span><span class="n">gate</span><span class="p">])</span>
             <span class="n">d_var_name</span> <span class="o">=</span> <span class="s2">&quot;d_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_id</span><span class="p">[</span><span class="n">gate</span><span class="p">])</span>
             <span class="n">f_var_name</span> <span class="o">=</span> <span class="s2">&quot;f_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_id</span><span class="p">[</span><span class="n">gate</span><span class="p">])</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">gate_start_time</span><span class="p">[</span><span class="n">gate</span><span class="p">]</span> <span class="o">=</span> <span class="n">Real</span><span class="p">(</span><span class="n">t_var_name</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">gate_duration</span><span class="p">[</span><span class="n">gate</span><span class="p">]</span> <span class="o">=</span> <span class="n">Real</span><span class="p">(</span><span class="n">d_var_name</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">gate_fidelity</span><span class="p">[</span><span class="n">gate</span><span class="p">]</span> <span class="o">=</span> <span class="n">Real</span><span class="p">(</span><span class="n">f_var_name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gate_start_time</span><span class="p">[</span><span class="n">gate</span><span class="p">]</span> <span class="o">=</span> <span class="n">z3</span><span class="o">.</span><span class="n">Real</span><span class="p">(</span><span class="n">t_var_name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gate_duration</span><span class="p">[</span><span class="n">gate</span><span class="p">]</span> <span class="o">=</span> <span class="n">z3</span><span class="o">.</span><span class="n">Real</span><span class="p">(</span><span class="n">d_var_name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gate_fidelity</span><span class="p">[</span><span class="n">gate</span><span class="p">]</span> <span class="o">=</span> <span class="n">z3</span><span class="o">.</span><span class="n">Real</span><span class="p">(</span><span class="n">f_var_name</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">xtalk_overlap_set</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">overlap_indicator</span><span class="p">[</span><span class="n">gate</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">overlap_amounts</span><span class="p">[</span><span class="n">gate</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -635,16 +636,16 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># Indicator variable for overlap of g_1 and g_2</span>
                     <span class="n">var_name1</span> <span class="o">=</span> <span class="s2">&quot;olp_ind_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_id</span><span class="p">[</span><span class="n">g_1</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_id</span><span class="p">[</span><span class="n">g_2</span><span class="p">])</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">overlap_indicator</span><span class="p">[</span><span class="n">g_1</span><span class="p">][</span><span class="n">g_2</span><span class="p">]</span> <span class="o">=</span> <span class="n">Bool</span><span class="p">(</span><span class="n">var_name1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">overlap_indicator</span><span class="p">[</span><span class="n">g_1</span><span class="p">][</span><span class="n">g_2</span><span class="p">]</span> <span class="o">=</span> <span class="n">z3</span><span class="o">.</span><span class="n">Bool</span><span class="p">(</span><span class="n">var_name1</span><span class="p">)</span>
                     <span class="n">var_name2</span> <span class="o">=</span> <span class="s2">&quot;olp_amnt_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_id</span><span class="p">[</span><span class="n">g_1</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_id</span><span class="p">[</span><span class="n">g_2</span><span class="p">])</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">overlap_amounts</span><span class="p">[</span><span class="n">g_1</span><span class="p">][</span><span class="n">g_2</span><span class="p">]</span> <span class="o">=</span> <span class="n">Real</span><span class="p">(</span><span class="n">var_name2</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">overlap_amounts</span><span class="p">[</span><span class="n">g_1</span><span class="p">][</span><span class="n">g_2</span><span class="p">]</span> <span class="o">=</span> <span class="n">z3</span><span class="o">.</span><span class="n">Real</span><span class="p">(</span><span class="n">var_name2</span><span class="p">)</span>
         <span class="n">active_qubits_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">gate_nodes</span><span class="p">():</span>
             <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">gate</span><span class="o">.</span><span class="n">qargs</span><span class="p">:</span>
                 <span class="n">active_qubits_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qubit_indices</span><span class="p">[</span><span class="n">q</span><span class="p">])</span>
         <span class="k">for</span> <span class="n">active_qubit</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">active_qubits_list</span><span class="p">)):</span>
             <span class="n">q_var_name</span> <span class="o">=</span> <span class="s2">&quot;l_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">active_qubit</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">qubit_lifetime</span><span class="p">[</span><span class="n">active_qubit</span><span class="p">]</span> <span class="o">=</span> <span class="n">Real</span><span class="p">(</span><span class="n">q_var_name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">qubit_lifetime</span><span class="p">[</span><span class="n">active_qubit</span><span class="p">]</span> <span class="o">=</span> <span class="n">z3</span><span class="o">.</span><span class="n">Real</span><span class="p">(</span><span class="n">q_var_name</span><span class="p">)</span>
 
         <span class="n">meas_q</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">op_nodes</span><span class="p">():</span>
@@ -652,7 +653,7 @@
                 <span class="n">meas_q</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qubit_indices</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">measured_qubits</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_measured_qubits</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">meas_q</span><span class="p">)))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">measure_start</span> <span class="o">=</span> <span class="n">Real</span><span class="p">(</span><span class="s2">&quot;meas_start&quot;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">measure_start</span> <span class="o">=</span> <span class="n">z3</span><span class="o">.</span><span class="n">Real</span><span class="p">(</span><span class="s2">&quot;meas_start&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="CrosstalkAdaptiveSchedule.basic_bounds"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.CrosstalkAdaptiveSchedule.basic_bounds.html#qiskit.transpiler.passes.CrosstalkAdaptiveSchedule.basic_bounds">[docs]</a>    <span class="k">def</span> <span class="nf">basic_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -677,6 +678,8 @@
 <span class="sd">        DAG scheduling constraints optimization</span>
 <span class="sd">        Sets overlap indicator variables</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">z3</span>
+
         <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate_start_time</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">dep_gate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">gate</span><span class="p">):</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dep_gate</span><span class="p">,</span> <span class="n">DAGOpNode</span><span class="p">):</span>
@@ -700,16 +703,18 @@
                 <span class="c1"># This constraint enforces full or zero overlap between two gates</span>
                 <span class="n">before</span> <span class="o">=</span> <span class="n">f_1</span> <span class="o">&lt;</span> <span class="n">s_2</span>
                 <span class="n">after</span> <span class="o">=</span> <span class="n">f_2</span> <span class="o">&lt;</span> <span class="n">s_1</span>
-                <span class="n">overlap1</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">s_2</span> <span class="o">&lt;=</span> <span class="n">s_1</span><span class="p">,</span> <span class="n">f_1</span> <span class="o">&lt;=</span> <span class="n">f_2</span><span class="p">)</span>
-                <span class="n">overlap2</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">s_1</span> <span class="o">&lt;=</span> <span class="n">s_2</span><span class="p">,</span> <span class="n">f_2</span> <span class="o">&lt;=</span> <span class="n">f_1</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Or</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">overlap1</span><span class="p">,</span> <span class="n">overlap2</span><span class="p">))</span>
-                <span class="n">intervals_overlap</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">s_2</span> <span class="o">&lt;=</span> <span class="n">f_1</span><span class="p">,</span> <span class="n">s_1</span> <span class="o">&lt;=</span> <span class="n">f_2</span><span class="p">)</span>
+                <span class="n">overlap1</span> <span class="o">=</span> <span class="n">z3</span><span class="o">.</span><span class="n">And</span><span class="p">(</span><span class="n">s_2</span> <span class="o">&lt;=</span> <span class="n">s_1</span><span class="p">,</span> <span class="n">f_1</span> <span class="o">&lt;=</span> <span class="n">f_2</span><span class="p">)</span>
+                <span class="n">overlap2</span> <span class="o">=</span> <span class="n">z3</span><span class="o">.</span><span class="n">And</span><span class="p">(</span><span class="n">s_1</span> <span class="o">&lt;=</span> <span class="n">s_2</span><span class="p">,</span> <span class="n">f_2</span> <span class="o">&lt;=</span> <span class="n">f_1</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">z3</span><span class="o">.</span><span class="n">Or</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">overlap1</span><span class="p">,</span> <span class="n">overlap2</span><span class="p">))</span>
+                <span class="n">intervals_overlap</span> <span class="o">=</span> <span class="n">z3</span><span class="o">.</span><span class="n">And</span><span class="p">(</span><span class="n">s_2</span> <span class="o">&lt;=</span> <span class="n">f_1</span><span class="p">,</span> <span class="n">s_1</span> <span class="o">&lt;=</span> <span class="n">f_2</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">overlap_indicator</span><span class="p">[</span><span class="n">g_1</span><span class="p">][</span><span class="n">g_2</span><span class="p">]</span> <span class="o">==</span> <span class="n">intervals_overlap</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="CrosstalkAdaptiveSchedule.fidelity_constraints"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.CrosstalkAdaptiveSchedule.fidelity_constraints.html#qiskit.transpiler.passes.CrosstalkAdaptiveSchedule.fidelity_constraints">[docs]</a>    <span class="k">def</span> <span class="nf">fidelity_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set gate fidelity based on gate overlap conditions</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">z3</span>
+
         <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate_start_time</span><span class="p">:</span>
             <span class="n">q_0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qubit_indices</span><span class="p">[</span><span class="n">gate</span><span class="o">.</span><span class="n">qargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
             <span class="n">no_xtalk</span> <span class="o">=</span> <span class="kc">False</span>
@@ -737,7 +742,7 @@
                     <span class="k">for</span> <span class="n">tmpg</span> <span class="ow">in</span> <span class="n">on_set</span><span class="p">:</span>
                         <span class="n">clauses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">overlap_indicator</span><span class="p">[</span><span class="n">gate</span><span class="p">][</span><span class="n">tmpg</span><span class="p">])</span>
                     <span class="k">for</span> <span class="n">tmpg</span> <span class="ow">in</span> <span class="n">off_set</span><span class="p">:</span>
-                        <span class="n">clauses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Not</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">overlap_indicator</span><span class="p">[</span><span class="n">gate</span><span class="p">][</span><span class="n">tmpg</span><span class="p">]))</span>
+                        <span class="n">clauses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">z3</span><span class="o">.</span><span class="n">Not</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">overlap_indicator</span><span class="p">[</span><span class="n">gate</span><span class="p">][</span><span class="n">tmpg</span><span class="p">]))</span>
                     <span class="n">err</span> <span class="o">=</span> <span class="mi">0</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">on_set</span><span class="p">:</span>
                         <span class="n">err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bp_cx_err</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cx_tuple</span><span class="p">(</span><span class="n">gate</span><span class="p">)]</span>
@@ -753,7 +758,7 @@
                     <span class="k">if</span> <span class="n">err</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
                         <span class="n">err</span> <span class="o">=</span> <span class="mf">0.999999</span>
                     <span class="n">val</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">err</span><span class="p">),</span> <span class="n">NUM_PREC</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Implies</span><span class="p">(</span><span class="n">And</span><span class="p">(</span><span class="o">*</span><span class="n">clauses</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate_fidelity</span><span class="p">[</span><span class="n">gate</span><span class="p">]</span> <span class="o">==</span> <span class="n">val</span><span class="p">))</span></div>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">z3</span><span class="o">.</span><span class="n">Implies</span><span class="p">(</span><span class="n">z3</span><span class="o">.</span><span class="n">And</span><span class="p">(</span><span class="o">*</span><span class="n">clauses</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate_fidelity</span><span class="p">[</span><span class="n">gate</span><span class="p">]</span> <span class="o">==</span> <span class="n">val</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="CrosstalkAdaptiveSchedule.coherence_constraints"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.CrosstalkAdaptiveSchedule.coherence_constraints.html#qiskit.transpiler.passes.CrosstalkAdaptiveSchedule.coherence_constraints">[docs]</a>    <span class="k">def</span> <span class="nf">coherence_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -805,6 +810,8 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Objective function is a weighted combination of gate errors and decoherence errors</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">z3</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">fidelity_terms</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_fidelity</span><span class="p">[</span><span class="n">gate</span><span class="p">]</span> <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate_fidelity</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">coherence_terms</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">qubit_lifetime</span><span class="p">:</span>
@@ -816,7 +823,7 @@
             <span class="n">all_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_factor</span> <span class="o">*</span> <span class="n">item</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coherence_terms</span><span class="p">:</span>
             <span class="n">all_terms</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_factor</span><span class="p">)</span> <span class="o">*</span> <span class="n">item</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">maximize</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">all_terms</span><span class="p">))</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">maximize</span><span class="p">(</span><span class="n">z3</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">all_terms</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="CrosstalkAdaptiveSchedule.r2f"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.CrosstalkAdaptiveSchedule.r2f.html#qiskit.transpiler.passes.CrosstalkAdaptiveSchedule.r2f">[docs]</a>    <span class="k">def</span> <span class="nf">r2f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -840,7 +847,9 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Setup and solve a Z3 optimization for finding the best schedule</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">opt</span> <span class="o">=</span> <span class="n">Optimize</span><span class="p">()</span>
+        <span class="kn">import</span> <span class="nn">z3</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">opt</span> <span class="o">=</span> <span class="n">z3</span><span class="o">.</span><span class="n">Optimize</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">create_z3_vars</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">basic_bounds</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scheduling_constraints</span><span class="p">()</span>
@@ -1040,12 +1049,6 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Main scheduling function</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">HAS_Z3</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
-                <span class="s2">&quot;z3-solver is required to use CrosstalkAdaptiveSchedule. &quot;</span>
-                <span class="s1">&#39;To install, run &quot;pip install z3-solver&quot;.&#39;</span>
-            <span class="p">)</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">dag</span> <span class="o">=</span> <span class="n">dag</span>
 
         <span class="c1"># process input program</span>
@@ -1078,7 +1081,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Terakhir diperbarui pada 2022/03/24.
+      Terakhir diperbarui pada 2022/04/01.
 
     </p>
   </div>

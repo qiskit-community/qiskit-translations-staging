@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.optimization.optimize_1q_gates &mdash; Documentation Qiskit 0.34.2</title>
+  <title>qiskit.transpiler.passes.optimization.optimize_1q_gates &mdash; Documentation Qiskit 0.35.0</title>
   
 
   
@@ -360,6 +360,7 @@
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library.standard_gates.u1</span> <span class="kn">import</span> <span class="n">U1Gate</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library.standard_gates.u2</span> <span class="kn">import</span> <span class="n">U2Gate</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library.standard_gates.u3</span> <span class="kn">import</span> <span class="n">U3Gate</span>
+<span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">ParameterExpression</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.gate</span> <span class="kn">import</span> <span class="n">Gate</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.basepasses</span> <span class="kn">import</span> <span class="n">TransformationPass</span>
 <span class="kn">from</span> <span class="nn">qiskit.quantum_info.synthesis</span> <span class="kn">import</span> <span class="n">Quaternion</span>
@@ -435,9 +436,15 @@
                     <span class="ow">and</span> <span class="n">current_node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">definition</span><span class="o">.</span><span class="n">global_phase</span>
                 <span class="p">):</span>
                     <span class="n">right_global_phase</span> <span class="o">+=</span> <span class="n">current_node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">definition</span><span class="o">.</span><span class="n">global_phase</span>
+
                 <span class="c1"># If there are any sympy objects coming from the gate convert</span>
                 <span class="c1"># to numpy.</span>
-                <span class="n">left_parameters</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">left_parameters</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">left_parameters</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">left_parameters</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="c1"># If left_parameters contained any unbound Parameters</span>
+                    <span class="k">pass</span>
+
                 <span class="c1"># Compose gates</span>
                 <span class="n">name_tuple</span> <span class="o">=</span> <span class="p">(</span><span class="n">left_name</span><span class="p">,</span> <span class="n">right_name</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">name_tuple</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">&quot;u1&quot;</span><span class="p">,</span> <span class="s2">&quot;u1&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;p&quot;</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">)):</span>
@@ -538,7 +545,8 @@
 
                 <span class="c1"># Y rotation is 0 mod 2*pi, so the gate is a u1</span>
                 <span class="k">if</span> <span class="p">(</span>
-                    <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">right_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span>
+                    <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ParameterExpression</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">right_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span>
                     <span class="ow">and</span> <span class="n">right_name</span> <span class="o">!=</span> <span class="s2">&quot;u1&quot;</span>
                     <span class="ow">and</span> <span class="n">right_name</span> <span class="o">!=</span> <span class="s2">&quot;p&quot;</span>
                 <span class="p">):</span>
@@ -553,31 +561,34 @@
                     <span class="p">)</span>
                 <span class="c1"># Y rotation is pi/2 or -pi/2 mod 2*pi, so the gate is a u2</span>
                 <span class="k">if</span> <span class="n">right_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;u3&quot;</span><span class="p">,</span> <span class="s2">&quot;u&quot;</span><span class="p">):</span>
-                    <span class="c1"># theta = pi/2 + 2*k*pi</span>
-                    <span class="n">right_angle</span> <span class="o">=</span> <span class="n">right_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
-                    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">right_angle</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">:</span>
-                        <span class="n">right_angle</span> <span class="o">=</span> <span class="mi">0</span>
-                    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">((</span><span class="n">right_angle</span><span class="p">),</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">:</span>
-                        <span class="n">right_name</span> <span class="o">=</span> <span class="s2">&quot;u2&quot;</span>
-                        <span class="n">right_parameters</span> <span class="o">=</span> <span class="p">(</span>
-                            <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
-                            <span class="n">right_parameters</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                            <span class="n">right_parameters</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">right_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
-                        <span class="p">)</span>
-                    <span class="c1"># theta = -pi/2 + 2*k*pi</span>
-                    <span class="n">right_angle</span> <span class="o">=</span> <span class="n">right_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
-                    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">right_angle</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">:</span>
-                        <span class="n">right_angle</span> <span class="o">=</span> <span class="mi">0</span>
-                    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">right_angle</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">:</span>
-                        <span class="n">right_name</span> <span class="o">=</span> <span class="s2">&quot;u2&quot;</span>
-                        <span class="n">right_parameters</span> <span class="o">=</span> <span class="p">(</span>
-                            <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
-                            <span class="n">right_parameters</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
-                            <span class="n">right_parameters</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">+</span> <span class="p">(</span><span class="n">right_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
-                        <span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ParameterExpression</span><span class="p">):</span>
+                        <span class="c1"># theta = pi/2 + 2*k*pi</span>
+                        <span class="n">right_angle</span> <span class="o">=</span> <span class="n">right_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
+                        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">right_angle</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">:</span>
+                            <span class="n">right_angle</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">((</span><span class="n">right_angle</span><span class="p">),</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">:</span>
+                            <span class="n">right_name</span> <span class="o">=</span> <span class="s2">&quot;u2&quot;</span>
+                            <span class="n">right_parameters</span> <span class="o">=</span> <span class="p">(</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+                                <span class="n">right_parameters</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                <span class="n">right_parameters</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">right_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+                            <span class="p">)</span>
+                        <span class="c1"># theta = -pi/2 + 2*k*pi</span>
+                        <span class="n">right_angle</span> <span class="o">=</span> <span class="n">right_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
+                        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">right_angle</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">:</span>
+                            <span class="n">right_angle</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">right_angle</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">:</span>
+                            <span class="n">right_name</span> <span class="o">=</span> <span class="s2">&quot;u2&quot;</span>
+                            <span class="n">right_parameters</span> <span class="o">=</span> <span class="p">(</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+                                <span class="n">right_parameters</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
+                                <span class="n">right_parameters</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">+</span> <span class="p">(</span><span class="n">right_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+                            <span class="p">)</span>
+
                 <span class="c1"># u1 and lambda is 0 mod 2*pi so gate is nop (up to a global phase)</span>
                 <span class="k">if</span> <span class="p">(</span>
-                    <span class="n">right_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;u1&quot;</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">)</span>
+                    <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right_parameters</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ParameterExpression</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="n">right_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;u1&quot;</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">)</span>
                     <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">right_parameters</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span>
                 <span class="p">):</span>
                     <span class="n">right_name</span> <span class="o">=</span> <span class="s2">&quot;nop&quot;</span>
@@ -673,7 +684,11 @@
 
     <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">runs</span><span class="p">:</span>
-        <span class="n">groups</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">is_parameterized</span><span class="p">())</span>
+        <span class="c1"># We exclude only u3 and u gate because for u1 and u2 we can really straightforward</span>
+        <span class="c1"># merge two gate with parameters.</span>
+        <span class="c1"># It would be great to combine all gate with parameters but this requires</span>
+        <span class="c1"># support parameters in qiskit.quantum_info.synthesis.Quaternion.</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">is_parameterized</span><span class="p">()</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;u3&quot;</span><span class="p">,</span> <span class="s2">&quot;u&quot;</span><span class="p">))</span>
 
         <span class="k">for</span> <span class="n">group_is_parameterized</span><span class="p">,</span> <span class="n">gates</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">group_is_parameterized</span><span class="p">:</span>
@@ -697,7 +712,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Mis à jour le 2022/03/24.
+      Mis à jour le 2022/04/01.
 
     </p>
   </div>

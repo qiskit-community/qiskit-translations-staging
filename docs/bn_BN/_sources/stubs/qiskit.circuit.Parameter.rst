@@ -26,6 +26,7 @@
       ~Parameter.log
       ~Parameter.sin
       ~Parameter.subs
+      ~Parameter.sympify
       ~Parameter.tan
 
 

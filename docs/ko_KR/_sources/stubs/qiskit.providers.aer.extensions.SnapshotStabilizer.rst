@@ -21,7 +21,6 @@
       ~SnapshotStabilizer.define_snapshot_register
       ~SnapshotStabilizer.inverse
       ~SnapshotStabilizer.is_parameterized
-      ~SnapshotStabilizer.mirror
       ~SnapshotStabilizer.qasm
       ~SnapshotStabilizer.repeat
       ~SnapshotStabilizer.reverse_ops
@@ -37,6 +36,9 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: snapshot_type
    .. autoattribute:: unit

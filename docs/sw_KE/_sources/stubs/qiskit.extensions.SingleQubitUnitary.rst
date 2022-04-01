@@ -21,7 +21,6 @@
       ~SingleQubitUnitary.copy
       ~SingleQubitUnitary.inverse
       ~SingleQubitUnitary.is_parameterized
-      ~SingleQubitUnitary.mirror
       ~SingleQubitUnitary.power
       ~SingleQubitUnitary.qasm
       ~SingleQubitUnitary.repeat
@@ -40,5 +39,8 @@
    .. autoattribute:: diag
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

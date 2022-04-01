@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.visualization.dag_visualization &mdash; Τεκμηρίωση του Qiskit - 0.34.2</title>
+  <title>qiskit.visualization.dag_visualization &mdash; Τεκμηρίωση του Qiskit - 0.35.0</title>
   
 
   
@@ -359,15 +359,9 @@
 <span class="kn">import</span> <span class="nn">tempfile</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.dagcircuit.dagnode</span> <span class="kn">import</span> <span class="n">DAGOpNode</span><span class="p">,</span> <span class="n">DAGInNode</span><span class="p">,</span> <span class="n">DAGOutNode</span>
-<span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">MissingOptionalLibraryError</span><span class="p">,</span> <span class="n">InvalidFileError</span>
+<span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">optionals</span> <span class="k">as</span> <span class="n">_optionals</span>
+<span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">InvalidFileError</span>
 <span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">VisualizationError</span>
-
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
-
-    <span class="n">HAS_PIL</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="n">HAS_PIL</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="n">FILENAME_EXTENSIONS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;bmp&quot;</span><span class="p">,</span>
@@ -428,7 +422,8 @@
 <span class="p">}</span>
 
 
-<div class="viewcode-block" id="dag_drawer"><a class="viewcode-back" href="../../../stubs/qiskit.visualization.dag_drawer.html#qiskit.visualization.dag_drawer">[τεκμηρίωση]</a><span class="k">def</span> <span class="nf">dag_drawer</span><span class="p">(</span><span class="n">dag</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;color&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="dag_drawer"><a class="viewcode-back" href="../../../stubs/qiskit.visualization.dag_drawer.html#qiskit.visualization.dag_drawer">[τεκμηρίωση]</a><span class="nd">@_optionals</span><span class="o">.</span><span class="n">HAS_PYDOT</span><span class="o">.</span><span class="n">require_in_call</span>
+<span class="k">def</span> <span class="nf">dag_drawer</span><span class="p">(</span><span class="n">dag</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;color&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Plot the directed acyclic graph (dag) to represent operation dependencies</span>
 <span class="sd">    in a quantum circuit.</span>
 
@@ -477,14 +472,8 @@
 <span class="sd">            dag = circuit_to_dag(circ)</span>
 <span class="sd">            dag_drawer(dag)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="kn">import</span> <span class="nn">pydot</span>
-    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-            <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;PyDot&quot;</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;dag_drawer&quot;</span><span class="p">,</span>
-            <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install pydot&quot;</span><span class="p">,</span>
-        <span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span>
+    <span class="kn">import</span> <span class="nn">pydot</span>
+
     <span class="c1"># NOTE: use type str checking to avoid potential cyclical import</span>
     <span class="c1"># the two tradeoffs ere that it will not handle subclasses and it is</span>
     <span class="c1"># slower (which doesn&#39;t matter for a visualization function)</span>
@@ -573,12 +562,8 @@
         <span class="n">dot</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">extension</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="k">elif</span> <span class="p">(</span><span class="s2">&quot;ipykernel&quot;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot;spyder&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">HAS_PIL</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-                <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;pillow&quot;</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;dag_drawer&quot;</span><span class="p">,</span>
-                <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install pillow&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
+        <span class="n">_optionals</span><span class="o">.</span><span class="n">HAS_PIL</span><span class="o">.</span><span class="n">require_now</span><span class="p">(</span><span class="s2">&quot;dag_drawer&quot;</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
 
         <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdirname</span><span class="p">:</span>
             <span class="n">tmp_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdirname</span><span class="p">,</span> <span class="s2">&quot;dag.png&quot;</span><span class="p">)</span>
@@ -588,12 +573,9 @@
             <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">image</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">HAS_PIL</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-                <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;pillow&quot;</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;dag_drawer&quot;</span><span class="p">,</span>
-                <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install pillow&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
+        <span class="n">_optionals</span><span class="o">.</span><span class="n">HAS_PIL</span><span class="o">.</span><span class="n">require_now</span><span class="p">(</span><span class="s2">&quot;dag_drawer&quot;</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+
         <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdirname</span><span class="p">:</span>
             <span class="n">tmp_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdirname</span><span class="p">,</span> <span class="s2">&quot;dag.png&quot;</span><span class="p">)</span>
             <span class="n">dot</span><span class="o">.</span><span class="n">write_png</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span>
@@ -618,7 +600,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Τελευταία ενημέρωση στις 2022/03/24.
+      Τελευταία ενημέρωση στις 2022/04/01.
 
     </p>
   </div>

@@ -13,17 +13,10 @@
       :nosignatures:
       :toctree: ../stubs/
 
-      ~VQE.cleanup_parameterized_circuits
       ~VQE.compute_minimum_eigenvalue
       ~VQE.construct_circuit
       ~VQE.construct_expectation
-      ~VQE.find_minimum
       ~VQE.get_energy_evaluation
-      ~VQE.get_optimal_circuit
-      ~VQE.get_optimal_cost
-      ~VQE.get_optimal_vector
-      ~VQE.get_prob_vector_for_params
-      ~VQE.get_probabilities_for_counts
       ~VQE.print_settings
       ~VQE.supports_aux_operators
 
@@ -38,7 +31,6 @@
    .. autoattribute:: include_custom
    .. autoattribute:: initial_point
    .. autoattribute:: max_evals_grouped
-   .. autoattribute:: optimal_params
    .. autoattribute:: optimizer
    .. autoattribute:: quantum_instance
    .. autoattribute:: setting

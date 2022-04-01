@@ -20,7 +20,6 @@
       ~SetMatrixProductState.copy
       ~SetMatrixProductState.inverse
       ~SetMatrixProductState.is_parameterized
-      ~SetMatrixProductState.mirror
       ~SetMatrixProductState.qasm
       ~SetMatrixProductState.repeat
       ~SetMatrixProductState.reverse_ops
@@ -36,5 +35,8 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

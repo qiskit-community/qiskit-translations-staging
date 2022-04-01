@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.circuit.library.standard_gates.x &mdash; Qiskit 0.34.2 documentazione</title>
+  <title>qiskit.circuit.library.standard_gates.x &mdash; Qiskit 0.35.0 documentazione</title>
   
 
   
@@ -351,12 +351,10 @@
 <span class="sd">&quot;&quot;&quot;X, CX, CCX and multi-controlled X gates.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">ceil</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.controlledgate</span> <span class="kn">import</span> <span class="n">ControlledGate</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.gate</span> <span class="kn">import</span> <span class="n">Gate</span>
-<span class="kn">from</span> <span class="nn">qiskit.circuit.parameterexpression</span> <span class="kn">import</span> <span class="n">ParameterValueType</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.quantumregister</span> <span class="kn">import</span> <span class="n">QuantumRegister</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit._utils</span> <span class="kn">import</span> <span class="n">_compute_control_matrix</span><span class="p">,</span> <span class="n">_ctrl_state_to_int</span>
 <span class="kn">from</span> <span class="nn">qiskit.qasm</span> <span class="kn">import</span> <span class="n">pi</span>
@@ -673,6 +671,13 @@
         <span class="c1"># pylint: disable=cyclic-import</span>
         <span class="kn">from</span> <span class="nn">qiskit.circuit.quantumcircuit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
 
+        <span class="c1">#                                                        ┌───┐</span>
+        <span class="c1"># q_0: ───────────────────■─────────────────────■────■───┤ T ├───■──</span>
+        <span class="c1">#                         │             ┌───┐   │  ┌─┴─┐┌┴───┴┐┌─┴─┐</span>
+        <span class="c1"># q_1: ───────■───────────┼─────────■───┤ T ├───┼──┤ X ├┤ Tdg ├┤ X ├</span>
+        <span class="c1">#      ┌───┐┌─┴─┐┌─────┐┌─┴─┐┌───┐┌─┴─┐┌┴───┴┐┌─┴─┐├───┤└┬───┬┘└───┘</span>
+        <span class="c1"># q_2: ┤ H ├┤ X ├┤ Tdg ├┤ X ├┤ T ├┤ X ├┤ Tdg ├┤ X ├┤ T ├─┤ H ├──────</span>
+        <span class="c1">#      └───┘└───┘└─────┘└───┘└───┘└───┘└─────┘└───┘└───┘ └───┘</span>
         <span class="n">q</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;q&quot;</span><span class="p">)</span>
         <span class="n">qc</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="n">rules</span> <span class="o">=</span> <span class="p">[</span>
@@ -816,8 +821,6 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">ctrl_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="o">*</span><span class="p">,</span>
-        <span class="n">angle</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ParameterValueType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a new 3-qubit controlled sqrt-X gate.</span>
 
@@ -825,25 +828,10 @@
 <span class="sd">            label (str or None): An optional label for the gate [Default: None]</span>
 <span class="sd">            ctrl_state (int or str or None): control state expressed as integer,</span>
 <span class="sd">                string (e.g. &#39;110&#39;), or None. If None, use all 1s.</span>
-<span class="sd">            angle (float): DEPRECATED. The angle used in the controlled-U1 gates. An angle of π/8</span>
-<span class="sd">                yields the sqrt(X) gates, an angle of π/4 the 3-qubit controlled X gate.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="s2">&quot;c3sx&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="p">[],</span> <span class="n">num_ctrl_qubits</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">ctrl_state</span><span class="o">=</span><span class="n">ctrl_state</span><span class="p">,</span> <span class="n">base_gate</span><span class="o">=</span><span class="n">SXGate</span><span class="p">()</span>
         <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">angle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;The angle argument is deprecated as of Qiskit Terra 0.17.0 and will &quot;</span>
-                <span class="s2">&quot;be removed no earlier than 3 months after the release date.&quot;</span><span class="p">,</span>
-                <span class="ne">DeprecationWarning</span><span class="p">,</span>
-                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">angle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">angle</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">8</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_angle</span> <span class="o">=</span> <span class="n">angle</span>
 
     <span class="k">def</span> <span class="nf">_define</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -868,52 +856,42 @@
         <span class="kn">from</span> <span class="nn">qiskit.circuit.quantumcircuit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
         <span class="kn">from</span> <span class="nn">.u1</span> <span class="kn">import</span> <span class="n">CU1Gate</span>
 
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">8</span>
         <span class="n">q</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;q&quot;</span><span class="p">)</span>
-        <span class="c1"># pylint: disable=invalid-unary-operand-type</span>
         <span class="n">rules</span> <span class="o">=</span> <span class="p">[</span>
             <span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
-            <span class="p">(</span><span class="n">CU1Gate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_angle</span><span class="p">),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
+            <span class="p">(</span><span class="n">CU1Gate</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">CXGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
-            <span class="p">(</span><span class="n">CU1Gate</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_angle</span><span class="p">),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
+            <span class="p">(</span><span class="n">CU1Gate</span><span class="p">(</span><span class="o">-</span><span class="n">angle</span><span class="p">),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">CXGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
-            <span class="p">(</span><span class="n">CU1Gate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_angle</span><span class="p">),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
+            <span class="p">(</span><span class="n">CU1Gate</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">CXGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
-            <span class="p">(</span><span class="n">CU1Gate</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_angle</span><span class="p">),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
+            <span class="p">(</span><span class="n">CU1Gate</span><span class="p">(</span><span class="o">-</span><span class="n">angle</span><span class="p">),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">CXGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
-            <span class="p">(</span><span class="n">CU1Gate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_angle</span><span class="p">),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
+            <span class="p">(</span><span class="n">CU1Gate</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">CXGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
-            <span class="p">(</span><span class="n">CU1Gate</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_angle</span><span class="p">),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
+            <span class="p">(</span><span class="n">CU1Gate</span><span class="p">(</span><span class="o">-</span><span class="n">angle</span><span class="p">),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">CXGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
-            <span class="p">(</span><span class="n">CU1Gate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_angle</span><span class="p">),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
+            <span class="p">(</span><span class="n">CU1Gate</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
             <span class="p">(</span><span class="n">HGate</span><span class="p">(),</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[]),</span>
         <span class="p">]</span>
         <span class="n">qc</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">instr</span><span class="p">,</span> <span class="n">qargs</span><span class="p">,</span> <span class="n">cargs</span> <span class="ow">in</span> <span class="n">rules</span><span class="p">:</span>
             <span class="n">qc</span><span class="o">.</span><span class="n">_append</span><span class="p">(</span><span class="n">instr</span><span class="p">,</span> <span class="n">qargs</span><span class="p">,</span> <span class="n">cargs</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">definition</span> <span class="o">=</span> <span class="n">qc</span>
-
-<div class="viewcode-block" id="C3SXGate.inverse"><a class="viewcode-back" href="../../../../../stubs/qiskit.circuit.library.C3SXGate.inverse.html#qiskit.circuit.library.C3SXGate.inverse">[documenti]</a>    <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Invert this gate. The C3X is its own inverse.&quot;&quot;&quot;</span>
-        <span class="c1"># pylint: disable=invalid-unary-operand-type</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_angle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">angle</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_angle</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">angle</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="k">return</span> <span class="n">C3SXGate</span><span class="p">(</span><span class="n">angle</span><span class="o">=</span><span class="n">angle</span><span class="p">,</span> <span class="n">ctrl_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ctrl_state</span><span class="p">)</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">definition</span> <span class="o">=</span> <span class="n">qc</span></div>
 
 
 <div class="viewcode-block" id="C3XGate"><a class="viewcode-back" href="../../../../../stubs/qiskit.circuit.library.C3XGate.html#qiskit.circuit.library.C3XGate">[documenti]</a><span class="k">class</span> <span class="nc">C3XGate</span><span class="p">(</span><span class="n">ControlledGate</span><span class="p">):</span>
@@ -922,23 +900,8 @@
 <span class="sd">    This implementation uses :math:`\sqrt{T}` and 14 CNOT gates.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span>
-        <span class="n">angle</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ParameterValueType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">label</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">ctrl_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="k">if</span> <span class="n">angle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">C3SXGate</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">ctrl_state</span><span class="p">,</span> <span class="n">angle</span><span class="o">=</span><span class="n">angle</span><span class="p">)</span>
-
-        <span class="n">instance</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
-        <span class="n">instance</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">ctrl_state</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">instance</span>
-
-    <span class="c1"># pylint: disable=unused-argument</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">angle</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ParameterValueType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">label</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">ctrl_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
@@ -1603,7 +1566,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Ultimo aggiornamento 2022/03/24.
+      Ultimo aggiornamento 2022/04/01.
 
     </p>
   </div>

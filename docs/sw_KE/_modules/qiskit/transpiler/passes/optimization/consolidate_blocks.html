@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.optimization.consolidate_blocks &mdash; Qiskit 0.34.2 documentation</title>
+  <title>qiskit.transpiler.passes.optimization.consolidate_blocks &mdash; Qiskit 0.35.0 documentation</title>
   
 
   
@@ -375,16 +375,18 @@
 <span class="sd">        collected by a previous pass, such as `Collect2qBlocks`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kak_basis_gate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force_consolidate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">basis_gates</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kak_basis_gate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force_consolidate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">basis_gates</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;ConsolidateBlocks initializer.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            kak_basis_gate (Gate): Basis gate for KAK decomposition.</span>
 <span class="sd">            force_consolidate (bool): Force block consolidation</span>
 <span class="sd">            basis_gates (List(str)): Basis gates from which to choose a KAK gate.</span>
+<span class="sd">            target (Target): The target object for the compilation target backend</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">basis_gates</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">target</span>
         <span class="k">if</span> <span class="n">basis_gates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">basis_gates</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">basis_gates</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">force_consolidate</span> <span class="o">=</span> <span class="n">force_consolidate</span>
@@ -411,7 +413,9 @@
         <span class="n">basis_gate_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decomposer</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">name</span>
         <span class="n">all_block_gates</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basis_gates</span> <span class="ow">and</span> <span class="n">block</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis_gates</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_not_in_basis</span><span class="p">(</span>
+                <span class="n">block</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">block</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">qargs</span><span class="p">,</span> <span class="n">global_index_map</span>
+            <span class="p">):</span>
                 <span class="n">all_block_gates</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                 <span class="n">dag</span><span class="o">.</span><span class="n">substitute_node</span><span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">UnitaryGate</span><span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">to_matrix</span><span class="p">()))</span>
             <span class="k">else</span><span class="p">:</span>
@@ -433,7 +437,7 @@
                 <span class="k">for</span> <span class="n">nd</span> <span class="ow">in</span> <span class="n">block</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">nd</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">basis_gate_name</span><span class="p">:</span>
                         <span class="n">basis_count</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis_gates</span> <span class="ow">and</span> <span class="n">nd</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis_gates</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_not_in_basis</span><span class="p">(</span><span class="n">nd</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">nd</span><span class="o">.</span><span class="n">qargs</span><span class="p">,</span> <span class="n">global_index_map</span><span class="p">):</span>
                         <span class="n">outside_basis</span> <span class="o">=</span> <span class="kc">True</span>
                     <span class="n">qc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nd</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="n">block_index_map</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nd</span><span class="o">.</span><span class="n">qargs</span><span class="p">])</span>
                 <span class="n">unitary</span> <span class="o">=</span> <span class="n">UnitaryGate</span><span class="p">(</span><span class="n">Operator</span><span class="p">(</span><span class="n">qc</span><span class="p">))</span>
@@ -444,7 +448,8 @@
                     <span class="ow">or</span> <span class="n">unitary</span><span class="o">.</span><span class="n">num_qubits</span> <span class="o">&gt;</span> <span class="mi">2</span>
                     <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">decomposer</span><span class="o">.</span><span class="n">num_basis_gates</span><span class="p">(</span><span class="n">unitary</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">basis_count</span>
                     <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_2q_depth</span>
-                    <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basis_gates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">outside_basis</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">basis_gates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">outside_basis</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">outside_basis</span><span class="p">)</span>
                 <span class="p">):</span>
                     <span class="n">dag</span><span class="o">.</span><span class="n">replace_block_with_op</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">unitary</span><span class="p">,</span> <span class="n">block_index_map</span><span class="p">,</span> <span class="n">cycle_check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="c1"># If 1q runs are collected before consolidate those too</span>
@@ -452,7 +457,9 @@
         <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">runs</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">run</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_block_gates</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">run</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis_gates</span> <span class="ow">and</span> <span class="n">run</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis_gates</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">run</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_not_in_basis</span><span class="p">(</span>
+                <span class="n">run</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">run</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">qargs</span><span class="p">,</span> <span class="n">global_index_map</span>
+            <span class="p">):</span>
                 <span class="n">dag</span><span class="o">.</span><span class="n">substitute_node</span><span class="p">(</span><span class="n">run</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">UnitaryGate</span><span class="p">(</span><span class="n">run</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">to_matrix</span><span class="p">()))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">qubit</span> <span class="o">=</span> <span class="n">run</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">qargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -467,6 +474,14 @@
                 <span class="n">unitary</span> <span class="o">=</span> <span class="n">UnitaryGate</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span>
                 <span class="n">dag</span><span class="o">.</span><span class="n">replace_block_with_op</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">unitary</span><span class="p">,</span> <span class="p">{</span><span class="n">qubit</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span> <span class="n">cycle_check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">dag</span></div>
+
+    <span class="k">def</span> <span class="nf">_check_not_in_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gate_name</span><span class="p">,</span> <span class="n">qargs</span><span class="p">,</span> <span class="n">global_index_map</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">instruction_supported</span><span class="p">(</span>
+                <span class="n">gate_name</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">global_index_map</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="n">qargs</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis_gates</span> <span class="ow">and</span> <span class="n">gate_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis_gates</span>
 
     <span class="k">def</span> <span class="nf">_block_qargs_to_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block_qargs</span><span class="p">,</span> <span class="n">global_index_map</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Map each qubit in block_qargs to its wire position among the block&#39;s wires.</span>
@@ -498,7 +513,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Last updated on 2022/03/24.
+      Last updated on 2022/04/01.
 
     </p>
   </div>

@@ -53,6 +53,8 @@
    .. rubric:: Attributes
 
    .. autoattribute:: dim
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
    .. autoattribute:: num_qubits
    .. autoattribute:: phase
    .. autoattribute:: qargs

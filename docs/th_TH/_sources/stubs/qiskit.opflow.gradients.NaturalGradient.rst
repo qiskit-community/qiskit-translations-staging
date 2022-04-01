@@ -14,6 +14,7 @@ NaturalGradient
       :toctree: ../stubs/
 
       ~NaturalGradient.convert
+      ~NaturalGradient.nat_grad_combo_fn
 
 
 

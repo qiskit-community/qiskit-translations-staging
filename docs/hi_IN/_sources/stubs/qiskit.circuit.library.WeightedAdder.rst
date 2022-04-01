@@ -20,7 +20,6 @@
    .. autoattribute:: header
    .. autoattribute:: instances
    .. autoattribute:: metadata
-   .. autoattribute:: num_ancilla_qubits
    .. autoattribute:: num_ancillas
    .. autoattribute:: num_carry_qubits
    .. autoattribute:: num_clbits

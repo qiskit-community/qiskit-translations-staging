@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.pulse.schedule &mdash; Τεκμηρίωση του Qiskit - 0.34.2</title>
+  <title>qiskit.pulse.schedule &mdash; Τεκμηρίωση του Qiskit - 0.35.0</title>
   
 
   
@@ -375,7 +375,6 @@
 <span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -1641,106 +1640,6 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
 
-<span class="k">class</span> <span class="nc">ParameterizedSchedule</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Temporary parameterized schedule class.</span>
-<span class="sd">    This should not be returned to users as it is currently only a helper class.</span>
-<span class="sd">    This class is takes an input command definition that accepts</span>
-<span class="sd">    a set of parameters. Calling ``bind`` on the class will return a ``Schedule``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">schedules</span><span class="p">,</span>
-        <span class="n">parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
-
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;ParameterizedSchedule is deprecated. Use Schedule with circuit.Parameter objects.&quot;</span><span class="p">,</span>
-            <span class="ne">DeprecationWarning</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">full_schedules</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">parameterized</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">parameters</span> <span class="o">=</span> <span class="n">parameters</span> <span class="ow">or</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
-        <span class="c1"># partition schedules into callable and schedules</span>
-        <span class="k">for</span> <span class="n">schedule</span> <span class="ow">in</span> <span class="n">schedules</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">schedule</span><span class="p">,</span> <span class="n">ParameterizedSchedule</span><span class="p">):</span>
-                <span class="n">parameterized</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">schedule</span><span class="p">)</span>
-                <span class="n">parameters</span> <span class="o">+=</span> <span class="n">schedule</span><span class="o">.</span><span class="n">parameters</span>
-            <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">schedule</span><span class="p">):</span>
-                <span class="n">parameterized</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">schedule</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">schedule</span><span class="p">,</span> <span class="n">Schedule</span><span class="p">):</span>
-                <span class="n">full_schedules</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">schedule</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">PulseError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">schedule</span><span class="p">)</span><span class="si">}</span><span class="s2"> not supported&quot;</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_parameterized</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">parameterized</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_schedules</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">full_schedules</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">parameters</span><span class="p">)))</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Schedule parameters.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span>
-
-    <span class="k">def</span> <span class="nf">bind_parameters</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">],</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Schedule</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Generate the Schedule from params to evaluate command expressions&quot;&quot;&quot;</span>
-        <span class="n">bound_schedule</span> <span class="o">=</span> <span class="n">Schedule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">schedules</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schedules</span><span class="p">)</span>
-
-        <span class="n">named_parameters</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
-                <span class="n">named_parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
-        <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">named_parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                        <span class="n">named_parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="n">PulseError</span><span class="p">(</span>
-                            <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> got multiple values for argument &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span>
-                            <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-                        <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">PulseError</span><span class="p">(</span>
-                        <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> got an unexpected keyword argument &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span>
-                        <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-                    <span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">param_sched</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameterized</span><span class="p">:</span>
-            <span class="c1"># recursively call until based callable is reached</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param_sched</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
-                <span class="n">predefined</span> <span class="o">=</span> <span class="n">param_sched</span><span class="o">.</span><span class="n">parameters</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># assuming no other parameterized instructions</span>
-                <span class="n">predefined</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span>
-            <span class="n">sub_params</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">named_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">predefined</span><span class="p">}</span>
-            <span class="n">schedules</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param_sched</span><span class="p">(</span><span class="o">**</span><span class="n">sub_params</span><span class="p">))</span>
-
-        <span class="c1"># construct evaluated schedules</span>
-        <span class="k">for</span> <span class="n">sched</span> <span class="ow">in</span> <span class="n">schedules</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sched</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
-                <span class="n">bound_schedule</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">sched</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sched</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">bound_schedule</span> <span class="o">|=</span> <span class="n">sched</span>
-
-        <span class="k">return</span> <span class="n">bound_schedule</span>
-
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">],</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Schedule</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bind_parameters</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-
 <span class="k">def</span> <span class="nf">_common_method</span><span class="p">(</span><span class="o">*</span><span class="n">classes</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A function decorator to attach the function to specified classes as a method.</span>
 
@@ -1973,7 +1872,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Τελευταία ενημέρωση στις 2022/03/24.
+      Τελευταία ενημέρωση στις 2022/04/01.
 
     </p>
   </div>

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.quantum_info.states.stabilizerstate &mdash; Qiskit 0.34.2 문서</title>
+  <title>qiskit.quantum_info.states.stabilizerstate &mdash; Qiskit 0.35.0 문서</title>
   
 
   
@@ -534,15 +534,21 @@
         <span class="k">return</span> <span class="n">ret</span></div>
 
 <div class="viewcode-block" id="StabilizerState.expectation_value"><a class="viewcode-back" href="../../../../stubs/qiskit.quantum_info.StabilizerState.expectation_value.html#qiskit.quantum_info.StabilizerState.expectation_value">[문서]</a>    <span class="k">def</span> <span class="nf">expectation_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oper</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Compute the expectation value of an operator.</span>
+        <span class="sd">&quot;&quot;&quot;Compute the expectation value of a Pauli operator.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            oper (BaseOperator): an operator to evaluate expval.</span>
+<span class="sd">            oper (Pauli): a Pauli operator to evaluate expval.</span>
 <span class="sd">            qargs (None or list): subsystems to apply the operator on.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            complex: the expectation value (only 0 or 1 or -1).</span>
+<span class="sd">            complex: the expectation value (only 0 or 1 or -1 or i or -i).</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            QiskitError: if oper is not a Pauli operator.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">oper</span><span class="p">,</span> <span class="n">Pauli</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;Operator for expectation value is not a Pauli operator.&quot;</span><span class="p">)</span>
+
         <span class="n">num_qubits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clifford</span><span class="o">.</span><span class="n">num_qubits</span>
         <span class="k">if</span> <span class="n">qargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">qubits</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">)</span>
@@ -552,19 +558,12 @@
         <span class="c1"># Construct Pauli on num_qubits</span>
         <span class="n">pauli</span> <span class="o">=</span> <span class="n">Pauli</span><span class="p">(</span><span class="n">num_qubits</span> <span class="o">*</span> <span class="s2">&quot;I&quot;</span><span class="p">)</span>
         <span class="n">phase</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">pauli_phase</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="p">)</span> <span class="o">**</span> <span class="n">oper</span><span class="o">.</span><span class="n">phase</span> <span class="k">if</span> <span class="n">oper</span><span class="o">.</span><span class="n">phase</span> <span class="k">else</span> <span class="mi">1</span>
 
         <span class="k">for</span> <span class="n">pos</span><span class="p">,</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">qubits</span><span class="p">):</span>
-            <span class="n">pauli_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">oper</span><span class="o">.</span><span class="n">to_label</span><span class="p">())[</span><span class="nb">len</span><span class="p">(</span><span class="n">oper</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">pos</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">pauli_pos</span> <span class="o">==</span> <span class="s2">&quot;X&quot;</span><span class="p">:</span>
-                <span class="n">pauli</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-            <span class="k">elif</span> <span class="n">pauli_pos</span> <span class="o">==</span> <span class="s2">&quot;Y&quot;</span><span class="p">:</span>
-                <span class="n">pauli</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-                <span class="n">pauli</span><span class="o">.</span><span class="n">z</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-                <span class="n">phase</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="k">elif</span> <span class="n">pauli_pos</span> <span class="o">==</span> <span class="s2">&quot;Z&quot;</span><span class="p">:</span>
-                <span class="n">pauli</span><span class="o">.</span><span class="n">z</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">pass</span>
+            <span class="n">pauli</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="o">=</span> <span class="n">oper</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span>
+            <span class="n">pauli</span><span class="o">.</span><span class="n">z</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="o">=</span> <span class="n">oper</span><span class="o">.</span><span class="n">z</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span>
+            <span class="n">phase</span> <span class="o">+=</span> <span class="n">pauli</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">pauli</span><span class="o">.</span><span class="n">z</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span>
 
         <span class="c1"># Check if there is a stabilizer that anti-commutes with an odd number of qubits</span>
         <span class="c1"># If so the expectation value is 0</span>
@@ -596,10 +595,11 @@
             <span class="n">phase</span> <span class="o">+=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">pauli_z</span> <span class="o">&amp;</span> <span class="n">stab</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="n">p</span><span class="p">])</span>
             <span class="n">pauli_z</span> <span class="o">=</span> <span class="n">pauli_z</span> <span class="o">^</span> <span class="n">stab</span><span class="o">.</span><span class="n">Z</span><span class="p">[</span><span class="n">p</span><span class="p">]</span>
 
+        <span class="c1"># For valid stabilizers, `phase` can only be 0 (= 1) or 2 (= -1) at this point.</span>
         <span class="k">if</span> <span class="n">phase</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">pauli_phase</span>
 
-        <span class="k">return</span> <span class="mi">1</span></div>
+        <span class="k">return</span> <span class="n">pauli_phase</span></div>
 
 <div class="viewcode-block" id="StabilizerState.probabilities"><a class="viewcode-back" href="../../../../stubs/qiskit.quantum_info.StabilizerState.probabilities.html#qiskit.quantum_info.StabilizerState.probabilities">[문서]</a>    <span class="k">def</span> <span class="nf">probabilities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the subsystem measurement probability vector.</span>
@@ -939,7 +939,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      최종 업데이트: 2022/03/24
+      최종 업데이트: 2022/04/01
 
     </p>
   </div>

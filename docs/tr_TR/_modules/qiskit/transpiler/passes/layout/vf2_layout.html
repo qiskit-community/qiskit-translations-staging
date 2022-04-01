@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.layout.vf2_layout &mdash; Qiskit 0.34.2 belgelendirmesi</title>
+  <title>qiskit.transpiler.passes.layout.vf2_layout &mdash; Qiskit 0.35.0 belgelendirmesi</title>
   
 
   
@@ -358,6 +358,7 @@
 
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.layout</span> <span class="kn">import</span> <span class="n">Layout</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.basepasses</span> <span class="kn">import</span> <span class="n">AnalysisPass</span>
+<span class="kn">from</span> <span class="nn">qiskit.transpiler.exceptions</span> <span class="kn">import</span> <span class="n">TranspilerError</span>
 <span class="kn">from</span> <span class="nn">qiskit.providers.exceptions</span> <span class="kn">import</span> <span class="n">BackendPropertyError</span>
 
 
@@ -392,13 +393,14 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">coupling_map</span><span class="p">,</span>
+        <span class="n">coupling_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">strict_direction</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">call_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">time_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">max_trials</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize a ``VF2Layout`` pass instance</span>
 
@@ -418,18 +420,31 @@
 <span class="sd">                based on the number of edges in the interaction graph or the coupling graph</span>
 <span class="sd">                (whichever is larger). If set to a value &lt;= 0 no limit on the number of trials</span>
 <span class="sd">                will be set.</span>
+<span class="sd">            target (Target): A target representing the backend device to run ``VF2Layout`` on.</span>
+<span class="sd">                If specified it will supersede a set value for ``properties`` and</span>
+<span class="sd">                ``coupling_map``.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError: At runtime, if neither ``coupling_map`` or ``target`` are provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span> <span class="o">=</span> <span class="n">coupling_map</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">build_coupling_map</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span> <span class="o">=</span> <span class="n">coupling_map</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">properties</span> <span class="o">=</span> <span class="n">properties</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">strict_direction</span> <span class="o">=</span> <span class="n">strict_direction</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">call_limit</span> <span class="o">=</span> <span class="n">call_limit</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">time_limit</span> <span class="o">=</span> <span class="n">time_limit</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">properties</span> <span class="o">=</span> <span class="n">properties</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_trials</span> <span class="o">=</span> <span class="n">max_trials</span>
 
 <div class="viewcode-block" id="VF2Layout.run"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.VF2Layout.run.html#qiskit.transpiler.passes.VF2Layout.run">[belgeler]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;run the layout method&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span><span class="s2">&quot;coupling_map or target must be specified.&quot;</span><span class="p">)</span>
+
         <span class="n">qubits</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">qubits</span>
         <span class="n">qubit_indices</span> <span class="o">=</span> <span class="p">{</span><span class="n">qubit</span><span class="p">:</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">qubits</span><span class="p">)}</span>
 
@@ -535,22 +550,34 @@
 <span class="sd">        to weight against higher connectivity qubits.&quot;&quot;&quot;</span>
         <span class="n">bits</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">get_physical_bits</span><span class="p">()</span>
         <span class="n">score</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Sum qubit degree for each qubit in chosen layout as really rough estimate of error</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;measure&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">bits</span><span class="p">:</span>
-                <span class="n">score</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span>
-                    <span class="n">bit</span>
-                <span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">in_degree</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">score</span>
-        <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">bits</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">score</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">readout_error</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span>
-            <span class="c1"># If readout error can&#39;t be found in properties fallback to degree</span>
-            <span class="c1"># divided by number of qubits as a terrible approximation</span>
-            <span class="k">except</span> <span class="n">BackendPropertyError</span><span class="p">:</span>
-                <span class="n">score</span> <span class="o">+=</span> <span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">in_degree</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span>
-                <span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+                <span class="n">props</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="s2">&quot;measure&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">bit</span><span class="p">,))</span>
+                <span class="k">if</span> <span class="n">props</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">props</span><span class="o">.</span><span class="n">error</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">score</span> <span class="o">+=</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span>
+                        <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">in_degree</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span>
+                    <span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">score</span> <span class="o">+=</span> <span class="n">props</span><span class="o">.</span><span class="n">error</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Sum qubit degree for each qubit in chosen layout as really rough estimate of error</span>
+                <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">bits</span><span class="p">:</span>
+                    <span class="n">score</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span>
+                        <span class="n">bit</span>
+                    <span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">in_degree</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">score</span>
+            <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">bits</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">score</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">readout_error</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span>
+                <span class="c1"># If readout error can&#39;t be found in properties fallback to degree</span>
+                <span class="c1"># divided by number of qubits as a terrible approximation</span>
+                <span class="k">except</span> <span class="n">BackendPropertyError</span><span class="p">:</span>
+                    <span class="n">score</span> <span class="o">+=</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span>
+                        <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">in_degree</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span>
+                    <span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">score</span></div>
 </pre></div>
 
@@ -569,7 +596,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Son güncelleme: 2022/03/24.
+      Son güncelleme: 2022/04/01.
 
     </p>
   </div>

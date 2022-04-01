@@ -20,7 +20,6 @@
       ~ContinueLoopOp.copy
       ~ContinueLoopOp.inverse
       ~ContinueLoopOp.is_parameterized
-      ~ContinueLoopOp.mirror
       ~ContinueLoopOp.qasm
       ~ContinueLoopOp.repeat
       ~ContinueLoopOp.reverse_ops
@@ -36,5 +35,8 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

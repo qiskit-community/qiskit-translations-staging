@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.quantum_info.operators.operator &mdash; Qiskit 0.34.2 문서</title>
+  <title>qiskit.quantum_info.operators.operator &mdash; Qiskit 0.35.0 문서</title>
   
 
   
@@ -531,10 +531,56 @@
             <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;Label contains invalid characters.&quot;</span><span class="p">)</span>
         <span class="c1"># Initialize an identity matrix and apply each gate</span>
         <span class="n">num_qubits</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">num_qubits</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">))</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">qubit</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">label</span><span class="p">)):</span>
             <span class="k">if</span> <span class="n">char</span> <span class="o">!=</span> <span class="s2">&quot;I&quot;</span><span class="p">:</span>
                 <span class="n">op</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">label_mats</span><span class="p">[</span><span class="n">char</span><span class="p">],</span> <span class="n">qargs</span><span class="o">=</span><span class="p">[</span><span class="n">qubit</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">op</span></div>
+
+<div class="viewcode-block" id="Operator.from_circuit"><a class="viewcode-back" href="../../../../stubs/qiskit.quantum_info.Operator.from_circuit.html#qiskit.quantum_info.Operator.from_circuit">[문서]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_circuit</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">circuit</span><span class="p">,</span> <span class="n">ignore_set_layout</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a new Operator object from a :class`.QuantumCircuit`</span>
+
+<span class="sd">        While a :class:`.QuantumCircuit` object can passed directly as ``data``</span>
+<span class="sd">        to the class constructor this provides no options on how the circuit</span>
+<span class="sd">        is used to create an :class:`.Operator`. This constructor method lets</span>
+<span class="sd">        you control how the :class:`.Operator` is created so it can be adjusted</span>
+<span class="sd">        for a particular use case.</span>
+
+<span class="sd">        By default this constructor method will permute the qubits based on a</span>
+<span class="sd">        configured initial layout (i.e. after it was transpiled). It also</span>
+<span class="sd">        provides an option to manually provide a :class:`.Layout` object</span>
+<span class="sd">        directly.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            circuit (QuantumCircuit): The :class:`.QuantumCircuit` to create an Operator</span>
+<span class="sd">                object from.</span>
+<span class="sd">            ignore_set_layout (bool): When set to ``True`` if the input ``circuit``</span>
+<span class="sd">                has a layout set it will be ignored</span>
+<span class="sd">            layout (Layout): If specified this kwarg can be used to specify a</span>
+<span class="sd">                particular layout to use to permute the qubits in the created</span>
+<span class="sd">                :class:`.Operator`. If this is specified it will be used instead</span>
+<span class="sd">                of a layout contained in the ``circuit`` input.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Operator: An operator representing the input circuit</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dimension</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">circuit</span><span class="o">.</span><span class="n">num_qubits</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dimension</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">layout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">ignore_set_layout</span><span class="p">:</span>
+                <span class="n">layout</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="s2">&quot;_layout&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">qargs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># If there was a layout specified (either from the circuit</span>
+        <span class="c1"># or via user input) use that to set qargs to permute qubits</span>
+        <span class="c1"># based on that layout</span>
+        <span class="k">if</span> <span class="n">layout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">qargs</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">phys</span><span class="p">:</span> <span class="n">circuit</span><span class="o">.</span><span class="n">find_bit</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span><span class="o">.</span><span class="n">index</span>
+                <span class="k">for</span> <span class="n">phys</span><span class="p">,</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">layout</span><span class="o">.</span><span class="n">get_physical_bits</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+        <span class="c1"># Convert circuit to an instruction</span>
+        <span class="n">instruction</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">to_instruction</span><span class="p">()</span>
+        <span class="n">op</span><span class="o">.</span><span class="n">_append_instruction</span><span class="p">(</span><span class="n">instruction</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="n">qargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">op</span></div>
 
 <div class="viewcode-block" id="Operator.is_unitary"><a class="viewcode-back" href="../../../../stubs/qiskit.quantum_info.Operator.is_unitary.html#qiskit.quantum_info.Operator.is_unitary">[문서]</a>    <span class="k">def</span> <span class="nf">is_unitary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -795,7 +841,7 @@
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">instruction</span><span class="p">,</span> <span class="s2">&quot;__array__&quot;</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">instruction</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">))</span>
 
-        <span class="n">dimension</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">instruction</span><span class="o">.</span><span class="n">num_qubits</span>
+        <span class="n">dimension</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">instruction</span><span class="o">.</span><span class="n">num_qubits</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dimension</span><span class="p">))</span>
         <span class="c1"># Convert circuit to an instruction</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">,</span> <span class="n">QuantumCircuit</span><span class="p">):</span>
@@ -845,7 +891,7 @@
                     <span class="p">)</span>
                 <span class="p">)</span>
             <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">definition</span><span class="o">.</span><span class="n">global_phase</span><span class="p">:</span>
-                <span class="n">dimension</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">obj</span><span class="o">.</span><span class="n">num_qubits</span>
+                <span class="n">dimension</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">obj</span><span class="o">.</span><span class="n">num_qubits</span>
                 <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span>
                     <span class="n">ScalarOp</span><span class="p">(</span><span class="n">dimension</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">definition</span><span class="o">.</span><span class="n">global_phase</span><span class="p">))),</span>
                     <span class="n">qargs</span><span class="o">=</span><span class="n">qargs</span><span class="p">,</span>
@@ -890,7 +936,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      최종 업데이트: 2022/03/24
+      최종 업데이트: 2022/04/01
 
     </p>
   </div>

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.instruction_durations &mdash; Qiskit 0.34.2 documentation</title>
+  <title>qiskit.transpiler.instruction_durations &mdash; Qiskit 0.35.0 documentation</title>
   
 
   
@@ -365,7 +365,11 @@
 
 <span class="sd">    It stores durations (gate lengths) and dt to be used at the scheduling stage of transpiling.</span>
 <span class="sd">    It can be constructed from ``backend`` or ``instruction_durations``,</span>
-<span class="sd">    which is an argument of :func:`transpile`.</span>
+<span class="sd">    which is an argument of :func:`transpile`. The duration of an instruction depends on the</span>
+<span class="sd">    instruction (given by name), the qubits, and optionally the parameters of the instruction.</span>
+<span class="sd">    Note that these fields are used as keys in dictionaries that are used to retrieve the</span>
+<span class="sd">    instruction durations. Therefore, users must use the exact same parameter value to retrieve</span>
+<span class="sd">    an instruction duration as the value with which it was added.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -373,6 +377,7 @@
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name_qubits</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name_qubits_params</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">dt</span>
         <span class="k">if</span> <span class="n">instruction_durations</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">instruction_durations</span><span class="p">)</span>
@@ -446,25 +451,48 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inst_durations</span><span class="p">,</span> <span class="n">InstructionDurations</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">inst_durations</span><span class="o">.</span><span class="n">duration_by_name</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name_qubits</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">inst_durations</span><span class="o">.</span><span class="n">duration_by_name_qubits</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name_qubits_params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="n">inst_durations</span><span class="o">.</span><span class="n">duration_by_name_qubits_params</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">items</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inst_durations</span><span class="p">):</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-                    <span class="n">inst_durations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">items</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">)</span>  <span class="c1"># set default unit</span>
-                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">items</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">items</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">)</span>  <span class="c1"># set default unit</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>  <span class="c1"># (inst_name, qubits, duration, unit)</span>
+                    <span class="n">inst_durations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">items</span><span class="p">[:</span><span class="mi">3</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="n">items</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">inst_durations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">items</span>
+
+                <span class="c1"># assert (inst_name, qubits, duration, parameters, unit)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inst_durations</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">5</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
                         <span class="s2">&quot;Each entry of inst_durations dictionary must be &quot;</span>
                         <span class="s2">&quot;(inst_name, qubits, duration) or &quot;</span>
-                        <span class="s2">&quot;(inst_name, qubits, duration, unit)&quot;</span>
+                        <span class="s2">&quot;(inst_name, qubits, duration, unit) or&quot;</span>
+                        <span class="s2">&quot;(inst_name, qubits, duration, parameters) or&quot;</span>
+                        <span class="s2">&quot;(inst_name, qubits, duration, parameters, unit) &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;received </span><span class="si">{</span><span class="n">inst_durations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
                     <span class="p">)</span>
 
-            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">inst_durations</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">inst_durations</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;None duration for </span><span class="si">{</span><span class="n">inst_durations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">inst_durations</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">qubits</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
                     <span class="n">qubits</span> <span class="o">=</span> <span class="p">[</span><span class="n">qubits</span><span class="p">]</span>
 
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                    <span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span><span class="n">parameters</span><span class="p">]</span>
+
                 <span class="k">if</span> <span class="n">qubits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">duration</span><span class="p">,</span> <span class="n">unit</span>
-                <span class="k">else</span><span class="p">:</span>
+                <span class="k">elif</span> <span class="n">parameters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name_qubits</span><span class="p">[(</span><span class="n">name</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">qubits</span><span class="p">))]</span> <span class="o">=</span> <span class="n">duration</span><span class="p">,</span> <span class="n">unit</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">qubits</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">parameters</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name_qubits_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">duration</span><span class="p">,</span> <span class="n">unit</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -473,13 +501,17 @@
         <span class="n">inst</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Instruction</span><span class="p">],</span>
         <span class="n">qubits</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Qubit</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Qubit</span><span class="p">]],</span>
         <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dt&quot;</span><span class="p">,</span>
+        <span class="n">parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Get the duration of the instruction with the name and the qubits.</span>
+        <span class="sd">&quot;&quot;&quot;Get the duration of the instruction with the name, qubits, and parameters.</span>
+
+<span class="sd">        Some instructions may have a parameter dependent duration.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            inst: An instruction or its name to be queried.</span>
 <span class="sd">            qubits: Qubits or its indices that the instruction acts on.</span>
 <span class="sd">            unit: The unit of duration to be returned. It must be &#39;s&#39; or &#39;dt&#39;.</span>
+<span class="sd">            parameters: The value of the parameters of the desired instruction.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            float|int: The duration of the instruction on the qubits.</span>
@@ -512,19 +544,31 @@
             <span class="n">qubits</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">qubits</span><span class="p">]</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">inst_name</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">inst_name</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">TranspilerError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Duration of </span><span class="si">{</span><span class="n">inst_name</span><span class="si">}</span><span class="s2"> on qubits </span><span class="si">{</span><span class="n">qubits</span><span class="si">}</span><span class="s2"> is not found.&quot;</span>
             <span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span></div>
 
-    <span class="k">def</span> <span class="nf">_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">qubits</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">to_unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Get the duration of the instruction with the name and the qubits.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_get</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">qubits</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">to_unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Get the duration of the instruction with the name, qubits, and parameters.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;barrier&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="mi">0</span>
 
-        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">qubits</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name_qubits</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">qubits</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">parameters</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">qubits</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name_qubits_params</span><span class="p">:</span>
+            <span class="n">duration</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name_qubits_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name_qubits</span><span class="p">:</span>
             <span class="n">duration</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name_qubits</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
         <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name</span><span class="p">:</span>
             <span class="n">duration</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration_by_name</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
@@ -570,11 +614,13 @@
 
 
 <span class="n">InstructionDurationsType</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span>
+    <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="nb">str</span><span class="p">]],</span>
+    <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]],</span>
     <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
     <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="nb">float</span><span class="p">]],</span>
     <span class="n">InstructionDurations</span><span class="p">,</span>
 <span class="p">]</span>
-<span class="sd">&quot;&quot;&quot;List of tuples representing (instruction name, qubits indices, duration).&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;List of tuples representing (instruction name, qubits indices, parameters, duration).&quot;&quot;&quot;</span>
 </pre></div>
 
              </article>
@@ -592,7 +638,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      2022/03/24 সর্বশেষ পরিবর্তন করা হয়েছে।
+      2022/04/01 সর্বশেষ পরিবর্তন করা হয়েছে।
 
     </p>
   </div>

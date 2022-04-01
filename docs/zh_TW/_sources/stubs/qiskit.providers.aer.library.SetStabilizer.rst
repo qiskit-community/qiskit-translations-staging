@@ -20,7 +20,6 @@
       ~SetStabilizer.copy
       ~SetStabilizer.inverse
       ~SetStabilizer.is_parameterized
-      ~SetStabilizer.mirror
       ~SetStabilizer.qasm
       ~SetStabilizer.repeat
       ~SetStabilizer.reverse_ops
@@ -36,5 +35,8 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

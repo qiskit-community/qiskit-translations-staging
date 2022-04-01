@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.basis.basis_translator &mdash; Dokumentasi Qiskit 0.34.2</title>
+  <title>qiskit.transpiler.passes.basis.basis_translator &mdash; Dokumentasi Qiskit 0.35.0</title>
   
 
   
@@ -353,14 +353,13 @@
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
-<span class="kn">from</span> <span class="nn">heapq</span> <span class="kn">import</span> <span class="n">heappush</span><span class="p">,</span> <span class="n">heappop</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">zip_longest</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">count</span> <span class="k">as</span> <span class="n">iter_count</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">retworkx</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Gate</span><span class="p">,</span> <span class="n">ParameterVector</span><span class="p">,</span> <span class="n">QuantumRegister</span>
+<span class="kn">from</span> <span class="nn">qiskit.circuit.equivalence</span> <span class="kn">import</span> <span class="n">Key</span>
 <span class="kn">from</span> <span class="nn">qiskit.dagcircuit</span> <span class="kn">import</span> <span class="n">DAGCircuit</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.basepasses</span> <span class="kn">import</span> <span class="n">TransformationPass</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.exceptions</span> <span class="kn">import</span> <span class="n">TranspilerError</span>
@@ -376,11 +375,10 @@
 <span class="sd">    This pass operates in several steps:</span>
 
 <span class="sd">    * Determine the source basis from the input circuit.</span>
-<span class="sd">    * Perform an A* search over basis sets, starting from the source basis and</span>
-<span class="sd">      targeting the device&#39;s target_basis, with edges discovered from the</span>
-<span class="sd">      provided EquivalenceLibrary. The heuristic used by the A* search is the</span>
-<span class="sd">      number of distinct circuit basis gates not in the target_basis, plus the</span>
-<span class="sd">      number of distinct device basis gates not used in the current basis.</span>
+<span class="sd">    * Perform a Dijkstra search over basis sets, starting from the device&#39;s</span>
+<span class="sd">      target_basis new gates are being generated using the rules from the provided</span>
+<span class="sd">      EquivalenceLibrary and the search stops if all gates in the source basis have</span>
+<span class="sd">      been generated.</span>
 <span class="sd">    * The found path, as a set of rules from the EquivalenceLibrary, is composed</span>
 <span class="sd">      into a set of gate replacement rules.</span>
 <span class="sd">    * The composed replacement rules are applied in-place to each op node which</span>
@@ -481,7 +479,7 @@
                 <span class="c1"># do an extra non-local search for this op to ensure we include any</span>
                 <span class="c1"># single qubit operation for (1,) as valid. This pattern also holds</span>
                 <span class="c1"># true for &gt; 2q ops too (so for 4q operations we need to check for 3q, 2q,</span>
-                <span class="c1"># and 1q opertaions in the same manner)</span>
+                <span class="c1"># and 1q operations in the same manner)</span>
                 <span class="k">if</span> <span class="n">qargs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qargs_with_non_global_operation</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span>
                     <span class="nb">frozenset</span><span class="p">(</span><span class="n">qargs</span><span class="p">)</span><span class="o">.</span><span class="n">issuperset</span><span class="p">(</span><span class="n">incomplete_qargs</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">incomplete_qargs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qargs_with_non_global_operation</span>
@@ -500,13 +498,11 @@
 
         <span class="c1"># Search for a path from source to target basis.</span>
         <span class="n">search_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-        <span class="n">basis_transforms</span> <span class="o">=</span> <span class="n">_basis_search</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_equiv_lib</span><span class="p">,</span> <span class="n">source_basis</span><span class="p">,</span> <span class="n">target_basis</span><span class="p">,</span> <span class="n">_basis_heuristic</span>
-        <span class="p">)</span>
+        <span class="n">basis_transforms</span> <span class="o">=</span> <span class="n">_basis_search</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_equiv_lib</span><span class="p">,</span> <span class="n">source_basis</span><span class="p">,</span> <span class="n">target_basis</span><span class="p">)</span>
 
         <span class="n">qarg_local_basis_transforms</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">qarg</span><span class="p">,</span> <span class="n">local_source_basis</span> <span class="ow">in</span> <span class="n">qargs_local_source_basis</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">expanded_target</span> <span class="o">=</span> <span class="n">target_basis</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qargs_with_non_global_operation</span><span class="p">[</span><span class="n">qarg</span><span class="p">]</span>
+            <span class="n">expanded_target</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">target_basis</span><span class="p">)</span>
             <span class="c1"># For any multiqubit operation that contains a subset of qubits that</span>
             <span class="c1"># has a non-local operation, include that non-local operation in the</span>
             <span class="c1"># search. This matches with the check we did above to include those</span>
@@ -515,6 +511,8 @@
                 <span class="k">for</span> <span class="n">non_local_qarg</span><span class="p">,</span> <span class="n">local_basis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qargs_with_non_global_operation</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                     <span class="k">if</span> <span class="n">qarg</span><span class="o">.</span><span class="n">issuperset</span><span class="p">(</span><span class="n">non_local_qarg</span><span class="p">):</span>
                         <span class="n">expanded_target</span> <span class="o">|=</span> <span class="n">local_basis</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">expanded_target</span> <span class="o">|=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qargs_with_non_global_operation</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">qarg</span><span class="p">)]</span>
 
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                 <span class="s2">&quot;Performing BasisTranslator search from source basis </span><span class="si">%s</span><span class="s2"> to target &quot;</span>
@@ -523,9 +521,19 @@
                 <span class="n">expanded_target</span><span class="p">,</span>
                 <span class="n">qarg</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">qarg_local_basis_transforms</span><span class="p">[</span><span class="n">qarg</span><span class="p">]</span> <span class="o">=</span> <span class="n">_basis_search</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_equiv_lib</span><span class="p">,</span> <span class="n">local_source_basis</span><span class="p">,</span> <span class="n">expanded_target</span><span class="p">,</span> <span class="n">_basis_heuristic</span>
+            <span class="n">local_basis_transforms</span> <span class="o">=</span> <span class="n">_basis_search</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_equiv_lib</span><span class="p">,</span> <span class="n">local_source_basis</span><span class="p">,</span> <span class="n">expanded_target</span>
             <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">local_basis_transforms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
+                    <span class="s2">&quot;Unable to map source basis </span><span class="si">{}</span><span class="s2"> to target basis </span><span class="si">{}</span><span class="s2"> on qarg </span><span class="si">{}</span><span class="s2"> &quot;</span>
+                    <span class="s2">&quot;over library </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">local_source_basis</span><span class="p">,</span> <span class="n">expanded_target</span><span class="p">,</span> <span class="n">qarg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_equiv_lib</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="n">qarg_local_basis_transforms</span><span class="p">[</span><span class="n">qarg</span><span class="p">]</span> <span class="o">=</span> <span class="n">local_basis_transforms</span>
 
         <span class="n">search_end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
@@ -626,22 +634,100 @@
         <span class="k">return</span> <span class="n">dag</span></div></div>
 
 
-<span class="k">def</span> <span class="nf">_basis_heuristic</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Simple metric to gauge distance between two bases as the number of</span>
-<span class="sd">    elements in the symmetric difference of the circuit basis and the device</span>
-<span class="sd">    basis.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="nb">len</span><span class="p">({</span><span class="n">gate_name</span> <span class="k">for</span> <span class="n">gate_name</span><span class="p">,</span> <span class="n">gate_num_qubits</span> <span class="ow">in</span> <span class="n">basis</span><span class="p">}</span> <span class="o">^</span> <span class="n">target</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">StopIfBasisRewritable</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Custom exception that signals `retworkx.dijkstra_search` to stop.&quot;&quot;&quot;</span>
 
 
-<span class="k">def</span> <span class="nf">_basis_search</span><span class="p">(</span><span class="n">equiv_lib</span><span class="p">,</span> <span class="n">source_basis</span><span class="p">,</span> <span class="n">target_basis</span><span class="p">,</span> <span class="n">heuristic</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">BasisSearchVisitor</span><span class="p">(</span><span class="n">retworkx</span><span class="o">.</span><span class="n">visit</span><span class="o">.</span><span class="n">DijkstraVisitor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handles events emitted during `retworkx.dijkstra_search`.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">source_basis</span><span class="p">,</span> <span class="n">target_basis</span><span class="p">,</span> <span class="n">num_gates_for_rule</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_basis</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">target_basis</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source_gates_remain</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">source_basis</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_gates_remain_for_rule</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">num_gates_for_rule</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_basis_transforms</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_predecessors</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_opt_cost_map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">discover_vertex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">score</span><span class="p">):</span>
+        <span class="n">gate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source_gates_remain</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">gate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_opt_cost_map</span><span class="p">[</span><span class="n">gate</span><span class="p">]</span> <span class="o">=</span> <span class="n">score</span>
+        <span class="n">rule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predecessors</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">gate</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rule</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Gate </span><span class="si">%s</span><span class="s2"> generated using rule </span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s2"> with total cost of </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span>
+                <span class="n">gate</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">rule</span><span class="o">.</span><span class="n">circuit</span><span class="p">,</span>
+                <span class="n">score</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_basis_transforms</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">gate</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">gate</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">rule</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">rule</span><span class="o">.</span><span class="n">circuit</span><span class="p">))</span>
+        <span class="c1"># we can stop the search if we have found all gates in the original ciruit.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source_gates_remain</span><span class="p">:</span>
+            <span class="c1"># if we start from source gates and apply `basis_transforms` in reverse order, we&#39;ll end</span>
+            <span class="c1"># up with gates in the target basis. Note though that `basis_transforms` may include</span>
+            <span class="c1"># additional transformations that are not required to map our source gates to the given</span>
+            <span class="c1"># target basis.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_basis_transforms</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="n">StopIfBasisRewritable</span>
+
+    <span class="k">def</span> <span class="nf">examine_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">):</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">edata</span> <span class="o">=</span> <span class="n">edge</span>
+        <span class="k">if</span> <span class="n">edata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">index</span> <span class="o">=</span> <span class="n">edata</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_gates_remain_for_rule</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+        <span class="c1"># if there are gates in this `rule` that we have not yet generated, we can&#39;t apply</span>
+        <span class="c1"># this `rule`. if `target` is already in basis, it&#39;s not beneficial to use this rule.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_gates_remain_for_rule</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_basis</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">retworkx</span><span class="o">.</span><span class="n">visit</span><span class="o">.</span><span class="n">PruneSearch</span>
+
+    <span class="k">def</span> <span class="nf">edge_relaxed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">):</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">edata</span> <span class="o">=</span> <span class="n">edge</span>
+        <span class="k">if</span> <span class="n">edata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">gate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_predecessors</span><span class="p">[</span><span class="n">gate</span><span class="p">]</span> <span class="o">=</span> <span class="n">edata</span><span class="p">[</span><span class="s2">&quot;rule&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">edge_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the cost of an edge.</span>
+
+<span class="sd">        This function computes the cost of this edge rule by summing</span>
+<span class="sd">        the costs of all gates in the rule equivalence circuit. In the</span>
+<span class="sd">        end, we need to subtract the cost of the source since `dijkstra`</span>
+<span class="sd">        will later add it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">edge</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># the target of the edge is a gate in the target basis,</span>
+            <span class="c1"># so we return a default value of 1.</span>
+            <span class="k">return</span> <span class="mi">1</span>
+
+        <span class="n">cost_tot</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">rule</span> <span class="o">=</span> <span class="n">edge</span><span class="p">[</span><span class="s2">&quot;rule&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">gate</span><span class="p">,</span> <span class="n">qargs</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">rule</span><span class="o">.</span><span class="n">circuit</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">Key</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">gate</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">num_qubits</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">qargs</span><span class="p">))</span>
+            <span class="n">cost_tot</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_opt_cost_map</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="n">source</span> <span class="o">=</span> <span class="n">edge</span><span class="p">[</span><span class="s2">&quot;source&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">cost_tot</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_opt_cost_map</span><span class="p">[</span><span class="n">source</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">basis_transforms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the gate basis transforms.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis_transforms</span>
+
+
+<span class="k">def</span> <span class="nf">_basis_search</span><span class="p">(</span><span class="n">equiv_lib</span><span class="p">,</span> <span class="n">source_basis</span><span class="p">,</span> <span class="n">target_basis</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Search for a set of transformations from source_basis to target_basis.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        equiv_lib (EquivalenceLibrary): Source of valid translations</span>
 <span class="sd">        source_basis (Set[Tuple[gate_name: str, gate_num_qubits: int]]): Starting basis.</span>
 <span class="sd">        target_basis (Set[gate_name: str]): Target basis.</span>
-<span class="sd">        heuristic (Callable[[source_basis, target_basis], int]): distance heuristic.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Optional[List[Tuple[gate, equiv_params, equiv_circuit]]]: List of (gate,</span>
@@ -650,100 +736,75 @@
 <span class="sd">            was found.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">source_basis</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">source_basis</span><span class="p">)</span>
-    <span class="n">target_basis</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">target_basis</span><span class="p">)</span>
-
-    <span class="n">open_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>  <span class="c1"># Bases found but not yet inspected.</span>
-    <span class="n">closed_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>  <span class="c1"># Bases found and inspected.</span>
-
-    <span class="c1"># Priority queue for inspection order of open_set. Contains Tuple[priority, count, basis]</span>
-    <span class="n">open_heap</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="c1"># Map from bases in closed_set to predecessor with lowest cost_from_source.</span>
-    <span class="c1"># Values are Tuple[prev_basis, gate_name, params, circuit].</span>
-    <span class="n">came_from</span> <span class="o">=</span> <span class="p">{}</span>
-
-    <span class="n">basis_count</span> <span class="o">=</span> <span class="n">iter_count</span><span class="p">()</span>  <span class="c1"># Used to break ties in priority.</span>
-
-    <span class="n">open_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">source_basis</span><span class="p">)</span>
-    <span class="n">heappush</span><span class="p">(</span><span class="n">open_heap</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="n">basis_count</span><span class="p">),</span> <span class="n">source_basis</span><span class="p">))</span>
-
-    <span class="c1"># Map from basis to lowest found cost from source.</span>
-    <span class="n">cost_from_source</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
-    <span class="n">cost_from_source</span><span class="p">[</span><span class="n">source_basis</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-
-    <span class="c1"># Map from basis to cost_from_source + heuristic.</span>
-    <span class="n">est_total_cost</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
-    <span class="n">est_total_cost</span><span class="p">[</span><span class="n">source_basis</span><span class="p">]</span> <span class="o">=</span> <span class="n">heuristic</span><span class="p">(</span><span class="n">source_basis</span><span class="p">,</span> <span class="n">target_basis</span><span class="p">)</span>
-
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Begining basis search from </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="n">source_basis</span><span class="p">,</span> <span class="n">target_basis</span><span class="p">)</span>
 
-    <span class="k">while</span> <span class="n">open_set</span><span class="p">:</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">current_basis</span> <span class="o">=</span> <span class="n">heappop</span><span class="p">(</span><span class="n">open_heap</span><span class="p">)</span>
+    <span class="n">source_basis</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">(</span><span class="n">gate_name</span><span class="p">,</span> <span class="n">gate_num_qubits</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">gate_name</span><span class="p">,</span> <span class="n">gate_num_qubits</span> <span class="ow">in</span> <span class="n">source_basis</span>
+        <span class="k">if</span> <span class="n">gate_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">target_basis</span>
+    <span class="p">}</span>
 
-        <span class="k">if</span> <span class="n">current_basis</span> <span class="ow">in</span> <span class="n">closed_set</span><span class="p">:</span>
-            <span class="c1"># When we close a node, we don&#39;t remove it from the heap,</span>
-            <span class="c1"># so skip here.</span>
-            <span class="k">continue</span>
+    <span class="c1"># if source basis is empty, no work to be done.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">source_basis</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
 
-        <span class="k">if</span> <span class="p">{</span><span class="n">gate_name</span> <span class="k">for</span> <span class="n">gate_name</span><span class="p">,</span> <span class="n">gate_num_qubits</span> <span class="ow">in</span> <span class="n">current_basis</span><span class="p">}</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">target_basis</span><span class="p">):</span>
-            <span class="c1"># Found target basis. Construct transform path.</span>
-            <span class="n">rtn</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">last_basis</span> <span class="o">=</span> <span class="n">current_basis</span>
-            <span class="k">while</span> <span class="n">last_basis</span> <span class="o">!=</span> <span class="n">source_basis</span><span class="p">:</span>
-                <span class="n">prev_basis</span><span class="p">,</span> <span class="n">gate_name</span><span class="p">,</span> <span class="n">gate_num_qubits</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">equiv</span> <span class="o">=</span> <span class="n">came_from</span><span class="p">[</span><span class="n">last_basis</span><span class="p">]</span>
+    <span class="n">all_gates_in_lib</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
-                <span class="n">rtn</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">gate_name</span><span class="p">,</span> <span class="n">gate_num_qubits</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">equiv</span><span class="p">))</span>
-                <span class="n">last_basis</span> <span class="o">=</span> <span class="n">prev_basis</span>
-            <span class="n">rtn</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">retworkx</span><span class="o">.</span><span class="n">PyDiGraph</span><span class="p">()</span>
+    <span class="n">nodes_to_indices</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">num_gates_for_rule</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Transformation path:&quot;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">gate_name</span><span class="p">,</span> <span class="n">gate_num_qubits</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">equiv</span> <span class="ow">in</span> <span class="n">rtn</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2"> =&gt; </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">gate_name</span><span class="p">,</span> <span class="n">gate_num_qubits</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">equiv</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">rtn</span>
+    <span class="k">def</span> <span class="nf">lazy_setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nodes_to_indices</span><span class="p">:</span>
+            <span class="n">nodes_to_indices</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nodes_to_indices</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Inspecting basis </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="n">current_basis</span><span class="p">)</span>
-        <span class="n">open_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">current_basis</span><span class="p">)</span>
-        <span class="n">closed_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">current_basis</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">gate_name</span><span class="p">,</span> <span class="n">gate_num_qubits</span> <span class="ow">in</span> <span class="n">current_basis</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">gate_name</span> <span class="ow">in</span> <span class="n">target_basis</span><span class="p">:</span>
-                <span class="k">continue</span>
-
-            <span class="n">equivs</span> <span class="o">=</span> <span class="n">equiv_lib</span><span class="o">.</span><span class="n">_get_equivalences</span><span class="p">((</span><span class="n">gate_name</span><span class="p">,</span> <span class="n">gate_num_qubits</span><span class="p">))</span>
-
-            <span class="n">basis_remain</span> <span class="o">=</span> <span class="n">current_basis</span> <span class="o">-</span> <span class="p">{(</span><span class="n">gate_name</span><span class="p">,</span> <span class="n">gate_num_qubits</span><span class="p">)}</span>
-            <span class="n">neighbors</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">rcounter</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># running sum of the number of equivalence rules in the library.</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">equiv_lib</span><span class="o">.</span><span class="n">_get_all_keys</span><span class="p">():</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">lazy_setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">all_gates_in_lib</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">equiv</span> <span class="ow">in</span> <span class="n">equiv_lib</span><span class="o">.</span><span class="n">_get_equivalences</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="n">sources</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">Key</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">gate</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">num_qubits</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">qargs</span><span class="p">))</span> <span class="k">for</span> <span class="n">gate</span><span class="p">,</span> <span class="n">qargs</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">equiv</span><span class="o">.</span><span class="n">circuit</span>
+            <span class="p">}</span>
+            <span class="n">all_gates_in_lib</span> <span class="o">|=</span> <span class="n">sources</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="p">(</span>
-                    <span class="nb">frozenset</span><span class="p">(</span>
-                        <span class="n">basis_remain</span>
-                        <span class="o">|</span> <span class="p">{(</span><span class="n">inst</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">inst</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)</span> <span class="k">for</span> <span class="n">inst</span><span class="p">,</span> <span class="n">qargs</span><span class="p">,</span> <span class="n">cargs</span> <span class="ow">in</span> <span class="n">equiv</span><span class="o">.</span><span class="n">data</span><span class="p">}</span>
-                    <span class="p">),</span>
-                    <span class="n">params</span><span class="p">,</span>
-                    <span class="n">equiv</span><span class="p">,</span>
+                    <span class="n">lazy_setdefault</span><span class="p">(</span><span class="n">source</span><span class="p">),</span>
+                    <span class="n">target</span><span class="p">,</span>
+                    <span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">rcounter</span><span class="p">,</span> <span class="s2">&quot;rule&quot;</span><span class="p">:</span> <span class="n">equiv</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="n">source</span><span class="p">},</span>
                 <span class="p">)</span>
-                <span class="k">for</span> <span class="n">params</span><span class="p">,</span> <span class="n">equiv</span> <span class="ow">in</span> <span class="n">equivs</span>
+                <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">sources</span>
             <span class="p">]</span>
 
-            <span class="c1"># Weight total path length of transformation weakly.</span>
-            <span class="n">tentative_cost_from_source</span> <span class="o">=</span> <span class="n">cost_from_source</span><span class="p">[</span><span class="n">current_basis</span><span class="p">]</span> <span class="o">+</span> <span class="mf">1e-3</span>
+            <span class="n">num_gates_for_rule</span><span class="p">[</span><span class="n">rcounter</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+            <span class="n">rcounter</span> <span class="o">+=</span> <span class="mi">1</span>
 
-            <span class="k">for</span> <span class="n">neighbor</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">equiv</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">closed_set</span><span class="p">:</span>
-                    <span class="k">continue</span>
+    <span class="c1"># This is only neccessary since gates in target basis are currently reported by</span>
+    <span class="c1"># their names and we need to have in addition the number of qubits they act on.</span>
+    <span class="n">target_basis_keys</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">key</span>
+        <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">target_basis</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">key</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">gate</span><span class="p">:</span> <span class="n">key</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">,</span> <span class="n">all_gates_in_lib</span><span class="p">)</span>
+    <span class="p">]</span>
 
-                <span class="k">if</span> <span class="n">tentative_cost_from_source</span> <span class="o">&gt;=</span> <span class="n">cost_from_source</span><span class="p">[</span><span class="n">neighbor</span><span class="p">]:</span>
-                    <span class="k">continue</span>
+    <span class="n">vis</span> <span class="o">=</span> <span class="n">BasisSearchVisitor</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">source_basis</span><span class="p">,</span> <span class="n">target_basis_keys</span><span class="p">,</span> <span class="n">num_gates_for_rule</span><span class="p">)</span>
+    <span class="c1"># we add a dummy node and connect it with gates in the target basis.</span>
+    <span class="c1"># we&#39;ll start the search from this dummy node.</span>
+    <span class="n">dummy</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;dummy starting node&quot;</span><span class="p">)</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">add_edges_from_no_data</span><span class="p">([(</span><span class="n">dummy</span><span class="p">,</span> <span class="n">nodes_to_indices</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">target_basis_keys</span><span class="p">])</span>
+    <span class="n">rtn</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">retworkx</span><span class="o">.</span><span class="n">digraph_dijkstra_search</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="p">[</span><span class="n">dummy</span><span class="p">],</span> <span class="n">vis</span><span class="o">.</span><span class="n">edge_cost</span><span class="p">,</span> <span class="n">vis</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">StopIfBasisRewritable</span><span class="p">:</span>
+        <span class="n">rtn</span> <span class="o">=</span> <span class="n">vis</span><span class="o">.</span><span class="n">basis_transforms</span>
 
-                <span class="n">open_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">neighbor</span><span class="p">)</span>
-                <span class="n">came_from</span><span class="p">[</span><span class="n">neighbor</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">current_basis</span><span class="p">,</span> <span class="n">gate_name</span><span class="p">,</span> <span class="n">gate_num_qubits</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">equiv</span><span class="p">)</span>
-                <span class="n">cost_from_source</span><span class="p">[</span><span class="n">neighbor</span><span class="p">]</span> <span class="o">=</span> <span class="n">tentative_cost_from_source</span>
-                <span class="n">est_total_cost</span><span class="p">[</span><span class="n">neighbor</span><span class="p">]</span> <span class="o">=</span> <span class="n">tentative_cost_from_source</span> <span class="o">+</span> <span class="n">heuristic</span><span class="p">(</span>
-                    <span class="n">neighbor</span><span class="p">,</span> <span class="n">target_basis</span>
-                <span class="p">)</span>
-                <span class="n">heappush</span><span class="p">(</span><span class="n">open_heap</span><span class="p">,</span> <span class="p">(</span><span class="n">est_total_cost</span><span class="p">[</span><span class="n">neighbor</span><span class="p">],</span> <span class="nb">next</span><span class="p">(</span><span class="n">basis_count</span><span class="p">),</span> <span class="n">neighbor</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Transformation path:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">gate_name</span><span class="p">,</span> <span class="n">gate_num_qubits</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">equiv</span> <span class="ow">in</span> <span class="n">rtn</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2"> =&gt; </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">gate_name</span><span class="p">,</span> <span class="n">gate_num_qubits</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">equiv</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">rtn</span>
 
 
 <span class="k">def</span> <span class="nf">_compose_transforms</span><span class="p">(</span><span class="n">basis_transforms</span><span class="p">,</span> <span class="n">source_basis</span><span class="p">,</span> <span class="n">source_dag</span><span class="p">):</span>
@@ -848,7 +909,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Terakhir diperbarui pada 2022/03/24.
+      Terakhir diperbarui pada 2022/04/01.
 
     </p>
   </div>

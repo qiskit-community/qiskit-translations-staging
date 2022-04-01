@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.opflow.primitive_ops.tapered_pauli_sum_op &mdash; Dokumentasi Qiskit 0.34.2</title>
+  <title>qiskit.opflow.primitive_ops.tapered_pauli_sum_op &mdash; Dokumentasi Qiskit 0.35.0</title>
   
 
   
@@ -427,6 +427,7 @@
         <span class="n">sq_paulis</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Pauli</span><span class="p">],</span>
         <span class="n">sq_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">tapering_values</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-14</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -436,6 +437,8 @@
 <span class="sd">            sq_list: the list of support of the single-qubit Pauli objects used to build</span>
 <span class="sd">                                 the Clifford operators</span>
 <span class="sd">            tapering_values: values determines the sector.</span>
+<span class="sd">            tol: Tolerance threshold for ignoring real and complex parts of a coefficient.</span>
+
 <span class="sd">        Raises:</span>
 <span class="sd">            OpflowError: Invalid paulis</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -460,6 +463,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_sq_paulis</span> <span class="o">=</span> <span class="n">sq_paulis</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sq_list</span> <span class="o">=</span> <span class="n">sq_list</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tapering_values</span> <span class="o">=</span> <span class="n">tapering_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tol</span> <span class="o">=</span> <span class="n">tol</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tol</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tolerance threshold for ignoring real and complex parts of a coefficient.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tol</span>
+
+    <span class="nd">@tol</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">tol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the tolerance threshold for ignoring real and complex parts of a coefficient.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tol</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">symmetries</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -729,7 +743,9 @@
             <span class="n">z_temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">pauli_term</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">z</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sq_list</span><span class="p">))</span>
             <span class="n">x_temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">pauli_term</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">paulis</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sq_list</span><span class="p">))</span>
             <span class="n">pauli_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">Pauli</span><span class="p">((</span><span class="n">z_temp</span><span class="p">,</span> <span class="n">x_temp</span><span class="p">))</span><span class="o">.</span><span class="n">to_label</span><span class="p">(),</span> <span class="n">coeff_out</span><span class="p">))</span>
+
         <span class="n">spo</span> <span class="o">=</span> <span class="n">SparsePauliOp</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span><span class="n">pauli_list</span><span class="p">)</span><span class="o">.</span><span class="n">simplify</span><span class="p">(</span><span class="n">atol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">spo</span> <span class="o">=</span> <span class="n">spo</span><span class="o">.</span><span class="n">chop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
         <span class="n">z2_symmetries</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">z2_symmetries</span><span class="o">.</span><span class="n">tapering_values</span> <span class="o">=</span> <span class="n">curr_tapering_values</span>
 
@@ -852,7 +868,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Terakhir diperbarui pada 2022/03/24.
+      Terakhir diperbarui pada 2022/04/01.
 
     </p>
   </div>

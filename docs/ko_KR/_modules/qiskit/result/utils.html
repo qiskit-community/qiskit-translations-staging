@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.result.utils &mdash; Qiskit 0.34.2 문서</title>
+  <title>qiskit.result.utils &mdash; Qiskit 0.35.0 문서</title>
   
 
   
@@ -350,28 +350,38 @@
 
 <span class="sd">&quot;&quot;&quot;Utility functions for working with Results.&quot;&quot;&quot;</span>
 
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">QiskitError</span>
 <span class="kn">from</span> <span class="nn">qiskit.result.result</span> <span class="kn">import</span> <span class="n">Result</span>
-<span class="kn">from</span> <span class="nn">qiskit.result.postprocess</span> <span class="kn">import</span> <span class="n">_bin_to_hex</span>
+<span class="kn">from</span> <span class="nn">qiskit.result.postprocess</span> <span class="kn">import</span> <span class="n">_bin_to_hex</span><span class="p">,</span> <span class="n">_hex_to_bin</span>
 
 
-<div class="viewcode-block" id="marginal_counts"><a class="viewcode-back" href="../../../stubs/qiskit.result.marginal_counts.html#qiskit.result.marginal_counts">[문서]</a><span class="k">def</span> <span class="nf">marginal_counts</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">format_marginal</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="marginal_counts"><a class="viewcode-back" href="../../../stubs/qiskit.result.marginal_counts.html#qiskit.result.marginal_counts">[문서]</a><span class="k">def</span> <span class="nf">marginal_counts</span><span class="p">(</span>
+    <span class="n">result</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">Result</span><span class="p">],</span>
+    <span class="n">indices</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">format_marginal</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">marginalize_memory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Result</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Marginalize counts from an experiment over some indices of interest.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        result (dict or Result): result to be marginalized</span>
+<span class="sd">        result: result to be marginalized</span>
 <span class="sd">            (a Result object or a dict(str, int) of counts).</span>
-<span class="sd">        indices (list(int) or None): The bit positions of interest</span>
+<span class="sd">        indices: The bit positions of interest</span>
 <span class="sd">            to marginalize over. If ``None`` (default), do not marginalize at all.</span>
-<span class="sd">        inplace (bool): Default: False. Operates on the original Result</span>
+<span class="sd">        inplace: Default: False. Operates on the original Result</span>
 <span class="sd">            argument if True, leading to loss of original Job Result.</span>
 <span class="sd">            It has no effect if ``result`` is a dict.</span>
-<span class="sd">        format_marginal (bool): Default: False. If True, takes the output of</span>
+<span class="sd">        format_marginal: Default: False. If True, takes the output of</span>
 <span class="sd">            marginalize and formats it with placeholders between cregs and</span>
 <span class="sd">            for non-indices.</span>
+<span class="sd">        marginalize_memory: If True, then also marginalize the memory field (if present).</span>
+<span class="sd">            If False, remove the memory field from the result.</span>
+<span class="sd">            If None, leave the memory field as is.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Result or dict(str, int): A Result object or a dictionary with</span>
@@ -391,9 +401,27 @@
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">new_counts_hex</span><span class="p">[</span><span class="n">_bin_to_hex</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span> <span class="o">=</span> <span class="n">v</span>
             <span class="n">experiment_result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">counts</span> <span class="o">=</span> <span class="n">new_counts_hex</span>
-            <span class="n">experiment_result</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">memory_slots</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
-            <span class="n">csize</span> <span class="o">=</span> <span class="n">experiment_result</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">creg_sizes</span>
-            <span class="n">experiment_result</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">creg_sizes</span> <span class="o">=</span> <span class="n">_adjust_creg_sizes</span><span class="p">(</span><span class="n">csize</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">experiment_result</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">memory_slots</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+                <span class="n">csize</span> <span class="o">=</span> <span class="n">experiment_result</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">creg_sizes</span>
+                <span class="n">experiment_result</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">creg_sizes</span> <span class="o">=</span> <span class="n">_adjust_creg_sizes</span><span class="p">(</span><span class="n">csize</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">experiment_result</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;memory&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">marginalize_memory</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                    <span class="nb">delattr</span><span class="p">(</span><span class="n">experiment_result</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;memory&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">marginalize_memory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">pass</span>  <span class="c1"># leave as is</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">sorted_indices</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                        <span class="n">indices</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>  <span class="c1"># same convention as for the counts</span>
+                    <span class="n">bit_strings</span> <span class="o">=</span> <span class="p">[</span><span class="n">_hex_to_bin</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">experiment_result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">memory</span><span class="p">]</span>
+                    <span class="n">marginal_bit_strings</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="o">-</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">sorted_indices</span> <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)])</span>
+                        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">bit_strings</span>
+                    <span class="p">]</span>
+                    <span class="n">experiment_result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">memory</span> <span class="o">=</span> <span class="p">[</span><span class="n">_bin_to_hex</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">marginal_bit_strings</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">result</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">marg_counts</span> <span class="o">=</span> <span class="n">_marginalize</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
@@ -496,7 +524,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      최종 업데이트: 2022/03/24
+      최종 업데이트: 2022/04/01
 
     </p>
   </div>

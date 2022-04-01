@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.quantum_info.synthesis.clifford_decompose &mdash; Qiskit 0.34.2 दिग्दर्शिका</title>
+  <title>qiskit.quantum_info.synthesis.clifford_decompose &mdash; Qiskit 0.35.0 दिग्दर्शिका</title>
   
 
   
@@ -815,15 +815,23 @@
     <span class="c1"># Reducing the original Clifford to identity</span>
     <span class="c1"># via symplectic Gaussian elimination</span>
     <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">qubit_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Calculate the adjoint of clifford_cpy without the phase</span>
+        <span class="n">clifford_adj</span> <span class="o">=</span> <span class="n">clifford_cpy</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">clifford_adj</span><span class="o">.</span><span class="n">destabilizer</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">clifford_adj</span><span class="o">.</span><span class="n">destabilizer</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">clifford_adj</span><span class="o">.</span><span class="n">stabilizer</span><span class="o">.</span><span class="n">Z</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">clifford_adj</span><span class="o">.</span><span class="n">destabilizer</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="n">clifford_adj</span><span class="o">.</span><span class="n">destabilizer</span><span class="o">.</span><span class="n">Z</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">clifford_adj</span><span class="o">.</span><span class="n">stabilizer</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">clifford_adj</span><span class="o">.</span><span class="n">stabilizer</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">clifford_adj</span><span class="o">.</span><span class="n">stabilizer</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">T</span>
+
         <span class="n">list_greedy_cost</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="n">qubit_list</span><span class="p">:</span>
             <span class="n">pauli_x</span> <span class="o">=</span> <span class="n">Pauli</span><span class="p">(</span><span class="n">num_qubits</span> <span class="o">*</span> <span class="s2">&quot;I&quot;</span><span class="p">)</span>
             <span class="n">pauli_x</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;X&quot;</span>
-            <span class="n">pauli_x</span> <span class="o">=</span> <span class="n">pauli_x</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">clifford_cpy</span><span class="p">)</span>
+            <span class="n">pauli_x</span> <span class="o">=</span> <span class="n">pauli_x</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">clifford_adj</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="s2">&quot;s&quot;</span><span class="p">)</span>
 
             <span class="n">pauli_z</span> <span class="o">=</span> <span class="n">Pauli</span><span class="p">(</span><span class="n">num_qubits</span> <span class="o">*</span> <span class="s2">&quot;I&quot;</span><span class="p">)</span>
             <span class="n">pauli_z</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Z&quot;</span>
-            <span class="n">pauli_z</span> <span class="o">=</span> <span class="n">pauli_z</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">clifford_cpy</span><span class="p">)</span>
+            <span class="n">pauli_z</span> <span class="o">=</span> <span class="n">pauli_z</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">clifford_adj</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="s2">&quot;s&quot;</span><span class="p">)</span>
             <span class="n">list_pairs</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">pauli_count</span> <span class="o">=</span> <span class="mi">0</span>
 
@@ -840,11 +848,11 @@
         <span class="c1"># Gaussian elimination step for the qubit with minimal CNOT cost</span>
         <span class="n">pauli_x</span> <span class="o">=</span> <span class="n">Pauli</span><span class="p">(</span><span class="n">num_qubits</span> <span class="o">*</span> <span class="s2">&quot;I&quot;</span><span class="p">)</span>
         <span class="n">pauli_x</span><span class="p">[</span><span class="n">min_qubit</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;X&quot;</span>
-        <span class="n">pauli_x</span> <span class="o">=</span> <span class="n">pauli_x</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">clifford_cpy</span><span class="p">)</span>
+        <span class="n">pauli_x</span> <span class="o">=</span> <span class="n">pauli_x</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">clifford_adj</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="s2">&quot;s&quot;</span><span class="p">)</span>
 
         <span class="n">pauli_z</span> <span class="o">=</span> <span class="n">Pauli</span><span class="p">(</span><span class="n">num_qubits</span> <span class="o">*</span> <span class="s2">&quot;I&quot;</span><span class="p">)</span>
         <span class="n">pauli_z</span><span class="p">[</span><span class="n">min_qubit</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Z&quot;</span>
-        <span class="n">pauli_z</span> <span class="o">=</span> <span class="n">pauli_z</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">clifford_cpy</span><span class="p">)</span>
+        <span class="n">pauli_z</span> <span class="o">=</span> <span class="n">pauli_z</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">clifford_adj</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="s2">&quot;s&quot;</span><span class="p">)</span>
 
         <span class="c1"># Compute the decoupling operator of cliff_ox and cliff_oz</span>
         <span class="n">decouple_circ</span><span class="p">,</span> <span class="n">decouple_cliff</span> <span class="o">=</span> <span class="n">_calc_decoupling</span><span class="p">(</span>
@@ -1112,7 +1120,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      अंतिम बार सम्पादित 2022/03/24.
+      अंतिम बार सम्पादित 2022/04/01.
 
     </p>
   </div>

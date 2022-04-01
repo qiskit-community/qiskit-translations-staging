@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.utils.gates_basis &mdash; Qiskit 0.34.2 documentation</title>
+  <title>qiskit.transpiler.passes.utils.gates_basis &mdash; Qiskit 0.35.0 documentation</title>
   
 
   
@@ -351,29 +351,53 @@
 <span class="sd">&quot;&quot;&quot;Check if all gates in the DAGCircuit are in the specified basis gates.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.basepasses</span> <span class="kn">import</span> <span class="n">AnalysisPass</span>
+<span class="kn">from</span> <span class="nn">qiskit.transpiler.exceptions</span> <span class="kn">import</span> <span class="n">TranspilerError</span>
 
 
 <div class="viewcode-block" id="GatesInBasis"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.GatesInBasis.html#qiskit.transpiler.passes.GatesInBasis">[docs]</a><span class="k">class</span> <span class="nc">GatesInBasis</span><span class="p">(</span><span class="n">AnalysisPass</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Check if all gates in a DAG are in a given set of gates&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basis_gates</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basis_gates</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the GatesInBasis pass.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            basis_gates (list): The list of strings representing the set of basis gates.</span>
+<span class="sd">            target (Target): The target representing the backend. If specified</span>
+<span class="sd">                this will be used instead of the ``basis_gates`` parameter</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TranspilerError: If neither basis_gates or target is set.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_basis_gates</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">basis_gates</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">basis_gates</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span>
+                <span class="s2">&quot;A value for &#39;basis_gates&#39; or &#39;target&#39; must be set to use this pass&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">basis_gates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_basis_gates</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">basis_gates</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
+                <span class="p">{</span><span class="s2">&quot;measure&quot;</span><span class="p">,</span> <span class="s2">&quot;reset&quot;</span><span class="p">,</span> <span class="s2">&quot;barrier&quot;</span><span class="p">,</span> <span class="s2">&quot;snapshot&quot;</span><span class="p">,</span> <span class="s2">&quot;delay&quot;</span><span class="p">}</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="n">target</span>
 
 <div class="viewcode-block" id="GatesInBasis.run"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.GatesInBasis.run.html#qiskit.transpiler.passes.GatesInBasis.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run the GatesInBasis pass on `dag`.&quot;&quot;&quot;</span>
         <span class="n">gates_out_of_basis</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">basic_instrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;measure&quot;</span><span class="p">,</span> <span class="s2">&quot;reset&quot;</span><span class="p">,</span> <span class="s2">&quot;barrier&quot;</span><span class="p">,</span> <span class="s2">&quot;snapshot&quot;</span><span class="p">,</span> <span class="s2">&quot;delay&quot;</span><span class="p">}</span>
-        <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">_op_names</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">gate</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis_gates</span> <span class="ow">and</span> <span class="n">gate</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">basic_instrs</span><span class="p">:</span>
-                <span class="n">gates_out_of_basis</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="k">break</span>
-
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">qubit_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">qubit</span><span class="p">:</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">qubits</span><span class="p">)}</span>
+            <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">op_nodes</span><span class="p">():</span>
+                <span class="c1"># Barrier is universal and supported by all backends</span>
+                <span class="k">if</span> <span class="n">gate</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;barrier&quot;</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span><span class="o">.</span><span class="n">instruction_supported</span><span class="p">(</span>
+                    <span class="n">gate</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">qubit_map</span><span class="p">[</span><span class="n">bit</span><span class="p">]</span> <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">gate</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span>
+                <span class="p">):</span>
+                    <span class="n">gates_out_of_basis</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">_op_names</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">gate</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis_gates</span><span class="p">:</span>
+                    <span class="n">gates_out_of_basis</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">property_set</span><span class="p">[</span><span class="s2">&quot;all_gates_in_basis&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">gates_out_of_basis</span></div></div>
 </pre></div>
 
@@ -392,7 +416,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Last updated on 2022/03/24.
+      Last updated on 2022/04/01.
 
     </p>
   </div>

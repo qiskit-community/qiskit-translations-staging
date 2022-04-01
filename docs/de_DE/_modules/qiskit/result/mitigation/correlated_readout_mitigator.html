@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.result.mitigation.correlated_readout_mitigator &mdash; Qiskit 0.34.2 Dokumentation</title>
+  <title>qiskit.result.mitigation.correlated_readout_mitigator &mdash; Qiskit 0.35.0 Dokumentation</title>
   
 
   
@@ -351,7 +351,7 @@
 <span class="sd">Readout mitigator class based on the A-matrix inversion method</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">QiskitError</span>
@@ -371,20 +371,20 @@
 <span class="sd">    :math:`2^N x 2^N` so the mitigation complexity is :math:`O(4^N)`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">amat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">qubits</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">assignment_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">qubits</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize a CorrelatedReadoutMitigator</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            amat: readout error assignment matrix.</span>
+<span class="sd">            assignment_matrix: readout error assignment matrix.</span>
 <span class="sd">            qubits: Optional, the measured physical qubits for mitigation.</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            QiskitError: matrix size does not agree with number of qubits</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">amat</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">amat</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">assignment_matrix</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">assignment_matrix</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;Assignment matrix columns must be valid probability distributions&quot;</span><span class="p">)</span>
-        <span class="n">amat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">amat</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-        <span class="n">matrix_qubits_num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">amat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">assignment_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">assignment_matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">matrix_qubits_num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">assignment_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
         <span class="k">if</span> <span class="n">qubits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_num_qubits</span> <span class="o">=</span> <span class="n">matrix_qubits_num</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_qubits</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_qubits</span><span class="p">)</span>
@@ -397,8 +397,13 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_qubits</span> <span class="o">=</span> <span class="n">qubits</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_num_qubits</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qubits</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_qubit_index</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qubits</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_qubits</span><span class="p">)))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assignment_mat</span> <span class="o">=</span> <span class="n">amat</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assignment_mat</span> <span class="o">=</span> <span class="n">assignment_matrix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_mitigation_mats</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">settings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return settings.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;assignment_matrix&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assignment_mat</span><span class="p">,</span> <span class="s2">&quot;qubits&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qubits</span><span class="p">}</span>
 
 <div class="viewcode-block" id="CorrelatedReadoutMitigator.expectation_value"><a class="viewcode-back" href="../../../../stubs/qiskit.result.CorrelatedReadoutMitigator.expectation_value.html#qiskit.result.CorrelatedReadoutMitigator.expectation_value">[Doku]</a>    <span class="k">def</span> <span class="nf">expectation_value</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -450,7 +455,7 @@
 
         <span class="c1"># Get operator coeffs</span>
         <span class="k">if</span> <span class="n">diagonal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">diagonal</span> <span class="o">=</span> <span class="n">z_diagonal</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_qubits</span><span class="p">)</span>
+            <span class="n">diagonal</span> <span class="o">=</span> <span class="n">z_diagonal</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_qubits</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">diagonal</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">diagonal</span> <span class="o">=</span> <span class="n">str2diag</span><span class="p">(</span><span class="n">diagonal</span><span class="p">)</span>
 
@@ -560,10 +565,10 @@
         <span class="p">)</span>
         <span class="n">num_qubits</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">qubits</span><span class="p">)</span>
 
-        <span class="n">new_amat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">[</span><span class="mi">2</span> <span class="o">**</span> <span class="n">num_qubits</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">new_amat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">[</span><span class="mi">2</span><span class="o">**</span><span class="n">num_qubits</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_assignment_mat</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_keep_indexes</span><span class="p">(</span><span class="n">qubit_indices</span><span class="p">)]):</span>
             <span class="n">new_amat</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_qubits</span> <span class="o">*</span> <span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="mi">2</span> <span class="o">**</span> <span class="n">num_qubits</span><span class="p">])</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_qubits</span> <span class="o">*</span> <span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="mi">2</span><span class="o">**</span><span class="n">num_qubits</span><span class="p">])</span>
             <span class="p">)</span>
         <span class="n">new_amat</span> <span class="o">=</span> <span class="n">new_amat</span><span class="o">.</span><span class="n">T</span>
         <span class="k">return</span> <span class="n">new_amat</span></div>
@@ -613,7 +618,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Zuletzt aktualisiert am 2022/03/24.
+      Zuletzt aktualisiert am 2022/04/01.
 
     </p>
   </div>

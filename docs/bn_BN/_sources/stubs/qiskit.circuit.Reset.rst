@@ -20,7 +20,6 @@
       ~Reset.copy
       ~Reset.inverse
       ~Reset.is_parameterized
-      ~Reset.mirror
       ~Reset.qasm
       ~Reset.repeat
       ~Reset.reverse_ops
@@ -36,5 +35,8 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

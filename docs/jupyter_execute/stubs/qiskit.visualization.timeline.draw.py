@@ -12,7 +12,7 @@ qc = QuantumCircuit(2)
 qc.h(0)
 qc.cx(0,1)
 
-qc = transpile(qc, FakeAlmaden(), scheduling_method='alap')
+qc = transpile(qc, FakeAlmaden(), scheduling_method='alap', layout_method='trivial')
 draw(qc)
 
 
@@ -27,7 +27,7 @@ qc = QuantumCircuit(2)
 qc.h(0)
 qc.cx(0,1)
 
-qc = transpile(qc, FakeAlmaden(), scheduling_method='alap')
+qc = transpile(qc, FakeAlmaden(), scheduling_method='alap', layout_method='trivial')
 draw(qc, style=IQXSimple())
 
 
@@ -42,6 +42,6 @@ qc = QuantumCircuit(2)
 qc.h(0)
 qc.cx(0,1)
 
-qc = transpile(qc, FakeAlmaden(), scheduling_method='alap')
+qc = transpile(qc, FakeAlmaden(), scheduling_method='alap', layout_method='trivial')
 draw(qc, style=IQXDebugging())
 

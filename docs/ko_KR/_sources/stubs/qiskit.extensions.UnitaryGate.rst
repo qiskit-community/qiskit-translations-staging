@@ -23,7 +23,6 @@
       ~UnitaryGate.copy
       ~UnitaryGate.inverse
       ~UnitaryGate.is_parameterized
-      ~UnitaryGate.mirror
       ~UnitaryGate.power
       ~UnitaryGate.qasm
       ~UnitaryGate.repeat
@@ -42,5 +41,8 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

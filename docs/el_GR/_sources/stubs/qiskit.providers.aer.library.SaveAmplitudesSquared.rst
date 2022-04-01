@@ -20,7 +20,6 @@
       ~SaveAmplitudesSquared.copy
       ~SaveAmplitudesSquared.inverse
       ~SaveAmplitudesSquared.is_parameterized
-      ~SaveAmplitudesSquared.mirror
       ~SaveAmplitudesSquared.qasm
       ~SaveAmplitudesSquared.repeat
       ~SaveAmplitudesSquared.reverse_ops
@@ -36,5 +35,8 @@
    .. autoattribute:: definition
    .. autoattribute:: duration
    .. autoattribute:: label
+   .. autoattribute:: name
+   .. autoattribute:: num_clbits
+   .. autoattribute:: num_qubits
    .. autoattribute:: params
    .. autoattribute:: unit

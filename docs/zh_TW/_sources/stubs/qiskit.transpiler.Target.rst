@@ -20,9 +20,11 @@
       ~Target.get_non_global_operation_names
       ~Target.instruction_properties
       ~Target.instruction_schedule_map
+      ~Target.instruction_supported
       ~Target.items
       ~Target.keys
       ~Target.operation_from_name
+      ~Target.operation_names_for_qargs
       ~Target.operations_for_qargs
       ~Target.qargs_for_operation_name
       ~Target.timing_constraints
@@ -41,6 +43,7 @@
    .. autoattribute:: min_length
    .. autoattribute:: pulse_alignment
    .. autoattribute:: aquire_alignment
+   .. autoattribute:: qubit_properties
    .. autoattribute:: instructions
    .. autoattribute:: operation_names
    .. autoattribute:: operations
