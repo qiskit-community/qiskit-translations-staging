@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Electronic structure &mdash; Qiskit Nature 0.3.1 說明文件</title>
+  <title>電子結構 &mdash; Qiskit Nature 0.3.1 說明文件</title>
   
 
   
@@ -41,7 +41,7 @@
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜尋" href="../search.html" />
     <link rel="next" title="振動結構" href="02_vibrational_structure.html" />
-    <link rel="prev" title="Qiskit Nature Tutorials" href="index.html" /> 
+    <link rel="prev" title="Qiskit 自然教程" href="index.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -253,9 +253,9 @@
       </li>
 
         
-          <li><a href="index.html">Qiskit Nature Tutorials</a> &gt;</li>
+          <li><a href="index.html">Qiskit 自然教程</a> &gt;</li>
         
-      <li>Electronic structure</li>
+      <li>電子結構</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
@@ -537,41 +537,41 @@ div.rendered_html tbody tr:hover {
 <p class="admonition-title">備註</p>
 <p>此頁面是從 <a class="reference external" href="https://github.com/Qiskit/qiskit-nature/blob/stable/0.3/docs/tutorials/01_electronic_structure.ipynb">docs/tutorials/01_electronic_structure.ipynb</a> 產生的。</p>
 </div>
-<section id="Electronic-structure">
-<h1>Electronic structure<a class="headerlink" href="#Electronic-structure" title="本標題的永久連結">¶</a></h1>
-<section id="Introduction">
-<h2>Introduction<a class="headerlink" href="#Introduction" title="本標題的永久連結">¶</a></h2>
-<p>The molecular Hamiltonian is</p>
+<section id="電子結構">
+<h1>電子結構<a class="headerlink" href="#電子結構" title="本標題的永久連結">¶</a></h1>
+<section id="簡介">
+<h2>簡介<a class="headerlink" href="#簡介" title="本標題的永久連結">¶</a></h2>
+<p>分子的哈密頓量是</p>
 <div class="math notranslate nohighlight">
 \[\mathcal{H} = - \sum_I \frac{\nabla_{R_I}^2}{M_I} - \sum_i \frac{\nabla_{r_i}^2}{m_e} - \sum_I\sum_i  \frac{Z_I e^2}{|R_I-r_i|} + \sum_i \sum_{j&gt;i} \frac{e^2}{|r_i-r_j|} + \sum_I\sum_{J&gt;I} \frac{Z_I Z_J e^2}{|R_I-R_J|}\]</div>
 <p>因為原子核比電子重得多，原子核的移動速度比電子慢很多，因此可以將原子核視為靜止不動，只需討論電子的部分，這就是波恩–歐本海默近似。</p>
-<p>Therefore, one can first tackle the electronic problem with nuclear coordinate entering only as parameters. The energy levels of the electrons in the molecule can be found by solving the non-relativistic time independent Schroedinger equation,</p>
+<p>因此，我們先將原子核坐標視為固定不變的參數，然後探討電子的部分，這樣分子中電子能階可以透過非相對論性且與時間無關的薛丁格方程求解得出。</p>
 <div class="math notranslate nohighlight">
 \[\mathcal{H}_{\text{el}} |\Psi_{n}\rangle = E_{n} |\Psi_{n}\rangle\]</div>
-<p>where</p>
+<p>其中</p>
 <div class="math notranslate nohighlight">
 \[\mathcal{H}_{\text{el}} = - \sum_i \frac{\nabla_{r_i}^2}{m_e} - \sum_I\sum_i  \frac{Z_I e^2}{|R_I-r_i|} + \sum_i \sum_{j&gt;i} \frac{e^2}{|r_i-r_j|}.\]</div>
 <p>In particular the ground state energy is given by:</p>
 <div class="math notranslate nohighlight">
 \[E_0 = \frac{\langle \Psi_0 | H_{\text{el}} | \Psi_0 \rangle}{\langle \Psi_0 | \Psi_0 \rangle}\]</div>
-<p>where <span class="math notranslate nohighlight">\(\Psi_0\)</span> is the ground state of the system.</p>
-<p>However, the dimensionality of this problem grows exponentially with the number of degrees of freedom. To tackle this issue we would like to prepare <span class="math notranslate nohighlight">\(\Psi_0\)</span> on a quantum computer and measure the Hamiltonian expectation value (or <span class="math notranslate nohighlight">\(E_0\)</span>) directly.</p>
-<p>So how do we do that concretely?</p>
+<p>其中 <span class="math notranslate nohighlight">\(\Psi_0\)</span> 是系統的基態。</p>
+<p>然而，這個問題難度會隨著自由度的增加而指數性成長。為了解決這問題，我們想在量子電腦上製備 <span class="math notranslate nohighlight">\(\Psi_0\)</span>，並直接測量哈密頓期望值(或 <span class="math notranslate nohighlight">\(E_0\)</span>) 。</p>
+<p>所以具體上我們怎麼做呢？</p>
 </section>
 <section id="Hartree-Fock-起始狀態">
 <h2>Hartree-Fock 起始狀態<a class="headerlink" href="#Hartree-Fock-起始狀態" title="本標題的永久連結">¶</a></h2>
-<p>A good starting point for solving this problem is the Hartree-Fock (HF) method. This method approximates a N-body problem into N one-body problems where each electron evolves in the mean-field of the others. Classically solving the HF equations is efficient and leads to the exact exchange energy but does not include any electron correlation. Therefore, it is usually a good starting point to start adding correlation.</p>
-<p>The Hamiltonian can then be re-expressed in the basis of the solutions of the HF method, also called Molecular Orbitals (MOs):</p>
+<p>哈特里－福克(HF) 法會是解決這類問題的起點。在這方法中，N 體問題被近似成 N 個一體問題（平均場近似）。 在經典計算機上求解 Hartree-Fock 方程是有效的，且能準確地交換能量，但沒有考慮電子之間的庫侖力交互作用。 因此，在計算中加入電子之間的修正項會是一個很好的出發點。</p>
+<p>上述電子哈密頓量改用 Hartree-Fock 方法（也稱為分子軌道方法 (MOs)）做表達：</p>
 <div class="math notranslate nohighlight">
 \[\hat{H}_{elec}=\sum_{pq} h_{pq} \hat{a}^{\dagger}_p \hat{a}_q +
 \frac{1}{2} \sum_{pqrs} h_{pqrs}  \hat{a}^{\dagger}_p \hat{a}^{\dagger}_q \hat{a}_r  \hat{a}_s\]</div>
-<p>with the 1-body integrals</p>
+<p>一體積分如下</p>
 <div class="math notranslate nohighlight">
 \[h_{pq} = \int \phi^*_p(r) \left( -\frac{1}{2} \nabla^2 - \sum_{I} \frac{Z_I}{R_I- r} \right)   \phi_q(r)dr\]</div>
-<p>and 2-body integrals</p>
+<p>與二體積分如下</p>
 <div class="math notranslate nohighlight">
 \[h_{pqrs} = \int \frac{\phi^*_p(r_1)  \phi^*_q(r_2) \phi_r(r_2)  \phi_s(r_1)}{|r_1-r_2|}dr_1dr_2.\]</div>
-<p>The MOs (<span class="math notranslate nohighlight">\(\phi_u\)</span>) can be occupied or virtual (unoccupied). One MO can contain 2 electrons. However, in what follows we actually work with Spin Orbitals which are associated with a spin up (<span class="math notranslate nohighlight">\(\alpha\)</span>) of spin down (<span class="math notranslate nohighlight">\(\beta\)</span>) electron. Thus Spin Orbitals can contain one electron or be unoccupied.</p>
+<p>MOs（<span class="math notranslate nohighlight">\(\phi_u\)</span>）可以是被電子佔用或是空缺（沒有被佔用）。一個 MO 可以有兩個電子。然而，在接下來的內容，我們會使用到電子自旋軌域：自旋向上(<span class="math notranslate nohighlight">\(\alpha\)</span>) 或向下 (<span class="math notranslate nohighlight">\(\beta\)</span>) ，因此自旋軌域可以有一個電子或是沒有電子。</p>
 <p>現在我們介紹如何用 Qiskit 表達上述的計算過程。</p>
 <p>Qiskit is interfaced with different classical codes which are able to find the HF solutions. Interfacing between Qiskit and the following codes is already available:</p>
 <ul class="simple">
@@ -580,7 +580,7 @@ div.rendered_html tbody tr:hover {
 <li><p>PyQuante</p></li>
 <li><p>PySCF</p></li>
 </ul>
-<p>In the following we set up a PySCF driver, for the hydrogen molecule at equilibrium bond length (0.735 angstrom) in the singlet state and with no charge.</p>
+<p>接下來我們用 PsSCF driver 設定不帶電荷且平均鍵長(0.735 埃) 的單態氫分子。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -617,12 +617,12 @@ Couldn&#39;t find cython becke routine
   h5py.get_config().default_file_mode = &#39;a&#39;
 </pre></div></div>
 </div>
-<p>For further information about the drivers see <a class="reference external" href="https://qiskit.org/documentation/nature/apidocs/qiskit_nature.drivers.second_quantization.html">https://qiskit.org/documentation/nature/apidocs/qiskit_nature.drivers.second_quantization.html</a></p>
+<p>有關 drivers 更多資訊，可以參看 <a class="reference external" href="https://qiskit.org/documentation/nature/apidocs/qiskit_nature.drivers.second_quantization.html">https://qiskit.org/documentation/nature/apidocs/qiskit_nature.drivers.second_quantization.html</a></p>
 </section>
-<section id="The-mapping-from-fermions-to-qubits">
-<h2>The mapping from fermions to qubits<a class="headerlink" href="#The-mapping-from-fermions-to-qubits" title="本標題的永久連結">¶</a></h2>
-<p><img alt="479de809724c40bdae1f43e90bc01297" class="no-scaled-link" src="../_images/jw_mapping.png" style="width: 500px;" /></p>
-<p>The Hamiltonian given in the previous section is expressed in terms of fermionic operators. To encode the problem into the state of a quantum computer, these operators must be mapped to spin operators (indeed the qubits follow spin statistics).</p>
+<section id="將費米子資訊輸入進量子比特">
+<h2>將費米子資訊輸入進量子比特<a class="headerlink" href="#將費米子資訊輸入進量子比特" title="本標題的永久連結">¶</a></h2>
+<p><img alt="aebcaca86d0943adabc4a04e405c57f9" class="no-scaled-link" src="../_images/jw_mapping.png" style="width: 500px;" /></p>
+<p>前一節提到的哈密頓量是以費米子運算子表達。為了將問題編碼成量子比特的狀態，這些運算子必須轉換成自旋運算子（實際上量子比特是遵循自旋統計）</p>
 <p>There exist different mapping types with different properties. Qiskit already supports the following mappings:</p>
 <ul class="simple">
 <li><p>Jordan-Wigner (über das paulische äquivalenzverbot. In The Collected Works of Eugene Paul Wigner (pp. 109-129). Springer, Berlin, Heidelberg (1993)).</p></li>
@@ -768,7 +768,7 @@ Couldn&#39;t find cython becke routine
         <a href="02_vibrational_structure.html" class="btn btn-neutral float-right" title="振動結構" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="Qiskit Nature Tutorials" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="index.html" class="btn btn-neutral" title="Qiskit 自然教程" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -800,10 +800,10 @@ Couldn&#39;t find cython becke routine
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Electronic structure</a><ul>
-<li><a class="reference internal" href="#Introduction">Introduction</a></li>
+<li><a class="reference internal" href="#">電子結構</a><ul>
+<li><a class="reference internal" href="#簡介">簡介</a></li>
 <li><a class="reference internal" href="#Hartree-Fock-起始狀態">Hartree-Fock 起始狀態</a></li>
-<li><a class="reference internal" href="#The-mapping-from-fermions-to-qubits">The mapping from fermions to qubits</a></li>
+<li><a class="reference internal" href="#將費米子資訊輸入進量子比特">將費米子資訊輸入進量子比特</a></li>
 </ul>
 </li>
 </ul>

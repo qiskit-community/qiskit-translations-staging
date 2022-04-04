@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Torch Connector and Hybrid QNNs &mdash; Qiskit Machine Learning 0.3.1 說明文件</title>
+  <title>Torch 連接器及混合式 QNNs &mdash; Qiskit Machine Learning 0.3.1 說明文件</title>
   
 
   
@@ -41,7 +41,7 @@
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜尋" href="../search.html" />
     <link rel="next" title="Torch Runtime" href="06_torch_runtime.html" />
-    <link rel="prev" title="qGANs for Loading Random Distributions" href="04_qgans_for_loading_random_distributions.html" /> 
+    <link rel="prev" title="使用 qGAN 編寫隨機分佈" href="04_qgans_for_loading_random_distributions.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -229,10 +229,10 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">入門</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../apidocs/qiskit_machine_learning.html">API 參考資料</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">版本資訊</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../apidocs/qiskit_machine_learning.html">API References</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">教程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 </ul>
 
             
@@ -273,9 +273,9 @@
       </li>
 
         
-          <li><a href="index.html">Machine Learning Tutorials</a> &gt;</li>
+          <li><a href="index.html">機器學習教程</a> &gt;</li>
         
-      <li>Torch Connector and Hybrid QNNs</li>
+      <li>Torch 連接器及混合式 QNNs</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
@@ -555,31 +555,30 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>This page was generated from <a class="reference external" href="https://github.com/Qiskit/qiskit-machine-learning/blob/stable/0.3/docs/tutorials/05_torch_connector.ipynb">docs/tutorials/05_torch_connector.ipynb</a>.</p>
+<p>此頁面是從 <a href="#id2"><span class="problematic" id="id3">`docs/tutorials/05_torch_connector.ipynb`__</span></a> 產生的。</p>
 </div>
-<section id="Torch-Connector-and-Hybrid-QNNs">
-<h1>Torch Connector and Hybrid QNNs<a class="headerlink" href="#Torch-Connector-and-Hybrid-QNNs" title="本標題的永久連結">¶</a></h1>
-<p>This tutorial introduces Qiskit’s <code class="docutils literal notranslate"><span class="pre">TorchConnector</span></code> class, and demonstrates how the <code class="docutils literal notranslate"><span class="pre">TorchConnector</span></code> allows for a natural integration of any <code class="docutils literal notranslate"><span class="pre">NeuralNetwork</span></code> from Qiskit Machine Learning into a PyTorch workflow. <code class="docutils literal notranslate"><span class="pre">TorchConnector</span></code> takes a Qiskit <code class="docutils literal notranslate"><span class="pre">NeuralNetwork</span></code> and makes it available as a PyTorch <code class="docutils literal notranslate"><span class="pre">Module</span></code>. The resulting module can be seamlessly incorporated into PyTorch classical architectures and trained jointly without additional considerations, enabling the development and testing of
-novel <strong>hybrid quantum-classical</strong> machine learning architectures.</p>
-<section id="Content:">
-<h2>Content:<a class="headerlink" href="#Content:" title="本標題的永久連結">¶</a></h2>
-<p><a class="reference external" href="#Part-1:-Simple-Classification-&amp;-Regression">Part 1: Simple Classification &amp; Regression</a></p>
-<p>The first part of this tutorial shows how quantum neural networks can be trained using PyTorch’s automatic differentiation engine (<code class="docutils literal notranslate"><span class="pre">torch.autograd</span></code>, <a class="reference external" href="https://pytorch.org/tutorials/beginner/blitz/autograd_tutorial.html">link</a>) for simple classification and regression tasks.</p>
+<section id="Torch-連接器及混合式-QNNs">
+<h1>Torch 連接器及混合式 QNNs<a class="headerlink" href="#Torch-連接器及混合式-QNNs" title="本標題的永久連結">¶</a></h1>
+<p>本教程介紹 Qiskit 的 <code class="docutils literal notranslate"><span class="pre">TorchConnector</span></code> 類別。然後展示了``TorchConnector`` 如何自然地將來自 Qiskit 機器學習的 <code class="docutils literal notranslate"><span class="pre">NeuralNetwork</span></code> 整合到 PyTorch 工作流程中。 `` TorchConnector`` 採用 Qiskit 的 <code class="docutils literal notranslate"><span class="pre">NeuralNetwork</span></code> 並將其作為 PyTorch 的 <code class="docutils literal notranslate"><span class="pre">Module</span></code> 使用。生成的模塊可以無縫融合到 PyTorch 的古典架構中並一起訓練，無需任何額外考慮。它還支持新**hybrid quantum-classical** 機器學習架構的開發和測試。</p>
+<section id="內容：">
+<h2>內容：<a class="headerlink" href="#內容：" title="本標題的永久連結">¶</a></h2>
+<p><cite>第 1 部分：簡單分類和回歸 &lt;# 第 1 部分：-Simple-Classification-&amp;-Regression&gt;</cite> __</p>
+<p>本教程的第一部分使用 PyTorch 的自動區分引擎(<code class="docutils literal notranslate"><span class="pre">torch.autograd</span></code>, <a class="reference external" href="https://pytorch.org/tutorials/beginner/blitz/autograd_tutorial.html">link</a>)。它展示如何訓練用於簡單分類和回歸任務的量子神經網絡。</p>
 <ol class="arabic simple">
-<li><p><a class="reference external" href="#1.-Classification">Classification</a></p>
+<li><p><a class="reference external" href="#1.-Classification">分類</a></p>
 <ol class="arabic simple">
-<li><p>Classification with PyTorch and <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code></p></li>
-<li><p>Classification with PyTorch and <code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code></p></li>
+<li><p>使用 PyTorch 及 <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> 進行分類</p></li>
+<li><p>使用 PyTorch 及 <code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code> 進行分類</p></li>
 </ol>
 </li>
-<li><p><a class="reference external" href="#2.-Regression">Regression</a></p>
+<li><p><a class="reference external" href="#2.-Regression">迴歸</a></p>
 <ol class="arabic simple">
-<li><p>Regression with PyTorch and <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code></p></li>
+<li><p>使用PyTorch 與 <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> 進行迴歸</p></li>
 </ol>
 </li>
 </ol>
-<p><a class="reference external" href="#Part-2:-MNIST-Classification,-Hybrid-QNNs">Part 2: MNIST Classification, Hybrid QNNs</a></p>
-<p>The second part of this tutorial illustrates how to embed a (Quantum) <code class="docutils literal notranslate"><span class="pre">NeuralNetwork</span></code> into a target PyTorch workflow (in this case, a typical CNN architecture) to classify MNIST data in a hybrid quantum-classical manner.</p>
+<p><a href="#id2"><span class="problematic" id="id4">`第 2 部分：MNIST 分類，混合 QNN&lt;#Part-2:-MNIST-Classification,-Hybrid-QNNs&gt;`__</span></a></p>
+<p>在教程的第二部分說明如何將（Quantum） <code class="docutils literal notranslate"><span class="pre">NeuralNetwork</span></code> 嵌入目標 PyTorch 工作流程（在此案例中，是典型的 CNN 架構），以混合式量子古典方式分類 MNIST 數據。</p>
 <hr class="docutils" />
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
@@ -617,11 +616,11 @@ novel <strong>hybrid quantum-classical</strong> machine learning architectures.<
 </div>
 </div>
 </section>
-<section id="Part-1:-Simple-Classification-&amp;-Regression">
-<h2>Part 1: Simple Classification &amp; Regression<a class="headerlink" href="#Part-1:-Simple-Classification-&-Regression" title="本標題的永久連結">¶</a></h2>
-<section id="1.-Classification">
-<h3>1. Classification<a class="headerlink" href="#1.-Classification" title="本標題的永久連結">¶</a></h3>
-<p>First, we show how <code class="docutils literal notranslate"><span class="pre">TorchConnector</span></code> allows to train a Quantum <code class="docutils literal notranslate"><span class="pre">NeuralNetwork</span></code> to solve a classification tasks using PyTorch’s automatic differentiation engine. In order to illustrate this, we will perform <strong>binary classification</strong> on a randomly generated dataset.</p>
+<section id="第一部分：簡單分類與迴歸">
+<h2>第一部分：簡單分類與迴歸<a class="headerlink" href="#第一部分：簡單分類與迴歸" title="本標題的永久連結">¶</a></h2>
+<section id="1.-分類">
+<h3>1. 分類<a class="headerlink" href="#1.-分類" title="本標題的永久連結">¶</a></h3>
+<p>首先，我們展示了``TorchConnector``如何使用 PyTorch 的自動區分引擎來訓練量子``NeuralNetwork``來解決分類任務。為了說明這一點，我們會準備一個隨機生成資料集的**binary classification**</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -660,9 +659,9 @@ novel <strong>hybrid quantum-classical</strong> machine learning architectures.<
 <img alt="../_images/tutorials_05_torch_connector_5_0.png" src="../_images/tutorials_05_torch_connector_5_0.png" />
 </div>
 </div>
-<section id="A.-Classification-with-PyTorch-and-OpflowQNN">
-<h4>A. Classification with PyTorch and <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code><a class="headerlink" href="#A.-Classification-with-PyTorch-and-OpflowQNN" title="本標題的永久連結">¶</a></h4>
-<p>Linking an <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> to PyTorch is relatively straightforward. Here we illustrate this using the <code class="docutils literal notranslate"><span class="pre">TwoLayerQNN</span></code>, a sub-case of <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> introduced in previous tutorials.</p>
+<section id="A.-使用-PyTorch-及-OpflowQNN-進行分類">
+<h4>A. 使用 PyTorch 及 <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> 進行分類<a class="headerlink" href="#A.-使用-PyTorch-及-OpflowQNN-進行分類" title="本標題的永久連結">¶</a></h4>
+<p>將 <a href="#id1"><span class="problematic" id="id2">``</span></a>OpflowQNN``鏈接到 PyTorch 相對容易。本節使用“TwoLayerQNN”，它是之前教程中介紹的“OpflowQNN”的一個子案例。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -728,14 +727,12 @@ tensor([-0.3285], grad_fn=&lt;_TorchNNFunctionBackward&gt;)
 </div>
 <section id="Optimizer">
 <h5>Optimizer<a class="headerlink" href="#Optimizer" title="本標題的永久連結">¶</a></h5>
-<p>The choice of optimizer for training any machine learning model can be crucial in determining the success of our training’s outcome. When using <code class="docutils literal notranslate"><span class="pre">TorchConnector</span></code>, we get access to all of the optimizer algorithms defined in the [<code class="docutils literal notranslate"><span class="pre">torch.optim</span></code>] package (<a class="reference external" href="https://pytorch.org/docs/stable/optim.html">link</a>). Some of the most famous algorithms used in popular machine learning architectures include <em>Adam</em>, <em>SGD</em>, or <em>Adagrad</em>. However, for this tutorial we will be using the L-BFGS algorithm
-(<code class="docutils literal notranslate"><span class="pre">torch.optim.LBFGS</span></code>), one of the most well know second-order optimization algorithms for numerical optimization.</p>
+<p>選擇用於訓練任何機器學習模型的優化器對於確定學習結果非常重要。使用``TorchConnector``時，在[<code class="docutils literal notranslate"><span class="pre">torch.optim</span></code>]套件中（<cite>link &lt;https://pytorch.org/docs/stable/optim.html&gt;</cite> __）我們可以使用所有優化器演算法。常見機器學習架構中最著名的演算法有 * Adam <em>、</em> SGD * 或 * Adagrad <a href="#id1"><span class="problematic" id="id2">*</span></a>。但是，本教程使用 L-BFGS 演算法（<code class="docutils literal notranslate"><span class="pre">torch.optim.LBFGS</span></code>）。它是最著名的用於數值優化的二階優化演算法之一。</p>
 </section>
-<section id="Loss-Function">
-<h5>Loss Function<a class="headerlink" href="#Loss-Function" title="本標題的永久連結">¶</a></h5>
-<p>As for the loss function, we can also take advantage of PyTorch’s pre-defined modules from <code class="docutils literal notranslate"><span class="pre">torch.nn</span></code>, such as the <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html">Cross-Entropy</a> or <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.MSELoss.html">Mean Squared Error</a> losses.</p>
-<p><strong>💡 Clarification :</strong> In classical machine learning, the general rule of thumb is to apply a Cross-Entropy loss to classification tasks, and MSE loss to regression tasks. However, this recommendation is given under the assumption that the output of the classification network is a class probability value in the [0,1] range (usually this is achieved through a Softmax layer). Because the following example for <code class="docutils literal notranslate"><span class="pre">TwoLayerQNN</span></code> does not include such layer, and we don’t apply any mapping to the output
-(the following section shows an example of application of parity mapping with <code class="docutils literal notranslate"><span class="pre">CircuitQNNs</span></code>), the QNN’s output can take any value in the range [-1,1]. In case you were wondering, this is the reason why this particular example uses MSELoss for classification despite it not being the norm (but we encourage you to experiment with different loss functions and see how they can impact training results).</p>
+<section id="損失函數">
+<h5>損失函數<a class="headerlink" href="#損失函數" title="本標題的永久連結">¶</a></h5>
+<p>至於損失函數，我們也可以從 ` <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html">torch. nn``中利用 PyTorch的預先定義模組，例如 `Cross-Entropy</a> 或`Mean Squared Error &lt;<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.MSELoss.html">https://pytorch.org/docs/stable/generated/torch.nn.MSELoss.html</a>&gt;`__ losses.</p>
+<p>** 💡 說明：** 在古典機器學習中的一個常見經驗法則是將交叉熵損失應用於分類任務，將 MSE 損失應用於迴歸任務。但是，這個推薦是在假設分類網絡的輸出是[0, 1] 範圍內的類別概率值（通常通過Softmax層實現）。下面的``TwoLayerQNN`` 範例不包含這樣的層，也沒有任何對輸出應用映射（以下顯示了使用“CircuitQNNs”應用奇偶校驗映射的範例)。因此，QNN 的輸出可以取[-1,1] 範圍內的任何值。順便說一句，這就是我們在這個特定範例中使用 MSELoss 進行分類的原因，即使它並不是範數（但我們建議你去嘗試不同的損失函數以查看它們如何影響訓練結果）。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -843,14 +840,14 @@ Accuracy: 0.8
 <img alt="../_images/tutorials_05_torch_connector_11_1.png" src="../_images/tutorials_05_torch_connector_11_1.png" />
 </div>
 </div>
-<p>The red circles indicate wrongly classified data points.</p>
+<p>紅色圓圈表示錯誤的分類數據點。</p>
 </section>
 </section>
-<section id="B.-Classification-with-PyTorch-and-CircuitQNN">
-<h4>B. Classification with PyTorch and <code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code><a class="headerlink" href="#B.-Classification-with-PyTorch-and-CircuitQNN" title="本標題的永久連結">¶</a></h4>
-<p>Linking an <code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code> to PyTorch requires a bit more attention than <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code>. Without the correct setup, backpropagation is not possible.</p>
-<p>In particular, we must make sure that we are returning a dense array of probabilities in the network’s forward pass (<code class="docutils literal notranslate"><span class="pre">sparse=False</span></code>). This parameter is set up to <code class="docutils literal notranslate"><span class="pre">False</span></code> by default, so we just have to make sure that it has not been changed.</p>
-<p><strong>⚠️ Attention:</strong> If we define a custom interpret function ( in the example: <code class="docutils literal notranslate"><span class="pre">parity</span></code>), we must remember to explicitly provide the desired output shape ( in the example: <code class="docutils literal notranslate"><span class="pre">2</span></code>). For more info on the initial parameter setup for <code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code>, please check out the <a class="reference external" href="https://qiskit.org/documentation/machine-learning/stubs/qiskit_machine_learning.neural_networks.CircuitQNN.html">official qiskit documentation</a>.</p>
+<section id="B.-使用-PyTorch-和-`-CircuitQNN``-進行分類">
+<h4>B. 使用 PyTorch 和 ` CircuitQNN`` 進行分類<a class="headerlink" href="#B.-使用-PyTorch-和-`-CircuitQNN``-進行分類" title="本標題的永久連結">¶</a></h4>
+<p>將“CircuitQNN”鏈接到PyTorch需要比“OpflowQNN”更加小心。沒有正確的設置，反向傳播是不可能的。</p>
+<p>特別是，我們必須確保我們在網絡的前向傳遞中返回一個密集的概率數組(<code class="docutils literal notranslate"><span class="pre">sparse=False</span></code>)。 依預設，此參數設定為 <code class="docutils literal notranslate"><span class="pre">False</span></code> ，因此我們必須確定它尚未變更。</p>
+<p><strong>⚠️ 注意：</strong> 如果我們定義自訂解譯功能（在範例中：<code class="docutils literal notranslate"><span class="pre">parity</span></code>），我們必須記住明確提供所需的輸出形狀（範例： <code class="docutils literal notranslate"><span class="pre">2</span></code>）。 如需 ` ` CircuitQNN`` 起始參數設定的相關資訊，請參閱 <a class="reference external" href="https://qiskit.org/documentation/machine-learning/stubs/qiskit_machine_learning.neural_networks.CircuitQNN.html">official qiskit documentation</a>。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -990,12 +987,12 @@ Accuracy: 0.45
 <img alt="../_images/tutorials_05_torch_connector_17_1.png" src="../_images/tutorials_05_torch_connector_17_1.png" />
 </div>
 </div>
-<p>The red circles indicate wrongly classified data points.</p>
+<p>紅色圓圈表示錯誤的分類數據點。</p>
 </section>
 </section>
-<section id="2.-Regression">
-<h3>2. Regression<a class="headerlink" href="#2.-Regression" title="本標題的永久連結">¶</a></h3>
-<p>We use a model based on the <code class="docutils literal notranslate"><span class="pre">TwoLayerQNN</span></code> to also illustrate how to perform a regression task. The chosen dataset in this case is randomly generated following a sine wave.</p>
+<section id="2.-迴歸">
+<h3>2. 迴歸<a class="headerlink" href="#2.-迴歸" title="本標題的永久連結">¶</a></h3>
+<p>我們使用以 <code class="docutils literal notranslate"><span class="pre">TwoLayerQNN</span></code> 為基礎的模型，也說明如何執行迴歸作業。在這種情況下，選擇的資料集是在正弦波之後隨機生成的。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
@@ -1022,9 +1019,9 @@ Accuracy: 0.45
 <img alt="../_images/tutorials_05_torch_connector_20_0.png" src="../_images/tutorials_05_torch_connector_20_0.png" />
 </div>
 </div>
-<section id="A.-Regression-with-PyTorch-and-OpflowQNN">
-<h4>A. Regression with PyTorch and <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code><a class="headerlink" href="#A.-Regression-with-PyTorch-and-OpflowQNN" title="本標題的永久連結">¶</a></h4>
-<p>The network definition and training loop will be analogous to those of the classification task using <code class="docutils literal notranslate"><span class="pre">TwoLayerQNN</span></code>. In this case, we define our own feature map and ansatz, instead of using the default values.</p>
+<section id="A.-使用PyTorch-及-OpflowQNN-進行迴歸">
+<h4>A. 使用PyTorch 及 <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> 進行迴歸<a class="headerlink" href="#A.-使用PyTorch-及-OpflowQNN-進行迴歸" title="本標題的永久連結">¶</a></h4>
+<p>網路定義和訓練迴圈會與使用 <code class="docutils literal notranslate"><span class="pre">TwoLayerQNN</span></code> 的分類任務類似。在此情況下，我們定義了自己的特徵圖和擬設，而不是使用預設值。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
@@ -1146,10 +1143,10 @@ tensor(14.9478, grad_fn=&lt;MseLossBackward&gt;)
 </section>
 </section>
 <hr class="docutils" />
-<section id="Part-2:-MNIST-Classification,-Hybrid-QNNs">
-<h2>Part 2: MNIST Classification, Hybrid QNNs<a class="headerlink" href="#Part-2:-MNIST-Classification,-Hybrid-QNNs" title="本標題的永久連結">¶</a></h2>
-<p>In this second part, we show how to leverage a hybrid quantum-classical neural network using <code class="docutils literal notranslate"><span class="pre">TorchConnector</span></code>, to perform a more complex image classification task on the MNIST handwritten digits dataset.</p>
-<p>For a more detailed (pre-<code class="docutils literal notranslate"><span class="pre">TorchConnector</span></code>) explanation on hybrid quantum-classical neural networks, you can check out the corresponding section in the <a class="reference external" href="https://qiskit.org/textbook/ch-machine-learning/machine-learning-qiskit-pytorch.html">Qiskit Textbook</a>.</p>
+<section id="第-2-部分：MNIST分類、混合式-QNNs">
+<h2>第 2 部分：MNIST分類、混合式 QNNs<a class="headerlink" href="#第-2-部分：MNIST分類、混合式-QNNs" title="本標題的永久連結">¶</a></h2>
+<p>第二部分展示如何通過 <a href="#id1"><span class="problematic" id="id2">``</span></a>TorchConnector``利用混合量子古典神經網絡。在 MNIST 手寫數字資料集上執行更複雜的圖像分類任務。</p>
+<p>有關混合量子古典神經網絡的更多信息（在``TorchConnector``之前），請參閱`Qiskit Textbook &lt;<a class="reference external" href="https://qiskit.org/textbook/ch-machine-learning/machine-learning-qiskit-pytorch.html">https://qiskit.org/textbook/ch-machine-learning/machine-learning-qiskit-pytorch.html</a>&gt;`__ 相對應的部分。</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
@@ -1174,9 +1171,9 @@ tensor(14.9478, grad_fn=&lt;MseLossBackward&gt;)
 </pre></div>
 </div>
 </div>
-<section id="Step-1:-Defining-Data-loaders-for-train-and-test">
-<h3>Step 1: Defining Data-loaders for train and test<a class="headerlink" href="#Step-1:-Defining-Data-loaders-for-train-and-test" title="本標題的永久連結">¶</a></h3>
-<p>We take advantage of the <code class="docutils literal notranslate"><span class="pre">torchvision</span></code> <a class="reference external" href="https://pytorch.org/vision/stable/datasets.html">API</a> to directly load a subset of the <a class="reference external" href="https://en.wikipedia.org/wiki/MNIST_database">MNIST dataset</a> and define torch <code class="docutils literal notranslate"><span class="pre">DataLoader</span></code>s (<a class="reference external" href="https://pytorch.org/docs/stable/data.html">link</a>) for train and test.</p>
+<section id="步驟-1：定義用於訓練和測試的數據加載器">
+<h3>步驟 1：定義用於訓練和測試的數據加載器<a class="headerlink" href="#步驟-1：定義用於訓練和測試的數據加載器" title="本標題的永久連結">¶</a></h3>
+<p>利用``torchvision`` <cite>API &lt;https://pytorch.org/vision/stable/datasets.html&gt;</cite> __去加載一個子集 <cite>MNIST dataset &lt;https://en.wikipedia.org/wiki/MNIST_database&gt; ，並直接定義一個 ``DataLoader`</cite>s (<a class="reference external" href="https://pytorch.org/docs/stable/data.html">link</a>) 用於訓練和測試。</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
@@ -1207,7 +1204,7 @@ tensor(14.9478, grad_fn=&lt;MseLossBackward&gt;)
 </pre></div>
 </div>
 </div>
-<p>If we perform a quick visualization we can see that the train dataset consists of images of handwritten 0s and 1s.</p>
+<p>執行簡單的可視化後，您可以看到訓練資料集由手寫的 0 和 1 圖像組成。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
@@ -1266,10 +1263,10 @@ tensor(14.9478, grad_fn=&lt;MseLossBackward&gt;)
 </div>
 </div>
 </section>
-<section id="Step-2:-Defining-the-QNN-and-Hybrid-Model">
-<h3>Step 2: Defining the QNN and Hybrid Model<a class="headerlink" href="#Step-2:-Defining-the-QNN-and-Hybrid-Model" title="本標題的永久連結">¶</a></h3>
-<p>This second step shows the power of the <code class="docutils literal notranslate"><span class="pre">TorchConnector</span></code>. After defining our quantum neural network layer (in this case, a <code class="docutils literal notranslate"><span class="pre">TwoLayerQNN</span></code>), we can embed it into a layer in our torch <code class="docutils literal notranslate"><span class="pre">Module</span></code> by initializing a torch connector as <code class="docutils literal notranslate"><span class="pre">TorchConnector(qnn)</span></code>.</p>
-<p><strong>⚠️ Attention:</strong> In order to have an adequate gradient backpropagation in hybrid models, we MUST set the initial parameter <code class="docutils literal notranslate"><span class="pre">input_gradients</span></code> to TRUE during the qnn initialization.</p>
+<section id="步驟-2：定義-QNN-和混合式模型">
+<h3>步驟 2：定義 QNN 和混合式模型<a class="headerlink" href="#步驟-2：定義-QNN-和混合式模型" title="本標題的永久連結">¶</a></h3>
+<p>第二步展示了``TorchConnector`` 的強大功能。在定義了量子神經網絡層（在本例中為``TwoLayerQNN``）之後，我們可以通過將torch connector 初始化為`` TorchConnector (qnn) `` 並將其嵌入到 <a href="#id1"><span class="problematic" id="id2">``</span></a>Module``中。</p>
+<p>** ⚠️ 注意：** 為了在混合模型中得到正確的梯度反向傳播，我們必須在 QNN 初始化期間設置初始參數 `` input_gradients`` 為 TRUE 。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
@@ -1340,8 +1337,8 @@ ComposedOp([
 </div>
 </div>
 </section>
-<section id="Step-3:-Training">
-<h3>Step 3: Training<a class="headerlink" href="#Step-3:-Training" title="本標題的永久連結">¶</a></h3>
+<section id="步驟-3：訓練">
+<h3>步驟 3：訓練<a class="headerlink" href="#步驟-3：訓練" title="本標題的永久連結">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
@@ -1407,8 +1404,8 @@ Training [100%] Loss: -1.7269
 </div>
 </div>
 </section>
-<section id="Step-4:-Evaluation">
-<h3>Step 4: Evaluation<a class="headerlink" href="#Step-4:-Evaluation" title="本標題的永久連結">¶</a></h3>
+<section id="步驟-4-：評估">
+<h3>步驟 4 ：評估<a class="headerlink" href="#步驟-4-：評估" title="本標題的永久連結">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
@@ -1524,7 +1521,7 @@ Performance on test data:
         <a href="06_torch_runtime.html" class="btn btn-neutral float-right" title="Torch Runtime" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="04_qgans_for_loading_random_distributions.html" class="btn btn-neutral" title="qGANs for Loading Random Distributions" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="04_qgans_for_loading_random_distributions.html" class="btn btn-neutral" title="使用 qGAN 編寫隨機分佈" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -1556,29 +1553,29 @@ Performance on test data:
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Torch Connector and Hybrid QNNs</a><ul>
-<li><a class="reference internal" href="#Content:">Content:</a></li>
-<li><a class="reference internal" href="#Part-1:-Simple-Classification-&amp;-Regression">Part 1: Simple Classification &amp; Regression</a><ul>
-<li><a class="reference internal" href="#1.-Classification">1. Classification</a><ul>
-<li><a class="reference internal" href="#A.-Classification-with-PyTorch-and-OpflowQNN">A. Classification with PyTorch and <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code></a><ul>
+<li><a class="reference internal" href="#">Torch 連接器及混合式 QNNs</a><ul>
+<li><a class="reference internal" href="#內容：">內容：</a></li>
+<li><a class="reference internal" href="#第一部分：簡單分類與迴歸">第一部分：簡單分類與迴歸</a><ul>
+<li><a class="reference internal" href="#1.-分類">1. 分類</a><ul>
+<li><a class="reference internal" href="#A.-使用-PyTorch-及-OpflowQNN-進行分類">A. 使用 PyTorch 及 <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> 進行分類</a><ul>
 <li><a class="reference internal" href="#Optimizer">Optimizer</a></li>
-<li><a class="reference internal" href="#Loss-Function">Loss Function</a></li>
+<li><a class="reference internal" href="#損失函數">損失函數</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#B.-Classification-with-PyTorch-and-CircuitQNN">B. Classification with PyTorch and <code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code></a></li>
+<li><a class="reference internal" href="#B.-使用-PyTorch-和-`-CircuitQNN``-進行分類">B. 使用 PyTorch 和 ` CircuitQNN`` 進行分類</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#2.-Regression">2. Regression</a><ul>
-<li><a class="reference internal" href="#A.-Regression-with-PyTorch-and-OpflowQNN">A. Regression with PyTorch and <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code></a></li>
+<li><a class="reference internal" href="#2.-迴歸">2. 迴歸</a><ul>
+<li><a class="reference internal" href="#A.-使用PyTorch-及-OpflowQNN-進行迴歸">A. 使用PyTorch 及 <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> 進行迴歸</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#Part-2:-MNIST-Classification,-Hybrid-QNNs">Part 2: MNIST Classification, Hybrid QNNs</a><ul>
-<li><a class="reference internal" href="#Step-1:-Defining-Data-loaders-for-train-and-test">Step 1: Defining Data-loaders for train and test</a></li>
-<li><a class="reference internal" href="#Step-2:-Defining-the-QNN-and-Hybrid-Model">Step 2: Defining the QNN and Hybrid Model</a></li>
-<li><a class="reference internal" href="#Step-3:-Training">Step 3: Training</a></li>
-<li><a class="reference internal" href="#Step-4:-Evaluation">Step 4: Evaluation</a></li>
+<li><a class="reference internal" href="#第-2-部分：MNIST分類、混合式-QNNs">第 2 部分：MNIST分類、混合式 QNNs</a><ul>
+<li><a class="reference internal" href="#步驟-1：定義用於訓練和測試的數據加載器">步驟 1：定義用於訓練和測試的數據加載器</a></li>
+<li><a class="reference internal" href="#步驟-2：定義-QNN-和混合式模型">步驟 2：定義 QNN 和混合式模型</a></li>
+<li><a class="reference internal" href="#步驟-3：訓練">步驟 3：訓練</a></li>
+<li><a class="reference internal" href="#步驟-4-：評估">步驟 4 ：評估</a></li>
 </ul>
 </li>
 </ul>

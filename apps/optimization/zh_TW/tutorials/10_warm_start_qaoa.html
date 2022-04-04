@@ -38,10 +38,10 @@
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
-    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="index" title="目錄" href="../genindex.html" />
     <link rel="search" title="搜尋" href="../search.html" />
-    <link rel="next" title="Using Classical Optimization Solvers and Models with Qiskit Optimization" href="11_using_classical_optimization_solvers_and_models.html" />
-    <link rel="prev" title="Application Classes for Optimization Problems" href="09_application_classes.html" /> 
+    <link rel="next" title="以Qiskit Optimization使用古典最佳化解算器和模型" href="11_using_classical_optimization_solvers_and_models.html" />
+    <link rel="prev" title="最佳化問題的應用類別" href="09_application_classes.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -144,7 +144,7 @@
   <div class="rst-other-versions">
     
     <dl>
-      <dt>Languages</dt>
+      <dt>語言</dt>
       
         <dd><a class="version" href="/documentation/optimization/tutorials/10_warm_start_qaoa.html">English</a></dd>
       
@@ -209,10 +209,10 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../apidocs/qiskit_optimization.html">API Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">開始</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../apidocs/qiskit_optimization.html">API 參考資料</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">教學</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">版本資訊</a></li>
 </ul>
 
             
@@ -535,24 +535,22 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>This page was generated from <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/10_warm_start_qaoa.ipynb">docs/tutorials/10_warm_start_qaoa.ipynb</a>.</p>
+<p>此頁面是從 <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/10_warm_start_qaoa.ipynb">docs/tutorials/10_warm_start_qaoa.ipynb</a> 產生的。</p>
 </div>
 <section id="Warm-starting-quantum-optimization">
 <h1>Warm-starting quantum optimization<a class="headerlink" href="#Warm-starting-quantum-optimization" title="本標題的永久連結">¶</a></h1>
-<section id="Introduction">
-<h2>Introduction<a class="headerlink" href="#Introduction" title="本標題的永久連結">¶</a></h2>
-<p>Optimization problems with integer variables or constraints are often hard to solve. For example, the Quadratic Unconstrained Binary Optimization (QUBO) problem, i.e.</p>
-<p><span class="math">\begin{align}
-\min_{x\in\{0,1\}^n}x^T\Sigma x + \mu^Tx,
-\end{align}</span></p>
-<p>is NP-Hard. Here, <span class="math notranslate nohighlight">\(\Sigma\)</span> is an <span class="math notranslate nohighlight">\(n\times n\)</span> matrix and <span class="math notranslate nohighlight">\(x\)</span> is a vector of <span class="math notranslate nohighlight">\(n\)</span> binary variables. Note that we could have added the linear term <span class="math notranslate nohighlight">\(\mu\)</span> to the diagonal as <span class="math notranslate nohighlight">\(x_i^2=x_i\)</span> for <span class="math notranslate nohighlight">\(x_i\in\{0, 1\}\)</span>. While QUBOs are hard to solve there exists many ways to relax them to problems that are easier to solve. For example, if <span class="math notranslate nohighlight">\(\Sigma\)</span> is semi-definite positive the QUBO can be relaxed and results in a convex Quadratic Program</p>
+<section id="簡介">
+<h2>簡介<a class="headerlink" href="#簡介" title="本標題的永久連結">¶</a></h2>
+<p>整數變數或限制的最佳化問題通常難以解決。 例如， Quadratic Un受限 Binary Optimization （QUBO）問題，亦即，</p>
+<p><span class="math">\begin{align} \min_{x\in\{0，1\}^n}x^T\Sigma x + \u^Tx， \end{align}</span></p>
+<p>是 NP-Hard。 在這裡， <span class="math notranslate nohighlight">\(\Sigma\)</span> 是 <span class="math notranslate nohighlight">\(n\times n\)</span> matrix ， <span class="math notranslate nohighlight">\(x\)</span> 是 <span class="math notranslate nohighlight">\(n\)</span> 二進位變數的向量。 請注意，我們可以將線性條款 <span class="math notranslate nohighlight">\(\mu\)</span> 新增至對角線，作為 <span class="math notranslate nohighlight">\(x_i^2=x_i\)</span> for <span class="math notranslate nohighlight">\(x_i\in\{0， 1\}\)</span>。 雖然 QUBOs 很難解決，但有很多方法可以讓它們放鬆到更容易解決的問題上。 例如，如果 <span class="math notranslate nohighlight">\(\Sigma\)</span> 是半明確的正面， QUBO 可以在凸形的二次程式中放鬆並產生結果</p>
 <p><span class="math">\begin{align}
 \min_{x\in[0,1]^n}x^T\Sigma x,
 \end{align}</span></p>
 <p>which becomes easy to solve as <span class="math notranslate nohighlight">\(x\)</span> now represents <span class="math notranslate nohighlight">\(n\)</span> continuous variables bound to the range <span class="math notranslate nohighlight">\([0, 1]\)</span>. Such relaxations can be leveraged to warm-start quantum optimization algorithms as shown in [1].</p>
 </section>
-<section id="References">
-<h2>References<a class="headerlink" href="#References" title="本標題的永久連結">¶</a></h2>
+<section id="參考資料">
+<h2>參考資料<a class="headerlink" href="#參考資料" title="本標題的永久連結">¶</a></h2>
 <p>[1] <a class="reference external" href="http://arxiv.org/abs/2009.10095">D. J. Egger, J Marecek, S. Woerner, Warm-starting quantum optimization, arXiv:2009.10095</a></p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
@@ -578,8 +576,8 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 </section>
-<section id="Preliminaries:-relaxing-QUBOs">
-<h2>Preliminaries: relaxing QUBOs<a class="headerlink" href="#Preliminaries:-relaxing-QUBOs" title="本標題的永久連結">¶</a></h2>
+<section id="前言：放寬-QUBOs">
+<h2>前言：放寬 QUBOs<a class="headerlink" href="#前言：放寬-QUBOs" title="本標題的永久連結">¶</a></h2>
 <p>First, we show how to relax a QUBO built with a semi-definite positive matrix to obtain an easy-to-solve QP.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
@@ -632,7 +630,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>Using DOCPLEX we build a model with binary variables.</p>
+<p>我們使用 DOCPLEX 建立具有二進位變數的模型。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -790,8 +788,8 @@ status: SUCCESS
 <section id="QAOA">
 <h2>QAOA<a class="headerlink" href="#QAOA" title="本標題的永久連結">¶</a></h2>
 <p>Here, we illustrate how to warm-start the quantum approximate optimization algorithm (QAOA) by leveraging the relaxed problem shown above.</p>
-<section id="Standard-QAOA">
-<h3>Standard QAOA<a class="headerlink" href="#Standard-QAOA" title="本標題的永久連結">¶</a></h3>
+<section id="標準-QAOA">
+<h3>標準 QAOA<a class="headerlink" href="#標準-QAOA" title="本標題的永久連結">¶</a></h3>
 <p>First, we use standard QAOA to solve the QUBO. To do this, we convert the QUBO to Qiskit’s QuadraticProgram class (note that the resulting problem is still a binary problem).</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -836,8 +834,8 @@ status: SUCCESS
 </pre></div></div>
 </div>
 </section>
-<section id="Warm-start-QAOA">
-<h3>Warm-start QAOA<a class="headerlink" href="#Warm-start-QAOA" title="本標題的永久連結">¶</a></h3>
+<section id="暖啟動-QAOA">
+<h3>暖啟動 QAOA<a class="headerlink" href="#暖啟動-QAOA" title="本標題的永久連結">¶</a></h3>
 <p>Next, we compare this result to a warm-start QAOA in which we use the solution to the continuous relaxation of the problem. First, we create the initial state</p>
 <p><span class="math">\begin{align}
 |\phi^*\rangle=\bigotimes_{i=0}^{n-1}R_y(\theta_i)|0\rangle_n .
@@ -944,8 +942,8 @@ status: SUCCESS
 </pre></div></div>
 </div>
 </section>
-<section id="Analysis">
-<h3>Analysis<a class="headerlink" href="#Analysis" title="本標題的永久連結">¶</a></h3>
+<section id="分析">
+<h3>分析<a class="headerlink" href="#分析" title="本標題的永久連結">¶</a></h3>
 <p>Both results appear to give the same result. However, when we look at the underlying probability distribution we observe that the warm-start QAOA has a much higher probability of sampling the optimal solution.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
@@ -1009,7 +1007,7 @@ status: SUCCESS
 </section>
 </section>
 <section id="id2">
-<h2>Warm-start QAOA<a class="headerlink" href="#id2" title="本標題的永久連結">¶</a></h2>
+<h2>暖啟動 QAOA<a class="headerlink" href="#id2" title="本標題的永久連結">¶</a></h2>
 <p>The warm-start features above are available in the Qiskit optimization module as a single optimizer named <code class="docutils literal notranslate"><span class="pre">WarmStartQAOAOptimizer</span></code> which is illustrated below. This solver will solve a QUBO with a warm-start QAOA. It computes <span class="math notranslate nohighlight">\(c^*\)</span> by relaxing the problem. This behavior is controlled by setting <code class="docutils literal notranslate"><span class="pre">relax_for_pre_solver</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
@@ -1115,10 +1113,10 @@ status: SUCCESS
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="11_using_classical_optimization_solvers_and_models.html" class="btn btn-neutral float-right" title="Using Classical Optimization Solvers and Models with Qiskit Optimization" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="11_using_classical_optimization_solvers_and_models.html" class="btn btn-neutral float-right" title="以Qiskit Optimization使用古典最佳化解算器和模型" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="09_application_classes.html" class="btn btn-neutral" title="Application Classes for Optimization Problems" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="09_application_classes.html" class="btn btn-neutral" title="最佳化問題的應用類別" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -1151,16 +1149,16 @@ status: SUCCESS
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
 <li><a class="reference internal" href="#">Warm-starting quantum optimization</a><ul>
-<li><a class="reference internal" href="#Introduction">Introduction</a></li>
-<li><a class="reference internal" href="#References">References</a></li>
-<li><a class="reference internal" href="#Preliminaries:-relaxing-QUBOs">Preliminaries: relaxing QUBOs</a></li>
+<li><a class="reference internal" href="#簡介">簡介</a></li>
+<li><a class="reference internal" href="#參考資料">參考資料</a></li>
+<li><a class="reference internal" href="#前言：放寬-QUBOs">前言：放寬 QUBOs</a></li>
 <li><a class="reference internal" href="#QAOA">QAOA</a><ul>
-<li><a class="reference internal" href="#Standard-QAOA">Standard QAOA</a></li>
-<li><a class="reference internal" href="#Warm-start-QAOA">Warm-start QAOA</a></li>
-<li><a class="reference internal" href="#Analysis">Analysis</a></li>
+<li><a class="reference internal" href="#標準-QAOA">標準 QAOA</a></li>
+<li><a class="reference internal" href="#暖啟動-QAOA">暖啟動 QAOA</a></li>
+<li><a class="reference internal" href="#分析">分析</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id2">Warm-start QAOA</a></li>
+<li><a class="reference internal" href="#id2">暖啟動 QAOA</a></li>
 </ul>
 </li>
 </ul>
