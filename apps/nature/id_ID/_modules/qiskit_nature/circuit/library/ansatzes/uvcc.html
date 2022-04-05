@@ -281,7 +281,7 @@
   <h1>Kode sumber untuk qiskit_nature.circuit.library.ansatzes.uvcc</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2021.</span>
+<span class="c1"># (C) Copyright IBM 2021, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -291,7 +291,7 @@
 <span class="c1"># copyright notice, and modified files need to carry a notice indicating</span>
 <span class="c1"># that they have been altered from the originals.</span>
 
-<span class="sd">&quot;&quot;&quot; The Unitary Vibrational Coupled-Cluster Single and Double excitations Ansatz. &quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot; The Unitary Vibrational Coupled-Cluster Ansatz. &quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
@@ -299,7 +299,7 @@
 
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">EvolvedOperatorAnsatz</span>
-<span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">OperatorBase</span><span class="p">,</span> <span class="n">PauliTrotterEvolution</span>
+<span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">PauliTrotterEvolution</span>
 
 <span class="kn">from</span> <span class="nn">qiskit_nature</span> <span class="kn">import</span> <span class="n">QiskitNatureError</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.converters.second_quantization</span> <span class="kn">import</span> <span class="n">QubitConverter</span>
@@ -312,8 +312,8 @@
 
 <div class="viewcode-block" id="UVCC"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.circuit.library.UVCC.html#qiskit_nature.circuit.library.UVCC">[docs]</a><span class="k">class</span> <span class="nc">UVCC</span><span class="p">(</span><span class="n">EvolvedOperatorAnsatz</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This trial wavefunction is a Unitary Vibrational Coupled-Cluster Single and Double excitations</span>
-<span class="sd">    ansatz.</span>
+<span class="sd">    This trial wavefunction is a Unitary Vibrational Coupled-Cluster ansatz.</span>
+
 <span class="sd">    For more information, see Ollitrault Pauline J., Chemical science 11 (2020): 6842-6855.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -378,7 +378,7 @@
         <span class="c1"># We cache these, because the generation may be quite expensive (depending on the generator)</span>
         <span class="c1"># and the user may want quick access to inspect these. Also, it speeds up testing for the</span>
         <span class="c1"># same reason!</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_excitation_ops</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SecondQuantizedOp</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_excitation_ops</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">SecondQuantizedOp</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">qubit_converter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">QubitConverter</span><span class="p">]:</span>
@@ -388,6 +388,7 @@
     <span class="nd">@qubit_converter</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">qubit_converter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conv</span><span class="p">:</span> <span class="n">QubitConverter</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Sets the qubit operator converter.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_operators</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_qubit_converter</span> <span class="o">=</span> <span class="n">conv</span>
 
@@ -399,6 +400,7 @@
     <span class="nd">@num_modals</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">num_modals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_modals</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Sets the number of modals.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_operators</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_modals</span> <span class="o">=</span> <span class="n">num_modals</span>
 
@@ -410,15 +412,67 @@
     <span class="nd">@excitations</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">excitations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Callable</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Sets the excitations.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_operators</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_excitations</span> <span class="o">=</span> <span class="n">exc</span>
+
+    <span class="nd">@EvolvedOperatorAnsatz</span><span class="o">.</span><span class="n">operators</span><span class="o">.</span><span class="n">getter</span>
+    <span class="k">def</span> <span class="nf">operators</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pylint: disable=invalid-overridden-method</span>
+        <span class="sd">&quot;&quot;&quot;The operators that are evolved in this circuit.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: The operators to be evolved contained in this ansatz or</span>
+<span class="sd">                  None if the configuration is not complete</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Overriding the getter to build the operators on demand when they are</span>
+        <span class="c1"># requested, if they are still set to None.</span>
+        <span class="n">operators</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">UVCC</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span><span class="o">.</span><span class="n">operators</span><span class="o">.</span><span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">operators</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">operators</span> <span class="o">==</span> <span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+            <span class="c1"># If the operators are None build them out if the uvcc config checks out ok, otherwise</span>
+            <span class="c1"># they will be left as None to be built at some later time.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_uvcc_configuration</span><span class="p">(</span><span class="n">raise_on_failure</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                <span class="c1"># The qubit operators are cached by `EvolvedOperatorAnsatz` class. We only generate</span>
+                <span class="c1"># them from the `SecondQuantizedOp`s produced by the generators, if they&#39;re not already</span>
+                <span class="c1"># present.</span>
+                <span class="n">excitation_ops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">excitation_ops</span><span class="p">()</span>
+
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Converting SecondQuantizedOps into PauliSumOps...&quot;</span><span class="p">)</span>
+                <span class="c1"># Convert operators according to saved state in converter from the conversion of the</span>
+                <span class="c1"># main operator since these need to be compatible. If Z2 Symmetry tapering was done</span>
+                <span class="c1"># it may be that one or more excitation operators do not commute with the</span>
+                <span class="c1"># symmetry. Normally the converted operators are maintained at the same index by</span>
+                <span class="c1"># the converter inserting None as the result if an operator did not commute. Here</span>
+                <span class="c1"># we are not interested in that just getting the valid set of operators so that</span>
+                <span class="c1"># behavior is suppressed.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">operators</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qubit_converter</span><span class="o">.</span><span class="n">convert_match</span><span class="p">(</span>
+                    <span class="n">excitation_ops</span><span class="p">,</span> <span class="n">suppress_none</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">UVCC</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span><span class="o">.</span><span class="n">operators</span><span class="o">.</span><span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_invalidate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_excitation_ops</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_invalidate</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_check_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raise_on_failure</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_modals</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">b</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_modals</span><span class="p">):</span>
+        <span class="c1"># Check our local config is valid first. The super class will check the</span>
+        <span class="c1"># operators by getting them, and if we detect they are still None they</span>
+        <span class="c1"># will be built so that its valid check will end up passing in that regard.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_uvcc_configuration</span><span class="p">(</span><span class="n">raise_on_failure</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_check_configuration</span><span class="p">(</span><span class="n">raise_on_failure</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_uvcc_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raise_on_failure</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="c1"># Check the local config, separated out that it can be checked via build</span>
+        <span class="c1"># or ahead of building operators to make sure everything needed is present.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_modals</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">raise_on_failure</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The number of modals cannot be &#39;None`.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">b</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_modals</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">raise_on_failure</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s2">&quot;The number of modals cannot contain negative values but is &quot;</span><span class="p">,</span>
@@ -437,21 +491,6 @@
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">return</span> <span class="kc">True</span>
-
-    <span class="k">def</span> <span class="nf">_build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">OperatorBase</span><span class="p">,</span> <span class="n">QuantumCircuit</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">operators</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">operators</span> <span class="o">==</span> <span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
-            <span class="n">excitation_ops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">excitation_ops</span><span class="p">()</span>
-
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Converting SecondQuantizedOps into PauliSumOps...&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">operators</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qubit_converter</span><span class="o">.</span><span class="n">convert_match</span><span class="p">(</span><span class="n">excitation_ops</span><span class="p">,</span> <span class="n">suppress_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Building QuantumCircuit...&quot;</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_build</span><span class="p">()</span>
 
 <div class="viewcode-block" id="UVCC.excitation_ops"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.circuit.library.UVCC.excitation_ops.html#qiskit_nature.circuit.library.UVCC.excitation_ops">[docs]</a>    <span class="k">def</span> <span class="nf">excitation_ops</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">SecondQuantizedOp</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Parses the excitations and generates the list of operators.</span>
