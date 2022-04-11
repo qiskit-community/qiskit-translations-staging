@@ -26,6 +26,5 @@
 
    .. autoattribute:: backend
    .. autoattribute:: experiment
-   .. autoattribute:: random
    .. autoattribute:: runtime
    .. autoattribute:: version

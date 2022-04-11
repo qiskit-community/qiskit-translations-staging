@@ -6,7 +6,8 @@
 
 import numpy as np
 from qiskit import QuantumCircuit
-from qiskit.algorithms.linear_solvers.observables.absolute_average import AbsoluteAverage
+from qiskit.algorithms.linear_solvers.observables.absolute_average import \
+AbsoluteAverage
 from qiskit.opflow import StateFn
 
 observable = AbsoluteAverage()

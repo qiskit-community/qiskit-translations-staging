@@ -20,7 +20,8 @@ t1_circs, t1_xdata = t1_circuits(num_of_gates, gate_time, qubits)
 
 
 import qiskit
-from qiskit.providers.aer.noise.errors.standard_errors             import thermal_relaxation_error
+from qiskit.providers.aer.noise.errors.standard_errors \
+            import thermal_relaxation_error
 from qiskit.providers.aer.noise import NoiseModel
 
 backend = qiskit.Aer.get_backend('qasm_simulator')

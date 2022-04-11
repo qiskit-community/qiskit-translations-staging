@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.providers.aer.noise.noise_model &mdash; Qiskit 0.35.0 documentation</title>
+  <title>qiskit.providers.aer.noise.noise_model &mdash; Qiskit 0.36.0 documentation</title>
   
 
   
@@ -34,8 +34,8 @@
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/gallery.css" type="text/css" />
@@ -189,6 +189,8 @@
         <dd><a class="version" href="/documentation/stable/0.32/index.html">0.32</a></dd>
       
         <dd><a class="version" href="/documentation/stable/0.33/index.html">0.33</a></dd>
+      
+        <dd><a class="version" href="/documentation/stable/0.34/index.html">0.34</a></dd>
       
     </dl>
   </div>
@@ -359,11 +361,10 @@
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">ndarray</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Instruction</span><span class="p">,</span> <span class="n">Delay</span>
-<span class="kn">from</span> <span class="nn">qiskit.providers</span> <span class="kn">import</span> <span class="n">BaseBackend</span><span class="p">,</span> <span class="n">BackendV1</span><span class="p">,</span> <span class="n">BackendV2</span>
 <span class="kn">from</span> <span class="nn">qiskit.providers.exceptions</span> <span class="kn">import</span> <span class="n">BackendPropertyError</span>
 <span class="kn">from</span> <span class="nn">qiskit.providers.models</span> <span class="kn">import</span> <span class="n">BackendProperties</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler</span> <span class="kn">import</span> <span class="n">PassManager</span>
-<span class="kn">from</span> <span class="nn">.device.models</span> <span class="kn">import</span> <span class="n">_excited_population</span>
+<span class="kn">from</span> <span class="nn">.device.models</span> <span class="kn">import</span> <span class="n">_excited_population</span><span class="p">,</span> <span class="n">_truncate_t2_value</span>
 <span class="kn">from</span> <span class="nn">.device.models</span> <span class="kn">import</span> <span class="n">basic_device_gate_errors</span>
 <span class="kn">from</span> <span class="nn">.device.models</span> <span class="kn">import</span> <span class="n">basic_device_readout_errors</span>
 <span class="kn">from</span> <span class="nn">.errors.quantum_error</span> <span class="kn">import</span> <span class="n">QuantumError</span>
@@ -641,10 +642,14 @@
 <span class="sd">        Raises:</span>
 <span class="sd">            NoiseError: If the input backend is not valid.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">BackendV2</span><span class="p">):</span>
+        <span class="n">backend_interface_version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend_interface_version</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">backend_interface_version</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">backend_interface_version</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">NoiseError</span><span class="p">(</span>
                 <span class="s2">&quot;NoiseModel.from_backend does not currently support V2 Backends.&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="p">(</span><span class="n">BaseBackend</span><span class="p">,</span> <span class="n">BackendV1</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">backend_interface_version</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">properties</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">properties</span><span class="p">()</span>
             <span class="n">configuration</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span>
             <span class="n">basis_gates</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">basis_gates</span>
@@ -711,9 +716,11 @@
             <span class="k">except</span> <span class="n">BackendPropertyError</span><span class="p">:</span>
                 <span class="n">excited_state_populations</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">try</span><span class="p">:</span>
+                <span class="n">t1s</span> <span class="o">=</span> <span class="p">[</span><span class="n">properties</span><span class="o">.</span><span class="n">t1</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">)]</span>
+                <span class="n">t2s</span> <span class="o">=</span> <span class="p">[</span><span class="n">properties</span><span class="o">.</span><span class="n">t2</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">)]</span>
                 <span class="n">delay_pass</span> <span class="o">=</span> <span class="n">RelaxationNoisePass</span><span class="p">(</span>
-                    <span class="n">t1s</span><span class="o">=</span><span class="p">[</span><span class="n">properties</span><span class="o">.</span><span class="n">t1</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">)],</span>
-                    <span class="n">t2s</span><span class="o">=</span><span class="p">[</span><span class="n">properties</span><span class="o">.</span><span class="n">t2</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">)],</span>
+                    <span class="n">t1s</span><span class="o">=</span><span class="n">t1s</span><span class="p">,</span>
+                    <span class="n">t2s</span><span class="o">=</span><span class="p">[</span><span class="n">_truncate_t2_value</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">)</span> <span class="k">for</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">t1s</span><span class="p">,</span> <span class="n">t2s</span><span class="p">)],</span>
                     <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span>
                     <span class="n">op_types</span><span class="o">=</span><span class="n">Delay</span><span class="p">,</span>
                     <span class="n">excited_state_populations</span><span class="o">=</span><span class="n">excited_state_populations</span>
@@ -1448,7 +1455,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      2022/04/05 সর্বশেষ পরিবর্তন করা হয়েছে।
+      2022/04/11 সর্বশেষ পরিবর্তন করা হয়েছে।
 
     </p>
   </div>

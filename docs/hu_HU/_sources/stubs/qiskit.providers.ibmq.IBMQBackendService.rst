@@ -14,6 +14,7 @@
       :toctree: ../stubs/
 
       ~IBMQBackendService.backends
+      ~IBMQBackendService.job_ids
       ~IBMQBackendService.jobs
       ~IBMQBackendService.my_reservations
       ~IBMQBackendService.retrieve_job

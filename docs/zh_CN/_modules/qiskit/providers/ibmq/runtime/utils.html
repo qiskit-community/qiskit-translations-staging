@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.providers.ibmq.runtime.utils &mdash; Qiskit 0.35.0 文档</title>
+  <title>qiskit.providers.ibmq.runtime.utils &mdash; Qiskit 0.36.0 文档</title>
   
 
   
@@ -34,8 +34,8 @@
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/gallery.css" type="text/css" />
@@ -190,6 +190,8 @@
       
         <dd><a class="version" href="/documentation/stable/0.33/index.html">0.33</a></dd>
       
+        <dd><a class="version" href="/documentation/stable/0.34/index.html">0.34</a></dd>
+      
     </dl>
   </div>
   <script>
@@ -250,7 +252,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../intro_tutorial1.html">Qiskit 简介</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../contributing_to_qiskit.html">为 Qiskit 贡献</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../configuration.html">Local Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../configuration.html">本地配置</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../faq.html">Frequently Asked Questions</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Libraries</span></p>
@@ -380,6 +382,7 @@
     <span class="n">ParameterExpression</span><span class="p">,</span>
     <span class="n">ParameterVector</span><span class="p">,</span>
     <span class="n">QuantumCircuit</span><span class="p">,</span>
+    <span class="n">QuantumRegister</span><span class="p">,</span>
     <span class="n">qpy_serialization</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">qiskit.result</span> <span class="kn">import</span> <span class="n">Result</span>
@@ -524,6 +527,8 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">complex</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">&#39;complex&#39;</span><span class="p">,</span> <span class="s1">&#39;__value__&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">imag</span><span class="p">]}</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="nb">object</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;__type__&quot;</span><span class="p">:</span> <span class="s2">&quot;ndarray&quot;</span><span class="p">,</span> <span class="s2">&quot;__value__&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">tolist</span><span class="p">()}</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">_serialize_and_encode</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">&#39;ndarray&#39;</span><span class="p">,</span> <span class="s1">&#39;__value__&#39;</span><span class="p">:</span> <span class="n">value</span><span class="p">}</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
@@ -546,8 +551,13 @@
             <span class="p">)</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">&#39;ParameterExpression&#39;</span><span class="p">,</span> <span class="s1">&#39;__value__&#39;</span><span class="p">:</span> <span class="n">value</span><span class="p">}</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Instruction</span><span class="p">):</span>
+            <span class="c1"># Append instruction to empty circuit</span>
+            <span class="n">quantum_register</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)</span>
+            <span class="n">quantum_circuit</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="n">quantum_register</span><span class="p">)</span>
+            <span class="n">quantum_circuit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">quantum_register</span><span class="p">)</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">_serialize_and_encode</span><span class="p">(</span>
-                <span class="n">data</span><span class="o">=</span><span class="n">obj</span><span class="p">,</span> <span class="n">serializer</span><span class="o">=</span><span class="n">qpy_serialization</span><span class="o">.</span><span class="n">_write_instruction</span><span class="p">,</span> <span class="n">compress</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">quantum_circuit</span><span class="p">,</span>
+                <span class="n">serializer</span><span class="o">=</span><span class="k">lambda</span> <span class="n">buff</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">qpy_serialization</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">buff</span><span class="p">))</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">&#39;Instruction&#39;</span><span class="p">,</span> <span class="s1">&#39;__value__&#39;</span><span class="p">:</span> <span class="n">value</span><span class="p">}</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s2">&quot;settings&quot;</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">&#39;settings&#39;</span><span class="p">,</span>
@@ -589,6 +599,8 @@
             <span class="k">if</span> <span class="n">obj_type</span> <span class="o">==</span> <span class="s1">&#39;complex&#39;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">obj_val</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">obj_val</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">obj_type</span> <span class="o">==</span> <span class="s1">&#39;ndarray&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj_val</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">obj_val</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">_decode_and_deserialize</span><span class="p">(</span><span class="n">obj_val</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">obj_type</span> <span class="o">==</span> <span class="s1">&#39;set&#39;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">obj_val</span><span class="p">)</span>
@@ -599,8 +611,11 @@
                     <span class="n">obj_val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__read_parameter_expression</span><span class="p">,</span> <span class="kc">False</span>
                 <span class="p">)</span>
             <span class="k">if</span> <span class="n">obj_type</span> <span class="o">==</span> <span class="s2">&quot;Instruction&quot;</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">_decode_and_deserialize</span><span class="p">(</span>
-                    <span class="n">obj_val</span><span class="p">,</span> <span class="n">qpy_serialization</span><span class="o">.</span><span class="n">_read_instruction</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                <span class="c1"># Standalone instructions are encoded as the sole</span>
+                <span class="c1"># instruction in a QPY serialized circuit to deserialize</span>
+                <span class="c1"># load qpy circuit and return first instruction object in that circuit.</span>
+                <span class="n">circuit</span> <span class="o">=</span> <span class="n">_decode_and_deserialize</span><span class="p">(</span><span class="n">obj_val</span><span class="p">,</span> <span class="n">qpy_serialization</span><span class="o">.</span><span class="n">load</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">circuit</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">obj_type</span> <span class="o">==</span> <span class="s1">&#39;settings&#39;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">deserialize_from_settings</span><span class="p">(</span>
                     <span class="n">mod_name</span><span class="o">=</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;__module__&#39;</span><span class="p">],</span>
@@ -631,7 +646,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      最后更新于 2022/04/05.
+      最后更新于 2022/04/11.
 
     </p>
   </div>
