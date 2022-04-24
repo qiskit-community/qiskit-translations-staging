@@ -154,3 +154,31 @@ for kk in range(4):
    print('Gate counts:', circ.count_ops())
    print()
 
+
+# In[16]:
+
+
+from qiskit import QuantumCircuit, transpile
+from qiskit.test.mock import FakeBoeblingen
+backend = FakeBoeblingen()
+
+ghz = QuantumCircuit(5)
+ghz.h(0)
+ghz.cx(0,range(1,5))
+ghz.draw(output='mpl')
+
+
+# In[17]:
+
+
+circ = transpile(ghz, backend, scheduling_method="asap")
+circ.draw(output='mpl')
+
+
+# In[18]:
+
+
+from qiskit.visualization.timeline import draw as timeline_draw
+
+timeline_draw(circ)
+

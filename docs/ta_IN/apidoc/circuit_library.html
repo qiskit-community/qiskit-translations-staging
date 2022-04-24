@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Circuit Library &mdash; Qiskit 0.36.0 documentation</title>
+  <title>Circuit Library &mdash; Qiskit 0.36.1 documentation</title>
   
 
   
@@ -345,8 +345,59 @@
 <span id="circuit-library"></span><span id="qiskit-circuit-library"></span><h1>Circuit Library<a class="headerlink" href="#module-qiskit.circuit.library" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="circuit-library-qiskit-circuit-library">
 <h2>Circuit Library (<a class="reference internal" href="#module-qiskit.circuit.library" title="qiskit.circuit.library"><code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit.circuit.library</span></code></a>)<a class="headerlink" href="#circuit-library-qiskit-circuit-library" title="Permalink to this headline">¶</a></h2>
+<p>The circuit library is a collection of well-studied and valuable circuits, directives, and gates.
+We call them valuable for different reasons, for instance they can serve as building blocks for
+algorithms or they are circuits that we think are hard to simulate classically.</p>
+<p>Each element can be plugged into a circuit using the <a class="reference internal" href="../stubs/qiskit.circuit.QuantumCircuit.append.html#qiskit.circuit.QuantumCircuit.append" title="qiskit.circuit.QuantumCircuit.append"><code class="xref py py-meth docutils literal notranslate"><span class="pre">QuantumCircuit.append()</span></code></a>
+method and so the circuit library allows users to program at higher levels of abstraction.
+For example, to append a multi-controlled CNOT:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">MCXGate</span>
+<span class="n">gate</span> <span class="o">=</span> <span class="n">MCXGate</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gate</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="s1">&#39;mpl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/circuit_library_0_0.png" src="../_images/circuit_library_0_0.png" />
+</div>
+</div>
+<p>The library is organized in several sections.</p>
 <div class="section" id="standard-gates">
-<h3>Standard Gates<a class="headerlink" href="#standard-gates" title="Permalink to this headline">¶</a></h3>
+<h3>Standard gates<a class="headerlink" href="#standard-gates" title="Permalink to this headline">¶</a></h3>
+<p>These operations are reversible unitary gates and they all subclass
+<a class="reference internal" href="../stubs/qiskit.circuit.Gate.html#qiskit.circuit.Gate" title="qiskit.circuit.Gate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gate</span></code></a>. As a consequence, they all have the methods
+<a class="reference internal" href="../stubs/qiskit.circuit.Gate.to_matrix.html#qiskit.circuit.Gate.to_matrix" title="qiskit.circuit.Gate.to_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_matrix()</span></code></a>, <a class="reference internal" href="../stubs/qiskit.circuit.Gate.power.html#qiskit.circuit.Gate.power" title="qiskit.circuit.Gate.power"><code class="xref py py-meth docutils literal notranslate"><span class="pre">power()</span></code></a>,
+and <a class="reference internal" href="../stubs/qiskit.circuit.Gate.control.html#qiskit.circuit.Gate.control" title="qiskit.circuit.Gate.control"><code class="xref py py-meth docutils literal notranslate"><span class="pre">control()</span></code></a>, which we can generally only apply to unitary operations.</p>
+<p>For example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">XGate</span>
+<span class="n">gate</span> <span class="o">=</span> <span class="n">XGate</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">gate</span><span class="o">.</span><span class="n">to_matrix</span><span class="p">())</span>             <span class="c1"># X gate</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">gate</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">to_matrix</span><span class="p">())</span>  <span class="c1"># √X gate</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">gate</span><span class="o">.</span><span class="n">control</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to_matrix</span><span class="p">())</span>  <span class="c1"># CX (controlled X) gate</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>[[0.+0.j 1.+0.j]
+ [1.+0.j 0.+0.j]]
+[[0.5+0.5j 0.5-0.5j]
+ [0.5-0.5j 0.5+0.5j]]
+[[1.+0.j 0.+0.j 0.+0.j 0.+0.j]
+ [0.+0.j 0.+0.j 0.+0.j 1.+0.j]
+ [0.+0.j 0.+0.j 1.+0.j 0.+0.j]
+ [0.+0.j 1.+0.j 0.+0.j 0.+0.j]]
+</pre></div>
+</div>
+</div>
+</div>
 <table class="autosummary longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -413,20 +464,8 @@
 <tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.IGate.html#qiskit.circuit.library.IGate" title="qiskit.circuit.library.IGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IGate</span></code></a>([label])</p></td>
 <td><p>Identity gate.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.MCPhaseGate.html#qiskit.circuit.library.MCPhaseGate" title="qiskit.circuit.library.MCPhaseGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCPhaseGate</span></code></a>(lam, num_ctrl_qubits[, label])</p></td>
-<td><p>Multi-controlled-Phase gate.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.MCXGate.html#qiskit.circuit.library.MCXGate" title="qiskit.circuit.library.MCXGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCXGate</span></code></a>(num_ctrl_qubits[, label, ...])</p></td>
-<td><p>The general, multi-controlled X gate.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.MCXGrayCode.html#qiskit.circuit.library.MCXGrayCode" title="qiskit.circuit.library.MCXGrayCode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCXGrayCode</span></code></a>(num_ctrl_qubits[, label, ctrl_state])</p></td>
-<td><p>Implement the multi-controlled X gate using the Gray code.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.MCXRecursive.html#qiskit.circuit.library.MCXRecursive" title="qiskit.circuit.library.MCXRecursive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCXRecursive</span></code></a>(num_ctrl_qubits[, label, ...])</p></td>
-<td><p>Implement the multi-controlled X gate using recursion.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.MCXVChain.html#qiskit.circuit.library.MCXVChain" title="qiskit.circuit.library.MCXVChain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCXVChain</span></code></a>(num_ctrl_qubits[, dirty_ancillas, ...])</p></td>
-<td><p>Implement the multi-controlled X gate using a V-chain of CX gates.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.MSGate.html#qiskit.circuit.library.MSGate" title="qiskit.circuit.library.MSGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MSGate</span></code></a>(num_qubits, theta[, label])</p></td>
+<td><p>MSGate has been deprecated.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.PhaseGate.html#qiskit.circuit.library.PhaseGate" title="qiskit.circuit.library.PhaseGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PhaseGate</span></code></a>(theta[, label])</p></td>
 <td><p>Single-qubit rotation about the Z axis.</p></td>
@@ -520,19 +559,34 @@
 </div>
 <div class="section" id="standard-directives">
 <h3>Standard Directives<a class="headerlink" href="#standard-directives" title="Permalink to this headline">¶</a></h3>
+<p>Directives are operations to the quantum stack that are meant to be interpreted by the backend or
+the transpiler. In general, the transpiler or backend might optionally ignore them if there is no
+implementation for them.</p>
 <table class="autosummary longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.Barrier.html#qiskit.circuit.Barrier" title="qiskit.circuit.Barrier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Barrier</span></code></a>(num_qubits)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.Barrier.html#qiskit.circuit.library.Barrier" title="qiskit.circuit.library.Barrier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Barrier</span></code></a>(num_qubits)</p></td>
 <td><p>Barrier instruction.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.Measure.html#qiskit.circuit.Measure" title="qiskit.circuit.Measure"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Measure</span></code></a>()</p></td>
+</tbody>
+</table>
+</div>
+<div class="section" id="standard-operations">
+<h3>Standard Operations<a class="headerlink" href="#standard-operations" title="Permalink to this headline">¶</a></h3>
+<p>Operations are non-reversible changes in the quantum state of the circuit.</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.Measure.html#qiskit.circuit.library.Measure" title="qiskit.circuit.library.Measure"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Measure</span></code></a>()</p></td>
 <td><p>Quantum measurement in the computational basis.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.Reset.html#qiskit.circuit.Reset" title="qiskit.circuit.Reset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Reset</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.Reset.html#qiskit.circuit.library.Reset" title="qiskit.circuit.library.Reset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Reset</span></code></a>()</p></td>
 <td><p>Qubit reset.</p></td>
 </tr>
 </tbody>
@@ -540,6 +594,27 @@
 </div>
 <div class="section" id="generalized-gates">
 <h3>Generalized Gates<a class="headerlink" href="#generalized-gates" title="Permalink to this headline">¶</a></h3>
+<p>These &quot;gates&quot; (many are <a class="reference internal" href="../stubs/qiskit.circuit.QuantumCircuit.html#qiskit.circuit.QuantumCircuit" title="qiskit.circuit.QuantumCircuit"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a> subclasses) allow to
+set the amount of qubits involved at instantiation time.</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">Diagonal</span>
+
+<span class="n">diagonal</span> <span class="o">=</span> <span class="n">Diagonal</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">diagonal</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)</span>
+
+<span class="n">diagonal</span> <span class="o">=</span> <span class="n">Diagonal</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">diagonal</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>1
+2
+</pre></div>
+</div>
+</div>
+</div>
 <table class="autosummary longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -561,20 +636,32 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.GMS.html#qiskit.circuit.library.GMS" title="qiskit.circuit.library.GMS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GMS</span></code></a>(num_qubits, theta)</p></td>
 <td><p>Global Mølmer–Sørensen gate.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.MSGate.html#qiskit.circuit.library.MSGate" title="qiskit.circuit.library.MSGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MSGate</span></code></a>(num_qubits, theta[, label])</p></td>
-<td><p>MSGate has been deprecated.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.GR.html#qiskit.circuit.library.GR" title="qiskit.circuit.library.GR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GR</span></code></a>(num_qubits, theta, phi)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.GR.html#qiskit.circuit.library.GR" title="qiskit.circuit.library.GR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GR</span></code></a>(num_qubits, theta, phi)</p></td>
 <td><p>Global R gate.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.GRX.html#qiskit.circuit.library.GRX" title="qiskit.circuit.library.GRX"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRX</span></code></a>(num_qubits, theta)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.GRX.html#qiskit.circuit.library.GRX" title="qiskit.circuit.library.GRX"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRX</span></code></a>(num_qubits, theta)</p></td>
 <td><p>Global RX gate.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.GRY.html#qiskit.circuit.library.GRY" title="qiskit.circuit.library.GRY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRY</span></code></a>(num_qubits, theta)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.GRY.html#qiskit.circuit.library.GRY" title="qiskit.circuit.library.GRY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRY</span></code></a>(num_qubits, theta)</p></td>
 <td><p>Global RY gate.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.GRZ.html#qiskit.circuit.library.GRZ" title="qiskit.circuit.library.GRZ"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRZ</span></code></a>(num_qubits, phi)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.GRZ.html#qiskit.circuit.library.GRZ" title="qiskit.circuit.library.GRZ"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRZ</span></code></a>(num_qubits, phi)</p></td>
 <td><p>Global RZ gate.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.MCPhaseGate.html#qiskit.circuit.library.MCPhaseGate" title="qiskit.circuit.library.MCPhaseGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCPhaseGate</span></code></a>(lam, num_ctrl_qubits[, label])</p></td>
+<td><p>Multi-controlled-Phase gate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.MCXGate.html#qiskit.circuit.library.MCXGate" title="qiskit.circuit.library.MCXGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCXGate</span></code></a>(num_ctrl_qubits[, label, ...])</p></td>
+<td><p>The general, multi-controlled X gate.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.MCXGrayCode.html#qiskit.circuit.library.MCXGrayCode" title="qiskit.circuit.library.MCXGrayCode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCXGrayCode</span></code></a>(num_ctrl_qubits[, label, ctrl_state])</p></td>
+<td><p>Implement the multi-controlled X gate using the Gray code.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.MCXRecursive.html#qiskit.circuit.library.MCXRecursive" title="qiskit.circuit.library.MCXRecursive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCXRecursive</span></code></a>(num_ctrl_qubits[, label, ...])</p></td>
+<td><p>Implement the multi-controlled X gate using recursion.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.MCXVChain.html#qiskit.circuit.library.MCXVChain" title="qiskit.circuit.library.MCXVChain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCXVChain</span></code></a>(num_ctrl_qubits[, dirty_ancillas, ...])</p></td>
+<td><p>Implement the multi-controlled X gate using a V-chain of CX gates.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.RVGate.html#qiskit.circuit.library.RVGate" title="qiskit.circuit.library.RVGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RVGate</span></code></a>(v_x, v_y, v_z[, basis])</p></td>
 <td><p>Rotation around arbitrary rotation axis <span class="math notranslate nohighlight">\(v\)</span> where <span class="math notranslate nohighlight">\(|v|\)</span> is angle of rotation in radians.</p></td>
@@ -590,6 +677,9 @@
 </div>
 <div class="section" id="boolean-logic-circuits">
 <h3>Boolean Logic Circuits<a class="headerlink" href="#boolean-logic-circuits" title="Permalink to this headline">¶</a></h3>
+<p>These are <a class="reference internal" href="../stubs/qiskit.circuit.QuantumCircuit.html#qiskit.circuit.QuantumCircuit" title="qiskit.circuit.QuantumCircuit"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a> subclasses
+that implement boolean logic operations, such as the logical
+or of a set of qubit states.</p>
 <table class="autosummary longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -613,6 +703,9 @@
 </div>
 <div class="section" id="basis-change-circuits">
 <h3>Basis Change Circuits<a class="headerlink" href="#basis-change-circuits" title="Permalink to this headline">¶</a></h3>
+<p>These circuits allow basis transformations of the qubit states. For example,
+in the case of the Quantum Fourier Transform (QFT), it transforms between
+the computational basis and the Fourier basis.</p>
 <table class="autosummary longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -627,6 +720,8 @@
 </div>
 <div class="section" id="arithmetic-circuits">
 <h3>Arithmetic Circuits<a class="headerlink" href="#arithmetic-circuits" title="Permalink to this headline">¶</a></h3>
+<p>These <a class="reference internal" href="../stubs/qiskit.circuit.QuantumCircuit.html#qiskit.circuit.QuantumCircuit" title="qiskit.circuit.QuantumCircuit"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a>s perform classical arithmetic,
+such as addition or multiplication.</p>
 <div class="section" id="amplitude-functions">
 <h4>Amplitude Functions<a class="headerlink" href="#amplitude-functions" title="Permalink to this headline">¶</a></h4>
 <table class="autosummary longtable docutils align-default">
@@ -753,20 +848,6 @@
 </table>
 </div>
 </div>
-<div class="section" id="id1">
-<h3>Amplitude Functions<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
-<table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.LinearAmplitudeFunction.html#qiskit.circuit.library.LinearAmplitudeFunction" title="qiskit.circuit.library.LinearAmplitudeFunction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LinearAmplitudeFunction</span></code></a>(num_state_qubits, ...)</p></td>
-<td><p>A circuit implementing a (piecewise) linear function on qubit amplitudes.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
 <div class="section" id="particular-quantum-circuits">
 <h3>Particular Quantum Circuits<a class="headerlink" href="#particular-quantum-circuits" title="Permalink to this headline">¶</a></h3>
 <table class="autosummary longtable docutils align-default">
@@ -810,6 +891,9 @@
 </div>
 <div class="section" id="n-local-circuits">
 <h3>N-local circuits<a class="headerlink" href="#n-local-circuits" title="Permalink to this headline">¶</a></h3>
+<p>These <code class="xref py py-class docutils literal notranslate"><span class="pre">BlueprintCircuit</span></code> subclasses are used
+as parameterized models (a.k.a. ansatzes or variational forms) in variational algorithms.
+They are heavily used in near-term algorithms in e.g. Chemistry, Physics or Optimization.</p>
 <table class="autosummary longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -842,6 +926,8 @@
 </div>
 <div class="section" id="data-encoding-circuits">
 <h3>Data encoding circuits<a class="headerlink" href="#data-encoding-circuits" title="Permalink to this headline">¶</a></h3>
+<p>These <code class="xref py py-class docutils literal notranslate"><span class="pre">BlueprintCircuit</span></code> encode classical
+data in quantum states and are used as feature maps for classification.</p>
 <table class="autosummary longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -863,8 +949,41 @@
 </tbody>
 </table>
 </div>
+<div class="section" id="template-circuits">
+<h3>Template circuits<a class="headerlink" href="#template-circuits" title="Permalink to this headline">¶</a></h3>
+<p>Templates are functions that return circuits that compute the identity. They are used at
+circuit optimization where matching part of the template allows the compiler
+to replace the match with the inverse of the remainder from the template.</p>
+<p>In this example, the identity constant in a template is checked:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit.circuit.library.templates</span> <span class="kn">import</span> <span class="n">template_nct_4b_1</span>
+<span class="kn">from</span> <span class="nn">qiskit.quantum_info</span> <span class="kn">import</span> <span class="n">Operator</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">template</span> <span class="o">=</span> <span class="n">template_nct_4b_1</span><span class="p">()</span>
+
+<span class="n">identity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="nb">len</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">qubits</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span><span class="n">template</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
+<span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">identity</span><span class="p">)</span>  <span class="c1"># True, template_nct_4b_1 is the identity</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-none notranslate"><div class="highlight"><pre><span></span>True
+</pre></div>
+</div>
+</div>
+</div>
 <div class="section" id="nct-not-cnot-toffoli-template-circuits">
-<h3>NCT (Not-CNOT-Toffoli) template circuits<a class="headerlink" href="#nct-not-cnot-toffoli-template-circuits" title="Permalink to this headline">¶</a></h3>
+<h4>NCT (Not-CNOT-Toffoli) template circuits<a class="headerlink" href="#nct-not-cnot-toffoli-template-circuits" title="Permalink to this headline">¶</a></h4>
+<p>Template circuits for <a class="reference internal" href="../stubs/qiskit.circuit.library.XGate.html#qiskit.circuit.library.XGate" title="qiskit.circuit.library.XGate"><code class="xref py py-class docutils literal notranslate"><span class="pre">XGate</span></code></a>,
+<a class="reference internal" href="../stubs/qiskit.circuit.library.CXGate.html#qiskit.circuit.library.CXGate" title="qiskit.circuit.library.CXGate"><code class="xref py py-class docutils literal notranslate"><span class="pre">CXGate</span></code></a>,
+and <a class="reference internal" href="../stubs/qiskit.circuit.library.CCXGate.html#qiskit.circuit.library.CCXGate" title="qiskit.circuit.library.CCXGate"><code class="xref py py-class docutils literal notranslate"><span class="pre">CCXGate</span></code></a> (Toffoli) gates.</p>
+<p><strong>Reference:</strong>
+Maslov, D. and Dueck, G. W. and Miller, D. M.,
+Techniques for the synthesis of reversible Toffoli networks, 2007
+<a class="reference external" href="http://dx.doi.org/10.1145/1278349.1278355">http://dx.doi.org/10.1145/1278349.1278355</a></p>
 <table class="autosummary longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1063,7 +1182,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_2a_1.html#qiskit.circuit.library.templates.nct.template_nct_2a_1" title="qiskit.circuit.library.templates.nct.template_nct_2a_1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_2a_1</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9a_1.html#qiskit.circuit.library.templates.nct.template_nct_9a_1" title="qiskit.circuit.library.templates.nct.template_nct_9a_1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9a_1</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1071,7 +1190,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9a_1.html#qiskit.circuit.library.templates.nct.template_nct_9a_1" title="qiskit.circuit.library.templates.nct.template_nct_9a_1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9a_1</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_1.html#qiskit.circuit.library.templates.nct.template_nct_9c_1" title="qiskit.circuit.library.templates.nct.template_nct_9c_1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_1</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1079,7 +1198,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_1.html#qiskit.circuit.library.templates.nct.template_nct_9c_1" title="qiskit.circuit.library.templates.nct.template_nct_9c_1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_1</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_2.html#qiskit.circuit.library.templates.nct.template_nct_9c_2" title="qiskit.circuit.library.templates.nct.template_nct_9c_2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_2</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1087,7 +1206,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_2.html#qiskit.circuit.library.templates.nct.template_nct_9c_2" title="qiskit.circuit.library.templates.nct.template_nct_9c_2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_2</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_3.html#qiskit.circuit.library.templates.nct.template_nct_9c_3" title="qiskit.circuit.library.templates.nct.template_nct_9c_3"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_3</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1095,7 +1214,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_3.html#qiskit.circuit.library.templates.nct.template_nct_9c_3" title="qiskit.circuit.library.templates.nct.template_nct_9c_3"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_3</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_4.html#qiskit.circuit.library.templates.nct.template_nct_9c_4" title="qiskit.circuit.library.templates.nct.template_nct_9c_4"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_4</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1103,7 +1222,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_4.html#qiskit.circuit.library.templates.nct.template_nct_9c_4" title="qiskit.circuit.library.templates.nct.template_nct_9c_4"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_4</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_5.html#qiskit.circuit.library.templates.nct.template_nct_9c_5" title="qiskit.circuit.library.templates.nct.template_nct_9c_5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_5</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1111,7 +1230,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_5.html#qiskit.circuit.library.templates.nct.template_nct_9c_5" title="qiskit.circuit.library.templates.nct.template_nct_9c_5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_5</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_6.html#qiskit.circuit.library.templates.nct.template_nct_9c_6" title="qiskit.circuit.library.templates.nct.template_nct_9c_6"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_6</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1119,7 +1238,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_6.html#qiskit.circuit.library.templates.nct.template_nct_9c_6" title="qiskit.circuit.library.templates.nct.template_nct_9c_6"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_6</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_7.html#qiskit.circuit.library.templates.nct.template_nct_9c_7" title="qiskit.circuit.library.templates.nct.template_nct_9c_7"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_7</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1127,7 +1246,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_7.html#qiskit.circuit.library.templates.nct.template_nct_9c_7" title="qiskit.circuit.library.templates.nct.template_nct_9c_7"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_7</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_8.html#qiskit.circuit.library.templates.nct.template_nct_9c_8" title="qiskit.circuit.library.templates.nct.template_nct_9c_8"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_8</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1135,7 +1254,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_8.html#qiskit.circuit.library.templates.nct.template_nct_9c_8" title="qiskit.circuit.library.templates.nct.template_nct_9c_8"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_8</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_9.html#qiskit.circuit.library.templates.nct.template_nct_9c_9" title="qiskit.circuit.library.templates.nct.template_nct_9c_9"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_9</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1143,7 +1262,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_9.html#qiskit.circuit.library.templates.nct.template_nct_9c_9" title="qiskit.circuit.library.templates.nct.template_nct_9c_9"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_9</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_10.html#qiskit.circuit.library.templates.nct.template_nct_9c_10" title="qiskit.circuit.library.templates.nct.template_nct_9c_10"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_10</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1151,7 +1270,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_10.html#qiskit.circuit.library.templates.nct.template_nct_9c_10" title="qiskit.circuit.library.templates.nct.template_nct_9c_10"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_10</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_11.html#qiskit.circuit.library.templates.nct.template_nct_9c_11" title="qiskit.circuit.library.templates.nct.template_nct_9c_11"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_11</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1159,7 +1278,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_11.html#qiskit.circuit.library.templates.nct.template_nct_9c_11" title="qiskit.circuit.library.templates.nct.template_nct_9c_11"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_11</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_12.html#qiskit.circuit.library.templates.nct.template_nct_9c_12" title="qiskit.circuit.library.templates.nct.template_nct_9c_12"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_12</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1167,7 +1286,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9c_12.html#qiskit.circuit.library.templates.nct.template_nct_9c_12" title="qiskit.circuit.library.templates.nct.template_nct_9c_12"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9c_12</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_1.html#qiskit.circuit.library.templates.nct.template_nct_9d_1" title="qiskit.circuit.library.templates.nct.template_nct_9d_1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_1</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1175,7 +1294,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_1.html#qiskit.circuit.library.templates.nct.template_nct_9d_1" title="qiskit.circuit.library.templates.nct.template_nct_9d_1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_1</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_2.html#qiskit.circuit.library.templates.nct.template_nct_9d_2" title="qiskit.circuit.library.templates.nct.template_nct_9d_2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_2</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1183,7 +1302,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_2.html#qiskit.circuit.library.templates.nct.template_nct_9d_2" title="qiskit.circuit.library.templates.nct.template_nct_9d_2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_2</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_3.html#qiskit.circuit.library.templates.nct.template_nct_9d_3" title="qiskit.circuit.library.templates.nct.template_nct_9d_3"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_3</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1191,7 +1310,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_3.html#qiskit.circuit.library.templates.nct.template_nct_9d_3" title="qiskit.circuit.library.templates.nct.template_nct_9d_3"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_3</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_4.html#qiskit.circuit.library.templates.nct.template_nct_9d_4" title="qiskit.circuit.library.templates.nct.template_nct_9d_4"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_4</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1199,7 +1318,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_4.html#qiskit.circuit.library.templates.nct.template_nct_9d_4" title="qiskit.circuit.library.templates.nct.template_nct_9d_4"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_4</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_5.html#qiskit.circuit.library.templates.nct.template_nct_9d_5" title="qiskit.circuit.library.templates.nct.template_nct_9d_5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_5</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1207,7 +1326,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_5.html#qiskit.circuit.library.templates.nct.template_nct_9d_5" title="qiskit.circuit.library.templates.nct.template_nct_9d_5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_5</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_6.html#qiskit.circuit.library.templates.nct.template_nct_9d_6" title="qiskit.circuit.library.templates.nct.template_nct_9d_6"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_6</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1215,7 +1334,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_6.html#qiskit.circuit.library.templates.nct.template_nct_9d_6" title="qiskit.circuit.library.templates.nct.template_nct_9d_6"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_6</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_7.html#qiskit.circuit.library.templates.nct.template_nct_9d_7" title="qiskit.circuit.library.templates.nct.template_nct_9d_7"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_7</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1223,7 +1342,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_7.html#qiskit.circuit.library.templates.nct.template_nct_9d_7" title="qiskit.circuit.library.templates.nct.template_nct_9d_7"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_7</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_8.html#qiskit.circuit.library.templates.nct.template_nct_9d_8" title="qiskit.circuit.library.templates.nct.template_nct_9d_8"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_8</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1231,7 +1350,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_8.html#qiskit.circuit.library.templates.nct.template_nct_9d_8" title="qiskit.circuit.library.templates.nct.template_nct_9d_8"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_8</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_9.html#qiskit.circuit.library.templates.nct.template_nct_9d_9" title="qiskit.circuit.library.templates.nct.template_nct_9d_9"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_9</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1239,15 +1358,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_9.html#qiskit.circuit.library.templates.nct.template_nct_9d_9" title="qiskit.circuit.library.templates.nct.template_nct_9d_9"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_9</span></code></a>()</p></td>
-<td><p><dl class="field-list simple">
-<dt class="field-odd">returns</dt>
-<dd class="field-odd"><p>template as a quantum circuit.</p>
-</dd>
-</dl>
-</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_10.html#qiskit.circuit.library.templates.nct.template_nct_9d_10" title="qiskit.circuit.library.templates.nct.template_nct_9d_10"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_10</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit.circuit.library.templates.nct.template_nct_9d_10.html#qiskit.circuit.library.templates.nct.template_nct_9d_10" title="qiskit.circuit.library.templates.nct.template_nct_9d_10"><code class="xref py py-obj docutils literal notranslate"><span class="pre">templates.nct.template_nct_9d_10</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">returns</dt>
 <dd class="field-odd"><p>template as a quantum circuit.</p>
@@ -1259,7 +1370,8 @@
 </table>
 </div>
 <div class="section" id="clifford-template-circuits">
-<h3>Clifford template circuits<a class="headerlink" href="#clifford-template-circuits" title="Permalink to this headline">¶</a></h3>
+<h4>Clifford template circuits<a class="headerlink" href="#clifford-template-circuits" title="Permalink to this headline">¶</a></h4>
+<p>Template circuits over Clifford gates.</p>
 <table class="autosummary longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1414,7 +1526,8 @@
 </table>
 </div>
 <div class="section" id="rzxgate-template-circuits">
-<h3>RZXGate template circuits<a class="headerlink" href="#rzxgate-template-circuits" title="Permalink to this headline">¶</a></h3>
+<h4>RZXGate template circuits<a class="headerlink" href="#rzxgate-template-circuits" title="Permalink to this headline">¶</a></h4>
+<p>Template circuits with <a class="reference internal" href="../stubs/qiskit.circuit.library.RZXGate.html#qiskit.circuit.library.RZXGate" title="qiskit.circuit.library.RZXGate"><code class="xref py py-class docutils literal notranslate"><span class="pre">RZXGate</span></code></a>.</p>
 <table class="autosummary longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1444,6 +1557,7 @@
 </div>
 </div>
 </div>
+</div>
 
 
              </article>
@@ -1470,7 +1584,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Last updated on 2022/04/12.
+      Last updated on 2022/04/23.
 
     </p>
   </div>
@@ -1491,8 +1605,9 @@
               <ul>
 <li><a class="reference internal" href="#">Circuit Library</a><ul>
 <li><a class="reference internal" href="#circuit-library-qiskit-circuit-library">Circuit Library (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit.circuit.library</span></code>)</a><ul>
-<li><a class="reference internal" href="#standard-gates">Standard Gates</a></li>
+<li><a class="reference internal" href="#standard-gates">Standard gates</a></li>
 <li><a class="reference internal" href="#standard-directives">Standard Directives</a></li>
+<li><a class="reference internal" href="#standard-operations">Standard Operations</a></li>
 <li><a class="reference internal" href="#generalized-gates">Generalized Gates</a></li>
 <li><a class="reference internal" href="#boolean-logic-circuits">Boolean Logic Circuits</a></li>
 <li><a class="reference internal" href="#basis-change-circuits">Basis Change Circuits</a></li>
@@ -1506,13 +1621,15 @@
 <li><a class="reference internal" href="#other-arithmetic-functions">Other arithmetic functions</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id1">Amplitude Functions</a></li>
 <li><a class="reference internal" href="#particular-quantum-circuits">Particular Quantum Circuits</a></li>
 <li><a class="reference internal" href="#n-local-circuits">N-local circuits</a></li>
 <li><a class="reference internal" href="#data-encoding-circuits">Data encoding circuits</a></li>
+<li><a class="reference internal" href="#template-circuits">Template circuits</a><ul>
 <li><a class="reference internal" href="#nct-not-cnot-toffoli-template-circuits">NCT (Not-CNOT-Toffoli) template circuits</a></li>
 <li><a class="reference internal" href="#clifford-template-circuits">Clifford template circuits</a></li>
 <li><a class="reference internal" href="#rzxgate-template-circuits">RZXGate template circuits</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

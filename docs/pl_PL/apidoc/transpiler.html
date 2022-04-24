@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Transpiler (qiskit.transpiler) &mdash; Qiskit 0.36.0 - dokumentacja</title>
+  <title>Transpiler (qiskit.transpiler) &mdash; Qiskit 0.36.1 - dokumentacja</title>
   
 
   
@@ -364,7 +364,7 @@ quantum circuit optimization methods and their usage, it is best to use one of
 these ready-made routines.</p>
 </div>
 <div class="section" id="supplementary-information">
-<h2>Supplementary Information<a class="headerlink" href="#supplementary-information" title="Stały odnośnik do tego nagłówka">¶</a></h2>
+<span id="transpiler-supplemental"></span><h2>Supplementary Information<a class="headerlink" href="#supplementary-information" title="Stały odnośnik do tego nagłówka">¶</a></h2>
 <details class="sphinx-bs dropdown card mb-3 fade-in-slide-down">
 <summary class="summary-title card-header">
 Basis gates<div class="summary-down docutils">
@@ -728,24 +728,249 @@ So the numbers below will likely change each time you run the code.</p>
 <div class="cell_output docutils container">
 <div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>Optimization Level 0
 Depth: 14
-Gate counts: OrderedDict([(&#39;cx&#39;, 16), (&#39;u2&#39;, 1)])
+Gate counts: OrderedDict([(&#39;cx&#39;, 19), (&#39;u2&#39;, 1)])
 
 Optimization Level 1
+Depth: 12
+Gate counts: OrderedDict([(&#39;cx&#39;, 14), (&#39;u2&#39;, 1)])
+
+Optimization Level 2
 Depth: 7
 Gate counts: OrderedDict([(&#39;cx&#39;, 9), (&#39;u2&#39;, 1)])
 
-Optimization Level 2
-Depth: 12
-Gate counts: OrderedDict([(&#39;cx&#39;, 20), (&#39;u2&#39;, 1)])
-
 Optimization Level 3
-Depth: 10
-Gate counts: OrderedDict([(&#39;cx&#39;, 10), (&#39;u2&#39;, 1)])
+Depth: 12
+Gate counts: OrderedDict([(&#39;cx&#39;, 11), (&#39;u2&#39;, 1)])
 
 </pre></div>
 </div>
 </div>
 </div>
+<br></div>
+</details><details class="sphinx-bs dropdown card mb-3 fade-in-slide-down">
+<summary class="summary-title card-header">
+Scheduling<div class="summary-down docutils">
+<svg version="1.1" width="24" height="24" class="octicon octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
+<div class="summary-up docutils">
+<svg version="1.1" width="24" height="24" class="octicon octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
+</summary><div class="summary-content card-body docutils">
+<p class="card-text">After the circuit has been translated to the target basis, mapped to the device, and optimized,
+a scheduling phase can be applied to optionally account for all the idle time in the circuit.
+At a high level the scheduling can be thought of as inserting delays into the circuit to account
+for idle time on the qubits between the execution of instructions. For example, if we start with a
+circuit such as:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span><span class="p">,</span> <span class="n">transpile</span>
+<span class="kn">from</span> <span class="nn">qiskit.test.mock</span> <span class="kn">import</span> <span class="n">FakeBoeblingen</span>
+<span class="n">backend</span> <span class="o">=</span> <span class="n">FakeBoeblingen</span><span class="p">()</span>
+
+<span class="n">ghz</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">ghz</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">ghz</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">ghz</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;mpl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/transpiler_15_0.png" src="../_images/transpiler_15_0.png" />
+</div>
+</div>
+<p class="card-text">we can then call <a class="reference internal" href="../stubs/qiskit.compiler.transpile.html#qiskit.compiler.transpile" title="qiskit.compiler.transpile"><code class="xref py py-func docutils literal notranslate"><span class="pre">transpile()</span></code></a> on it with <code class="docutils literal notranslate"><span class="pre">scheduling_method</span></code> set:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">circ</span> <span class="o">=</span> <span class="n">transpile</span><span class="p">(</span><span class="n">ghz</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span> <span class="n">scheduling_method</span><span class="o">=</span><span class="s2">&quot;asap&quot;</span><span class="p">)</span>
+<span class="n">circ</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s1">&#39;mpl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/transpiler_16_0.png" src="../_images/transpiler_16_0.png" />
+</div>
+</div>
+<p class="card-text">You can see here that the transpiler inserted <a class="reference internal" href="../stubs/qiskit.circuit.Delay.html#qiskit.circuit.Delay" title="qiskit.circuit.Delay"><code class="xref py py-class docutils literal notranslate"><span class="pre">Delay</span></code></a> instructions to
+account for idle time on each qubit. To get a better idea of the timing of the circuit we can
+also look at it with the <a class="reference internal" href="../stubs/qiskit.visualization.timeline.draw.html#qiskit.visualization.timeline.draw" title="qiskit.visualization.timeline.draw"><code class="xref py py-func docutils literal notranslate"><span class="pre">timeline.draw()</span></code></a> function:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit.visualization.timeline</span> <span class="kn">import</span> <span class="n">draw</span> <span class="k">as</span> <span class="n">timeline_draw</span>
+
+<span class="n">timeline_draw</span><span class="p">(</span><span class="n">circ</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/transpiler_17_0.png" src="../_images/transpiler_17_0.png" />
+</div>
+</div>
+<p class="card-text">The scheduling of a circuit involves two parts, analysis and constraint mapping followed by a
+padding pass. The first part requires running a scheduling analysis pass such as
+<code class="xref py py-class docutils literal notranslate"><span class="pre">ALAPSchedulingAnalysis</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ASAPSchedulingAnalysis</span></code> which analyzes the circuit
+and records the start time of each instruction in the circuit using a scheduling algorithm („as late
+as possible” for  <code class="xref py py-class docutils literal notranslate"><span class="pre">ALAPSchedulingAnalysis</span></code> and „as soon as possible” for
+<code class="xref py py-class docutils literal notranslate"><span class="pre">ASAPSchedulingAnalysis</span></code>) in the property set. Once the circuit has an initial scheduling
+additional passes can be run to account for any timing constraints on the target backend, such
+as alignment constraints. This is typically done with the
+<a class="reference internal" href="../stubs/qiskit.transpiler.passes.ConstrainedReschedule.html#qiskit.transpiler.passes.ConstrainedReschedule" title="qiskit.transpiler.passes.ConstrainedReschedule"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConstrainedReschedule</span></code></a> pass which will adjust the scheduling
+set in the property set to the contraints of the target backend. Once all
+the scheduling and adjustments/rescheduling are finished a padding pass,
+such as <a class="reference internal" href="../stubs/qiskit.transpiler.passes.PadDelay.html#qiskit.transpiler.passes.PadDelay" title="qiskit.transpiler.passes.PadDelay"><code class="xref py py-class docutils literal notranslate"><span class="pre">PadDelay</span></code></a> or <a class="reference internal" href="../stubs/qiskit.transpiler.passes.PadDynamicalDecoupling.html#qiskit.transpiler.passes.PadDynamicalDecoupling" title="qiskit.transpiler.passes.PadDynamicalDecoupling"><code class="xref py py-class docutils literal notranslate"><span class="pre">PadDynamicalDecoupling</span></code></a> is run
+to insert the instructions into the circuit, which completes the scheduling.</p>
+<p class="card-text">Scheduling Anaylsis with control flow instructions:</p>
+<p class="card-text">When scheduling analysis passes run there are additional constraints on classical conditions
+and control flow instructions in a circuit. This section covers the details of these additional
+constraints that any scheduling pass will need to account for.</p>
+<p class="card-text">Policy of topological node ordering in scheduling:</p>
+<p class="card-text">The DAG representation of <code class="docutils literal notranslate"><span class="pre">QuantumCircuit</span></code> respects the node ordering also in the
+classical register wires, though theoretically two conditional instructions
+conditioned on the same register are commute, i.e. read-access to the
+classical register doesn’t change its state.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">qc</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">x</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">c_if</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">x</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">c_if</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="card-text">The scheduler SHOULD comply with above topological ordering policy of the DAG circuit.
+Accordingly, the <cite>asap</cite>-scheduled circuit will become</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>     ┌────────────────┐   ┌───┐
+q_0: ┤ Delay(100[dt]) ├───┤ X ├──────────────
+     ├────────────────┤   └─╥─┘      ┌───┐
+q_1: ┤ Delay(100[dt]) ├─────╫────────┤ X ├───
+     └────────────────┘     ║        └─╥─┘
+                       ┌────╨────┐┌────╨────┐
+c: 1/══════════════════╡ c_0=0x1 ╞╡ c_0=0x1 ╞
+                       └─────────┘└─────────┘
+</pre></div>
+</div>
+<p class="card-text">Note that this scheduling might be inefficient in some cases,
+because the second conditional operation can start without waiting the delay of 100 dt.
+However, such optimization should be done by another pass,
+otherwise scheduling may break topological ordering of the original circuit.</p>
+<p class="card-text">Realistic control flow scheduling respecting for microarcitecture:</p>
+<p class="card-text">In the dispersive QND readout scheme, qubit is measured with microwave stimulus to qubit (Q)
+followed by resonator ring-down (depopulation). This microwave signal is recorded
+in the buffer memory (B) with hardware kernel, then a discriminated (D) binary value
+is moved to the classical register (C).
+The sequence from t0 to t1 of the measure instruction interval might be modeled as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Q ░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░
+B ░░▒▒▒▒▒▒▒▒░░░░░░░░░
+D ░░░░░░░░░░▒▒▒▒▒▒░░░
+C ░░░░░░░░░░░░░░░░▒▒░
+</pre></div>
+</div>
+<p class="card-text">However, <code class="docutils literal notranslate"><span class="pre">QuantumCircuit</span></code> representation is not enough accurate to represent
+this model. In the circuit representation, thus <code class="docutils literal notranslate"><span class="pre">Qubit</span></code> is occupied by the
+stimulus microwave signal during the first half of the interval,
+and <code class="docutils literal notranslate"><span class="pre">Clbit</span></code> is only occupied at the very end of the interval.</p>
+<p class="card-text">This precise model may induce weird edge case.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>        ┌───┐
+q_0: ───┤ X ├──────
+        └─╥─┘   ┌─┐
+q_1: ─────╫─────┤M├
+     ┌────╨────┐└╥┘
+c: 1/╡ c_0=0x1 ╞═╩═
+     └─────────┘ 0
+</pre></div>
+</div>
+<p class="card-text">In this example, user may intend to measure the state of <code class="docutils literal notranslate"><span class="pre">q_1</span></code>, after <code class="docutils literal notranslate"><span class="pre">XGate</span></code> is
+applied to the <code class="docutils literal notranslate"><span class="pre">q_0</span></code>. This is correct interpretation from viewpoint of
+the topological node ordering, i.e. x gate node come in front of the measure node.
+However, according to the measurement model above, the data in the register
+is unchanged during the stimulus, thus two nodes are simultaneously operated.
+If one <cite>alap</cite>-schedule this circuit, it may return following circuit.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>     ┌────────────────┐   ┌───┐
+q_0: ┤ Delay(500[dt]) ├───┤ X ├──────
+     └────────────────┘   └─╥─┘   ┌─┐
+q_1: ───────────────────────╫─────┤M├
+                       ┌────╨────┐└╥┘
+c: 1/══════════════════╡ c_0=0x1 ╞═╩═
+                       └─────────┘ 0
+</pre></div>
+</div>
+<p class="card-text">Note that there is no delay on <code class="docutils literal notranslate"><span class="pre">q_1</span></code> wire, and the measure instruction immediately
+start after t=0, while the conditional gate starts after the delay.
+It looks like the topological ordering between the nodes are flipped in the scheduled view.
+This behavior can be understood by considering the control flow model described above,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>: Quantum Circuit, first-measure
+0 ░░░░░░░░░░░░▒▒▒▒▒▒░
+1 ░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░
+
+: In wire q0
+Q ░░░░░░░░░░░░░░░▒▒▒░
+C ░░░░░░░░░░░░▒▒░░░░░
+
+: In wire q1
+Q ░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░
+B ░░▒▒▒▒▒▒▒▒░░░░░░░░░
+D ░░░░░░░░░░▒▒▒▒▒▒░░░
+C ░░░░░░░░░░░░░░░░▒▒░
+</pre></div>
+</div>
+<p class="card-text">Since there is no qubit register (Q0, Q1) overlap, the node ordering is determined by the
+shared classical register C. As you can see, the execution order is still
+preserved on C, i.e. read C then apply <code class="docutils literal notranslate"><span class="pre">XGate</span></code>, finally store the measured outcome in C.
+Because <code class="docutils literal notranslate"><span class="pre">DAGOpNode</span></code> cannot define different durations for associated registers,
+the time ordering of two nodes is inverted anyways.</p>
+<p class="card-text">This behavior can be controlled by <code class="docutils literal notranslate"><span class="pre">clbit_write_latency</span></code> and <code class="docutils literal notranslate"><span class="pre">conditional_latency</span></code>.
+The former parameter determines the delay of the register write-access from
+the beginning of the measure instruction t0, and another parameter determines
+the delay of conditional gate operation from t0 which comes from the register read-access.
+These information might be found in the backend configuration and then should
+be copied to the pass manager property set before the pass is called.</p>
+<p class="card-text">By default latencies, the <cite>alap</cite>-scheduled circuit of above example may become</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>        ┌───┐
+q_0: ───┤ X ├──────
+        └─╥─┘   ┌─┐
+q_1: ─────╫─────┤M├
+     ┌────╨────┐└╥┘
+c: 1/╡ c_0=0x1 ╞═╩═
+     └─────────┘ 0
+</pre></div>
+</div>
+<p class="card-text">If the backend microarchitecture supports smart scheduling of the control flow, i.e.
+it may separately schedule qubit and classical register,
+insertion of the delay yields unnecessary longer total execution time.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>: Quantum Circuit, first-xgate
+0 ░▒▒▒░░░░░░░░░░░░░░░
+1 ░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░
+
+: In wire q0
+Q ░▒▒▒░░░░░░░░░░░░░░░
+C ░░░░░░░░░░░░░░░░░░░ (zero latency)
+
+: In wire q1
+Q ░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░
+C ░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░ (zero latency, scheduled after C0 read-access)
+</pre></div>
+</div>
+<p class="card-text">However this result is much more intuitive in the topological ordering view.
+If finite conditional latency is provided, for example, 30 dt, the circuit
+is scheduled as follows.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>     ┌───────────────┐   ┌───┐
+q_0: ┤ Delay(30[dt]) ├───┤ X ├──────
+     ├───────────────┤   └─╥─┘   ┌─┐
+q_1: ┤ Delay(30[dt]) ├─────╫─────┤M├
+     └───────────────┘┌────╨────┐└╥┘
+c: 1/═════════════════╡ c_0=0x1 ╞═╩═
+                      └─────────┘ 0
+</pre></div>
+</div>
+<p class="card-text">with the timing model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>: Quantum Circuit, first-xgate
+0 ░░▒▒▒░░░░░░░░░░░░░░░
+1 ░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░
+
+: In wire q0
+Q ░░▒▒▒░░░░░░░░░░░░░░░
+C ░▒░░░░░░░░░░░░░░░░░░ (30dt latency)
+
+: In wire q1
+Q ░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░
+C ░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░
+</pre></div>
+</div>
+<p class="card-text">See <a class="reference external" href="https://arxiv.org/abs/2102.01682">https://arxiv.org/abs/2102.01682</a> for more details.</p>
 <br></div>
 </details></div>
 <div class="section" id="transpiler-api">
@@ -906,7 +1131,7 @@ Gate counts: OrderedDict([(&#39;cx&#39;, 10), (&#39;u2&#39;, 1)])
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Ostatnia modyfikacja 2022/04/12.
+      Ostatnia modyfikacja 2022/04/23.
 
     </p>
   </div>

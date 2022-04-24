@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.routing.sabre_swap &mdash; Qiskit 0.36.0 belgelendirmesi</title>
+  <title>qiskit.transpiler.passes.routing.sabre_swap &mdash; Qiskit 0.36.1 belgelendirmesi</title>
   
 
   
@@ -355,10 +355,11 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span><span class="p">,</span> <span class="n">deepcopy</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">retworkx</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library.standard_gates</span> <span class="kn">import</span> <span class="n">SwapGate</span>
-<span class="kn">from</span> <span class="nn">qiskit.circuit.quantumregister</span> <span class="kn">import</span> <span class="n">Qubit</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.basepasses</span> <span class="kn">import</span> <span class="n">TransformationPass</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.exceptions</span> <span class="kn">import</span> <span class="n">TranspilerError</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.layout</span> <span class="kn">import</span> <span class="n">Layout</span>
@@ -405,7 +406,13 @@
 <span class="sd">    `arXiv:1809.02573 &lt;https://arxiv.org/pdf/1809.02573.pdf&gt;`_</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coupling_map</span><span class="p">,</span> <span class="n">heuristic</span><span class="o">=</span><span class="s2">&quot;basic&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fake_run</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">coupling_map</span><span class="p">,</span>
+        <span class="n">heuristic</span><span class="o">=</span><span class="s2">&quot;basic&quot;</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">fake_run</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;SabreSwap initializer.</span>
 
 <span class="sd">        Args:</span>
@@ -494,6 +501,14 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">qubits</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">size</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span><span class="s2">&quot;More virtual qubits exist than physical.&quot;</span><span class="p">)</span>
 
+        <span class="n">max_iterations_without_progress</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">qubits</span><span class="p">)</span>  <span class="c1"># Arbitrary.</span>
+        <span class="n">ops_since_progress</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">extended_set</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Normally this isn&#39;t necessary, but here we want to log some objects that have some</span>
+        <span class="c1"># non-trivial cost to create.</span>
+        <span class="n">do_expensive_logging</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">dist_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">distance_matrix</span>
 
         <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
@@ -510,7 +525,7 @@
 
         <span class="c1"># A decay factor for each qubit used to heuristically penalize recently</span>
         <span class="c1"># used qubits (to encourage parallelism).</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">qubits_decay</span> <span class="o">=</span> <span class="p">{</span><span class="n">qubit</span><span class="p">:</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">qubits</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qubits_decay</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">qubits</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="c1"># Start algorithm from the front layer and iterate until all gates done.</span>
         <span class="n">num_search_steps</span> <span class="o">=</span> <span class="mi">0</span>
@@ -519,10 +534,12 @@
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">input_node</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">input_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">for</span> <span class="n">successor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_successors</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="n">dag</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">applied_predecessors</span><span class="p">[</span><span class="n">successor</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
         <span class="k">while</span> <span class="n">front_layer</span><span class="p">:</span>
             <span class="n">execute_gate_list</span> <span class="o">=</span> <span class="p">[]</span>
 
             <span class="c1"># Remove as many immediately applicable gates as possible</span>
+            <span class="n">new_front_layer</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">front_layer</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                     <span class="n">v0</span><span class="p">,</span> <span class="n">v1</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">qargs</span>
@@ -532,13 +549,24 @@
                         <span class="n">current_layout</span><span class="o">.</span><span class="n">_v2p</span><span class="p">[</span><span class="n">v0</span><span class="p">],</span> <span class="n">current_layout</span><span class="o">.</span><span class="n">_v2p</span><span class="p">[</span><span class="n">v1</span><span class="p">]</span>
                     <span class="p">):</span>
                         <span class="n">execute_gate_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">new_front_layer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>  <span class="c1"># Single-qubit gates as well as barriers are free</span>
                     <span class="n">execute_gate_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">front_layer</span> <span class="o">=</span> <span class="n">new_front_layer</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">execute_gate_list</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">ops_since_progress</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_iterations_without_progress</span><span class="p">:</span>
+                <span class="c1"># Backtrack to the last time we made progress, then greedily insert swaps to route</span>
+                <span class="c1"># the gate with the smallest distance between its arguments.  This is a release</span>
+                <span class="c1"># valve for the algorithm to avoid infinite loops only, and should generally not</span>
+                <span class="c1"># come into play for most circuits.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_undo_operations</span><span class="p">(</span><span class="n">ops_since_progress</span><span class="p">,</span> <span class="n">mapped_dag</span><span class="p">,</span> <span class="n">current_layout</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_greedy_swaps</span><span class="p">(</span><span class="n">front_layer</span><span class="p">,</span> <span class="n">mapped_dag</span><span class="p">,</span> <span class="n">current_layout</span><span class="p">,</span> <span class="n">canonical_register</span><span class="p">)</span>
+                <span class="k">continue</span>
 
             <span class="k">if</span> <span class="n">execute_gate_list</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">execute_gate_list</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_apply_gate</span><span class="p">(</span><span class="n">mapped_dag</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">current_layout</span><span class="p">,</span> <span class="n">canonical_register</span><span class="p">)</span>
-                    <span class="n">front_layer</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">successor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_successors</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">dag</span><span class="p">):</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">applied_predecessors</span><span class="p">[</span><span class="n">successor</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_resolved</span><span class="p">(</span><span class="n">successor</span><span class="p">):</span>
@@ -548,27 +576,33 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">_reset_qubits_decay</span><span class="p">()</span>
 
                 <span class="c1"># Diagnostics</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="s2">&quot;free! </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
-                    <span class="p">[</span>
-                        <span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">DAGOpNode</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span>
-                        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">execute_gate_list</span>
-                    <span class="p">],</span>
-                <span class="p">)</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="s2">&quot;front_layer: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
-                    <span class="p">[(</span><span class="n">n</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">DAGOpNode</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">front_layer</span><span class="p">],</span>
-                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">do_expensive_logging</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="s2">&quot;free! </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="p">[</span>
+                            <span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">DAGOpNode</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span>
+                            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">execute_gate_list</span>
+                        <span class="p">],</span>
+                    <span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="s2">&quot;front_layer: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="p">[</span>
+                            <span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">DAGOpNode</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span>
+                            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">front_layer</span>
+                        <span class="p">],</span>
+                    <span class="p">)</span>
 
+                <span class="n">ops_since_progress</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">extended_set</span> <span class="o">=</span> <span class="kc">None</span>
                 <span class="k">continue</span>
 
             <span class="c1"># After all free gates are exhausted, heuristically find</span>
             <span class="c1"># the best swap and insert it. When two or more swaps tie</span>
             <span class="c1"># for best score, pick one randomly.</span>
-            <span class="n">extended_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obtain_extended_set</span><span class="p">(</span><span class="n">dag</span><span class="p">,</span> <span class="n">front_layer</span><span class="p">)</span>
-            <span class="n">swap_candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obtain_swaps</span><span class="p">(</span><span class="n">front_layer</span><span class="p">,</span> <span class="n">current_layout</span><span class="p">)</span>
-            <span class="n">swap_scores</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">swap_candidates</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">swap_qubits</span> <span class="ow">in</span> <span class="n">swap_scores</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">extended_set</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">extended_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obtain_extended_set</span><span class="p">(</span><span class="n">dag</span><span class="p">,</span> <span class="n">front_layer</span><span class="p">)</span>
+            <span class="n">swap_scores</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">swap_qubits</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obtain_swaps</span><span class="p">(</span><span class="n">front_layer</span><span class="p">,</span> <span class="n">current_layout</span><span class="p">):</span>
                 <span class="n">trial_layout</span> <span class="o">=</span> <span class="n">current_layout</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
                 <span class="n">trial_layout</span><span class="o">.</span><span class="n">swap</span><span class="p">(</span><span class="o">*</span><span class="n">swap_qubits</span><span class="p">)</span>
                 <span class="n">score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_score_heuristic</span><span class="p">(</span>
@@ -579,9 +613,14 @@
             <span class="n">best_swaps</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">swap_scores</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">min_score</span><span class="p">]</span>
             <span class="n">best_swaps</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bit_indices</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bit_indices</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]]))</span>
             <span class="n">best_swap</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">best_swaps</span><span class="p">)</span>
-            <span class="n">swap_node</span> <span class="o">=</span> <span class="n">DAGOpNode</span><span class="p">(</span><span class="n">op</span><span class="o">=</span><span class="n">SwapGate</span><span class="p">(),</span> <span class="n">qargs</span><span class="o">=</span><span class="n">best_swap</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_gate</span><span class="p">(</span><span class="n">mapped_dag</span><span class="p">,</span> <span class="n">swap_node</span><span class="p">,</span> <span class="n">current_layout</span><span class="p">,</span> <span class="n">canonical_register</span><span class="p">)</span>
+            <span class="n">swap_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_gate</span><span class="p">(</span>
+                <span class="n">mapped_dag</span><span class="p">,</span>
+                <span class="n">DAGOpNode</span><span class="p">(</span><span class="n">op</span><span class="o">=</span><span class="n">SwapGate</span><span class="p">(),</span> <span class="n">qargs</span><span class="o">=</span><span class="n">best_swap</span><span class="p">),</span>
+                <span class="n">current_layout</span><span class="p">,</span>
+                <span class="n">canonical_register</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="n">current_layout</span><span class="o">.</span><span class="n">swap</span><span class="p">(</span><span class="o">*</span><span class="n">best_swap</span><span class="p">)</span>
+            <span class="n">ops_since_progress</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">swap_node</span><span class="p">)</span>
 
             <span class="n">num_search_steps</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">if</span> <span class="n">num_search_steps</span> <span class="o">%</span> <span class="n">DECAY_RESET_INTERVAL</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -591,23 +630,23 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">qubits_decay</span><span class="p">[</span><span class="n">best_swap</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">DECAY_RATE</span>
 
             <span class="c1"># Diagnostics</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;SWAP Selection...&quot;</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;extended_set: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="n">n</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">extended_set</span><span class="p">])</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;swap scores: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">swap_scores</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;best swap: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">best_swap</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;qubits decay: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">qubits_decay</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">do_expensive_logging</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;SWAP Selection...&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;extended_set: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="n">n</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">extended_set</span><span class="p">])</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;swap scores: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">swap_scores</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;best swap: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">best_swap</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;qubits decay: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">qubits_decay</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">property_set</span><span class="p">[</span><span class="s2">&quot;final_layout&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_layout</span>
-
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fake_run</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">mapped_dag</span>
         <span class="k">return</span> <span class="n">dag</span></div>
 
     <span class="k">def</span> <span class="nf">_apply_gate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mapped_dag</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">current_layout</span><span class="p">,</span> <span class="n">canonical_register</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fake_run</span><span class="p">:</span>
-            <span class="k">return</span>
         <span class="n">new_node</span> <span class="o">=</span> <span class="n">_transform_gate_for_layout</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">current_layout</span><span class="p">,</span> <span class="n">canonical_register</span><span class="p">)</span>
-        <span class="n">mapped_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">new_node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">new_node</span><span class="o">.</span><span class="n">qargs</span><span class="p">,</span> <span class="n">new_node</span><span class="o">.</span><span class="n">cargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fake_run</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">new_node</span>
+        <span class="k">return</span> <span class="n">mapped_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">new_node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">new_node</span><span class="o">.</span><span class="n">qargs</span><span class="p">,</span> <span class="n">new_node</span><span class="o">.</span><span class="n">cargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_reset_qubits_decay</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Reset all qubit decay factors to 1 upon request (to forget about</span>
@@ -616,15 +655,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">qubits_decay</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">qubits_decay</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
 
     <span class="k">def</span> <span class="nf">_successors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">dag</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">successor</span><span class="p">,</span> <span class="n">edge_data</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">successor</span><span class="p">,</span> <span class="n">DAGOpNode</span><span class="p">):</span>
-                <span class="k">continue</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">edge_data</span><span class="p">,</span> <span class="n">Qubit</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an iterable of the successors along each wire from the given node.</span>
+
+<span class="sd">        This yields the same successor multiple times if there are parallel wires (e.g. two adjacent</span>
+<span class="sd">        operations that have one clbit and qubit in common), which is important in the swapping</span>
+<span class="sd">        algorithm for detecting if each wire has been accounted for.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">successor</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">successor</span><span class="p">,</span> <span class="n">DAGOpNode</span><span class="p">):</span>
                 <span class="k">yield</span> <span class="n">successor</span>
 
     <span class="k">def</span> <span class="nf">_is_resolved</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return True if all of a node&#39;s predecessors in dag are applied.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">applied_predecessors</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">applied_predecessors</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">cargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_obtain_extended_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag</span><span class="p">,</span> <span class="n">front_layer</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Populate extended_set by looking ahead a fixed number of gates.</span>
@@ -670,8 +712,19 @@
                     <span class="n">virtual_neighbor</span> <span class="o">=</span> <span class="n">current_layout</span><span class="p">[</span><span class="n">neighbor</span><span class="p">]</span>
                     <span class="n">swap</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">virtual</span><span class="p">,</span> <span class="n">virtual_neighbor</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bit_indices</span><span class="p">[</span><span class="n">q</span><span class="p">])</span>
                     <span class="n">candidate_swaps</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">swap</span><span class="p">))</span>
-
         <span class="k">return</span> <span class="n">candidate_swaps</span>
+
+    <span class="k">def</span> <span class="nf">_add_greedy_swaps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">front_layer</span><span class="p">,</span> <span class="n">dag</span><span class="p">,</span> <span class="n">layout</span><span class="p">,</span> <span class="n">qubits</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Mutate ``dag`` and ``layout`` by applying greedy swaps to ensure that at least one gate</span>
+<span class="sd">        can be routed.&quot;&quot;&quot;</span>
+        <span class="n">layout_map</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">_v2p</span>
+        <span class="n">target_node</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="n">front_layer</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_matrix</span><span class="p">[</span><span class="n">layout_map</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">layout_map</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]],</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">_shortest_swap_path</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">target_node</span><span class="o">.</span><span class="n">qargs</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="p">,</span> <span class="n">layout</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_gate</span><span class="p">(</span><span class="n">dag</span><span class="p">,</span> <span class="n">DAGOpNode</span><span class="p">(</span><span class="n">op</span><span class="o">=</span><span class="n">SwapGate</span><span class="p">(),</span> <span class="n">qargs</span><span class="o">=</span><span class="n">pair</span><span class="p">),</span> <span class="n">layout</span><span class="p">,</span> <span class="n">qubits</span><span class="p">)</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">swap</span><span class="p">(</span><span class="o">*</span><span class="n">pair</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_compute_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">layout</span><span class="p">):</span>
         <span class="n">cost</span> <span class="o">=</span> <span class="mi">0</span>
@@ -705,18 +758,43 @@
                 <span class="o">*</span> <span class="n">total_cost</span>
             <span class="p">)</span>
 
-        <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span><span class="s2">&quot;Heuristic </span><span class="si">%s</span><span class="s2"> not recognized.&quot;</span> <span class="o">%</span> <span class="n">heuristic</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span><span class="s2">&quot;Heuristic </span><span class="si">%s</span><span class="s2"> not recognized.&quot;</span> <span class="o">%</span> <span class="n">heuristic</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_undo_operations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operations</span><span class="p">,</span> <span class="n">dag</span><span class="p">,</span> <span class="n">layout</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Mutate ``dag`` and ``layout`` by undoing the swap gates listed in ``operations``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">operation</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">operations</span><span class="p">):</span>
+                <span class="n">layout</span><span class="o">.</span><span class="n">swap</span><span class="p">(</span><span class="o">*</span><span class="n">operation</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">operation</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">operations</span><span class="p">):</span>
+                <span class="n">dag</span><span class="o">.</span><span class="n">remove_op_node</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
+                <span class="n">p0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bit_indices</span><span class="p">[</span><span class="n">operation</span><span class="o">.</span><span class="n">qargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+                <span class="n">p1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bit_indices</span><span class="p">[</span><span class="n">operation</span><span class="o">.</span><span class="n">qargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+                <span class="n">layout</span><span class="o">.</span><span class="n">swap</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="n">p1</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">_transform_gate_for_layout</span><span class="p">(</span><span class="n">op_node</span><span class="p">,</span> <span class="n">layout</span><span class="p">,</span> <span class="n">device_qreg</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return node implementing a virtual op on given layout.&quot;&quot;&quot;</span>
     <span class="n">mapped_op_node</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">op_node</span><span class="p">)</span>
-
-    <span class="n">premap_qargs</span> <span class="o">=</span> <span class="n">op_node</span><span class="o">.</span><span class="n">qargs</span>
-    <span class="n">mapped_qargs</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">device_qreg</span><span class="p">[</span><span class="n">layout</span><span class="o">.</span><span class="n">_v2p</span><span class="p">[</span><span class="n">x</span><span class="p">]],</span> <span class="n">premap_qargs</span><span class="p">)</span>
-    <span class="n">mapped_op_node</span><span class="o">.</span><span class="n">qargs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mapped_qargs</span><span class="p">)</span>
-
+    <span class="n">mapped_op_node</span><span class="o">.</span><span class="n">qargs</span> <span class="o">=</span> <span class="p">[</span><span class="n">device_qreg</span><span class="p">[</span><span class="n">layout</span><span class="o">.</span><span class="n">_v2p</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">op_node</span><span class="o">.</span><span class="n">qargs</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">mapped_op_node</span>
+
+
+<span class="k">def</span> <span class="nf">_shortest_swap_path</span><span class="p">(</span><span class="n">target_qubits</span><span class="p">,</span> <span class="n">coupling_map</span><span class="p">,</span> <span class="n">layout</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return an iterator that yields the swaps between virtual qubits needed to bring the two</span>
+<span class="sd">    virtual qubits in ``target_qubits`` together in the coupling map.&quot;&quot;&quot;</span>
+    <span class="n">v_start</span><span class="p">,</span> <span class="n">v_goal</span> <span class="o">=</span> <span class="n">target_qubits</span>
+    <span class="n">start</span><span class="p">,</span> <span class="n">goal</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">_v2p</span><span class="p">[</span><span class="n">v_start</span><span class="p">],</span> <span class="n">layout</span><span class="o">.</span><span class="n">_v2p</span><span class="p">[</span><span class="n">v_goal</span><span class="p">]</span>
+    <span class="c1"># TODO: remove the list call once using retworkx 0.12, as the return value can be sliced.</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">retworkx</span><span class="o">.</span><span class="n">dijkstra_shortest_paths</span><span class="p">(</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">goal</span><span class="p">)[</span><span class="n">goal</span><span class="p">])</span>
+    <span class="c1"># Swap both qubits towards the &quot;centre&quot; (as opposed to applying the same swaps to one) to</span>
+    <span class="c1"># parallelise and reduce depth.</span>
+    <span class="n">split</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">forwards</span><span class="p">,</span> <span class="n">backwards</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">split</span><span class="p">],</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">path</span><span class="p">[</span><span class="n">split</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">swap</span> <span class="ow">in</span> <span class="n">forwards</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">v_start</span><span class="p">,</span> <span class="n">layout</span><span class="o">.</span><span class="n">_p2v</span><span class="p">[</span><span class="n">swap</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">swap</span> <span class="ow">in</span> <span class="n">backwards</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">v_goal</span><span class="p">,</span> <span class="n">layout</span><span class="o">.</span><span class="n">_p2v</span><span class="p">[</span><span class="n">swap</span><span class="p">]</span>
 </pre></div>
 
              </article>
@@ -734,7 +812,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Son güncelleme: 2022/04/12.
+      Son güncelleme: 2022/04/23.
 
     </p>
   </div>

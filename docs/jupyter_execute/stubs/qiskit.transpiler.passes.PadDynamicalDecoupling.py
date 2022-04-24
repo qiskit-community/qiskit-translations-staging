@@ -8,7 +8,7 @@ import numpy as np
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import XGate
 from qiskit.transpiler import PassManager, InstructionDurations
-from qiskit.transpiler.passes import ALAPSchedule, DynamicalDecoupling
+from qiskit.transpiler.passes import ALAPScheduleAnalysis, PadDynamicalDecoupling
 from qiskit.visualization import timeline_drawer
 circ = QuantumCircuit(4)
 circ.h(0)
@@ -28,8 +28,8 @@ durations = InstructionDurations(
 
 # balanced X-X sequence on all qubits
 dd_sequence = [XGate(), XGate()]
-pm = PassManager([ALAPSchedule(durations),
-                  DynamicalDecoupling(durations, dd_sequence)])
+pm = PassManager([ALAPScheduleAnalysis(durations),
+                  PadDynamicalDecoupling(durations, dd_sequence)])
 circ_dd = pm.run(circ)
 timeline_drawer(circ_dd)
 
@@ -48,8 +48,8 @@ for k in range(n):
 spacing.append(1 - sum(spacing))
 pm = PassManager(
     [
-        ALAPSchedule(durations),
-        DynamicalDecoupling(durations, dd_sequence, qubits=[0], spacing=spacing),
+        ALAPScheduleAnalysis(durations),
+        PadDynamicalDecoupling(durations, dd_sequence, qubits=[0], spacing=spacing),
     ]
 )
 circ_dd = pm.run(circ)

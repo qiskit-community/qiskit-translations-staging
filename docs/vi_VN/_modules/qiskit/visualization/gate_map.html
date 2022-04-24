@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.visualization.gate_map &mdash; Tài liệu Qiskit 0.36.0</title>
+  <title>qiskit.visualization.gate_map &mdash; Tài liệu Qiskit 0.36.1</title>
   
 
   
@@ -360,6 +360,7 @@
 
 <span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">QiskitError</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">optionals</span> <span class="k">as</span> <span class="n">_optionals</span>
+<span class="kn">from</span> <span class="nn">qiskit.providers.exceptions</span> <span class="kn">import</span> <span class="n">BackendPropertyError</span>
 <span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">VisualizationError</span>
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">matplotlib_close_if_inline</span>
 
@@ -1250,14 +1251,16 @@
 
     <span class="n">backend_version</span> <span class="o">=</span> <span class="n">_get_backend_interface_version</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">backend_version</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">backend_name</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">name</span><span class="p">()</span>
         <span class="n">num_qubits</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span><span class="o">.</span><span class="n">n_qubits</span>
         <span class="n">cmap</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">configuration</span><span class="p">()</span><span class="o">.</span><span class="n">coupling_map</span>
-        <span class="n">props</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">properties</span><span class="p">()</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+        <span class="n">props</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">properties</span><span class="p">()</span>
+        <span class="n">props_dict</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
         <span class="n">single_gate_errors</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_qubits</span>
         <span class="n">read_err</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_qubits</span>
         <span class="n">cx_errors</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="c1"># sx error rates</span>
-        <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">props</span><span class="p">[</span><span class="s2">&quot;gates&quot;</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">props_dict</span><span class="p">[</span><span class="s2">&quot;gates&quot;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="n">gate</span><span class="p">[</span><span class="s2">&quot;gate&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;sx&quot;</span><span class="p">:</span>
                 <span class="n">_qubit</span> <span class="o">=</span> <span class="n">gate</span><span class="p">[</span><span class="s2">&quot;qubits&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
                 <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">gate</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]:</span>
@@ -1277,16 +1280,18 @@
                         <span class="k">break</span>
 
             <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">cmap</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">props</span><span class="p">[</span><span class="s2">&quot;gates&quot;</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">props_dict</span><span class="p">[</span><span class="s2">&quot;gates&quot;</span><span class="p">]:</span>
                     <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;qubits&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">line</span><span class="p">:</span>
                         <span class="n">cx_errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
                         <span class="k">break</span>
         <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">props</span><span class="p">[</span><span class="s2">&quot;qubits&quot;</span><span class="p">][</span><span class="n">qubit</span><span class="p">]:</span>
-                <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;readout_error&quot;</span><span class="p">:</span>
-                    <span class="n">read_err</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">read_err</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">readout_error</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">BackendPropertyError</span><span class="p">:</span>
+                <span class="k">pass</span>
 
     <span class="k">else</span><span class="p">:</span>
+        <span class="n">backend_name</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">name</span>
         <span class="n">num_qubits</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">num_qubits</span>
         <span class="n">cmap</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">coupling_map</span>
         <span class="n">two_q_error_map</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1317,7 +1322,7 @@
                     <span class="k">if</span> <span class="ow">not</span> <span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="ow">in</span> <span class="n">cmap</span><span class="p">:</span>
                         <span class="n">directed</span> <span class="o">=</span> <span class="kc">True</span>
                         <span class="k">break</span>
-            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">cmap</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get_edges</span><span class="p">():</span>
                 <span class="n">err</span> <span class="o">=</span> <span class="n">two_q_error_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">line</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
                 <span class="n">cx_errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
 
@@ -1435,7 +1440,7 @@
         <span class="n">spine</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">show_title</span><span class="p">:</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">backend</span><span class="o">.</span><span class="n">name</span><span class="p">()</span><span class="si">}</span><span class="s2"> Error Map&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">backend_name</span><span class="si">}</span><span class="s2"> Error Map&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
     <span class="n">matplotlib_close_if_inline</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">fig</span></div>
 </pre></div>
@@ -1455,7 +1460,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Cập nhật mới nhất vào 2022/04/12.
+      Cập nhật mới nhất vào 2022/04/23.
 
     </p>
   </div>
