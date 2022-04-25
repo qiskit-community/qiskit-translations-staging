@@ -643,7 +643,7 @@ Operator([[0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
 <p>Оператор как объект хранит основную матрицу и данные о длине векторов на входе и выходе.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: Основной массив Numpy доступен через свойство <code class="docutils literal notranslate"><span class="pre">Operator.data</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dims</span></code>: To return the total input and output dimension of the operator, we may use the <code class="docutils literal notranslate"><span class="pre">Operator.dim</span></code> property. <em>Note: the output is returned as a tuple</em> <code class="docutils literal notranslate"><span class="pre">(input_dim,</span> <span class="pre">output_dim)</span></code>, <em>which is the reverse of the shape of the underlying matrix.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dims</span></code>: Размеры исходного и преобразованного векторов можно узнать с помощью свойства <code class="docutils literal notranslate"><span class="pre">Operator.dim</span></code>. <em>Примечание: Результатом будет кортеж ``(input_dim, output_dim)``, при этом размерность основной матрицы составляет ``output_dim`` на ``input_dim``.</em></p></li>
 </ul>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -796,7 +796,7 @@ Dimension of input system 1: (3,)
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Pauli</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Gate</span></code> и``Instruction``</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">QuantumCircuit</span></code> objects</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">QuantumCircuits</span></code></p></li>
 </ul>
 <p>Отметим, что последний вариант говорит о возможности использования класса <code class="docutils literal notranslate"><span class="pre">Operator</span></code> для симуляции конечной унитарной матрицы квантовой цепи без вызова бэкенда. Однако при наличии в цепи каких-либо неподдерживаемых операций возникает исключение. К ним относятся измерение, сброс, условные операции и гейты, непредставимые в виде матрицы и не раскладываемые до таковых.</p>
 <div class="nbinput docutils container">
@@ -982,7 +982,7 @@ c: 2/══════════════╩══╩═
 <p>Операторы можно сочетать разными методами.</p>
 <div class="section" id="Тензорное-произведение">
 <h3>Тензорное произведение<a class="headerlink" href="#Тензорное-произведение" title="Ссылка на этот заголовок">¶</a></h3>
-<p>Two operators <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(B\)</span> may be combined into a tensor product operator <span class="math notranslate nohighlight">\(A\otimes B\)</span> using the <code class="docutils literal notranslate"><span class="pre">Operator.tensor</span></code> function. Note that if both <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(B\)</span> are single-qubit operators, then <code class="docutils literal notranslate"><span class="pre">A.tensor(B)</span></code> = <span class="math notranslate nohighlight">\(A\otimes B\)</span> will have the subsystems indexed as matrix <span class="math notranslate nohighlight">\(B\)</span> on subsystem 0, and matrix <span class="math notranslate nohighlight">\(A\)</span> on subsystem 1.</p>
+<p>Из двух операторов <span class="math notranslate nohighlight">\(A\)</span> и <span class="math notranslate nohighlight">\(B\)</span> можно построить оператор большей размерности, перемножая их тензорно <span class="math notranslate nohighlight">\(A\otimes B\)</span> с помощью <code class="docutils literal notranslate"><span class="pre">Operator.tensor</span></code>. Если операторы <span class="math notranslate nohighlight">\(A\)</span> и <span class="math notranslate nohighlight">\(B\)</span> являются однокубитными, то <code class="docutils literal notranslate"><span class="pre">A.tensor(B)</span></code> = <span class="math notranslate nohighlight">\(A\otimes B\)</span> означает одновременное действие <span class="math notranslate nohighlight">\(B\)</span> на нулевой кубит и <span class="math notranslate nohighlight">\(A\)</span> на первый.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
@@ -1009,7 +1009,7 @@ Operator([[ 0.+0.j,  0.+0.j,  1.+0.j,  0.+0.j],
 </div>
 <div class="section" id="Тензорное-расширение">
 <h3>Тензорное расширение<a class="headerlink" href="#Тензорное-расширение" title="Ссылка на этот заголовок">¶</a></h3>
-<p>A closely related operation is <code class="docutils literal notranslate"><span class="pre">Operator.expand</span></code>, which acts like a tensor product but in the reverse order. Hence, for two operators <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(B\)</span> we have <code class="docutils literal notranslate"><span class="pre">A.expand(B)</span></code> = <span class="math notranslate nohighlight">\(B\otimes A\)</span> where the subsystems indexed as matrix <span class="math notranslate nohighlight">\(A\)</span> on subsystem 0, and matrix <span class="math notranslate nohighlight">\(B\)</span> on subsystem 1.</p>
+<p>Похожим образом действует и функция``Operator.expand``, вычисляющая тензорное произведение тех же матриц, записанных в обратном порядке. Результатом будет оператор <code class="docutils literal notranslate"><span class="pre">A.expand(B)</span></code> = <span class="math notranslate nohighlight">\(B\otimes A\)</span>, где <span class="math notranslate nohighlight">\(A\)</span> действует уже на нулевой кубит, а <span class="math notranslate nohighlight">\(B\)</span> на первый.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
@@ -1084,7 +1084,7 @@ Operator([[ 0.+0.j, -1.+0.j],
 <div class="section" id="Композиция-подсистем">
 <h3>Композиция подсистем<a class="headerlink" href="#Композиция-подсистем" title="Ссылка на этот заголовок">¶</a></h3>
 <p>Обратите внимание, что матричное произведение требует соответствия размерностей выхода первого оператора <span class="math notranslate nohighlight">\(A\)</span> и входа второго <span class="math notranslate nohighlight">\(B\)</span> (и наоборот при аргументе <code class="docutils literal notranslate"><span class="pre">front=True</span></code>).</p>
-<p>We can also compose a smaller operator with a selection of subsystems on a larger operator using the <code class="docutils literal notranslate"><span class="pre">qargs</span></code> kwarg of <code class="docutils literal notranslate"><span class="pre">compose</span></code>, either with or without <code class="docutils literal notranslate"><span class="pre">front=True</span></code>. In this case, the relevant input and output dimensions of the subsystems being composed must match. <em>Note that the smaller operator must always be the argument of</em> <code class="docutils literal notranslate"><span class="pre">compose</span></code> <em>method.</em></p>
+<p>Можно также матрично умножить оператор на выбранную часть другого оператора большей размерности. Для этого применяют аргумент с ключом <code class="docutils literal notranslate"><span class="pre">qargs</span></code>, независимым от значения <code class="docutils literal notranslate"><span class="pre">front</span></code>. Здесь также нужно следить за равенством количества столбцов первой матрицы и строк второй. <em>Меньший по размеру оператор будет аргументом метода ``compose``, применяемого к большему</em></p>
 <p>Рассмотрим пример объединения двухкубитного гейта с частью трехкубитного оператора:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
@@ -1347,7 +1347,7 @@ Process fidelity = 1.0
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Обновлено: 2022/04/23.
+      Обновлено: 2022/04/25.
 
     </p>
   </div>

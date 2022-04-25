@@ -31,3 +31,4 @@
    .. autoattribute:: name
    .. autoattribute:: priority
    .. autoattribute:: tokens
+   .. autoattribute:: url
