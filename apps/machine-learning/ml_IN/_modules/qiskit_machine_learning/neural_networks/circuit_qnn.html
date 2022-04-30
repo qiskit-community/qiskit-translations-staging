@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_machine_learning.neural_networks.circuit_qnn &mdash; Qiskit Machine Learning 0.3.1 documentation</title>
+  <title>qiskit_machine_learning.neural_networks.circuit_qnn &mdash; Qiskit Machine Learning 0.4.0 documentation</title>
   
 
   
@@ -197,7 +197,7 @@
               
               
                 <div class="version">
-                  0.3.1
+                  0.4.0
                 </div>
               
             
@@ -318,12 +318,22 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">sparse</span> <span class="kn">import</span> <span class="n">SparseArray</span><span class="p">,</span> <span class="n">DOK</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">coo_matrix</span>
 
-    <span class="n">_HAS_SPARSE</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="n">_HAS_SPARSE</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
+<span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Parameter</span>
+<span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">Gradient</span><span class="p">,</span> <span class="n">CircuitSampler</span><span class="p">,</span> <span class="n">StateFn</span><span class="p">,</span> <span class="n">OpflowError</span><span class="p">,</span> <span class="n">OperatorBase</span>
+<span class="kn">from</span> <span class="nn">qiskit.providers</span> <span class="kn">import</span> <span class="n">Backend</span>
+<span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">QuantumInstance</span>
+
+<span class="kn">import</span> <span class="nn">qiskit_machine_learning.optionals</span> <span class="k">as</span> <span class="nn">_optionals</span>
+<span class="kn">from</span> <span class="nn">.sampling_neural_network</span> <span class="kn">import</span> <span class="n">SamplingNeuralNetwork</span>
+<span class="kn">from</span> <span class="nn">..exceptions</span> <span class="kn">import</span> <span class="n">QiskitMachineLearningError</span><span class="p">,</span> <span class="n">QiskitError</span>
+
+<span class="k">if</span> <span class="n">_optionals</span><span class="o">.</span><span class="n">HAS_SPARSE</span><span class="p">:</span>
+    <span class="c1"># pylint: disable=import-error</span>
+    <span class="kn">from</span> <span class="nn">sparse</span> <span class="kn">import</span> <span class="n">SparseArray</span>
+<span class="k">else</span><span class="p">:</span>
 
     <span class="k">class</span> <span class="nc">SparseArray</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
         <span class="sd">&quot;&quot;&quot;Empty SparseArray class</span>
@@ -332,18 +342,6 @@
 
         <span class="k">pass</span>
 
-
-<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">coo_matrix</span>
-
-<span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
-<span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Parameter</span>
-<span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">Gradient</span><span class="p">,</span> <span class="n">CircuitSampler</span><span class="p">,</span> <span class="n">StateFn</span><span class="p">,</span> <span class="n">OpflowError</span>
-<span class="kn">from</span> <span class="nn">qiskit.providers</span> <span class="kn">import</span> <span class="n">BaseBackend</span><span class="p">,</span> <span class="n">Backend</span>
-<span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">QuantumInstance</span>
-<span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">MissingOptionalLibraryError</span>
-
-<span class="kn">from</span> <span class="nn">.sampling_neural_network</span> <span class="kn">import</span> <span class="n">SamplingNeuralNetwork</span>
-<span class="kn">from</span> <span class="nn">..exceptions</span> <span class="kn">import</span> <span class="n">QiskitMachineLearningError</span><span class="p">,</span> <span class="n">QiskitError</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -361,7 +359,7 @@
         <span class="n">interpret</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">output_shape</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">gradient</span><span class="p">:</span> <span class="n">Gradient</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">quantum_instance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">QuantumInstance</span><span class="p">,</span> <span class="n">BaseBackend</span><span class="p">,</span> <span class="n">Backend</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">quantum_instance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">QuantumInstance</span><span class="p">,</span> <span class="n">Backend</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">input_gradients</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -408,6 +406,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_weight_params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">weight_params</span> <span class="ow">or</span> <span class="p">[])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_input_gradients</span> <span class="o">=</span> <span class="n">input_gradients</span>
         <span class="n">sparse</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">sampling</span> <span class="k">else</span> <span class="n">sparse</span>
+        <span class="k">if</span> <span class="n">sparse</span><span class="p">:</span>
+            <span class="n">_optionals</span><span class="o">.</span><span class="n">HAS_SPARSE</span><span class="o">.</span><span class="n">require_now</span><span class="p">(</span><span class="s2">&quot;DOK&quot;</span><span class="p">)</span>
 
         <span class="c1"># copy circuit and add measurements in case non are given</span>
         <span class="c1"># TODO: need to be able to handle partial measurements! (partial trace...)</span>
@@ -446,7 +446,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_construct_gradient_circuit</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_construct_gradient_circuit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_gradient_circuit</span><span class="p">:</span> <span class="n">QuantumCircuit</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gradient_circuit</span><span class="p">:</span> <span class="n">OperatorBase</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># todo: avoid copying the circuit</span>
             <span class="n">grad_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original_circuit</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -542,9 +542,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span>
 
     <span class="nd">@quantum_instance</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">quantum_instance</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">QuantumInstance</span><span class="p">,</span> <span class="n">BaseBackend</span><span class="p">,</span> <span class="n">Backend</span><span class="p">]]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">quantum_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">QuantumInstance</span><span class="p">,</span> <span class="n">Backend</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Sets the quantum instance to evaluate the circuit and make sure circuit has</span>
 <span class="sd">        measurements or not depending on the type of backend used.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -554,7 +552,7 @@
 
     <span class="k">def</span> <span class="nf">_set_quantum_instance</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">quantum_instance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">QuantumInstance</span><span class="p">,</span> <span class="n">BaseBackend</span><span class="p">,</span> <span class="n">Backend</span><span class="p">]],</span>
+        <span class="n">quantum_instance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">QuantumInstance</span><span class="p">,</span> <span class="n">Backend</span><span class="p">]],</span>
         <span class="n">output_shape</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
         <span class="n">interpret</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -568,7 +566,7 @@
 <span class="sd">            interpret: A callable that maps the measured integer to another unsigned integer or</span>
 <span class="sd">                tuple of unsigned integers.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">quantum_instance</span><span class="p">,</span> <span class="p">(</span><span class="n">BaseBackend</span><span class="p">,</span> <span class="n">Backend</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">quantum_instance</span><span class="p">,</span> <span class="n">Backend</span><span class="p">):</span>
             <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">quantum_instance</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span> <span class="o">=</span> <span class="n">quantum_instance</span>
 
@@ -588,7 +586,9 @@
 
             <span class="c1"># transpile the QNN circuit</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">transpile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">transpile</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="p">,</span> <span class="n">pass_manager</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">unbound_pass_manager</span>
+                <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_circuit_transpiled</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">except</span> <span class="n">QiskitError</span><span class="p">:</span>
                 <span class="c1"># likely it is caused by RawFeatureVector, we just ignore this error and</span>
@@ -637,9 +637,7 @@
     <span class="k">def</span> <span class="nf">_sample</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">weights</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">QiskitMachineLearningError</span><span class="p">(</span><span class="s2">&quot;Sampling requires a quantum instance!&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_quantum_instance</span><span class="p">(</span><span class="s2">&quot;samples&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">is_statevector</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">QiskitMachineLearningError</span><span class="p">(</span><span class="s2">&quot;Sampling does not work with statevector simulator!&quot;</span><span class="p">)</span>
@@ -649,9 +647,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">backend_options</span><span class="p">[</span><span class="s2">&quot;memory&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="n">circuits</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="c1"># iterate over rows, each row is an element of a batch</span>
-        <span class="n">rows</span> <span class="o">=</span> <span class="n">input_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
+        <span class="c1"># iterate over samples, each sample is an element of a batch</span>
+        <span class="n">num_samples</span> <span class="o">=</span> <span class="n">input_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
             <span class="n">param_values</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">input_param</span><span class="p">:</span> <span class="n">input_data</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">input_param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_params</span><span class="p">)</span>
             <span class="p">}</span>
@@ -660,12 +658,17 @@
             <span class="p">)</span>
             <span class="n">circuits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">bind_parameters</span><span class="p">(</span><span class="n">param_values</span><span class="p">))</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">bound_pass_manager</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">circuits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">transpile</span><span class="p">(</span>
+                <span class="n">circuits</span><span class="p">,</span> <span class="n">pass_manager</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">bound_pass_manager</span>
+            <span class="p">)</span>
+
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">circuits</span><span class="p">,</span> <span class="n">had_transpiled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit_transpiled</span><span class="p">)</span>
         <span class="c1"># set the memory setting back</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">backend_options</span><span class="p">[</span><span class="s2">&quot;memory&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">orig_memory</span>
 
         <span class="c1"># return samples</span>
-        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_shape</span><span class="p">))</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_samples</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_shape</span><span class="p">))</span>
         <span class="c1"># collect them from all executed circuits</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">circuit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">circuits</span><span class="p">):</span>
             <span class="n">memory</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get_memory</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
@@ -676,16 +679,12 @@
     <span class="k">def</span> <span class="nf">_probabilities</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">weights</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">SparseArray</span><span class="p">]:</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">QiskitMachineLearningError</span><span class="p">(</span>
-                <span class="s2">&quot;Evaluation of probabilities requires a quantum instance!&quot;</span>
-            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_quantum_instance</span><span class="p">(</span><span class="s2">&quot;probabilities&quot;</span><span class="p">)</span>
 
         <span class="c1"># evaluate operator</span>
         <span class="n">circuits</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">rows</span> <span class="o">=</span> <span class="n">input_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
+        <span class="n">num_samples</span> <span class="o">=</span> <span class="n">input_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
             <span class="n">param_values</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">input_param</span><span class="p">:</span> <span class="n">input_data</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">input_param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_params</span><span class="p">)</span>
             <span class="p">}</span>
@@ -694,18 +693,20 @@
             <span class="p">)</span>
             <span class="n">circuits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">bind_parameters</span><span class="p">(</span><span class="n">param_values</span><span class="p">))</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">bound_pass_manager</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">circuits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">transpile</span><span class="p">(</span>
+                <span class="n">circuits</span><span class="p">,</span> <span class="n">pass_manager</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">bound_pass_manager</span>
+            <span class="p">)</span>
+
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">circuits</span><span class="p">,</span> <span class="n">had_transpiled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit_transpiled</span><span class="p">)</span>
         <span class="c1"># initialize probabilities</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sparse</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">_HAS_SPARSE</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-                    <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;DOK&quot;</span><span class="p">,</span>
-                    <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install &#39;qiskit-machine-learning[sparse]&#39;&quot;</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="n">prob</span> <span class="o">=</span> <span class="n">DOK</span><span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_shape</span><span class="p">))</span>
+            <span class="c1"># pylint: disable=import-error</span>
+            <span class="kn">from</span> <span class="nn">sparse</span> <span class="kn">import</span> <span class="n">DOK</span>
+
+            <span class="n">prob</span> <span class="o">=</span> <span class="n">DOK</span><span class="p">((</span><span class="n">num_samples</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_shape</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_shape</span><span class="p">))</span>
+            <span class="n">prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_samples</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_shape</span><span class="p">))</span>
 
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">circuit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">circuits</span><span class="p">):</span>
             <span class="n">counts</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get_counts</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
@@ -727,59 +728,64 @@
     <span class="k">def</span> <span class="nf">_probability_gradients</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">weights</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">SparseArray</span><span class="p">],</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">SparseArray</span><span class="p">]]:</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">QiskitMachineLearningError</span><span class="p">(</span>
-                <span class="s2">&quot;Evaluation of probability gradients requires a quantum instance!&quot;</span>
-            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_quantum_instance</span><span class="p">(</span><span class="s2">&quot;probability gradients&quot;</span><span class="p">)</span>
 
         <span class="c1"># check whether gradient circuit could be constructed</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gradient_circuit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
-        <span class="n">rows</span> <span class="o">=</span> <span class="n">input_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">num_samples</span> <span class="o">=</span> <span class="n">input_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="c1"># initialize empty gradients</span>
         <span class="n">input_grad</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># by default we don&#39;t have data gradients</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sparse</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">_HAS_SPARSE</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-                    <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;DOK&quot;</span><span class="p">,</span>
-                    <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install &#39;qiskit-machine-learning[sparse]&#39;&quot;</span><span class="p">,</span>
-                <span class="p">)</span>
+            <span class="c1"># pylint: disable=import-error</span>
+            <span class="kn">from</span> <span class="nn">sparse</span> <span class="kn">import</span> <span class="n">DOK</span>
+
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_gradients</span><span class="p">:</span>
-                <span class="n">input_grad</span> <span class="o">=</span> <span class="n">DOK</span><span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_inputs</span><span class="p">))</span>
-            <span class="n">weights_grad</span> <span class="o">=</span> <span class="n">DOK</span><span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_weights</span><span class="p">))</span>
+                <span class="n">input_grad</span> <span class="o">=</span> <span class="n">DOK</span><span class="p">((</span><span class="n">num_samples</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_inputs</span><span class="p">))</span>
+            <span class="n">weights_grad</span> <span class="o">=</span> <span class="n">DOK</span><span class="p">((</span><span class="n">num_samples</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_weights</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_gradients</span><span class="p">:</span>
-                <span class="n">input_grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_inputs</span><span class="p">))</span>
-            <span class="n">weights_grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_weights</span><span class="p">))</span>
+                <span class="n">input_grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_samples</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_inputs</span><span class="p">))</span>
+            <span class="n">weights_grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_samples</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_weights</span><span class="p">))</span>
 
-        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
-            <span class="n">param_values</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">input_param</span><span class="p">:</span> <span class="n">input_data</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">input_param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_params</span><span class="p">)</span>
+        <span class="n">param_values</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">input_param</span><span class="p">:</span> <span class="n">input_data</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">input_param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_params</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">param_values</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="n">weight_param</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">weights</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">weight_param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight_params</span><span class="p">)</span>
             <span class="p">}</span>
-            <span class="n">param_values</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-                <span class="p">{</span><span class="n">weight_param</span><span class="p">:</span> <span class="n">weights</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">weight_param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight_params</span><span class="p">)}</span>
-            <span class="p">)</span>
+        <span class="p">)</span>
 
-            <span class="c1"># TODO: additional &quot;bind_parameters&quot; should not be necessary,</span>
-            <span class="c1">#  seems like a bug to be fixed</span>
-            <span class="n">grad</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gradient_circuit</span><span class="p">,</span> <span class="n">param_values</span><span class="p">)</span>
-                <span class="o">.</span><span class="n">bind_parameters</span><span class="p">(</span><span class="n">param_values</span><span class="p">)</span>
-                <span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-            <span class="p">)</span>
+        <span class="n">converted_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gradient_circuit</span><span class="p">,</span> <span class="n">param_values</span><span class="p">)</span>
+        <span class="c1"># if statement is a workaround for https://github.com/Qiskit/qiskit-terra/issues/7608</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">converted_op</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># create an list of parameter bindings, each element corresponds to a sample in the dataset</span>
+            <span class="n">param_bindings</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">{</span><span class="n">param</span><span class="p">:</span> <span class="n">param_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">param_values</span> <span class="ow">in</span> <span class="n">param_values</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">)</span>
+            <span class="p">]</span>
 
-            <span class="c1"># construct gradients</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_gradients</span><span class="p">:</span>
-                <span class="n">num_grad_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_inputs</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_weights</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">num_grad_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_weights</span>
+            <span class="n">grad</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="c1"># iterate over gradient vectors and bind the correct leftover parameters</span>
+            <span class="k">for</span> <span class="n">g_i</span><span class="p">,</span> <span class="n">param_i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">converted_op</span><span class="p">,</span> <span class="n">param_bindings</span><span class="p">):</span>
+                <span class="c1"># bind or re-bind remaining values and evaluate the gradient</span>
+                <span class="n">grad</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g_i</span><span class="o">.</span><span class="n">bind_parameters</span><span class="p">(</span><span class="n">param_i</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">grad</span> <span class="o">=</span> <span class="n">converted_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_gradients</span><span class="p">:</span>
+            <span class="n">num_grad_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_inputs</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_weights</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">num_grad_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_weights</span>
+
+        <span class="c1"># construct gradients</span>
+        <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_grad_vars</span><span class="p">):</span>
-                <span class="n">coo_grad</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">(</span><span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>  <span class="c1"># this works for sparse and dense case</span>
+                <span class="n">coo_grad</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">(</span><span class="n">grad</span><span class="p">[</span><span class="n">sample</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>  <span class="c1"># this works for sparse and dense case</span>
 
                 <span class="c1"># get index for input or weights gradients</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_gradients</span><span class="p">:</span>
@@ -788,15 +794,14 @@
                     <span class="n">grad_index</span> <span class="o">=</span> <span class="n">i</span>
 
                 <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">coo_grad</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="n">coo_grad</span><span class="o">.</span><span class="n">col</span><span class="p">,</span> <span class="n">coo_grad</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
-
                     <span class="c1"># interpret integer and construct key</span>
                     <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interpret</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
                     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">Integral</span><span class="p">):</span>
-                        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">grad_index</span><span class="p">)</span>
+                        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">grad_index</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="c1"># if key is an array-type, cast to hashable tuple</span>
                         <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">key</span><span class="p">))</span>
-                        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="o">*</span><span class="n">key</span><span class="p">,</span> <span class="n">grad_index</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+                        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="o">*</span><span class="n">key</span><span class="p">,</span> <span class="n">grad_index</span><span class="p">)</span>
 
                     <span class="c1"># store value for inputs or weights gradients</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_gradients</span><span class="p">:</span>
@@ -807,13 +812,20 @@
                             <span class="n">weights_grad</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">weights_grad</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="c1"># end of for each sample</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sparse</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_gradients</span><span class="p">:</span>
                 <span class="n">input_grad</span> <span class="o">=</span> <span class="n">input_grad</span><span class="o">.</span><span class="n">to_coo</span><span class="p">()</span>
-            <span class="k">return</span> <span class="n">input_grad</span><span class="p">,</span> <span class="n">weights_grad</span><span class="o">.</span><span class="n">to_coo</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">input_grad</span><span class="p">,</span> <span class="n">weights_grad</span></div>
+            <span class="n">weights_grad</span> <span class="o">=</span> <span class="n">weights_grad</span><span class="o">.</span><span class="n">to_coo</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">input_grad</span><span class="p">,</span> <span class="n">weights_grad</span>
+
+    <span class="k">def</span> <span class="nf">_check_quantum_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantum_instance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QiskitMachineLearningError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Evaluation of </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2"> requires a quantum instance!&quot;</span>
+            <span class="p">)</span></div>
 </pre></div>
 
              </article>

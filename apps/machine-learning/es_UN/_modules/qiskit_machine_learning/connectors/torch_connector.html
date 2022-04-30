@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_machine_learning.connectors.torch_connector &mdash; documentación de Qiskit Machine Learning - 0.3.1</title>
+  <title>qiskit_machine_learning.connectors.torch_connector &mdash; documentación de Qiskit Machine Learning - 0.4.0</title>
   
 
   
@@ -197,7 +197,7 @@
               
               
                 <div class="version">
-                  0.3.1
+                  0.4.0
                 </div>
               
             
@@ -301,7 +301,7 @@
   <h1>Código fuente para qiskit_machine_learning.connectors.torch_connector</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2021.</span>
+<span class="c1"># (C) Copyright IBM 2021, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -315,24 +315,16 @@
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">MissingOptionalLibraryError</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">sparse</span> <span class="kn">import</span> <span class="n">SparseArray</span><span class="p">,</span> <span class="n">COO</span>
-
-    <span class="n">_HAS_SPARSE</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="n">_HAS_SPARSE</span> <span class="o">=</span> <span class="kc">False</span>
-
+<span class="kn">import</span> <span class="nn">qiskit_machine_learning.optionals</span> <span class="k">as</span> <span class="nn">_optionals</span>
 <span class="kn">from</span> <span class="nn">..neural_networks</span> <span class="kn">import</span> <span class="n">NeuralNetwork</span>
 <span class="kn">from</span> <span class="nn">..exceptions</span> <span class="kn">import</span> <span class="n">QiskitMachineLearningError</span>
-<span class="kn">from</span> <span class="nn">..deprecation</span> <span class="kn">import</span> <span class="n">deprecate_property</span>
 
-<span class="k">try</span><span class="p">:</span>
+<span class="k">if</span> <span class="n">_optionals</span><span class="o">.</span><span class="n">HAS_TORCH</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">sparse_coo_tensor</span><span class="p">,</span> <span class="n">einsum</span>
     <span class="kn">from</span> <span class="nn">torch.autograd</span> <span class="kn">import</span> <span class="n">Function</span>
     <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span><span class="p">,</span> <span class="n">Parameter</span> <span class="k">as</span> <span class="n">TorchParam</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+<span class="k">else</span><span class="p">:</span>
 
     <span class="k">class</span> <span class="nc">Function</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
         <span class="sd">&quot;&quot;&quot;Empty Function class</span>
@@ -351,18 +343,13 @@
     <span class="k">class</span> <span class="nc">Module</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
         <span class="sd">&quot;&quot;&quot;Empty Module class</span>
 <span class="sd">        Replacement if torch.nn.Module is not present.</span>
-<span class="sd">        Always fails to initialize</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-                <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;Pytorch&quot;</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;TorchConnector&quot;</span><span class="p">,</span>
-                <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install &#39;qiskit-machine-learning[torch]&#39;&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
+        <span class="k">pass</span>
 
 
-<div class="viewcode-block" id="TorchConnector"><a class="viewcode-back" href="../../../stubs/qiskit_machine_learning.connectors.TorchConnector.html#qiskit_machine_learning.connectors.TorchConnector">[documentos]</a><span class="k">class</span> <span class="nc">TorchConnector</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
+<div class="viewcode-block" id="TorchConnector"><a class="viewcode-back" href="../../../stubs/qiskit_machine_learning.connectors.TorchConnector.html#qiskit_machine_learning.connectors.TorchConnector">[documentos]</a><span class="nd">@_optionals</span><span class="o">.</span><span class="n">HAS_TORCH</span><span class="o">.</span><span class="n">require_in_instance</span>
+<span class="k">class</span> <span class="nc">TorchConnector</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Connects a Qiskit (Quantum) Neural Network to PyTorch.&quot;&quot;&quot;</span>
 
     <span class="c1"># pylint: disable=abstract-method</span>
@@ -389,7 +376,6 @@
 
 <span class="sd">            Raises:</span>
 <span class="sd">                QiskitMachineLearningError: Invalid input data.</span>
-<span class="sd">                MissingOptionalLibraryError: sparse not installed.</span>
 <span class="sd">            &quot;&quot;&quot;</span>
 
             <span class="c1"># validate input shape</span>
@@ -402,14 +388,18 @@
             <span class="n">ctx</span><span class="o">.</span><span class="n">neural_network</span> <span class="o">=</span> <span class="n">neural_network</span>
             <span class="n">ctx</span><span class="o">.</span><span class="n">sparse</span> <span class="o">=</span> <span class="n">sparse</span>
             <span class="n">ctx</span><span class="o">.</span><span class="n">save_for_backward</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">neural_network</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">input_data</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">weights</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+
+            <span class="c1"># Detach the tensors and move it to CPU as we need numpy array to compute gradients</span>
+            <span class="c1"># of the quantum neural network. If the tensors are on CPU already this does nothing.</span>
+            <span class="c1"># Some other tensors down below are also moved to CPU for computations.</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">neural_network</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span>
+                <span class="n">input_data</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">weights</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="p">)</span>
             <span class="k">if</span> <span class="n">neural_network</span><span class="o">.</span><span class="n">sparse</span> <span class="ow">and</span> <span class="n">sparse</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">_HAS_SPARSE</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-                        <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;COO&quot;</span><span class="p">,</span>
-                        <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install &#39;qiskit-machine-learning[sparse]&#39;&quot;</span><span class="p">,</span>
-                    <span class="p">)</span>
+                <span class="n">_optionals</span><span class="o">.</span><span class="n">HAS_SPARSE</span><span class="o">.</span><span class="n">require_now</span><span class="p">(</span><span class="s2">&quot;COO&quot;</span><span class="p">)</span>
+                <span class="c1"># pylint: disable=import-error</span>
+                <span class="kn">from</span> <span class="nn">sparse</span> <span class="kn">import</span> <span class="n">SparseArray</span><span class="p">,</span> <span class="n">COO</span>
+
                 <span class="n">result</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">COO</span><span class="p">,</span> <span class="n">cast</span><span class="p">(</span><span class="n">SparseArray</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span><span class="o">.</span><span class="n">asformat</span><span class="p">(</span><span class="s2">&quot;coo&quot;</span><span class="p">))</span>
                 <span class="n">result_tensor</span> <span class="o">=</span> <span class="n">sparse_coo_tensor</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">coords</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -421,6 +411,9 @@
             <span class="c1"># convention.</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">result_tensor</span> <span class="o">=</span> <span class="n">result_tensor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># place the resulting tensor back to the device where input data is stored</span>
+            <span class="n">result_tensor</span> <span class="o">=</span> <span class="n">result_tensor</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">input_data</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
             <span class="k">return</span> <span class="n">result_tensor</span>
 
@@ -456,7 +449,9 @@
                 <span class="n">grad_output</span> <span class="o">=</span> <span class="n">grad_output</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
             <span class="c1"># evaluate QNN gradient</span>
-            <span class="n">input_grad</span><span class="p">,</span> <span class="n">weights_grad</span> <span class="o">=</span> <span class="n">neural_network</span><span class="o">.</span><span class="n">backward</span><span class="p">(</span><span class="n">input_data</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">weights</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+            <span class="n">input_grad</span><span class="p">,</span> <span class="n">weights_grad</span> <span class="o">=</span> <span class="n">neural_network</span><span class="o">.</span><span class="n">backward</span><span class="p">(</span>
+                <span class="n">input_data</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">weights</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="p">)</span>
             <span class="k">if</span> <span class="n">input_grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">neural_network</span><span class="o">.</span><span class="n">sparse</span><span class="p">:</span>
                     <span class="n">input_grad</span> <span class="o">=</span> <span class="n">sparse_coo_tensor</span><span class="p">(</span><span class="n">input_grad</span><span class="o">.</span><span class="n">coords</span><span class="p">,</span> <span class="n">input_grad</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
@@ -475,7 +470,10 @@
                 <span class="c1"># to get total gradient of output w.r.t. each input k and batch index i.</span>
                 <span class="c1"># This operation should preserve the batch dimension to be able to do back-prop in</span>
                 <span class="c1"># a batched manner.</span>
-                <span class="n">input_grad</span> <span class="o">=</span> <span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ij,ijk-&gt;ik&quot;</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">,</span> <span class="n">input_grad</span><span class="p">)</span>
+                <span class="n">input_grad</span> <span class="o">=</span> <span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ij,ijk-&gt;ik&quot;</span><span class="p">,</span> <span class="n">grad_output</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span> <span class="n">input_grad</span><span class="p">)</span>
+
+                <span class="c1"># place the resulting tensor to the device where they were stored</span>
+                <span class="n">input_grad</span> <span class="o">=</span> <span class="n">input_grad</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">input_data</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">weights_grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">neural_network</span><span class="o">.</span><span class="n">sparse</span><span class="p">:</span>
@@ -494,7 +492,10 @@
                 <span class="c1"># from this point on backwards with respect to each parameter k. Sums over all i and</span>
                 <span class="c1"># j to get total gradient of output w.r.t. each parameter k.</span>
                 <span class="c1"># The weights&#39; dimension is independent of the batch size.</span>
-                <span class="n">weights_grad</span> <span class="o">=</span> <span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ij,ijk-&gt;k&quot;</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">,</span> <span class="n">weights_grad</span><span class="p">)</span>
+                <span class="n">weights_grad</span> <span class="o">=</span> <span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ij,ijk-&gt;k&quot;</span><span class="p">,</span> <span class="n">grad_output</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span> <span class="n">weights_grad</span><span class="p">)</span>
+
+                <span class="c1"># place the resulting tensor to the device where they were stored</span>
+                <span class="n">weights_grad</span> <span class="o">=</span> <span class="n">weights_grad</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
             <span class="c1"># return gradients for the first two arguments and None for the others (i.e. qnn/sparse)</span>
             <span class="k">return</span> <span class="n">input_grad</span><span class="p">,</span> <span class="n">weights_grad</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
@@ -543,20 +544,6 @@
     <span class="k">def</span> <span class="nf">neural_network</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NeuralNetwork</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns the underlying neural network.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neural_network</span>
-
-    <span class="c1"># Bug in mypy, if property decorator is used with another one</span>
-    <span class="c1"># https://github.com/python/mypy/issues/1362</span>
-
-    <span class="nd">@property</span>  <span class="c1"># type: ignore</span>
-    <span class="nd">@deprecate_property</span><span class="p">(</span><span class="s2">&quot;0.2.0&quot;</span><span class="p">,</span> <span class="n">new_name</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        .. deprecated:: 0.2.0</span>
-<span class="sd">           Use :meth:`weight` instead.</span>
-
-<span class="sd">        Returns the weights of the underlying network.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">weight</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>

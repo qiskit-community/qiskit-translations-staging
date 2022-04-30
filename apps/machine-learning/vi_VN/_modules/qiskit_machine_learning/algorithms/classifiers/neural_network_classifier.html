@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_machine_learning.algorithms.classifiers.neural_network_classifier &mdash; Tài liệu Qiskit Machine Learning 0.3.1</title>
+  <title>qiskit_machine_learning.algorithms.classifiers.neural_network_classifier &mdash; Tài liệu Qiskit Machine Learning 0.4.0</title>
   
 
   
@@ -197,7 +197,7 @@
               
               
                 <div class="version">
-                  0.3.1
+                  0.4.0
                 </div>
               
             
@@ -301,7 +301,7 @@
   <h1>Source code for qiskit_machine_learning.algorithms.classifiers.neural_network_classifier</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2021.</span>
+<span class="c1"># (C) Copyright IBM 2021, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -312,10 +312,12 @@
 <span class="c1"># that they have been altered from the originals.</span>
 <span class="sd">&quot;&quot;&quot;An implementation of quantum neural network classifier.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Callable</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">cast</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse</span>
 <span class="kn">from</span> <span class="nn">qiskit.algorithms.optimizers</span> <span class="kn">import</span> <span class="n">Optimizer</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">spmatrix</span>
 <span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">ClassifierMixin</span>
 <span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">OneHotEncoder</span><span class="p">,</span> <span class="n">LabelEncoder</span>
 
@@ -387,7 +389,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_target_encoder</span> <span class="o">=</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">if</span> <span class="n">one_hot</span> <span class="k">else</span> <span class="n">LabelEncoder</span><span class="p">()</span>
 
 <div class="viewcode-block" id="NeuralNetworkClassifier.fit"><a class="viewcode-back" href="../../../../stubs/qiskit_machine_learning.algorithms.NeuralNetworkClassifier.fit.html#qiskit_machine_learning.algorithms.NeuralNetworkClassifier.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>  <span class="c1"># pylint: disable=invalid-name</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_and_encode_labels</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_warm_start</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fit_result</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_input</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 
         <span class="c1"># mypy definition</span>
         <span class="n">function</span><span class="p">:</span> <span class="n">ObjectiveFunction</span> <span class="o">=</span> <span class="kc">None</span>
@@ -415,6 +419,9 @@
 <div class="viewcode-block" id="NeuralNetworkClassifier.predict"><a class="viewcode-back" href="../../../../stubs/qiskit_machine_learning.algorithms.NeuralNetworkClassifier.predict.html#qiskit_machine_learning.algorithms.NeuralNetworkClassifier.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>  <span class="c1"># pylint: disable=invalid-name</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">QiskitMachineLearningError</span><span class="p">(</span><span class="s2">&quot;Model needs to be fit to some training data first!&quot;</span><span class="p">)</span>
+
+        <span class="n">X</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_input</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neural_network</span><span class="o">.</span><span class="n">output_shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,):</span>
             <span class="n">predict</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_neural_network</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_result</span><span class="o">.</span><span class="n">x</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
@@ -432,35 +439,43 @@
 <div class="viewcode-block" id="NeuralNetworkClassifier.score"><a class="viewcode-back" href="../../../../stubs/qiskit_machine_learning.algorithms.NeuralNetworkClassifier.score.html#qiskit_machine_learning.algorithms.NeuralNetworkClassifier.score">[docs]</a>    <span class="k">def</span> <span class="nf">score</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encode_labels</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_input</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ClassifierMixin</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_fit_and_encode_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Fits label or one-hot encoder and converts categorical target data.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_validate_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validates and transforms if required features and labels. If arrays are sparse, they are</span>
+<span class="sd">        converted to dense as the numpy math in the loss/objective functions does not work with</span>
+<span class="sd">        sparse. If one hot encoding is required, then labels are one hot encoded otherwise label</span>
+<span class="sd">        are encoded via ``LabelEncoder`` from ``SciKit-Learn``. If labels are strings, they</span>
+<span class="sd">        converted to numerical representation.</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="c1"># string data is assumed to be categorical</span>
+<span class="sd">        Args:</span>
+<span class="sd">            X: features</span>
+<span class="sd">            y: labels</span>
 
-            <span class="c1"># OneHotEncoder expects data with shape (n_samples, n_features) but</span>
-            <span class="c1"># LabelEncoder expects shape (n_samples,) so set desired shape</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_one_hot</span> <span class="k">else</span> <span class="n">y</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_target_encoder</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_encoder</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            A tuple with validated features and labels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+            <span class="c1"># our math does not work with sparse arrays</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">spmatrix</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>  <span class="c1"># cast is required by mypy</span>
 
-        <span class="k">return</span> <span class="n">y</span>
+        <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="c1"># string data is assumed to be categorical</span>
 
-    <span class="k">def</span> <span class="nf">_encode_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Converts categorical target data using label or one-hot encoding.&quot;&quot;&quot;</span>
+                <span class="c1"># OneHotEncoder expects data with shape (n_samples, n_features) but</span>
+                <span class="c1"># LabelEncoder expects shape (n_samples,) so set desired shape</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_one_hot</span> <span class="k">else</span> <span class="n">y</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># the model is being trained, fit first</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_target_encoder</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_encoder</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">spmatrix</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>  <span class="c1"># cast is required by mypy</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="c1"># string data is assumed to be categorical</span>
-
-            <span class="c1"># OneHotEncoder expects data with shape (n_samples, n_features) but</span>
-            <span class="c1"># LabelEncoder expects shape (n_samples,) so set desired shape</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_one_hot</span> <span class="k">else</span> <span class="n">y</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_encoder</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">y</span></div>
+        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span></div>
 </pre></div>
 
              </article>

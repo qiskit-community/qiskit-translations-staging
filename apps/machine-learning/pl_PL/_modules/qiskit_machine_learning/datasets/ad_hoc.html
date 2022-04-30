@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_machine_learning.datasets.ad_hoc &mdash; Qiskit Machine Learning 0.3.1 - dokumentacja</title>
+  <title>qiskit_machine_learning.datasets.ad_hoc &mdash; Qiskit Machine Learning 0.4.0 - dokumentacja</title>
   
 
   
@@ -197,7 +197,7 @@
               
               
                 <div class="version">
-                  0.3.1
+                  0.4.0
                 </div>
               
             
@@ -315,10 +315,12 @@
 <span class="sd">ad hoc dataset</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">it</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">scipy</span>
-<span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">algorithm_globals</span>
-<span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">MissingOptionalLibraryError</span>
+<span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">algorithm_globals</span><span class="p">,</span> <span class="n">optionals</span>
 
 <span class="kn">from</span> <span class="nn">qiskit_machine_learning.datasets.dataset_helper</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">features_and_labels_transform</span><span class="p">,</span>
@@ -326,15 +328,77 @@
 
 
 <div class="viewcode-block" id="ad_hoc_data"><a class="viewcode-back" href="../../../stubs/qiskit_machine_learning.datasets.ad_hoc_data.html#qiskit_machine_learning.datasets.ad_hoc_data">[dokumentacja]</a><span class="k">def</span> <span class="nf">ad_hoc_data</span><span class="p">(</span>
-    <span class="n">training_size</span><span class="p">,</span>
-    <span class="n">test_size</span><span class="p">,</span>
-    <span class="n">n</span><span class="p">,</span>
-    <span class="n">gap</span><span class="p">,</span>
-    <span class="n">plot_data</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">one_hot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">include_sample_total</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;returns ad hoc dataset&quot;&quot;&quot;</span>
+    <span class="n">training_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">test_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">gap</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">plot_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">one_hot</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">include_sample_total</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+    <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+    <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+<span class="p">]:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Generates a toy dataset that can be fully separated with</span>
+<span class="sd">    ``qiskit.circuit.library.ZZ_Feature_Map`` according to the procedure</span>
+<span class="sd">    outlined in [1]. To construct the dataset, we first sample uniformly</span>
+<span class="sd">    distributed vectors :math:`\vec{x} \in (0, 2\pi]^{n}` and apply the</span>
+<span class="sd">    feature map</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        |\Phi(\vec{x})\rangle = U_{{\Phi} (\vec{x})} H^{\otimes n} U_{{\Phi} (\vec{x})}</span>
+<span class="sd">        H^{\otimes n} |0^{\otimes n} \rangle</span>
+
+<span class="sd">    where</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        U_{{\Phi} (\vec{x})} = \exp \left( i \sum_{S \subseteq [n] } \phi_S(\vec{x})</span>
+<span class="sd">        \prod_{i \in S} Z_i \right)</span>
+
+<span class="sd">    and</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \begin{cases}</span>
+<span class="sd">        \phi_{\{i, j\}} = (\pi - x_i)(\pi - x_j) \\</span>
+<span class="sd">        \phi_{\{i\}} = x_i</span>
+<span class="sd">        \end{cases}</span>
+
+<span class="sd">    We then attribute labels to the vectors according to the rule</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        m(\vec{x}) = \begin{cases}</span>
+<span class="sd">        1 &amp; \langle \Phi(\vec{x}) | V^\dagger \prod_i Z_i V | \Phi(\vec{x}) \rangle &gt; \Delta \\</span>
+<span class="sd">        -1 &amp; \langle \Phi(\vec{x}) | V^\dagger \prod_i Z_i V | \Phi(\vec{x}) \rangle &lt; -\Delta</span>
+<span class="sd">        \end{cases}</span>
+
+<span class="sd">    where :math:`\Delta` is the separation gap, and</span>
+<span class="sd">    :math:`V\in \mathrm{SU}(4)` is a random unitary.</span>
+
+<span class="sd">    The current implementation only works with n = 2 or 3.</span>
+
+<span class="sd">    **References:**</span>
+
+<span class="sd">    [1] Havlíček V, Córcoles AD, Temme K, Harrow AW, Kandala A, Chow JM,</span>
+<span class="sd">    Gambetta JM. Supervised learning with quantum-enhanced feature</span>
+<span class="sd">    spaces. Nature. 2019 Mar;567(7747):209-12.</span>
+<span class="sd">    `arXiv:1804.11326 &lt;https://arxiv.org/abs/1804.11326&gt;`_</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        training_size: the number of training samples.</span>
+<span class="sd">        test_size: the number of testing samples.</span>
+<span class="sd">        n: number of qubits (dimension of the feature space). Must be 2 or 3.</span>
+<span class="sd">        gap: separation gap (:math:`\Delta`).</span>
+<span class="sd">        plot_data: whether to plot the data. Requires matplotlib.</span>
+<span class="sd">        one_hot: if True, return the data in one-hot format.</span>
+<span class="sd">        include_sample_total: if True, return all points in the uniform</span>
+<span class="sd">            grid in addition to training and testing samples.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Training and testing samples.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: if n is not 2 or 3.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">class_labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;B&quot;</span><span class="p">]</span>
     <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
@@ -344,267 +408,67 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Supported values of &#39;n&#39; are 2 and 3 only, but </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> is provided.&quot;</span><span class="p">)</span>
 
-    <span class="n">label_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">))</span>
-    <span class="n">sample_train</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">sample_a</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">)]</span>
-    <span class="n">sample_b</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">)]</span>
+    <span class="c1"># Define auxiliary matrices and initial state</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">i_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">h_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">h_n</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">,</span> <span class="p">[</span><span class="n">h_2</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">psi_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span><span class="p">)</span>
 
-    <span class="n">sample_total</span> <span class="o">=</span> <span class="p">[[[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">)]</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">)]</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">)]</span>
+    <span class="c1"># Generate Z matrices acting on each qubits</span>
+    <span class="n">z_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">reduce</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">,</span> <span class="p">[</span><span class="n">i_2</span><span class="p">]</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="p">[</span><span class="n">z</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">i_2</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
 
-    <span class="c1"># interactions = np.transpose(np.array([[1, 0], [0, 1], [1, 1]]))</span>
-
-    <span class="n">steps</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">count</span>
-
-    <span class="c1"># sx = np.array([[0, 1], [1, 0]])</span>
-    <span class="c1"># X = np.asmatrix(sx)</span>
-    <span class="c1"># sy = np.array([[0, -1j], [1j, 0]])</span>
-    <span class="c1"># Y = np.asmatrix(sy)</span>
-    <span class="n">s_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
-    <span class="n">z_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">s_z</span><span class="p">)</span>
-    <span class="n">j_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
-    <span class="n">j_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">j_m</span><span class="p">)</span>
-    <span class="n">h_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-    <span class="n">h_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">h_m</span><span class="p">,</span> <span class="n">h_m</span><span class="p">)</span>
-    <span class="n">h_3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">h_m</span><span class="p">,</span> <span class="n">h_2</span><span class="p">)</span>
-    <span class="n">h_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">h_m</span><span class="p">)</span>
-    <span class="n">h_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">h_2</span><span class="p">)</span>
-    <span class="n">h_3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">h_3</span><span class="p">)</span>
-
-    <span class="n">f_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span><span class="p">)</span>
-
-    <span class="n">my_array</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span><span class="p">)]</span>
-
-    <span class="k">for</span> <span class="n">arindex</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">my_array</span><span class="p">):</span>
-        <span class="n">temp_f</span> <span class="o">=</span> <span class="nb">bin</span><span class="p">(</span><span class="n">f_a</span><span class="p">[</span><span class="n">arindex</span><span class="p">])[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">findex</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-            <span class="n">my_array</span><span class="p">[</span><span class="n">arindex</span><span class="p">][</span><span class="n">findex</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">temp_f</span><span class="p">[</span><span class="n">findex</span><span class="p">])</span>
-
-    <span class="n">my_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">my_array</span><span class="p">)</span>
-    <span class="n">my_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">my_array</span><span class="p">)</span>
-
-    <span class="c1"># Define decision functions</span>
-    <span class="n">maj</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">my_array</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">)</span>
-    <span class="n">parity</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">my_array</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
-    <span class="c1"># dict1 = (-1) ** (my_array[0])</span>
-    <span class="n">d_m</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># Construct the parity operator</span>
+    <span class="n">bitstrings</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bstring</span><span class="p">)</span> <span class="k">for</span> <span class="n">bstring</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="p">[[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">]]</span> <span class="o">*</span> <span class="n">n</span><span class="p">)]</span>
     <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="n">d_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">parity</span><span class="p">)</span>
+        <span class="n">bitstring_parity</span> <span class="o">=</span> <span class="p">[</span><span class="n">bstr</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">bstr</span> <span class="ow">in</span> <span class="n">bitstrings</span><span class="p">]</span>
+        <span class="n">d_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bitstring_parity</span><span class="p">))</span>
     <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-        <span class="n">d_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">maj</span><span class="p">)</span>
+        <span class="n">bitstring_majority</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">if</span> <span class="n">bstr</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">&quot;0&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">bstr</span> <span class="ow">in</span> <span class="n">bitstrings</span><span class="p">]</span>
+        <span class="n">d_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bitstring_majority</span><span class="p">))</span>
 
+    <span class="c1"># Generate a random unitary operator by collecting eigenvectors of a</span>
+    <span class="c1"># random hermitian operator</span>
     <span class="n">basis</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span>
         <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="n">n</span><span class="p">)</span>
     <span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="n">n</span><span class="p">))</span>
-    <span class="n">basis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span>
+    <span class="n">eigvals</span><span class="p">,</span> <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">eigvals</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">eigvecs</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span>
+    <span class="n">m_m</span> <span class="o">=</span> <span class="n">eigvecs</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">d_m</span> <span class="o">@</span> <span class="n">eigvecs</span>
 
-    <span class="p">[</span><span class="n">s_a</span><span class="p">,</span> <span class="n">u_a</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span>
+    <span class="c1"># Generate a grid of points in the feature space and compute the</span>
+    <span class="c1"># expectation value of the parity</span>
+    <span class="n">xvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ind_pairs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">it</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">_sample_total</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">xvals</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">z_i</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">phi</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">([(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="n">i1</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="n">i2</span><span class="p">])</span> <span class="o">*</span> <span class="n">z_i</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span> <span class="o">@</span> <span class="n">z_i</span><span class="p">[</span><span class="n">i2</span><span class="p">]</span> <span class="k">for</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span> <span class="ow">in</span> <span class="n">ind_pairs</span><span class="p">])</span>
+        <span class="n">u_u</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">expm</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">phi</span><span class="p">)</span>  <span class="c1"># pylint: disable=no-member</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">u_u</span> <span class="o">@</span> <span class="n">h_n</span> <span class="o">@</span> <span class="n">u_u</span> <span class="o">@</span> <span class="n">psi_0</span>
+        <span class="n">exp_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">psi</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">m_m</span> <span class="o">@</span> <span class="n">psi</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">exp_val</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">gap</span><span class="p">:</span>
+            <span class="n">_sample_total</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">exp_val</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_sample_total</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">sample_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">_sample_total</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">count</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
 
-    <span class="n">idx</span> <span class="o">=</span> <span class="n">s_a</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">s_a</span> <span class="o">=</span> <span class="n">s_a</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-    <span class="n">u_a</span> <span class="o">=</span> <span class="n">u_a</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span>
+    <span class="c1"># Extract training and testing samples from grid</span>
+    <span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span> <span class="o">=</span> <span class="n">_sample_ad_hoc_data</span><span class="p">(</span><span class="n">sample_total</span><span class="p">,</span> <span class="n">xvals</span><span class="p">,</span> <span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
 
-    <span class="n">m_m</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">u_a</span><span class="p">))</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">d_m</span><span class="p">)</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">u_a</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">plot_data</span><span class="p">:</span>
+        <span class="n">_plot_ad_hoc_data</span><span class="p">(</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">,</span> <span class="n">training_size</span><span class="p">)</span>
 
-    <span class="n">psi_plus</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-    <span class="n">psi_0</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]]</span>
-    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-        <span class="n">psi_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">psi_0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">psi_plus</span><span class="p">))</span>
-
-    <span class="n">sample_total_a</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">sample_total_b</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">sample_total_void</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">n_1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">n_2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
-                <span class="n">x_1</span> <span class="o">=</span> <span class="n">steps</span> <span class="o">*</span> <span class="n">n_1</span>
-                <span class="n">x_2</span> <span class="o">=</span> <span class="n">steps</span> <span class="o">*</span> <span class="n">n_2</span>
-                <span class="n">phi</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">x_1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">z_m</span><span class="p">,</span> <span class="n">j_m</span><span class="p">)</span>
-                    <span class="o">+</span> <span class="n">x_2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">j_m</span><span class="p">,</span> <span class="n">z_m</span><span class="p">)</span>
-                    <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">x_1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">x_2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">z_m</span><span class="p">,</span> <span class="n">z_m</span><span class="p">)</span>
-                <span class="p">)</span>
-                <span class="n">u_u</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">expm</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">phi</span><span class="p">)</span>  <span class="c1"># pylint: disable=no-member</span>
-                <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">u_u</span><span class="p">)</span> <span class="o">@</span> <span class="n">h_2</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">u_u</span><span class="p">)</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">psi_0</span><span class="p">)</span>
-                <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">psi</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">m_m</span> <span class="o">@</span> <span class="n">psi</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">temp</span> <span class="o">&gt;</span> <span class="n">gap</span><span class="p">:</span>
-                    <span class="n">sample_total</span><span class="p">[</span><span class="n">n_1</span><span class="p">][</span><span class="n">n_2</span><span class="p">]</span> <span class="o">=</span> <span class="o">+</span><span class="mi">1</span>
-                <span class="k">elif</span> <span class="n">temp</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">gap</span><span class="p">:</span>
-                    <span class="n">sample_total</span><span class="p">[</span><span class="n">n_1</span><span class="p">][</span><span class="n">n_2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">sample_total</span><span class="p">[</span><span class="n">n_1</span><span class="p">][</span><span class="n">n_2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-
-        <span class="c1"># Now sample randomly from sample_Total a number of times training_size+testing_size</span>
-        <span class="n">t_r</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">while</span> <span class="n">t_r</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">):</span>
-            <span class="n">draw1</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
-            <span class="n">draw2</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">sample_total</span><span class="p">[</span><span class="n">draw1</span><span class="p">][</span><span class="n">draw2</span><span class="p">]</span> <span class="o">==</span> <span class="o">+</span><span class="mi">1</span><span class="p">:</span>
-                <span class="n">sample_a</span><span class="p">[</span><span class="n">t_r</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">draw1</span> <span class="o">/</span> <span class="n">count</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">draw2</span> <span class="o">/</span> <span class="n">count</span><span class="p">]</span>
-                <span class="n">t_r</span> <span class="o">+=</span> <span class="mi">1</span>
-
-        <span class="n">t_r</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">while</span> <span class="n">t_r</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">):</span>
-            <span class="n">draw1</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
-            <span class="n">draw2</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">sample_total</span><span class="p">[</span><span class="n">draw1</span><span class="p">][</span><span class="n">draw2</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-                <span class="n">sample_b</span><span class="p">[</span><span class="n">t_r</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">draw1</span> <span class="o">/</span> <span class="n">count</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">draw2</span> <span class="o">/</span> <span class="n">count</span><span class="p">]</span>
-                <span class="n">t_r</span> <span class="o">+=</span> <span class="mi">1</span>
-
-        <span class="n">sample_train</span> <span class="o">=</span> <span class="p">[</span><span class="n">sample_a</span><span class="p">,</span> <span class="n">sample_b</span><span class="p">]</span>
-
-        <span class="k">for</span> <span class="n">lindex</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">):</span>
-            <span class="n">label_train</span><span class="p">[</span><span class="n">lindex</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">lindex</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">):</span>
-            <span class="n">label_train</span><span class="p">[</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span> <span class="o">+</span> <span class="n">lindex</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="n">label_train</span> <span class="o">=</span> <span class="n">label_train</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-        <span class="n">sample_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">sample_train</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">),</span> <span class="n">n</span><span class="p">))</span>
-        <span class="n">training_input</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">key</span><span class="p">:</span> <span class="p">(</span><span class="n">sample_train</span><span class="p">[</span><span class="n">label_train</span> <span class="o">==</span> <span class="n">k</span><span class="p">,</span> <span class="p">:])[:</span><span class="n">training_size</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">class_labels</span><span class="p">)</span>
-        <span class="p">}</span>
-        <span class="n">test_input</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">key</span><span class="p">:</span> <span class="p">(</span><span class="n">sample_train</span><span class="p">[</span><span class="n">label_train</span> <span class="o">==</span> <span class="n">k</span><span class="p">,</span> <span class="p">:])[</span><span class="n">training_size</span> <span class="p">:</span> <span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">)]</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">class_labels</span><span class="p">)</span>
-        <span class="p">}</span>
-
-        <span class="k">if</span> <span class="n">plot_data</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-            <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-                    <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;Matplotlib&quot;</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ad_hoc_data&quot;</span><span class="p">,</span>
-                    <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install matplotlib&quot;</span><span class="p">,</span>
-                <span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span>
-
-            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-            <span class="n">fig2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
-                <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
-                    <span class="n">sample_train</span><span class="p">[</span><span class="n">label_train</span> <span class="o">==</span> <span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">][:</span><span class="n">training_size</span><span class="p">],</span>
-                    <span class="n">sample_train</span><span class="p">[</span><span class="n">label_train</span> <span class="o">==</span> <span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">][:</span><span class="n">training_size</span><span class="p">],</span>
-                <span class="p">)</span>
-
-            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Ad-hoc Data&quot;</span><span class="p">)</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
-    <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">n_1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">n_2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
-                <span class="k">for</span> <span class="n">n_3</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
-                    <span class="n">x_1</span> <span class="o">=</span> <span class="n">steps</span> <span class="o">*</span> <span class="n">n_1</span>
-                    <span class="n">x_2</span> <span class="o">=</span> <span class="n">steps</span> <span class="o">*</span> <span class="n">n_2</span>
-                    <span class="n">x_3</span> <span class="o">=</span> <span class="n">steps</span> <span class="o">*</span> <span class="n">n_3</span>
-                    <span class="n">phi</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">x_1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">z_m</span><span class="p">,</span> <span class="n">j_m</span><span class="p">),</span> <span class="n">j_m</span><span class="p">)</span>
-                        <span class="o">+</span> <span class="n">x_2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">j_m</span><span class="p">,</span> <span class="n">z_m</span><span class="p">),</span> <span class="n">j_m</span><span class="p">)</span>
-                        <span class="o">+</span> <span class="n">x_3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">j_m</span><span class="p">,</span> <span class="n">j_m</span><span class="p">),</span> <span class="n">z_m</span><span class="p">)</span>
-                        <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">x_1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">x_2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">z_m</span><span class="p">,</span> <span class="n">z_m</span><span class="p">),</span> <span class="n">j_m</span><span class="p">)</span>
-                        <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">x_2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">x_3</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">j_m</span><span class="p">,</span> <span class="n">z_m</span><span class="p">),</span> <span class="n">z_m</span><span class="p">)</span>
-                        <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">x_1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">x_3</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">z_m</span><span class="p">,</span> <span class="n">j_m</span><span class="p">),</span> <span class="n">z_m</span><span class="p">)</span>
-                    <span class="p">)</span>
-                    <span class="n">u_u</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">expm</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">phi</span><span class="p">)</span>  <span class="c1"># pylint: disable=no-member</span>
-                    <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">u_u</span><span class="p">)</span> <span class="o">@</span> <span class="n">h_3</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">u_u</span><span class="p">)</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">psi_0</span><span class="p">)</span>
-                    <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">psi</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">m_m</span> <span class="o">@</span> <span class="n">psi</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="n">temp</span> <span class="o">&gt;</span> <span class="n">gap</span><span class="p">:</span>
-                        <span class="n">sample_total</span><span class="p">[</span><span class="n">n_1</span><span class="p">][</span><span class="n">n_2</span><span class="p">][</span><span class="n">n_3</span><span class="p">]</span> <span class="o">=</span> <span class="o">+</span><span class="mi">1</span>
-                        <span class="n">sample_total_a</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">n_1</span><span class="p">,</span> <span class="n">n_2</span><span class="p">,</span> <span class="n">n_3</span><span class="p">])</span>
-                    <span class="k">elif</span> <span class="n">temp</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">gap</span><span class="p">:</span>
-                        <span class="n">sample_total</span><span class="p">[</span><span class="n">n_1</span><span class="p">][</span><span class="n">n_2</span><span class="p">][</span><span class="n">n_3</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-                        <span class="n">sample_total_b</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">n_1</span><span class="p">,</span> <span class="n">n_2</span><span class="p">,</span> <span class="n">n_3</span><span class="p">])</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">sample_total</span><span class="p">[</span><span class="n">n_1</span><span class="p">][</span><span class="n">n_2</span><span class="p">][</span><span class="n">n_3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-                        <span class="n">sample_total_void</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">n_1</span><span class="p">,</span> <span class="n">n_2</span><span class="p">,</span> <span class="n">n_3</span><span class="p">])</span>
-
-        <span class="c1"># Now sample randomly from sample_Total a number of times training_size+testing_size</span>
-        <span class="n">t_r</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">while</span> <span class="n">t_r</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">):</span>
-            <span class="n">draw1</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
-            <span class="n">draw2</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
-            <span class="n">draw3</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">sample_total</span><span class="p">[</span><span class="n">draw1</span><span class="p">][</span><span class="n">draw2</span><span class="p">][</span><span class="n">draw3</span><span class="p">]</span> <span class="o">==</span> <span class="o">+</span><span class="mi">1</span><span class="p">:</span>
-                <span class="n">sample_a</span><span class="p">[</span><span class="n">t_r</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">draw1</span> <span class="o">/</span> <span class="n">count</span><span class="p">,</span>
-                    <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">draw2</span> <span class="o">/</span> <span class="n">count</span><span class="p">,</span>
-                    <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">draw3</span> <span class="o">/</span> <span class="n">count</span><span class="p">,</span>
-                <span class="p">]</span>
-                <span class="n">t_r</span> <span class="o">+=</span> <span class="mi">1</span>
-
-        <span class="n">t_r</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">while</span> <span class="n">t_r</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">):</span>
-            <span class="n">draw1</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
-            <span class="n">draw2</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
-            <span class="n">draw3</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">sample_total</span><span class="p">[</span><span class="n">draw1</span><span class="p">][</span><span class="n">draw2</span><span class="p">][</span><span class="n">draw3</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-                <span class="n">sample_b</span><span class="p">[</span><span class="n">t_r</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">draw1</span> <span class="o">/</span> <span class="n">count</span><span class="p">,</span>
-                    <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">draw2</span> <span class="o">/</span> <span class="n">count</span><span class="p">,</span>
-                    <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">draw3</span> <span class="o">/</span> <span class="n">count</span><span class="p">,</span>
-                <span class="p">]</span>
-                <span class="n">t_r</span> <span class="o">+=</span> <span class="mi">1</span>
-
-        <span class="n">sample_train</span> <span class="o">=</span> <span class="p">[</span><span class="n">sample_a</span><span class="p">,</span> <span class="n">sample_b</span><span class="p">]</span>
-
-        <span class="k">for</span> <span class="n">lindex</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">):</span>
-            <span class="n">label_train</span><span class="p">[</span><span class="n">lindex</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">lindex</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">):</span>
-            <span class="n">label_train</span><span class="p">[</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span> <span class="o">+</span> <span class="n">lindex</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="n">label_train</span> <span class="o">=</span> <span class="n">label_train</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-        <span class="n">sample_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">sample_train</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">),</span> <span class="n">n</span><span class="p">))</span>
-        <span class="n">training_input</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">key</span><span class="p">:</span> <span class="p">(</span><span class="n">sample_train</span><span class="p">[</span><span class="n">label_train</span> <span class="o">==</span> <span class="n">k</span><span class="p">,</span> <span class="p">:])[:</span><span class="n">training_size</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">class_labels</span><span class="p">)</span>
-        <span class="p">}</span>
-        <span class="n">test_input</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">key</span><span class="p">:</span> <span class="p">(</span><span class="n">sample_train</span><span class="p">[</span><span class="n">label_train</span> <span class="o">==</span> <span class="n">k</span><span class="p">,</span> <span class="p">:])[</span><span class="n">training_size</span> <span class="p">:</span> <span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">)]</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">class_labels</span><span class="p">)</span>
-        <span class="p">}</span>
-
-        <span class="k">if</span> <span class="n">plot_data</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-            <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-                    <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;Matplotlib&quot;</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ad_hoc_data&quot;</span><span class="p">,</span>
-                    <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install matplotlib&quot;</span><span class="p">,</span>
-                <span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span>
-            <span class="n">sample_total_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sample_total_a</span><span class="p">)</span>
-            <span class="n">sample_total_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sample_total_b</span><span class="p">)</span>
-            <span class="n">x_1</span> <span class="o">=</span> <span class="n">sample_total_a</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
-            <span class="n">y_1</span> <span class="o">=</span> <span class="n">sample_total_a</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
-            <span class="n">z_1</span> <span class="o">=</span> <span class="n">sample_total_a</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
-
-            <span class="n">x_2</span> <span class="o">=</span> <span class="n">sample_total_b</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
-            <span class="n">y_2</span> <span class="o">=</span> <span class="n">sample_total_b</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
-            <span class="n">z_2</span> <span class="o">=</span> <span class="n">sample_total_b</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
-
-            <span class="n">fig1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-            <span class="n">ax_1</span> <span class="o">=</span> <span class="n">fig1</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
-            <span class="n">ax_1</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_1</span><span class="p">,</span> <span class="n">y_1</span><span class="p">,</span> <span class="n">z_1</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;#8A360F&quot;</span><span class="p">)</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
-            <span class="n">fig2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-            <span class="n">ax_2</span> <span class="o">=</span> <span class="n">fig2</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
-            <span class="n">ax_2</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_2</span><span class="p">,</span> <span class="n">y_2</span><span class="p">,</span> <span class="n">z_2</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;#683FC8&quot;</span><span class="p">)</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
-            <span class="n">sample_training_a</span> <span class="o">=</span> <span class="n">training_input</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">]</span>
-            <span class="n">sample_training_b</span> <span class="o">=</span> <span class="n">training_input</span><span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">]</span>
-
-            <span class="n">x_1</span> <span class="o">=</span> <span class="n">sample_training_a</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
-            <span class="n">y_1</span> <span class="o">=</span> <span class="n">sample_training_a</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
-            <span class="n">z_1</span> <span class="o">=</span> <span class="n">sample_training_a</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
-
-            <span class="n">x_2</span> <span class="o">=</span> <span class="n">sample_training_b</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
-            <span class="n">y_2</span> <span class="o">=</span> <span class="n">sample_training_b</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
-            <span class="n">z_2</span> <span class="o">=</span> <span class="n">sample_training_b</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
-
-            <span class="n">fig1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-            <span class="n">ax_1</span> <span class="o">=</span> <span class="n">fig1</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
-            <span class="n">ax_1</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_1</span><span class="p">,</span> <span class="n">y_1</span><span class="p">,</span> <span class="n">z_1</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;#8A360F&quot;</span><span class="p">)</span>
-            <span class="n">ax_1</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_2</span><span class="p">,</span> <span class="n">y_2</span><span class="p">,</span> <span class="n">z_2</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;#683FC8&quot;</span><span class="p">)</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">training_input</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="p">(</span><span class="n">x_sample</span><span class="p">[</span><span class="n">y_sample</span> <span class="o">==</span> <span class="n">k</span><span class="p">,</span> <span class="p">:])[:</span><span class="n">training_size</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">class_labels</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">test_input</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="p">(</span><span class="n">x_sample</span><span class="p">[</span><span class="n">y_sample</span> <span class="o">==</span> <span class="n">k</span><span class="p">,</span> <span class="p">:])[</span><span class="n">training_size</span> <span class="p">:</span> <span class="p">(</span><span class="n">training_size</span> <span class="o">+</span> <span class="n">test_size</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">class_labels</span><span class="p">)</span>
+    <span class="p">}</span>
 
     <span class="n">training_feature_array</span><span class="p">,</span> <span class="n">training_label_array</span> <span class="o">=</span> <span class="n">features_and_labels_transform</span><span class="p">(</span>
         <span class="n">training_input</span><span class="p">,</span> <span class="n">class_labels</span><span class="p">,</span> <span class="n">one_hot</span>
@@ -630,43 +494,34 @@
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="sample_ad_hoc_data"><a class="viewcode-back" href="../../../stubs/qiskit_machine_learning.datasets.sample_ad_hoc_data.html#qiskit_machine_learning.datasets.sample_ad_hoc_data">[dokumentacja]</a><span class="k">def</span> <span class="nf">sample_ad_hoc_data</span><span class="p">(</span><span class="n">sample_total</span><span class="p">,</span> <span class="n">test_size</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;returns sample ad hoc data&quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">_sample_ad_hoc_data</span><span class="p">(</span><span class="n">sample_total</span><span class="p">,</span> <span class="n">xvals</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">sample_total</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">sample_a</span><span class="p">,</span> <span class="n">sample_b</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sample_list</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="n">sample_a</span><span class="p">,</span> <span class="n">sample_b</span><span class="p">]):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">sample_list</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">num_samples</span><span class="p">:</span>
+            <span class="n">draws</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">sample_total</span><span class="p">[</span><span class="n">draws</span><span class="p">]</span> <span class="o">==</span> <span class="n">label</span><span class="p">:</span>
+                <span class="n">sample_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">xvals</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">draws</span><span class="p">])</span>
 
-    <span class="n">class_labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;B&quot;</span><span class="p">]</span>  <span class="c1"># copied from ad_hoc_data()</span>
-    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="n">count</span> <span class="o">=</span> <span class="mi">100</span>
-    <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-        <span class="n">count</span> <span class="o">=</span> <span class="mi">20</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_samples</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_samples</span><span class="p">)</span>
+    <span class="n">samples</span> <span class="o">=</span> <span class="p">[</span><span class="n">sample_a</span><span class="p">,</span> <span class="n">sample_b</span><span class="p">]</span>
+    <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">samples</span><span class="p">,</span> <span class="n">labels</span>
 
-    <span class="n">label_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">test_size</span><span class="p">)</span>
-    <span class="n">sample_a</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">test_size</span><span class="p">)]</span>
-    <span class="n">sample_b</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">test_size</span><span class="p">)]</span>
-    <span class="n">t_r</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">while</span> <span class="n">t_r</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">test_size</span><span class="p">):</span>
-        <span class="n">draw1</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
-        <span class="n">draw2</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">sample_total</span><span class="p">[</span><span class="n">draw1</span><span class="p">][</span><span class="n">draw2</span><span class="p">]</span> <span class="o">==</span> <span class="o">+</span><span class="mi">1</span><span class="p">:</span>
-            <span class="n">sample_a</span><span class="p">[</span><span class="n">t_r</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">draw1</span> <span class="o">/</span> <span class="n">count</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">draw2</span> <span class="o">/</span> <span class="n">count</span><span class="p">]</span>
-            <span class="n">t_r</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    <span class="n">t_r</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">while</span> <span class="n">t_r</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">test_size</span><span class="p">):</span>
-        <span class="n">draw1</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
-        <span class="n">draw2</span> <span class="o">=</span> <span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">sample_total</span><span class="p">[</span><span class="n">draw1</span><span class="p">][</span><span class="n">draw2</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-            <span class="n">sample_b</span><span class="p">[</span><span class="n">t_r</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">draw1</span> <span class="o">/</span> <span class="n">count</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">draw2</span> <span class="o">/</span> <span class="n">count</span><span class="p">]</span>
-            <span class="n">t_r</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="n">sample_train</span> <span class="o">=</span> <span class="p">[</span><span class="n">sample_a</span><span class="p">,</span> <span class="n">sample_b</span><span class="p">]</span>
-    <span class="k">for</span> <span class="n">lindex</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">test_size</span><span class="p">):</span>
-        <span class="n">label_train</span><span class="p">[</span><span class="n">lindex</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">lindex</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">test_size</span><span class="p">):</span>
-        <span class="n">label_train</span><span class="p">[</span><span class="n">test_size</span> <span class="o">+</span> <span class="n">lindex</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">label_train</span> <span class="o">=</span> <span class="n">label_train</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-    <span class="n">sample_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">sample_train</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">test_size</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
-    <span class="n">test_input</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="p">(</span><span class="n">sample_train</span><span class="p">[</span><span class="n">label_train</span> <span class="o">==</span> <span class="n">k</span><span class="p">,</span> <span class="p">:])[:]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">class_labels</span><span class="p">)}</span>
-    <span class="k">return</span> <span class="n">test_input</span></div>
+<span class="nd">@optionals</span><span class="o">.</span><span class="n">HAS_MATPLOTLIB</span><span class="o">.</span><span class="n">require_in_call</span>
+<span class="k">def</span> <span class="nf">_plot_ad_hoc_data</span><span class="p">(</span><span class="n">x_total</span><span class="p">,</span> <span class="n">y_total</span><span class="p">,</span> <span class="n">training_size</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">x_total</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">projection</span> <span class="o">=</span> <span class="s2">&quot;3d&quot;</span> <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="n">projection</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="o">*</span><span class="n">x_total</span><span class="p">[</span><span class="n">y_total</span> <span class="o">==</span> <span class="n">k</span><span class="p">][:</span><span class="n">training_size</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Ad-hoc Data&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 
              </article>

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_machine_learning.algorithms.trainable_model &mdash; Dokumentasi Qiskit Machine Learning 0.3.1</title>
+  <title>qiskit_machine_learning.algorithms.trainable_model &mdash; Dokumentasi Qiskit Machine Learning 0.4.0</title>
   
 
   
@@ -197,7 +197,7 @@
               
               
                 <div class="version">
-                  0.3.1
+                  0.4.0
                 </div>
               
             
@@ -328,17 +328,16 @@
     <span class="n">CrossEntropyLoss</span><span class="p">,</span>
     <span class="n">CrossEntropySigmoidLoss</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">qiskit_machine_learning.deprecation</span> <span class="kn">import</span> <span class="n">deprecate_values</span>
 
 <span class="kn">from</span> <span class="nn">.objective_functions</span> <span class="kn">import</span> <span class="n">ObjectiveFunction</span>
+<span class="kn">from</span> <span class="nn">.serializable_model</span> <span class="kn">import</span> <span class="n">SerializableModelMixin</span>
+<span class="kn">from</span> <span class="nn">..deprecation</span> <span class="kn">import</span> <span class="n">deprecate_values</span>
 
 
-<div class="viewcode-block" id="TrainableModel"><a class="viewcode-back" href="../../../stubs/qiskit_machine_learning.algorithms.TrainableModel.html#qiskit_machine_learning.algorithms.TrainableModel">[docs]</a><span class="k">class</span> <span class="nc">TrainableModel</span><span class="p">:</span>
+<div class="viewcode-block" id="TrainableModel"><a class="viewcode-back" href="../../../stubs/qiskit_machine_learning.algorithms.TrainableModel.html#qiskit_machine_learning.algorithms.TrainableModel">[docs]</a><span class="k">class</span> <span class="nc">TrainableModel</span><span class="p">(</span><span class="n">SerializableModelMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base class for ML model. This class defines Scikit-Learn like interface to implement.&quot;&quot;&quot;</span>
 
-    <span class="nd">@deprecate_values</span><span class="p">(</span>
-        <span class="s2">&quot;0.2.0&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;loss&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;l1&quot;</span><span class="p">:</span> <span class="s2">&quot;absolute_error&quot;</span><span class="p">,</span> <span class="s2">&quot;l2&quot;</span><span class="p">:</span> <span class="s2">&quot;squared_error&quot;</span><span class="p">}},</span> <span class="n">stack_level</span><span class="o">=</span><span class="mi">4</span>
-    <span class="p">)</span>
+    <span class="nd">@deprecate_values</span><span class="p">(</span><span class="s2">&quot;0.4.0&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;loss&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;cross_entropy_sigmoid&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;unsupported&gt;&quot;</span><span class="p">}})</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neural_network</span><span class="p">:</span> <span class="n">NeuralNetwork</span><span class="p">,</span>
@@ -390,16 +389,12 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span> <span class="o">=</span> <span class="n">CrossEntropyLoss</span><span class="p">()</span>
             <span class="k">elif</span> <span class="n">loss</span> <span class="o">==</span> <span class="s2">&quot;cross_entropy_sigmoid&quot;</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span> <span class="o">=</span> <span class="n">CrossEntropySigmoidLoss</span><span class="p">()</span>
-            <span class="k">elif</span> <span class="n">loss</span> <span class="o">==</span> <span class="s2">&quot;l1&quot;</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span> <span class="o">=</span> <span class="n">L1Loss</span><span class="p">()</span>
-            <span class="k">elif</span> <span class="n">loss</span> <span class="o">==</span> <span class="s2">&quot;l2&quot;</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span> <span class="o">=</span> <span class="n">L2Loss</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">QiskitMachineLearningError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown loss </span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">optimizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">optimizer</span> <span class="o">=</span> <span class="n">SLSQP</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
+        <span class="c1"># call the setter that has some additional checks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_warm_start</span> <span class="o">=</span> <span class="n">warm_start</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fit_result</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_initial_point</span> <span class="o">=</span> <span class="n">initial_point</span>
@@ -419,6 +414,13 @@
     <span class="k">def</span> <span class="nf">optimizer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optimizer</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns an optimizer to be used in training.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span>
+
+    <span class="nd">@optimizer</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">optimizer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Optimizer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the optimizer to use in training process.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">optimizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">optimizer</span> <span class="o">=</span> <span class="n">SLSQP</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">warm_start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>

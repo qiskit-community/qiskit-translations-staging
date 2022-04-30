@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_machine_learning.algorithms.objective_functions &mdash; Qiskit Machine Learning 0.3.1 說明文件</title>
+  <title>qiskit_machine_learning.algorithms.objective_functions &mdash; Qiskit Machine Learning 0.4.0 說明文件</title>
   
 
   
@@ -197,7 +197,7 @@
               
               
                 <div class="version">
-                  0.3.1
+                  0.4.0
                 </div>
               
             
@@ -301,7 +301,7 @@
   <h1>qiskit_machine_learning.algorithms.objective_functions 的原始碼</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2021.</span>
+<span class="c1"># (C) Copyright IBM 2021, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -318,9 +318,14 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="k">try</span><span class="p">:</span>
+<span class="kn">import</span> <span class="nn">qiskit_machine_learning.optionals</span> <span class="k">as</span> <span class="nn">_optionals</span>
+<span class="kn">from</span> <span class="nn">qiskit_machine_learning.neural_networks</span> <span class="kn">import</span> <span class="n">NeuralNetwork</span>
+<span class="kn">from</span> <span class="nn">qiskit_machine_learning.utils.loss_functions</span> <span class="kn">import</span> <span class="n">Loss</span>
+
+<span class="k">if</span> <span class="n">_optionals</span><span class="o">.</span><span class="n">HAS_SPARSE</span><span class="p">:</span>
+    <span class="c1"># pylint: disable=import-error</span>
     <span class="kn">from</span> <span class="nn">sparse</span> <span class="kn">import</span> <span class="n">SparseArray</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+<span class="k">else</span><span class="p">:</span>
 
     <span class="k">class</span> <span class="nc">SparseArray</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
         <span class="sd">&quot;&quot;&quot;Empty SparseArray class</span>
@@ -328,10 +333,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">pass</span>
-
-
-<span class="kn">from</span> <span class="nn">qiskit_machine_learning.neural_networks</span> <span class="kn">import</span> <span class="n">NeuralNetwork</span>
-<span class="kn">from</span> <span class="nn">qiskit_machine_learning.utils.loss_functions</span> <span class="kn">import</span> <span class="n">Loss</span>
 
 
 <div class="viewcode-block" id="ObjectiveFunction"><a class="viewcode-back" href="../../../stubs/qiskit_machine_learning.algorithms.ObjectiveFunction.html#qiskit_machine_learning.algorithms.ObjectiveFunction">[文件]</a><span class="k">class</span> <span class="nc">ObjectiveFunction</span><span class="p">:</span>
@@ -352,6 +353,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_X</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_samples</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">=</span> <span class="n">y</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_neural_network</span> <span class="o">=</span> <span class="n">neural_network</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span> <span class="o">=</span> <span class="n">loss</span>
@@ -414,7 +416,7 @@
         <span class="n">predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neural_network_forward</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
         <span class="n">target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">predict</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
         <span class="c1"># float(...) is for mypy compliance</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span><span class="n">predict</span><span class="p">,</span> <span class="n">target</span><span class="p">)))</span></div>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span><span class="n">predict</span><span class="p">,</span> <span class="n">target</span><span class="p">))</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_samples</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BinaryObjectiveFunction.gradient"><a class="viewcode-back" href="../../../stubs/qiskit_machine_learning.algorithms.BinaryObjectiveFunction.gradient.html#qiskit_machine_learning.algorithms.BinaryObjectiveFunction.gradient">[文件]</a>    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="c1"># check that we have supported output shape</span>
@@ -435,7 +437,7 @@
         <span class="c1"># and weights for this output.</span>
         <span class="n">grad</span> <span class="o">=</span> <span class="n">loss_gradient</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">@</span> <span class="n">weight_grad</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
         <span class="c1"># we keep the shape of (1, num_weights)</span>
-        <span class="n">grad</span> <span class="o">=</span> <span class="n">grad</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">grad</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_samples</span>
 
         <span class="k">return</span> <span class="n">grad</span></div></div>
 
@@ -459,6 +461,7 @@
             <span class="c1"># loss vector is a loss of a particular output value(value of i) versus true labels.</span>
             <span class="c1"># we do this across all samples.</span>
             <span class="n">val</span> <span class="o">+=</span> <span class="n">probs</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_samples</span>
 
         <span class="k">return</span> <span class="n">val</span></div>
 
@@ -474,6 +477,7 @@
             <span class="c1"># weight probability gradients and a loss vector.</span>
             <span class="n">grad</span> <span class="o">+=</span> <span class="n">weight_prob_grad</span><span class="p">[:,</span> <span class="n">i</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="p">)</span>
 
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">grad</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_samples</span>
         <span class="k">return</span> <span class="n">grad</span></div></div>
 
 
@@ -487,7 +491,8 @@
         <span class="c1"># probabilities is of shape (N, num_outputs)</span>
         <span class="n">probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neural_network_forward</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
         <span class="c1"># float(...) is for mypy compliance</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span><span class="n">probs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="p">)))</span></div>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span><span class="n">probs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="p">))</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_samples</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div>
 
 <div class="viewcode-block" id="OneHotObjectiveFunction.gradient"><a class="viewcode-back" href="../../../stubs/qiskit_machine_learning.algorithms.OneHotObjectiveFunction.gradient.html#qiskit_machine_learning.algorithms.OneHotObjectiveFunction.gradient">[文件]</a>    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="c1"># predict is of shape (N, num_outputs)</span>
@@ -504,6 +509,7 @@
             <span class="c1"># samples for an output.</span>
             <span class="n">grad</span> <span class="o">+=</span> <span class="n">loss_gradient</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">@</span> <span class="n">weight_prob_grad</span><span class="p">[:,</span> <span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
 
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">grad</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_samples</span>
         <span class="k">return</span> <span class="n">grad</span></div></div>
 </pre></div>
 
