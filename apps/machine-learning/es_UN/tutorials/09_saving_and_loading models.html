@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Saving, Loading Qiskit Machine Learning Models and Continuous Training &mdash; documentación de Qiskit Machine Learning - 0.4.0</title>
+  <title>Guardar, Cargar modelos de Machine Learning de Qiskit y Entrenamiento Continuo &mdash; documentación de Qiskit Machine Learning - 0.4.0</title>
   
 
   
@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
     <link rel="index" title="Índice" href="../genindex.html" />
     <link rel="search" title="Buscar" href="../search.html" />
-    <link rel="next" title="Effective Dimension of Qiskit Neural Networks" href="10_effective_dimension.html" />
+    <link rel="next" title="Dimensión Efectiva de las Redes Neuronales de Qiskit" href="10_effective_dimension.html" />
     <link rel="prev" title="Entrenamiento de Kernel Cuántico para Aplicaciones de Machine Learning" href="08_quantum_kernel_trainer.html" /> 
 
   
@@ -275,7 +275,7 @@
         
           <li><a href="index.html">Tutoriales de Machine Learning</a> &gt;</li>
         
-      <li>Saving, Loading Qiskit Machine Learning Models and Continuous Training</li>
+      <li>Guardar, Cargar modelos de Machine Learning de Qiskit y Entrenamiento Continuo</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
@@ -557,18 +557,18 @@ div.rendered_html tbody tr:hover {
 <p class="admonition-title">Nota</p>
 <p>Esta página fue generada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-machine-learning/blob/stable/0.4/docs/tutorials/09_saving_and_loadingmodels.ipynb">docs/tutorials/09_saving_and_loading models.ipynb</a>.</p>
 </div>
-<section id="Saving,-Loading-Qiskit-Machine-Learning-Models-and-Continuous-Training">
-<h1>Saving, Loading Qiskit Machine Learning Models and Continuous Training<a class="headerlink" href="#Saving,-Loading-Qiskit-Machine-Learning-Models-and-Continuous-Training" title="Enlazar permanentemente con este título">¶</a></h1>
-<p>In this tutorial we will show how to save and load Qiskit machine learning models. Ability to save a model is very important, especially when a significant amount of time is invested in training a model on a real hardware. Also, we will show how to resume training of the previously saved model.</p>
-<p>In this tutorial we will cover how to:</p>
+<section id="Guardar,-Cargar-modelos-de-Machine-Learning-de-Qiskit-y-Entrenamiento-Continuo">
+<h1>Guardar, Cargar modelos de Machine Learning de Qiskit y Entrenamiento Continuo<a class="headerlink" href="#Guardar,-Cargar-modelos-de-Machine-Learning-de-Qiskit-y-Entrenamiento-Continuo" title="Enlazar permanentemente con este título">¶</a></h1>
+<p>En este tutorial, mostraremos cómo guardar y cargar modelos de machine learning de Qiskit. La capacidad de guardar un modelo es muy importante, especialmente cuando se invierte una cantidad significativa de tiempo en entrenar un modelo en un hardware real. Además, mostraremos cómo reanudar el entrenamiento del modelo previamente guardado.</p>
+<p>En este tutorial cubriremos cómo:</p>
 <ul class="simple">
-<li><p>Generate a simple dataset, split it into training/test datasets and plot them</p></li>
-<li><p>Train and save a model</p></li>
-<li><p>Load a saved model and resume training</p></li>
-<li><p>Evaluate performance of models</p></li>
-<li><p>PyTorch hybrid models</p></li>
+<li><p>Generar un conjunto de datos simple, dividirlo en conjuntos de datos de entrenamiento/prueba y graficarlos</p></li>
+<li><p>Entrenar y guardar un modelo</p></li>
+<li><p>Cargar un modelo guardado y reanudar el entrenamiento</p></li>
+<li><p>Evaluar el rendimiento de los modelos</p></li>
+<li><p>Modelos híbridos de PyTorch</p></li>
 </ul>
-<p>First off, we start from the required imports. We’ll heavily use SciKit-Learn on the data preparation step. In the next cell we also fix a random seed for reproducibility purposes.</p>
+<p>En primer lugar, comenzamos con las importaciones requeridas. Usaremos mucho SciKit-Learn en el paso de preparación de datos. En la siguiente celda también fijamos una semilla aleatoria con fines de reproducibilidad.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -590,7 +590,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>We will be using two quantum simulators. We’ll start training on the QASM simulator then will resume training on the statevector simulator. The approach shown in this tutorial can be used to train a model on a real hardware available on the cloud and then re-use the model for inference on a local simulator.</p>
+<p>Usaremos dos simuladores cuánticos. Comenzaremos a entrenar en el simulador QASM y luego reanudaremos el entrenamiento en el simulador de vector de estado. El enfoque que se muestra en este tutorial se puede usar para entrenar un modelo en un hardware real disponible en la nube y luego reutilizar el modelo para la inferencia en un simulador local.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -610,9 +610,9 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<section id="1.-Prepare-a-dataset">
-<h2>1. Prepare a dataset<a class="headerlink" href="#1.-Prepare-a-dataset" title="Enlazar permanentemente con este título">¶</a></h2>
-<p>Next step is to prepare a dataset. Here, we generate some data in the same way as in other tutorials. The difference is that we apply some transformations to the generated data. We generates <code class="docutils literal notranslate"><span class="pre">40</span></code> samples, each sample has <code class="docutils literal notranslate"><span class="pre">2</span></code> features, so our features is an array of shape <code class="docutils literal notranslate"><span class="pre">(40,</span> <span class="pre">2)</span></code>. Labels are obtained by summing up features by columns and if the sum is more than <code class="docutils literal notranslate"><span class="pre">1</span></code> then this sample is labeled as <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span></code> otherwise.</p>
+<section id="1.-Preparar-un-conjunto-de-datos">
+<h2>1. Preparar un conjunto de datos<a class="headerlink" href="#1.-Preparar-un-conjunto-de-datos" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>El siguiente paso es preparar un conjunto de datos. Aquí, generamos algunos datos de la misma manera que en otros tutoriales. La diferencia es que aplicamos algunas transformaciones a los datos generados. Generamos <code class="docutils literal notranslate"><span class="pre">40</span></code> muestras, cada muestra tiene <code class="docutils literal notranslate"><span class="pre">2</span></code> características, por lo que nuestras características son una matriz de la forma <code class="docutils literal notranslate"><span class="pre">(40,</span> <span class="pre">2)</span></code>. Las etiquetas se obtienen sumando características por columnas y si la suma es mayor que <code class="docutils literal notranslate"><span class="pre">1</span></code>, esta muestra se etiqueta como <code class="docutils literal notranslate"><span class="pre">1</span></code> y <code class="docutils literal notranslate"><span class="pre">0</span></code> en caso contrario.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -624,7 +624,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>Then, we scale down our features into a range of <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> by applying <code class="docutils literal notranslate"><span class="pre">MinMaxScaler</span></code> from SciKit-Learn. Model training convergence is better when this transformation is applied.</p>
+<p>Luego, reducimos nuestras características a un rango de <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> aplicando <code class="docutils literal notranslate"><span class="pre">MinMaxScaler</span></code> de SciKit-Learn. La convergencia de entrenamiento de modelos es mejor cuando se aplica esta transformación.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -643,7 +643,7 @@ div.rendered_html tbody tr:hover {
 (40, 2)
 </pre></div></div>
 </div>
-<p>Let’s take a look at the features of the first <code class="docutils literal notranslate"><span class="pre">5</span></code> samples of our dataset after the transformation.</p>
+<p>Echemos un vistazo a las características de las primeras <code class="docutils literal notranslate"><span class="pre">5</span></code> muestras de nuestro conjunto de datos después de la transformación.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -665,8 +665,7 @@ array([[0.79067335, 0.44566143],
        [0.10351936, 0.45754615]])
 </pre></div></div>
 </div>
-<p>We choose <code class="docutils literal notranslate"><span class="pre">VQC</span></code> or Variational Quantum Classifier as a model we will train. This model, by default, takes one-hot encoded labels, so we have to transform the labels that are in the set of <code class="docutils literal notranslate"><span class="pre">{0,</span> <span class="pre">1}</span></code> into one-hot representation. We employ SciKit-Learn for this transformation as well. Please note that the input array must be reshaped to <code class="docutils literal notranslate"><span class="pre">(num_samples,</span> <span class="pre">1)</span></code> first. The <code class="docutils literal notranslate"><span class="pre">OneHotEncoder</span></code> encoder does not work with 1D arrays and our labels is a 1D array. In this case a user must decide either an
-array has only one feature(our case!) or has one sample. Also, by default the encoder returns sparse arrays, but for dataset plotting it is easier to have dense arrays, so we set <code class="docutils literal notranslate"><span class="pre">sparse</span></code> to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+<p>Elegimos <code class="docutils literal notranslate"><span class="pre">VQC</span></code> o Variational Quantum Classifier como un modelo que entrenaremos. Este modelo, por defecto, toma etiquetas codificadas one-hot, por lo que tenemos que transformar las etiquetas que están en el conjunto de <code class="docutils literal notranslate"><span class="pre">{0,</span> <span class="pre">1}</span></code> en una representación one-hot. También empleamos SciKit-Learn para esta transformación. Ten en cuenta que la matriz de entrada debe cambiarse primero a la forma <code class="docutils literal notranslate"><span class="pre">(num_samples,</span> <span class="pre">1)</span></code>. El codificador <code class="docutils literal notranslate"><span class="pre">OneHotEncoder</span></code> no funciona con arreglos 1D y nuestras etiquetas son un arreglo 1D. En este caso, un usuario debe decidir si un arreglo tiene solo una característica (¡nuestro caso!) o tiene una muestra. Además, de manera predeterminada, el codificador devuelve arreglos dispersos, pero para la graficación de conjuntos de datos es más fácil tener arreglos densos, por lo que configuramos <code class="docutils literal notranslate"><span class="pre">sparse</span></code> con <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -685,7 +684,7 @@ array has only one feature(our case!) or has one sample. Also, by default the en
 (40, 2)
 </pre></div></div>
 </div>
-<p>Let’s take a look at the labels of the first <code class="docutils literal notranslate"><span class="pre">5</span></code> labels of the dataset. The labels should be one-hot encoded.</p>
+<p>Echemos un vistazo a las etiquetas de las primeras <code class="docutils literal notranslate"><span class="pre">5</span></code> del conjunto de datos. Las etiquetas deben estar codificadas en one-hot.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -707,7 +706,7 @@ array([[0., 1.],
        [1., 0.]])
 </pre></div></div>
 </div>
-<p>Now we split our dataset into two parts: a training dataset and a test one. As a rule of thumb, 80% of a full dataset should go into a training part and 20% into a test one. Our training dataset has <code class="docutils literal notranslate"><span class="pre">30</span></code> samples. The test dataset should be used only once, when a model is trained to verify how well the model behaves on unseen data. We employ <code class="docutils literal notranslate"><span class="pre">train_test_split</span></code> from SciKit-Learn.</p>
+<p>Ahora dividimos nuestro conjunto de datos en dos partes: un conjunto de datos de entrenamiento y uno de prueba. Como regla general, el 80% de un conjunto de datos completo debe ir a una parte de entrenamiento y el 20% a una de prueba. Nuestro conjunto de datos de entrenamiento tiene <code class="docutils literal notranslate"><span class="pre">30</span></code> muestras. El conjunto de datos de prueba debe usarse solo una vez, cuando se entrena un modelo para verificar qué tan bien se comporta el modelo en datos no vistos. Empleamos <code class="docutils literal notranslate"><span class="pre">train_test_split</span></code> de SciKit-Learn.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -728,7 +727,7 @@ array([[0., 1.],
 (30, 2)
 </pre></div></div>
 </div>
-<p>Now it is time to see how our dataset looks like. Let’s plot it.</p>
+<p>Ahora es el momento de ver cómo es nuestro conjunto de datos. Grafiquémoslo.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
@@ -782,18 +781,18 @@ array([[0., 1.],
 <img alt="../_images/tutorials_09_saving_and_loading_models_18_0.png" src="../_images/tutorials_09_saving_and_loading_models_18_0.png" />
 </div>
 </div>
-<p>On the plot above we see:</p>
+<p>En la gráfica de arriba vemos:</p>
 <ul class="simple">
-<li><p>Solid blue dots are the samples from the training dataset labeled as <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
-<li><p>Empty blue dots are the samples from the test dataset labeled as <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
-<li><p>Solid green dots are the samples from the training dataset labeled as <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
-<li><p>Empty green dots are the samples from the test dataset labeled as <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p>Los puntos azules sólidos son las muestras del conjunto de datos de entrenamiento etiquetados como <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
+<li><p>Los puntos azules vacíos son las muestras del conjunto de datos de prueba etiquetados como <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
+<li><p>Los puntos verdes sólidos son las muestras del conjunto de datos de entrenamiento etiquetados como <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p>Los puntos verdes vacíos son las muestras del conjunto de datos de prueba etiquetados como <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 </ul>
-<p>We’ll train our model using solid dots and verify it using empty dots.</p>
+<p>Entrenaremos nuestro modelo usando los puntos sólidos y lo verificaremos usando los puntos vacíos.</p>
 </section>
-<section id="2.-Train-a-model-and-save-it">
-<h2>2. Train a model and save it<a class="headerlink" href="#2.-Train-a-model-and-save-it" title="Enlazar permanentemente con este título">¶</a></h2>
-<p>We’ll train our model in two steps. On the first step we train our model in <code class="docutils literal notranslate"><span class="pre">20</span></code> iterations.</p>
+<section id="2.-Entrenar-un-modelo-y-guardarlo">
+<h2>2. Entrenar un modelo y guardarlo<a class="headerlink" href="#2.-Entrenar-un-modelo-y-guardarlo" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>Entrenaremos nuestro modelo en dos pasos. En el primer paso entrenamos nuestro modelo en <code class="docutils literal notranslate"><span class="pre">20</span></code> iteraciones.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
@@ -802,7 +801,7 @@ array([[0., 1.],
 </pre></div>
 </div>
 </div>
-<p>Create an empty array for callback to store values of the objective function.</p>
+<p>Crea una matriz vacía para la devolución de llamada para almacenar valores de la función objetivo.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
@@ -811,7 +810,7 @@ array([[0., 1.],
 </pre></div>
 </div>
 </div>
-<p>We re-use a callback function from the Neural Network Classifier &amp; Regressor tutorial to plot iteration versus objective function value with some minor tweaks to plot objective values at each step.</p>
+<p>Reutilizamos una función de devolución de llamada del tutorial Clasificador y Regresor de Redes Neuronales para graficar la iteración contra el valor de la función objetivo con algunos ajustes menores para graficar los valores objetivos en cada paso.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
@@ -842,8 +841,8 @@ array([[0., 1.],
 </pre></div>
 </div>
 </div>
-<p>As mentioned above we train a <code class="docutils literal notranslate"><span class="pre">VQC</span></code> model and set <code class="docutils literal notranslate"><span class="pre">COBYLA</span></code> as an optimizer with a chosen value of the <code class="docutils literal notranslate"><span class="pre">maxiter</span></code> parameter. Then we evaluate performance of the model to see how well it was trained. Then we save this model for a file. On the second step we load this model and will continue to work with it.</p>
-<p>Here, we manually construct an ansatz to fix an initial point where to start optimization from.</p>
+<p>Como se mencionó anteriormente, entrenamos un modelo <code class="docutils literal notranslate"><span class="pre">VQC</span></code> y configuramos <code class="docutils literal notranslate"><span class="pre">COBYLA</span></code> como un optimizador con un valor dado del parámetro <code class="docutils literal notranslate"><span class="pre">maxiter</span></code>. Luego evaluamos el desempeño del modelo para ver qué tan bien fue entrenado. Después guardamos este modelo en un archivo. En el segundo paso cargamos este modelo y continuaremos trabajando con él.</p>
+<p>Aquí, construimos manualmente un ansatz para fijar un punto inicial desde donde comenzar la optimización.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
@@ -855,7 +854,7 @@ array([[0., 1.],
 </pre></div>
 </div>
 </div>
-<p>We create a model and set a quantum instance to the QASM simulator we created earlier.</p>
+<p>Creamos un modelo y configuramos una instancia cuántica en el simulador QASM que creamos anteriormente.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
@@ -866,7 +865,7 @@ array([[0., 1.],
 </pre></div>
 </div>
 </div>
-<p>Now it is time to train the model.</p>
+<p>Ahora es el momento de entrenar el modelo.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
@@ -891,7 +890,7 @@ array([[0., 1.],
 &lt;qiskit_machine_learning.algorithms.classifiers.vqc.VQC at 0x16ec7cdf488&gt;
 </pre></div></div>
 </div>
-<p>Let’s see how well our model performs after the first step of training.</p>
+<p>Veamos qué tan bien se desempeña nuestro modelo después del primer paso de entrenamiento.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
@@ -910,7 +909,7 @@ Train score 0.8
 Test score  0.8
 </pre></div></div>
 </div>
-<p>Next, we save the model. You may choose any file name you want. Please note that the <code class="docutils literal notranslate"><span class="pre">save</span></code> method does not append an extension if it is not specified in the file name.</p>
+<p>A continuación, guardamos el modelo. Puedes elegir cualquier nombre de archivo que desees. Ten en cuenta que el método <code class="docutils literal notranslate"><span class="pre">save</span></code> no agrega una extensión si no se especifica en el nombre del archivo.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
@@ -920,9 +919,9 @@ Test score  0.8
 </div>
 </div>
 </section>
-<section id="3.-Load-a-model-and-continue-training">
-<h2>3. Load a model and continue training<a class="headerlink" href="#3.-Load-a-model-and-continue-training" title="Enlazar permanentemente con este título">¶</a></h2>
-<p>To load a model a user have to call a class method <code class="docutils literal notranslate"><span class="pre">load</span></code> of the corresponding model class. In our case it is <code class="docutils literal notranslate"><span class="pre">VQC</span></code>. We pass the same file name we used in the previous section where we saved our model.</p>
+<section id="3.-Cargar-un-modelo-y-continuar-su-entrenamiento">
+<h2>3. Cargar un modelo y continuar su entrenamiento<a class="headerlink" href="#3.-Cargar-un-modelo-y-continuar-su-entrenamiento" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>Para cargar un modelo, un usuario debe llamar al método <code class="docutils literal notranslate"><span class="pre">load</span></code> de la clase del modelo correspondiente. En nuestro caso es <code class="docutils literal notranslate"><span class="pre">VQC</span></code>. Le pasamos el mismo nombre de archivo que usamos en el apartado anterior donde guardamos nuestro modelo.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
@@ -931,8 +930,7 @@ Test score  0.8
 </pre></div>
 </div>
 </div>
-<p>Next, we want to alter the model in a way it can be trained further and on another simulator. To do so, we set the <code class="docutils literal notranslate"><span class="pre">warm_start</span></code> property. When it is set to <code class="docutils literal notranslate"><span class="pre">True</span></code> and <code class="docutils literal notranslate"><span class="pre">fit()</span></code> is called again the model uses weights from previous fit to start a new fit. We also set quantum instance of the underlying network to the statevector simulator we created in the beginning of the tutorial. Finally, we create and set a new optimizer with <code class="docutils literal notranslate"><span class="pre">maxiter</span></code> is set to <code class="docutils literal notranslate"><span class="pre">80</span></code>, so the total number of iterations
-is <code class="docutils literal notranslate"><span class="pre">100</span></code>.</p>
+<p>A continuación, queremos modificar el modelo de manera que pueda entrenarse más y en otro simulador. Para hacerlo, establecemos la propiedad <code class="docutils literal notranslate"><span class="pre">warm_start</span></code>. Cuando se establece en <code class="docutils literal notranslate"><span class="pre">True</span></code> y se llama de nuevo a <code class="docutils literal notranslate"><span class="pre">fit()</span></code>, el modelo utiliza los pesos del ajuste anterior para iniciar un nuevo ajuste. También configuramos la instancia cuántica de la red subyacente en el simulador de vector de estado que creamos al comienzo del tutorial. Finalmente, creamos y configuramos un nuevo optimizador con <code class="docutils literal notranslate"><span class="pre">maxiter</span></code> establecido en <code class="docutils literal notranslate"><span class="pre">80</span></code>, por lo que el número total de iteraciones es <code class="docutils literal notranslate"><span class="pre">100</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
@@ -943,7 +941,7 @@ is <code class="docutils literal notranslate"><span class="pre">100</span></code
 </pre></div>
 </div>
 </div>
-<p>Now we continue training our model from the state we finished in the previous section.</p>
+<p>Ahora seguimos entrenando nuestro modelo desde el estado en el que terminamos en el apartado anterior.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
@@ -986,7 +984,7 @@ Train score 0.9333333333333333
 Test score 0.8
 </pre></div></div>
 </div>
-<p>Let’s see which data points were misclassified. First, we call <code class="docutils literal notranslate"><span class="pre">predict</span></code> to infer predicted values from the training and test features.</p>
+<p>Veamos qué puntos de datos se clasificaron incorrectamente. Primero, llamamos <code class="docutils literal notranslate"><span class="pre">predict</span></code> para inferir los valores predichos de las características de entrenamiento y prueba.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
@@ -996,7 +994,7 @@ Test score 0.8
 </pre></div>
 </div>
 </div>
-<p>Plot the whole dataset and the highlight the points that were classified incorrectly.</p>
+<p>Graficar el conjunto de datos completo y resaltar los puntos que se clasificaron incorrectamente.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
@@ -1042,12 +1040,12 @@ Test score 0.8
 <img alt="../_images/tutorials_09_saving_and_loading_models_46_1.png" src="../_images/tutorials_09_saving_and_loading_models_46_1.png" />
 </div>
 </div>
-<p>So, if you have a large dataset or a large model you can train it in multiple steps as shown in this tutorial.</p>
+<p>Por lo tanto, si tienes un conjunto de datos grande o un modelo grande, puedes entrenarlo en varios pasos como se muestra en este tutorial.</p>
 </section>
-<section id="4.-PyTorch-hybrid-models">
-<h2>4. PyTorch hybrid models<a class="headerlink" href="#4.-PyTorch-hybrid-models" title="Enlazar permanentemente con este título">¶</a></h2>
-<p>To save and load hybrid models, when using the TorchConnector, follow the PyTorch recommendations of saving and loading the models. For more details please refer to the PyTorch Connector tutorial <a class="reference external" href="https://qiskit.org/documentation/machine-learning/tutorials/05_torch_connector.html">here</a> where a short snippet shows how to do it.</p>
-<p>Take a look at this pseudo-like code to get the idea:</p>
+<section id="4.-Modelos-híbridos-PyTorch">
+<h2>4. Modelos híbridos PyTorch<a class="headerlink" href="#4.-Modelos-híbridos-PyTorch" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>Para guardar y cargar modelos híbridos, al usar TorchConnector, sigue las recomendaciones de PyTorch para guardar y cargar los modelos. Para obtener más detalles, consulta el tutorial de PyTorch Connector <a class="reference external" href="https://qiskit.org/documentation/machine-learning/tutorials/05_torch_connector.html">aquí</a> donde un breve fragmento de código muestra cómo hacerlo.</p>
+<p>Echa un vistazo a este pseudo código para hacerte una idea:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create a QNN and a hybrid model</span>
 <span class="n">qnn</span> <span class="o">=</span> <span class="n">create_qnn</span><span class="p">()</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">Net</span><span class="p">(</span><span class="n">qnn</span><span class="p">)</span>
@@ -1096,7 +1094,7 @@ Test score 0.8
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="10_effective_dimension.html" class="btn btn-neutral float-right" title="Effective Dimension of Qiskit Neural Networks" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="10_effective_dimension.html" class="btn btn-neutral float-right" title="Dimensión Efectiva de las Redes Neuronales de Qiskit" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
         <a href="08_quantum_kernel_trainer.html" class="btn btn-neutral" title="Entrenamiento de Kernel Cuántico para Aplicaciones de Machine Learning" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
@@ -1131,11 +1129,11 @@ Test score 0.8
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Saving, Loading Qiskit Machine Learning Models and Continuous Training</a><ul>
-<li><a class="reference internal" href="#1.-Prepare-a-dataset">1. Prepare a dataset</a></li>
-<li><a class="reference internal" href="#2.-Train-a-model-and-save-it">2. Train a model and save it</a></li>
-<li><a class="reference internal" href="#3.-Load-a-model-and-continue-training">3. Load a model and continue training</a></li>
-<li><a class="reference internal" href="#4.-PyTorch-hybrid-models">4. PyTorch hybrid models</a></li>
+<li><a class="reference internal" href="#">Guardar, Cargar modelos de Machine Learning de Qiskit y Entrenamiento Continuo</a><ul>
+<li><a class="reference internal" href="#1.-Preparar-un-conjunto-de-datos">1. Preparar un conjunto de datos</a></li>
+<li><a class="reference internal" href="#2.-Entrenar-un-modelo-y-guardarlo">2. Entrenar un modelo y guardarlo</a></li>
+<li><a class="reference internal" href="#3.-Cargar-un-modelo-y-continuar-su-entrenamiento">3. Cargar un modelo y continuar su entrenamiento</a></li>
+<li><a class="reference internal" href="#4.-Modelos-híbridos-PyTorch">4. Modelos híbridos PyTorch</a></li>
 </ul>
 </li>
 </ul>
