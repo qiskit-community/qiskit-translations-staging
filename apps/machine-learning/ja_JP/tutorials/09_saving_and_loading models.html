@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Saving, Loading Qiskit Machine Learning Models and Continuous Training &mdash; Qiskit Machine Learning 0.4.0 ドキュメント</title>
+  <title>Qiskit機械学習モデルの保存、読み込み、継続的なトレーニング &mdash; Qiskit Machine Learning 0.4.0 ドキュメント</title>
   
 
   
@@ -275,7 +275,7 @@
         
           <li><a href="index.html">機械学習チュートリアル</a> &gt;</li>
         
-      <li>Saving, Loading Qiskit Machine Learning Models and Continuous Training</li>
+      <li>Qiskit機械学習モデルの保存、読み込み、継続的なトレーニング</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
@@ -555,20 +555,20 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">注釈</p>
-<p>This page was generated from <a class="reference external" href="https://github.com/Qiskit/qiskit-machine-learning/blob/stable/0.4/docs/tutorials/09_saving_and_loadingmodels.ipynb">docs/tutorials/09_saving_and_loading models.ipynb</a>.</p>
+<p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-machine-learning/blob/stable/0.4/docs/tutorials/09_saving_and_loadingmodels.ipynb">docs/tutorials/09_saving_and_loading models.ipynb</a> から生成されました。</p>
 </div>
-<section id="Saving,-Loading-Qiskit-Machine-Learning-Models-and-Continuous-Training">
-<h1>Saving, Loading Qiskit Machine Learning Models and Continuous Training<a class="headerlink" href="#Saving,-Loading-Qiskit-Machine-Learning-Models-and-Continuous-Training" title="このヘッドラインへのパーマリンク">¶</a></h1>
-<p>In this tutorial we will show how to save and load Qiskit machine learning models. Ability to save a model is very important, especially when a significant amount of time is invested in training a model on a real hardware. Also, we will show how to resume training of the previously saved model.</p>
-<p>In this tutorial we will cover how to:</p>
+<section id="Qiskit機械学習モデルの保存、読み込み、継続的なトレーニング">
+<h1>Qiskit機械学習モデルの保存、読み込み、継続的なトレーニング<a class="headerlink" href="#Qiskit機械学習モデルの保存、読み込み、継続的なトレーニング" title="このヘッドラインへのパーマリンク">¶</a></h1>
+<p>このチュートリアルでは、Qiskit機械学習モデルを保存およびロードする方法を示します。モデルを保存する機能は非常に重要です。特に、実際のハードウェアでモデルをトレーニングするためにかなりの時間が費やされている場合です。また、以前に保存したモデルのトレーニングを再開する方法も示します。</p>
+<p>このチュートリアルでは、次の方法について説明します。</p>
 <ul class="simple">
-<li><p>Generate a simple dataset, split it into training/test datasets and plot them</p></li>
-<li><p>Train and save a model</p></li>
-<li><p>Load a saved model and resume training</p></li>
-<li><p>Evaluate performance of models</p></li>
-<li><p>PyTorch hybrid models</p></li>
+<li><p>単純なデータセットを生成し、それをトレーニング/テストデータセットに分割してプロットします</p></li>
+<li><p>モデルをトレーニングして保存する</p></li>
+<li><p>保存したモデルをロードしてトレーニングを再開します</p></li>
+<li><p>モデルのパフォーマンスを評価する</p></li>
+<li><p>PyTorchハイブリッドモデル</p></li>
 </ul>
-<p>First off, we start from the required imports. We’ll heavily use SciKit-Learn on the data preparation step. In the next cell we also fix a random seed for reproducibility purposes.</p>
+<p>まず、必要な import から始めます。 データ準備のステップでは、SciKit-Learn を多用します。 次のセルでは、再現性のためにランダムシードも修正します。</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -590,7 +590,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>We will be using two quantum simulators. We’ll start training on the QASM simulator then will resume training on the statevector simulator. The approach shown in this tutorial can be used to train a model on a real hardware available on the cloud and then re-use the model for inference on a local simulator.</p>
+<p>2つの量子シミュレーターを使用します。QASMシミュレーターでトレーニングを開始してから、statevectorシミュレーターでトレーニングを再開します。このチュートリアルに示されているアプローチを使用して、クラウドで利用可能な実際のハードウェアでモデルをトレーニングし、ローカルシミュレーターで推論するためにモデルを再利用できます。</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -610,9 +610,9 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<section id="1.-Prepare-a-dataset">
-<h2>1. Prepare a dataset<a class="headerlink" href="#1.-Prepare-a-dataset" title="このヘッドラインへのパーマリンク">¶</a></h2>
-<p>Next step is to prepare a dataset. Here, we generate some data in the same way as in other tutorials. The difference is that we apply some transformations to the generated data. We generates <code class="docutils literal notranslate"><span class="pre">40</span></code> samples, each sample has <code class="docutils literal notranslate"><span class="pre">2</span></code> features, so our features is an array of shape <code class="docutils literal notranslate"><span class="pre">(40,</span> <span class="pre">2)</span></code>. Labels are obtained by summing up features by columns and if the sum is more than <code class="docutils literal notranslate"><span class="pre">1</span></code> then this sample is labeled as <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span></code> otherwise.</p>
+<section id="1.-データセットの準備">
+<h2>1. データセットの準備<a class="headerlink" href="#1.-データセットの準備" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p>次のステップは、データセットを準備することです。ここでは、他のチュートリアルと同じ方法でいくつかのデータを生成します。違いは、生成されたデータにいくつかの変換を適用することです。 <code class="docutils literal notranslate"><span class="pre">40</span></code> のサンプルを生成し、各サンプルには <code class="docutils literal notranslate"><span class="pre">2</span></code> の特徴があるため、私たちの特徴は形状 <code class="docutils literal notranslate"><span class="pre">(40,</span> <span class="pre">2)</span></code> の配列です。ラベルは、列ごとに特徴を合計することによって取得され、合計が <code class="docutils literal notranslate"><span class="pre">1</span></code> より大きい場合、このサンプルは <code class="docutils literal notranslate"><span class="pre">1</span></code> および <code class="docutils literal notranslate"><span class="pre">0</span></code> としてラベル付けされます。</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -624,7 +624,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>Then, we scale down our features into a range of <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> by applying <code class="docutils literal notranslate"><span class="pre">MinMaxScaler</span></code> from SciKit-Learn. Model training convergence is better when this transformation is applied.</p>
+<p>次に、SciKit-Learnの <code class="docutils literal notranslate"><span class="pre">MinMaxScaler</span></code> を適用して、特徴量を <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> の範囲に削減します。この変換を適用すると、モデルトレーニングの収束が向上します。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -643,7 +643,7 @@ div.rendered_html tbody tr:hover {
 (40, 2)
 </pre></div></div>
 </div>
-<p>Let’s take a look at the features of the first <code class="docutils literal notranslate"><span class="pre">5</span></code> samples of our dataset after the transformation.</p>
+<p>変換後のデータセットの最初の <code class="docutils literal notranslate"><span class="pre">5</span></code> サンプルの特徴量を見てみましょう。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -1131,8 +1131,8 @@ Test score 0.8
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Saving, Loading Qiskit Machine Learning Models and Continuous Training</a><ul>
-<li><a class="reference internal" href="#1.-Prepare-a-dataset">1. Prepare a dataset</a></li>
+<li><a class="reference internal" href="#">Qiskit機械学習モデルの保存、読み込み、継続的なトレーニング</a><ul>
+<li><a class="reference internal" href="#1.-データセットの準備">1. データセットの準備</a></li>
 <li><a class="reference internal" href="#2.-Train-a-model-and-save-it">2. Train a model and save it</a></li>
 <li><a class="reference internal" href="#3.-Load-a-model-and-continue-training">3. Load a model and continue training</a></li>
 <li><a class="reference internal" href="#4.-PyTorch-hybrid-models">4. PyTorch hybrid models</a></li>
