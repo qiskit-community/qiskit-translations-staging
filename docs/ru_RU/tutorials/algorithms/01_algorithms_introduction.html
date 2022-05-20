@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Введение в алгоритмы в Qiskit &mdash; документация Qiskit 0.36.1</title>
+  <title>Введение в алгоритмы в Qiskit &mdash; документация Qiskit 0.36.2</title>
   
 
   
@@ -34,8 +34,8 @@
   <link rel="stylesheet" href="../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/gallery.css" type="text/css" />
@@ -191,6 +191,10 @@
         <dd><a class="version" href="/documentation/stable/0.33/index.html">0.33</a></dd>
       
         <dd><a class="version" href="/documentation/stable/0.34/index.html">0.34</a></dd>
+      
+        <dd><a class="version" href="/documentation/stable/0.35/index.html">0.35</a></dd>
+      
+        <dd><a class="version" href="/documentation/stable/0.36/index.html">0.36</a></dd>
       
     </dl>
   </div>
@@ -614,7 +618,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>Выведем анзац (цепь для создания пробной волновой функции) на экран и убедимся, что это действительно квантовая цепь с набором параметров θ[0] — θ[7], которые изменяются по мере того, как оптимизатор VQE находит минимальное собственное значение. К параметрам мы вернемся чуть позже в примере, разобранном ниже.</p>
+<p>Let’s draw the ansatz so we can see it’s a <code class="docutils literal notranslate"><span class="pre">QuantumCircuit</span></code> where θ[0] through θ[7] will be the parameters that are varied as VQE optimizer finds the minimum eigenvalue. We’ll come back to the parameters later in a working example below.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -649,7 +653,7 @@ q_1: ┤ RY(θ[1]) ├─■─┤ RY(θ[3]) ├─■─┤ RY(θ[5]) ├─■
 </pre></div>
 </div>
 </div>
-<p>Сам по себе он не содержит информацию об особенностях обработки вашей цепи (количество повторов, наличие шума, особенности транспиляции и т.д.). С этим может помочь <cite>QuantumInstance &lt;https://qiskit.org/documentation/stubs/qiskit.utils.QuantumInstance.html&gt;</cite> __ из Terra, обеспечивающий помимо выбора бэкенда еще и настройку запуска:</p>
+<p>Now a backend on its own does not have information on how you might want to run the circuits etc. For example how many shots, do you want a noise model, even options around transpiling the circuits. For this Qiskit Terra has a <code class="docutils literal notranslate"><span class="pre">`QuantumInstance</span></code> &lt;<a class="reference external" href="https://qiskit.org/documentation/stubs/qiskit.utils.QuantumInstance.html">https://qiskit.org/documentation/stubs/qiskit.utils.QuantumInstance.html</a>&gt;`__ which is provided both the backend as well as various settings around the circuit processing and execution so for instance:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -661,7 +665,7 @@ q_1: ┤ RY(θ[1]) ├─■─┤ RY(θ[3]) ├─■─┤ RY(θ[5]) ├─■
 </pre></div>
 </div>
 </div>
-<p>Примечание: При непосредственном выборе бэкенда также создается QuantumInstance с настройками по умолчанию, поэтому алгоритмы по сути всегда используют именно его.</p>
+<p>Note: if you provide the backend directly then internally a <code class="docutils literal notranslate"><span class="pre">QuantumInstance</span></code> will be created from it, with default settings, so at all times the algorithms are working through a <code class="docutils literal notranslate"><span class="pre">QuantumInstance</span></code>.</p>
 <p>Теперь нам доступен метод <cite>compute_mininum_eigenvalue() &lt;https://qiskit.org/documentation/stubs/qiskit.algorithms.VQE.html#qiskit.algorithms.VQE.compute_minimum_eigenvalue&gt;</cite> __. Он является интерфейсом для вызова таких модулей как Nature или Optimization и обеспечивает совместимость их работы с алгоритмами данного типа.</p>
 </div>
 <div class="section" id="Полный-рабочий-пример">
@@ -681,8 +685,8 @@ q_1: ┤ RY(θ[1]) ├─■─┤ RY(θ[3]) ├─■─┤ RY(θ[5]) ├─■
 </pre></div>
 </div>
 </div>
-<p>Рассмотрим пример работы VQE, в котором бэкенд задается QuantumInstance уже на начальном этапе. Однако эта процедура может быть быть выполнена и позднее, такой вариант мы тоже разберем.</p>
-<p>Примечание: В работе алгоритма важную роль играет генератор случайных чисел и здесь использована возможность его инициализации через QuantumInstance. Поэтому при каждом запуске вы будете получать один и тот же результат. Это не обязательная процедура, но иногда она бывает полезной, поэтому разберем ее в нашем примере.</p>
+<p>So let’s build a VQE instance passing a backend using a <code class="docutils literal notranslate"><span class="pre">QuantumInstance</span></code>, to the constructor. Now VQE does have setters so the <code class="docutils literal notranslate"><span class="pre">QuantumInstance</span></code> can also be passed later.</p>
+<p>Note: In order that you can run this notebook and see the exact same output the random number generator used throughout algorithms in <code class="docutils literal notranslate"><span class="pre">algorithms_globals</span></code>, as well as the transpiler and simulator, via the <code class="docutils literal notranslate"><span class="pre">QuantumInstance</span></code>, are seeded. You do not have to do this but if want to be able to reproduce the exact same outcome each time then this is how it’s done.</p>
 <p>Давайте запустим VQE и посмотрим на возвращаемый в результате объект.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
@@ -728,9 +732,9 @@ q_1: ┤ RY(θ[1]) ├─■─┤ RY(θ[3]) ├─■─┤ RY(θ[5]) ├─■
 </div>
 <p>Судя по результату, оптимизатор менял значение параметров <code class="docutils literal notranslate"><span class="pre">65</span></code> раз до достижения минимального собственного значения <code class="docutils literal notranslate"><span class="pre">-1,85727</span></code>, которое и соответствует энергии основного электронного уровня молекулы водорода. Здесь также приведены оптимальные параметры анзаца, при которых он дает искомое число.</p>
 </div>
-<div class="section" id="Отложенное-использование-QuantumInstance-при-работе-с-VQE">
-<h2>Отложенное использование QuantumInstance при работе с VQE<a class="headerlink" href="#Отложенное-использование-QuantumInstance-при-работе-с-VQE" title="Ссылка на этот заголовок">¶</a></h2>
-<p>В заключение рассмотрим порядок создания объекта VQE без непосредственного применения QuantumInstance. Здесь мы выполним его позднее.</p>
+<div class="section" id="Using-VQE-setting-QuantumInstance-after-Construction">
+<h2>Using VQE setting <code class="docutils literal notranslate"><span class="pre">QuantumInstance</span></code> after Construction<a class="headerlink" href="#Using-VQE-setting-QuantumInstance-after-Construction" title="Ссылка на этот заголовок">¶</a></h2>
+<p>To close off let’s also create a VQE instance without supplying the <code class="docutils literal notranslate"><span class="pre">QuantumInstance</span></code>. We later set it as long as by the time VQE runs it has a <code class="docutils literal notranslate"><span class="pre">QuantumInstance</span></code> to use.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -825,7 +829,7 @@ q_1: ┤ RY(θ[1]) ├─■─┤ RY(θ[3]) ├─■─┤ RY(θ[5]) ├─■
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Обновлено: 2022/05/05.
+      Обновлено: 2022/05/20.
 
     </p>
   </div>
@@ -848,7 +852,7 @@ q_1: ┤ RY(θ[1]) ├─■─┤ RY(θ[3]) ├─■─┤ RY(θ[5]) ├─■
 <li><a class="reference internal" href="#Как-устроена-библиотека-алгоритмов?">Как устроена библиотека алгоритмов?</a></li>
 <li><a class="reference internal" href="#Как-запустить-алгоритм?">Как запустить алгоритм?</a></li>
 <li><a class="reference internal" href="#Полный-рабочий-пример">Полный рабочий пример</a></li>
-<li><a class="reference internal" href="#Отложенное-использование-QuantumInstance-при-работе-с-VQE">Отложенное использование QuantumInstance при работе с VQE</a></li>
+<li><a class="reference internal" href="#Using-VQE-setting-QuantumInstance-after-Construction">Using VQE setting <code class="docutils literal notranslate"><span class="pre">QuantumInstance</span></code> after Construction</a></li>
 </ul>
 </li>
 </ul>

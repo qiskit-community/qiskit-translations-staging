@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Fluxo do operador &mdash; Documentação Qiskit 0.36.1</title>
+  <title>Fluxo do operador &mdash; Documentação Qiskit 0.36.2</title>
   
 
   
@@ -34,8 +34,8 @@
   <link rel="stylesheet" href="../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/gallery.css" type="text/css" />
@@ -191,6 +191,10 @@
         <dd><a class="version" href="/documentation/stable/0.33/index.html">0.33</a></dd>
       
         <dd><a class="version" href="/documentation/stable/0.34/index.html">0.34</a></dd>
+      
+        <dd><a class="version" href="/documentation/stable/0.35/index.html">0.35</a></dd>
+      
+        <dd><a class="version" href="/documentation/stable/0.36/index.html">0.36</a></dd>
       
     </dl>
   </div>
@@ -921,7 +925,7 @@ DictStateFn({&#39;1&#39;: 1}, coeff=1.0, is_measurement=True)
 <li><p><code class="docutils literal notranslate"><span class="pre">~</span></code> - adjunto, alternando entre uma função de estado e medição</p></li>
 </ul>
 <p>Esteja bastante ciente de que esses operadores obedecem às <a class="reference external" href="https://docs.python.org/3/reference/expressions.html#operator-precedence">regras do Python para precedência de operador</a>, o que pode não ser aquilo que você espera matematicamente. Por exemplo, <code class="docutils literal notranslate"><span class="pre">I^X</span> <span class="pre">+</span> <span class="pre">X^I</span></code> será realmente analisado como <code class="docutils literal notranslate"><span class="pre">I</span> <span class="pre">^</span> <span class="pre">(X</span> <span class="pre">+</span> <span class="pre">X)</span> <span class="pre">^</span> <span class="pre">I</span> <span class="pre">==</span> <span class="pre">2</span> <span class="pre">*</span> <span class="pre">(I^X^I)</span></code> porque o Python avalia <code class="docutils literal notranslate"><span class="pre">+</span></code> antes de <code class="docutils literal notranslate"><span class="pre">^</span></code>. Nestes casos, você pode usar os métodos (<code class="docutils literal notranslate"><span class="pre">.tensor()</span></code>, etc) ou parênteses.</p>
-<p><code class="docutils literal notranslate"><span class="pre">StateFn</span></code>s carregam um coeficiente. Isso nos permite multiplicar estados por uma grandeza escalar e então construir somas.</p>
+<p><code class="docutils literal notranslate"><span class="pre">StateFn</span></code>s carry a coefficient. This allows us to multiply states by a scalar, and so to construct sums.</p>
 <p>Aqui, construímos <span class="math notranslate nohighlight">\((2 + 3i)|0\rangle\)</span>.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
@@ -1615,8 +1619,14 @@ ListOp([
 <h3><code class="docutils literal notranslate"><span class="pre">ListOp</span></code>s: <code class="docutils literal notranslate"><span class="pre">SummedOp</span></code>, <code class="docutils literal notranslate"><span class="pre">ComposedOp</span></code>, <code class="docutils literal notranslate"><span class="pre">TensoredOp</span></code><a class="headerlink" href="#ListOps:-SummedOp,-ComposedOp,-TensoredOp" title="Link permanente para este título">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">ListOp</span></code>, introduzido acima é útil para operações de vetorização. Mas, ele também serve como uma superclasse para classes compostas por listas. Se você já usou o que foi exposto acima, notará que você pode facilmente realizar operações entre <code class="docutils literal notranslate"><span class="pre">OperatorBase</span></code>s que em geral podemos não saber como executar eficientemente (ou simplesmente por que não implementamos um procedimento eficiente ainda), como a adição entre <code class="docutils literal notranslate"><span class="pre">CircuitOp</span></code>s. Nesses casos, você pode receber um resultado <code class="docutils literal notranslate"><span class="pre">ListOp</span></code> (ou uma subclasse destes) da sua operação, representando uma execução lenta da operação. Por exemplo, se você tentar adicionar em conjunto um <code class="docutils literal notranslate"><span class="pre">DictStateFn</span></code> and a <code class="docutils literal notranslate"><span class="pre">CircuitStateFn</span></code>, você receberá um <code class="docutils literal notranslate"><span class="pre">SummedOp</span></code> representando a soma dos dois. Esta função Estado composta ainda tem um <code class="docutils literal notranslate"><span class="pre">eval</span></code> funcional (mas pode precisar realizar um cálculo não escalável por baixo dos panos, como por exemplo, converter ambos para vetores).</p>
 <p>Estes <code class="docutils literal notranslate"><span class="pre">OperatorBase</span></code>s compostos são como construímos uma computação rica e cada vez mais complexa a partir dos blocos de construção <code class="docutils literal notranslate"><span class="pre">PrimitiveOp</span></code> e <code class="docutils literal notranslate"><span class="pre">StateFn</span></code>.</p>
-<p>Todo <code class="docutils literal notranslate"><span class="pre">ListOp</span></code> tem quatro propriedades: * <code class="docutils literal notranslate"><span class="pre">oplist</span></code> - A lista de <code class="docutils literal notranslate"><span class="pre">OperatorBase</span></code>s que pode representar termos, fatores, etc. * <code class="docutils literal notranslate"><span class="pre">combo_fn</span></code> - A função que recebe uma lista de números complexos que gera um valor de saída que define como combinar esses valores dos itens <code class="docutils literal notranslate"><span class="pre">oplist</span></code>. Para simplificar a transmissão, essa função é definida sobre matrizes NumPy. * <code class="docutils literal notranslate"><span class="pre">coeff</span></code> - Um coeficiente de multiplicação do primitivo. Observe que <code class="docutils literal notranslate"><span class="pre">coeff</span></code> pode ser int, float, complex ou um objeto <code class="docutils literal notranslate"><span class="pre">Parameter</span></code> livre (<code class="docutils literal notranslate"><span class="pre">qiskit.circuit</span></code> no Terra) para ser vinculado mais tarde utilizando <code class="docutils literal notranslate"><span class="pre">my_op.bind_parameters</span></code>. * <code class="docutils literal notranslate"><span class="pre">abelian</span></code> - informa se os Operadores na <code class="docutils literal notranslate"><span class="pre">oplist</span></code> são conhecidos por comutar mutuamente (geralmente definido depois de convertido pelo conversor <code class="docutils literal notranslate"><span class="pre">AbelianGrouper</span></code>).</p>
-<p>Note que <code class="docutils literal notranslate"><span class="pre">ListOp</span></code> suporta sobrecargas típicas de iteração, permitindo usar indexação como <code class="docutils literal notranslate"><span class="pre">my_op[4]</span></code> para acessar o <code class="docutils literal notranslate"><span class="pre">OperatorBase</span></code>s em <code class="docutils literal notranslate"><span class="pre">oplist</span></code>.</p>
+<p>Every <code class="docutils literal notranslate"><span class="pre">ListOp</span></code> has four properties:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">oplist</span></code> - The list of <code class="docutils literal notranslate"><span class="pre">OperatorBase</span></code>s which may represent terms, factors, etc.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">combo_fn</span></code> - The function taking a list of complex numbers to an output value which defines how to combine the outputs of the <code class="docutils literal notranslate"><span class="pre">oplist</span></code> items. For broadcasting simplicity, this function is defined over NumPy arrays.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coeff</span></code> - A coefficient multiplying the primitive. Note that <code class="docutils literal notranslate"><span class="pre">coeff</span></code> can be int, float, complex or a free <code class="docutils literal notranslate"><span class="pre">Parameter</span></code> object (from <code class="docutils literal notranslate"><span class="pre">qiskit.circuit</span></code> in Terra) to be bound later using <code class="docutils literal notranslate"><span class="pre">my_op.bind_parameters</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">abelian</span></code> - Indicates whether the Operators in <code class="docutils literal notranslate"><span class="pre">oplist</span></code> are known to mutually commute (usually set after being converted by the <code class="docutils literal notranslate"><span class="pre">AbelianGrouper</span></code> converter).</p></li>
+</ul>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">ListOp</span></code> supports typical sequence overloads, so you can use indexing like <code class="docutils literal notranslate"><span class="pre">my_op[4]</span></code> to access the <code class="docutils literal notranslate"><span class="pre">OperatorBase</span></code>s in <code class="docutils literal notranslate"><span class="pre">oplist</span></code>.</p>
 </div>
 <div class="section" id="OperatorStateFn">
 <h3><code class="docutils literal notranslate"><span class="pre">OperatorStateFn</span></code><a class="headerlink" href="#OperatorStateFn" title="Link permanente para este título">¶</a></h3>
@@ -2099,7 +2109,8 @@ array([-0.88272211+0.0e+00j, -0.88272211+0.0e+00j, -0.88272211+0.0e+00j,
 </div>
 <div class="section" id="Executando-CircuitStateFns-com-o-CircuitSampler">
 <h3>Executando <code class="docutils literal notranslate"><span class="pre">CircuitStateFn</span></code>s com o <code class="docutils literal notranslate"><span class="pre">CircuitSampler</span></code><a class="headerlink" href="#Executando-CircuitStateFns-com-o-CircuitSampler" title="Link permanente para este título">¶</a></h3>
-<p>O <code class="docutils literal notranslate"><span class="pre">CircuitSampler</span></code> percorre um Operador e converte qualquer <code class="docutils literal notranslate"><span class="pre">CircuitStateFns</span></code> em aproximações da função estado resultante de um <code class="docutils literal notranslate"><span class="pre">DictStateFn</span></code> ou <code class="docutils literal notranslate"><span class="pre">VectorStateFn</span></code> usando um backend quântico. Observe que para aproximar o valor do <code class="docutils literal notranslate"><span class="pre">CircuitStateFn</span></code>, ele deve 1) enviar a função estado através de um canal de despolarização, o que irá destruir todas as informações da fase e 2) substituir as frequências amostradas por <strong>raízes quadradas</strong> da frequência, em vez da probabilidade bruta de amostragem (que seria equivalente a amostragem do <strong>quadrado</strong> da função estado, pela regra Born.)</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">CircuitSampler</span></code> traverses an Operator and converts any <code class="docutils literal notranslate"><span class="pre">CircuitStateFn</span></code>s into approximations of the resulting state function by a <code class="docutils literal notranslate"><span class="pre">DictStateFn</span></code> or <code class="docutils literal notranslate"><span class="pre">VectorStateFn</span></code> using a quantum backend. Note that in order to approximate the value of the <code class="docutils literal notranslate"><span class="pre">CircuitStateFn</span></code>, it must 1) send the state function through a depolarizing channel, which will destroy all phase information and 2) replace the sampled frequencies with <strong>square roots</strong> of the frequency, rather than the raw probability of
+sampling (which would be the equivalent of sampling the <strong>square</strong> of the state function, per the Born rule).</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[63]:
 </pre></div>
@@ -2209,7 +2220,7 @@ ComposedOp([
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Última actualização em 2022/05/05.
+      Última actualização em 2022/05/20.
 
     </p>
   </div>

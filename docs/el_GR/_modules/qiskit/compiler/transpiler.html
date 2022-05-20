@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.compiler.transpiler &mdash; Τεκμηρίωση του Qiskit - 0.36.1</title>
+  <title>qiskit.compiler.transpiler &mdash; Τεκμηρίωση του Qiskit - 0.36.2</title>
   
 
   
@@ -34,8 +34,8 @@
   <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
@@ -191,6 +191,10 @@
         <dd><a class="version" href="/documentation/stable/0.33/index.html">0.33</a></dd>
       
         <dd><a class="version" href="/documentation/stable/0.34/index.html">0.34</a></dd>
+      
+        <dd><a class="version" href="/documentation/stable/0.35/index.html">0.35</a></dd>
+      
+        <dd><a class="version" href="/documentation/stable/0.36/index.html">0.36</a></dd>
       
     </dl>
   </div>
@@ -1278,11 +1282,18 @@
 <span class="sd">    take precedence over backend durations, but be superceded by ``inst_duration``s.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">inst_durations</span><span class="p">:</span>
-        <span class="n">backend_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="p">()</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">backend_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="o">.</span><span class="n">from_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-            <span class="k">pass</span>
+        <span class="n">backend_version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend_version</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="c1"># Legacy BaseBackend still has `version` as a method.</span>
+            <span class="n">backend_version</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">backend_version</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">backend_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">backend_durations</span> <span class="o">=</span> <span class="n">InstructionDurations</span><span class="o">.</span><span class="n">from_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">backend_durations</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">instruction_durations</span>
 
     <span class="n">durations</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">circ</span> <span class="ow">in</span> <span class="n">circuits</span><span class="p">:</span>
@@ -1440,7 +1451,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Τελευταία ενημέρωση στις 2022/05/05.
+      Τελευταία ενημέρωση στις 2022/05/20.
 
     </p>
   </div>
