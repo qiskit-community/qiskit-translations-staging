@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Electronic structure &mdash; Qiskit Nature 0.3.2 文档</title>
+  <title>电子结构 &mdash; Qiskit Nature 0.3.2 文档</title>
   
 
   
@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜寻" href="../search.html" />
-    <link rel="next" title="Vibrational structure" href="02_vibrational_structure.html" />
+    <link rel="next" title="振动结构" href="02_vibrational_structure.html" />
     <link rel="prev" title="Qiskit Nature Tutorials" href="index.html" /> 
 
   
@@ -255,7 +255,7 @@
         
           <li><a href="index.html">Qiskit Nature Tutorials</a> &gt;</li>
         
-      <li>Electronic structure</li>
+      <li>电子结构</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
@@ -537,43 +537,43 @@ div.rendered_html tbody tr:hover {
 <p class="admonition-title">备注</p>
 <p>此页面是从 <a href="#id1"><span class="problematic" id="id2">`</span></a>docs/tutorials/01_electronic_structure.ipynb`__中生成的。</p>
 </div>
-<section id="Electronic-structure">
-<h1>Electronic structure<a class="headerlink" href="#Electronic-structure" title="永久链接至标题">¶</a></h1>
+<section id="电子结构">
+<h1>电子结构<a class="headerlink" href="#电子结构" title="永久链接至标题">¶</a></h1>
 <section id="简介">
 <h2>简介<a class="headerlink" href="#简介" title="永久链接至标题">¶</a></h2>
-<p>The molecular Hamiltonian is</p>
+<p>分子的哈密顿量可以表示为</p>
 <div class="math notranslate nohighlight">
 \[\mathcal{H} = - \sum_I \frac{\nabla_{R_I}^2}{M_I} - \sum_i \frac{\nabla_{r_i}^2}{m_e} - \sum_I\sum_i  \frac{Z_I e^2}{|R_I-r_i|} + \sum_i \sum_{j&gt;i} \frac{e^2}{|r_i-r_j|} + \sum_I\sum_{J&gt;I} \frac{Z_I Z_J e^2}{|R_I-R_J|}\]</div>
-<p>Because the nuclei are much heavier than the electrons they do not move on the same time scale and therefore, the behavior of nuclei and electrons can be decoupled. This is the Born-Oppenheimer approximation.</p>
-<p>Therefore, one can first tackle the electronic problem with nuclear coordinate entering only as parameters. The energy levels of the electrons in the molecule can be found by solving the non-relativistic time independent Schroedinger equation,</p>
+<p>由于原子核比电子重得多，原子核的移动速度比电子慢很多，因此可以将原子核视为静止不动，只需讨论电子的部分，这就是 Born-Oppenheimer 近似。</p>
+<p>因此，我们可以先将原子核坐标视为固定不变的参数，然后探讨电子部分的哈密顿量。这样分子中电子能级可以通过非相对论不含时薛定谔方程求解得出，</p>
 <div class="math notranslate nohighlight">
 \[\mathcal{H}_{\text{el}} |\Psi_{n}\rangle = E_{n} |\Psi_{n}\rangle\]</div>
-<p>where</p>
+<p>其中</p>
 <div class="math notranslate nohighlight">
 \[\mathcal{H}_{\text{el}} = - \sum_i \frac{\nabla_{r_i}^2}{m_e} - \sum_I\sum_i  \frac{Z_I e^2}{|R_I-r_i|} + \sum_i \sum_{j&gt;i} \frac{e^2}{|r_i-r_j|}.\]</div>
-<p>In particular the ground state energy is given by:</p>
+<p>具体而言，电子基态能量如下：</p>
 <div class="math notranslate nohighlight">
 \[E_0 = \frac{\langle \Psi_0 | H_{\text{el}} | \Psi_0 \rangle}{\langle \Psi_0 | \Psi_0 \rangle}\]</div>
-<p>where <span class="math notranslate nohighlight">\(\Psi_0\)</span> is the ground state of the system.</p>
-<p>However, the dimensionality of this problem grows exponentially with the number of degrees of freedom. To tackle this issue we would like to prepare <span class="math notranslate nohighlight">\(\Psi_0\)</span> on a quantum computer and measure the Hamiltonian expectation value (or <span class="math notranslate nohighlight">\(E_0\)</span>) directly.</p>
-<p>So how do we do that concretely?</p>
+<p>其中 <span class="math notranslate nohighlight">\(\Psi_0\)</span> 是系統的基态。</p>
+<p>然而，这个问题的维数会随着自由度的增加而指数性成长。为了解决这问题，我们想在量子计算机上构建 <span class="math notranslate nohighlight">\(\Psi_0\)</span>，并直接测量哈密顿量的期望值（或 <span class="math notranslate nohighlight">\(E_0\)</span> ） 。</p>
+<p>所以我们具体怎么做呢？</p>
 </section>
-<section id="The-Hartree-Fock-initial-state">
-<h2>The Hartree-Fock initial state<a class="headerlink" href="#The-Hartree-Fock-initial-state" title="永久链接至标题">¶</a></h2>
+<section id="Hartree-Fock-初始状态">
+<h2>Hartree-Fock 初始状态<a class="headerlink" href="#Hartree-Fock-初始状态" title="永久链接至标题">¶</a></h2>
 <p>A good starting point for solving this problem is the Hartree-Fock (HF) method. This method approximates a N-body problem into N one-body problems where each electron evolves in the mean-field of the others. Classically solving the HF equations is efficient and leads to the exact exchange energy but does not include any electron correlation. Therefore, it is usually a good starting point to start adding correlation.</p>
 <p>The Hamiltonian can then be re-expressed in the basis of the solutions of the HF method, also called Molecular Orbitals (MOs):</p>
 <div class="math notranslate nohighlight">
 \[\hat{H}_{elec}=\sum_{pq} h_{pq} \hat{a}^{\dagger}_p \hat{a}_q +
 \frac{1}{2} \sum_{pqrs} h_{pqrs}  \hat{a}^{\dagger}_p \hat{a}^{\dagger}_q \hat{a}_r  \hat{a}_s\]</div>
-<p>with the 1-body integrals</p>
+<p>其中一体积分的表达式为</p>
 <div class="math notranslate nohighlight">
 \[h_{pq} = \int \phi^*_p(r) \left( -\frac{1}{2} \nabla^2 - \sum_{I} \frac{Z_I}{R_I- r} \right)   \phi_q(r)dr\]</div>
-<p>and 2-body integrals</p>
+<p>二体积分的表达式为</p>
 <div class="math notranslate nohighlight">
 \[h_{pqrs} = \int \frac{\phi^*_p(r_1)  \phi^*_q(r_2) \phi_r(r_2)  \phi_s(r_1)}{|r_1-r_2|}dr_1dr_2.\]</div>
-<p>The MOs (<span class="math notranslate nohighlight">\(\phi_u\)</span>) can be occupied or virtual (unoccupied). One MO can contain 2 electrons. However, in what follows we actually work with Spin Orbitals which are associated with a spin up (<span class="math notranslate nohighlight">\(\alpha\)</span>) of spin down (<span class="math notranslate nohighlight">\(\beta\)</span>) electron. Thus Spin Orbitals can contain one electron or be unoccupied.</p>
-<p>We now show how to concretely realise these steps with Qiskit.</p>
-<p>Qiskit is interfaced with different classical codes which are able to find the HF solutions. Interfacing between Qiskit and the following codes is already available:</p>
+<p>分子轨道（ <span class="math notranslate nohighlight">\(\phi_u\)</span> ）可以是被电子占用或是空缺。一个分子轨道可以有两个电子。然而在接下来的内容中，我们实际上会使用到自旋轨道（ Spin Orbitals ）：其可以是自旋向上（ <span class="math notranslate nohighlight">\(\alpha\)</span> ）或向下（ <span class="math notranslate nohighlight">\(\beta\)</span> ）。因此自旋轨道可以有一个电子或是没有电子。</p>
+<p>现在我们介绍如何具体使用 Qiskit 实现上述的计算过程。</p>
+<p>Qiskit 能跟可以求解 HF 的传统资源库互通。目前 Qiskit 提供以下资源库:</p>
 <ul class="simple">
 <li><p>Gaussian</p></li>
 <li><p>Psi4</p></li>
@@ -617,11 +617,11 @@ Couldn&#39;t find cython becke routine
   h5py.get_config().default_file_mode = &#39;a&#39;
 </pre></div></div>
 </div>
-<p>For further information about the drivers see <a class="reference external" href="https://qiskit.org/documentation/nature/apidocs/qiskit_nature.drivers.second_quantization.html">https://qiskit.org/documentation/nature/apidocs/qiskit_nature.drivers.second_quantization.html</a></p>
+<p>有关 drivers 更多资讯，可以参看 <a class="reference external" href="https://qiskit.org/documentation/nature/apidocs/qiskit_nature.drivers.second_quantization.html">https://qiskit.org/documentation/nature/apidocs/qiskit_nature.drivers.second_quantization.html</a></p>
 </section>
-<section id="The-mapping-from-fermions-to-qubits">
-<h2>The mapping from fermions to qubits<a class="headerlink" href="#The-mapping-from-fermions-to-qubits" title="永久链接至标题">¶</a></h2>
-<p><img alt="166e1638e74a45d383dd7a86d365251f" class="no-scaled-link" src="../_images/jw_mapping.png" style="width: 500px;" /></p>
+<section id="将费米子映射为量子位">
+<h2>将费米子映射为量子位<a class="headerlink" href="#将费米子映射为量子位" title="永久链接至标题">¶</a></h2>
+<p><img alt="a7a5a341b24e43fd8cdce85edc347f08" class="no-scaled-link" src="../_images/jw_mapping.png" style="width: 500px;" /></p>
 <p>The Hamiltonian given in the previous section is expressed in terms of fermionic operators. To encode the problem into the state of a quantum computer, these operators must be mapped to spin operators (indeed the qubits follow spin statistics).</p>
 <p>There exist different mapping types with different properties. Qiskit already supports the following mappings:</p>
 <ul class="simple">
@@ -705,7 +705,7 @@ Couldn&#39;t find cython becke routine
 + 0.04523279994605782 * YYYY
 </pre></div></div>
 </div>
-<p>In the minimal (STO-3G) basis set 4 qubits are required. We can reduce the number of qubits by using the Parity mapping, which allows for the removal of 2 qubits by exploiting known symmetries arising from the mapping.</p>
+<p>最低限度的（ STO-3G ）基组需要 4 个量子位。而我们可以使用 Parity 映射来减少量子位的需求：我们可以利用已知的映射对称性减少 2 个量子位。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -728,8 +728,8 @@ Couldn&#39;t find cython becke routine
 + (0.18093119978423114-3.469446951953614e-18j) * XX
 </pre></div></div>
 </div>
-<p>This time only 2 qubits are needed.</p>
-<p>Now that the Hamiltonian is ready, it can be used in a quantum algorithm to find information about the electronic structure of the corresponding molecule. Check out our tutorials on Ground State Calculation and Excited States Calculation to learn more about how to do that in Qiskit!</p>
+<p>现在只需要两个量子位。</p>
+<p>现在哈密顿量已经构建好了，我们可以用量子算法去求出分子的电子结构。如果您感兴趣，请继续查看我们关于基态计算和激发态计算的教程！</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -765,7 +765,7 @@ Couldn&#39;t find cython becke routine
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="02_vibrational_structure.html" class="btn btn-neutral float-right" title="Vibrational structure" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="02_vibrational_structure.html" class="btn btn-neutral float-right" title="振动结构" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
         <a href="index.html" class="btn btn-neutral" title="Qiskit Nature Tutorials" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
@@ -800,10 +800,10 @@ Couldn&#39;t find cython becke routine
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Electronic structure</a><ul>
+<li><a class="reference internal" href="#">电子结构</a><ul>
 <li><a class="reference internal" href="#简介">简介</a></li>
-<li><a class="reference internal" href="#The-Hartree-Fock-initial-state">The Hartree-Fock initial state</a></li>
-<li><a class="reference internal" href="#The-mapping-from-fermions-to-qubits">The mapping from fermions to qubits</a></li>
+<li><a class="reference internal" href="#Hartree-Fock-初始状态">Hartree-Fock 初始状态</a></li>
+<li><a class="reference internal" href="#将费米子映射为量子位">将费米子映射为量子位</a></li>
 </ul>
 </li>
 </ul>
