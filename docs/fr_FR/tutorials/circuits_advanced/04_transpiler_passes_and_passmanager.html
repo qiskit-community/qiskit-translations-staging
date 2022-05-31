@@ -596,9 +596,9 @@ div.rendered_html tbody tr:hover {
 <p>Cette page a été générée à partir de <a href="#id2"><span class="problematic" id="id3">`tutorials/circuits_advanced/4_transpiler_passes_and_passmanager.ipynb`__</span></a>.</p>
 </div>
 <div class="section" id="Passes-du-transpileur-et-gestionnaire-de-passes">
-<h1>Passes du transpileur et gestionnaire de passes<a class="headerlink" href="#Passes-du-transpileur-et-gestionnaire-de-passes" title="Lien permanent vers ce titre">¶</a></h1>
+<h1>Passes du transpileur et gestionnaire de passes<a class="headerlink" href="#Passes-du-transpileur-et-gestionnaire-de-passes" title="Lien permanent vers cette rubrique">¶</a></h1>
 <div class="section" id="Introduction">
-<h2>Introduction<a class="headerlink" href="#Introduction" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>Introduction<a class="headerlink" href="#Introduction" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>Le transpileur est un composant central de Qiskit Terra, il est conçu pour être modulaire et extensible. L’objectif est d’être en mesure de créer de nouvelles transformations de circuit (appelées passes du transpileur), et de les combiner avec les autres passes existantes. La manière dont les passes sont combinées entre elles et l’ordre dans lequel elle sont appliquées a un effet déterminant sur le résultat final. C’est le pass manager (gestionnaire de passes), qui ordonnance les différentes passes et leur permet de communiquer ensemble au travers d’un espace de communication spécifique. Le transpileur ouvre ainsi la porte sur un champ de recherche vers une optimisation significative des circuits quantiques.</p>
 <p>Dans ce notebook, nous examinons les passes pré-programmées, comment utiliser le gestionnaire de passes, et nous allons développer une passe personnalisée simple de transpileur. Pour le dernier point, nous avons besoin d’introduire préalablement la notion de représentation interne de circuit quantique dans Qiskit, sous la forme d’un Graphe Acyclique Directionnel GAD (en anglais DAG pour Direct Acyclic Graph). Ensuite nous prendrons l’exemple de la passe d’échanges simples, qui permet de transformer un circuit pour l’adapter à un appareil dont la connectivité entre les qubits est limitée.</p>
 <p><strong>*Avant de commencer*</strong> : Vous devrez peut-être installer la bibliothèque <code class="docutils literal notranslate"><span class="pre">pydot</span></code> et la bibliothèque <code class="docutils literal notranslate"><span class="pre">graphviz</span></code> pour les routines de tracé des DAG. Si vous utilisez Anaconda Python, vous pouvez installer les deux bibliothèques avec la commande <code class="docutils literal notranslate"><span class="pre">conda</span></code>. Si vous utilisez l’interpréteur Python natif de votre système, installez <code class="docutils literal notranslate"><span class="pre">pydot</span></code> en utilisant la commande <code class="docutils literal notranslate"><span class="pre">pip</span></code> et installez <code class="docutils literal notranslate"><span class="pre">graphviz</span></code> en utilisant le gestionnaire de paquets natif de votre système (comme <code class="docutils literal notranslate"><span class="pre">yum</span></code>, <code class="docutils literal notranslate"><span class="pre">apt</span></code>, <code class="docutils literal notranslate"><span class="pre">dnf</span></code>, <code class="docutils literal notranslate"><span class="pre">brew</span></code>, etc.).</p>
@@ -614,7 +614,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="section" id="L'objet-PassManager">
-<h2>L’objet PassManager<a class="headerlink" href="#L'objet-PassManager" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>L’objet PassManager<a class="headerlink" href="#L'objet-PassManager" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>Il permet de spécifier le nombre de passes désirées.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
@@ -722,7 +722,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="section" id="Différentes-variétés-d'une-même-passe">
-<h2>Différentes variétés d’une même passe<a class="headerlink" href="#Différentes-variétés-d'une-même-passe" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>Différentes variétés d’une même passe<a class="headerlink" href="#Différentes-variétés-d'une-même-passe" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>Il peut se trouver des passes qui font la même chose, mais de manière différente. Par exemple : <code class="docutils literal notranslate"><span class="pre">TrivialLayout</span></code>, <code class="docutils literal notranslate"><span class="pre">DenseLayout</span></code> et <code class="docutils literal notranslate"><span class="pre">NoiseAdaptiveLayout</span></code> permettent toutes de choisir un layout (relation entre les qubits virtuels et les qubits physiques), mais elles utilisent des algorithmes différents pour des objectifs différents. De même <code class="docutils literal notranslate"><span class="pre">BasicSwap</span></code>, <code class="docutils literal notranslate"><span class="pre">LookaheadSwap</span></code> et <code class="docutils literal notranslate"><span class="pre">StochasticSwap</span></code> ont toutes pour effet d’insérer des swap (échanges) pour rendre un circuit compatible avec la carte de couplage. Le caractère modulaire du transpileur permet de faire des substitutions de ces passes.</p>
 <p>Ci-dessous nous montrons les passes de swap appliquées à un seul et même circuit pour le transformer en une topologie correspondant à une chaine linéaire.
 On peut voir que la performance la meilleure est atteinte lorsque <code class="docutils literal notranslate"><span class="pre">StochasticSwap</span></code> est utilisée. Mais ceci peut varier en fonction de votre circuit.</p>
@@ -825,7 +825,7 @@ On peut voir que la performance la meilleure est atteinte lorsque <code class="d
 </div>
 </div>
 <div class="section" id="Gestionnaires-de-passes-pré-configurées">
-<h2>Gestionnaires de passes pré-configurées<a class="headerlink" href="#Gestionnaires-de-passes-pré-configurées" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>Gestionnaires de passes pré-configurées<a class="headerlink" href="#Gestionnaires-de-passes-pré-configurées" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>Qiskit inclut plusieurs gestionnaires de passes prédéfinis qui correspondent à différents niveaux d’optimisation obtenus selon différents arrangement de passes. Actuellement les niveaux d’optimisation 0 à 3 sont implémentés. Le niveau le plus haut (3) correspond à l’optimisation la meilleure, mais le temps d’optimisation est également le plus élevé. Le choix du meilleur gestionnaire de passes peut-être fait à l’aide d’essais, tant l’optimisation dépend du circuit lui même et de la plateforme sur lequel il va être exécuté.</p>
 <p>Nous illustrons ici les différents niveaux d’optimisation en regardant un circuit de synthèse d’état. Il s’agit d’initialiser quatre qubits dans un état arbitraire, et d’optimiser le circuit qui y parvient.</p>
 <ul class="simple">
@@ -1001,7 +1001,7 @@ depth =  38
 </div>
 </div>
 <div class="section" id="Introduction-au-GAD-(Graphe-Acyclique-Direct)">
-<h2>Introduction au GAD (Graphe Acyclique Direct)<a class="headerlink" href="#Introduction-au-GAD-(Graphe-Acyclique-Direct)" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>Introduction au GAD (Graphe Acyclique Direct)<a class="headerlink" href="#Introduction-au-GAD-(Graphe-Acyclique-Direct)" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>Dans Qiskit, la représentation interne des circuit se fait en utilisant un Graphe Acyclique Direct (GAD). Par rapport à une liste de portes (netlist), cette représentation a l’avantage de rendre explicite le flot d’information entre les opérations, ce qui rend les décisions de transformation plus faciles pour les passes, sans changer la signification du circuit.</p>
 <p>Commençons par construire un circuit simple, et examinons son GAD.</p>
 <div class="nbinput docutils container">
@@ -1184,7 +1184,7 @@ node condition:  (ClassicalRegister(3, &#39;c&#39;), 2)
 </div>
 </div>
 <div class="section" id="Implémentation-d'une-passe-BasicMapper">
-<h2>Implémentation d’une passe BasicMapper<a class="headerlink" href="#Implémentation-d'une-passe-BasicMapper" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>Implémentation d’une passe BasicMapper<a class="headerlink" href="#Implémentation-d'une-passe-BasicMapper" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>Maintenant que nous sommes familiers du principe du GAD, utilisons le pour construire une passe de transpilation. Ici nous allons implémenter une passe de base pour faire correspondre un circuit quelconque à une machine dont la connectivité entre les qubits est limitée. Ceci s’appelle le BasicMapper. Cette passe est également incluse dans Qiskit Terra.</p>
 <p>Le premier choix à effectuer est de décider si le type de passe est du type TransformationPass ou du type AnalysisPass. Les passes de type transformation modifient le circuit, alors que les passes de type analyse ne font que collecter de l’information (qui pourra être utilisée par les autres passes). Puis la méthode run(dag) est appelée, elle exécute la tâche principale. Enfin la passe est enregistrée dans le module qiskit.transpiler.passes.</p>
 <p>Cette passe fonctionne de la manière suivante : elle traverse le GAD (Graphe Acyclique Direct) couche après couche (chaque couche est un ensemble d’opérations qui n’ont pas d’action sur des qubits indépendants, donc théoriquement toutes les opérations d’une couche peuvent être exécutées indépendamment les unes des autres). Pour chacune des opérations, si elle ne correspond pas aux contraintes de la carte de couplage, la passe identifie une possibilité d’échange (swap) pour amener les qubits l’un à coté de l’autre.</p>
@@ -1380,12 +1380,12 @@ node condition:  (ClassicalRegister(3, &#39;c&#39;), 2)
 <p>Notez que cette passe n’insère que les swaps nécessaires pour que chaque interaction à deux qubit soit conforme à la carte dee couplage de l’appareil. Il ne s’agit pas, par exemple, de la direction des interactions ou de l’ensemble de porte natif pris en charge par l’unité. C’est une philosophie de conception du transpileur de Qiskit: chaque passe exécute une petite action bien définie, et l’optimisation efficace du circuit est réalisée par le gestionnaire de passes en combinant plusieurs passes.</p>
 </div>
 <div class="section" id="Journal-du-Transpileur">
-<h2>Journal du Transpileur<a class="headerlink" href="#Journal-du-Transpileur" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>Journal du Transpileur<a class="headerlink" href="#Journal-du-Transpileur" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>Du fait de la complexité des opérations internes qui sont effectuées par le transpileur, il est probable que vous soyez confronté à une situation où vous souhaiterez corriger un problème ou simplement que vous souhaitiez mieux comprendre ce qu’il se passe lorsque vous invoquez le transpileur. Afin de faciliter cela, le transpileur écrit un journal de messages lors de son exécution normale. Ce journal est écrit à l’aide du module <cite>logging</cite> de la bibliothèque standard de Python. La journalisation standard de Python a été choisie car elle permet au module Terra de Qiskit de s’intégrer de manière naturelle avec d’autres bibliothèques ou applications.</p>
 <p>Pour une description plus précise de la journalisation de Python vous pouvez vous référer à la <a href="#id2"><span class="problematic" id="id4">`documentation officielle&lt;https://docs.python.org/3/library/logging.html&gt;`__</span></a> et aux tutoriels et exemples que vous y trouverez.</p>
 <div class="alert alert-block alert-success"><p>Remarque: La plupart des fonctions de module de journalisation utilisées dans cette section adaptent les paramètres globaux. Si vous exécutez des commandes dans cette section, elle peut effectuer la sortie d’autres cellules si elles sont exécutées dans un ordre différent.</p>
 </div><div class="section" id="Configuration-de-la-bibliothèque-standard-de-journalisation">
-<h3>Configuration de la bibliothèque standard de journalisation<a class="headerlink" href="#Configuration-de-la-bibliothèque-standard-de-journalisation" title="Lien permanent vers ce titre">¶</a></h3>
+<h3>Configuration de la bibliothèque standard de journalisation<a class="headerlink" href="#Configuration-de-la-bibliothèque-standard-de-journalisation" title="Lien permanent vers cette rubrique">¶</a></h3>
 <p>Par défaut la bibliothèque de journalisation standard de Python ne produit que les messages de niveau <code class="docutils literal notranslate"><span class="pre">WARNING</span></code>, <code class="docutils literal notranslate"><span class="pre">ERROR</span></code> ou <code class="docutils literal notranslate"><span class="pre">CRITICAL</span></code>. Dans la mesure où aucun des messages générés par le transpileur n’utilise ces niveaux (ils sont tous informatifs) il faut reconfigurer les paramètres de journalisation.</p>
 <p>La manière la plus simple d’y parvenir est d’executer :</p>
 <div class="nbinput nblast docutils container">
@@ -1498,7 +1498,7 @@ INFO:qiskit.compiler.transpile:Total Transpile Time - 75.43111 (ms)
 <p>Comme vous pouvez le voir clairement, lorsque que nous appelons <code class="docutils literal notranslate"><span class="pre">transpile()</span></code> il se produit deux types de messages. D’une part ceux qui sont de niveau <code class="docutils literal notranslate"><span class="pre">INFO</span></code> en provenance du gestionnaire de passes. Ces derniers indiquent les passes qui sont exécutées et leur durée d’execution. D’autre part ceux de niveau <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> et qui proviennent de la passe StochasticSwap et qui en décrivent les opérations internes. Ils sont utiles pour corriger des problèmes de cette passe.</p>
 </div>
 <div class="section" id="Réglage-du-niveau-de-journalisation-du-transpileur">
-<h3>Réglage du niveau de journalisation du transpileur<a class="headerlink" href="#Réglage-du-niveau-de-journalisation-du-transpileur" title="Lien permanent vers ce titre">¶</a></h3>
+<h3>Réglage du niveau de journalisation du transpileur<a class="headerlink" href="#Réglage-du-niveau-de-journalisation-du-transpileur" title="Lien permanent vers cette rubrique">¶</a></h3>
 <p>Le transpileur qiskit utilise un espace de noms unique <code class="docutils literal notranslate"><span class="pre">qiskit.transpiler</span></code>, tel qu’utilisé par <code class="docutils literal notranslate"><span class="pre">logging.getLogger('qiskit.transpiler')</span></code>. Il est donc très facile de régler le niveau de le logging pour le transpilateur spécifiquement. Par exemple, si vous souhaitez seulement voir les messages de log au niveau INFO ou supérieur, vous pouvez exécuter :</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
@@ -1548,7 +1548,7 @@ INFO:qiskit.compiler.transpile:Total Transpile Time - 38.27548 (ms)
 </div>
 </div>
 <div class="section" id="Réglage-de-la-journalisation-pour-gérer-l'exécution-en-parallèle">
-<h3>Réglage de la journalisation pour gérer l’exécution en parallèle<a class="headerlink" href="#Réglage-de-la-journalisation-pour-gérer-l'exécution-en-parallèle" title="Lien permanent vers ce titre">¶</a></h3>
+<h3>Réglage de la journalisation pour gérer l’exécution en parallèle<a class="headerlink" href="#Réglage-de-la-journalisation-pour-gérer-l'exécution-en-parallèle" title="Lien permanent vers cette rubrique">¶</a></h3>
 <p>Lorsque l’on execute le transpileur avec plusieurs circuits, le réglage par défaut fait que la transpilation de ces circuits se fait en parallèle. Si vous faites ceci avec la journalisation activée, et que vous voulez pouvoir comprendre la sortie, il y a quelques étapes supplémentaires à accomplir.</p>
 <p>Si vous ne faisiez qu’activer la journalisation comme ci-dessus et que vous envoyez plusieurs circuits à <code class="docutils literal notranslate"><span class="pre">transpile()</span></code>, vous obtiendrez des messages difficiles à interpréter. Par exemple :</p>
 <div class="nbinput docutils container">
@@ -1913,7 +1913,7 @@ qiskit.compiler.transpile - MainProcess - INFO: Total Transpile Time - 172.73402
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Mis à jour le 2022/05/20.
+      Mis à jour le 2022/05/31.
 
     </p>
   </div>
@@ -1962,6 +1962,7 @@ qiskit.compiler.transpile - MainProcess - INFO: Total Transpile Time - 172.73402
          <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
          <script src="../../_static/jquery.js"></script>
          <script src="../../_static/underscore.js"></script>
+         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../_static/doctools.js"></script>
          <script src="../../_static/thebelab-helper.js"></script>
          <script src="../../_static/translations.js"></script>

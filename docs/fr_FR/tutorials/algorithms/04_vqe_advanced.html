@@ -596,7 +596,7 @@ div.rendered_html tbody tr:hover {
 <p>Cette page a été générée à partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-tutorials/blob/master/tutorials/algorithms/04_vqe_advanced.ipynb">tutorials/algorithms/04_vqe_advanced.ipynb</a>.</p>
 </div>
 <div class="section" id="Utilisation-avancée-de-VQE">
-<h1>Utilisation avancée de VQE<a class="headerlink" href="#Utilisation-avancée-de-VQE" title="Lien permanent vers ce titre">¶</a></h1>
+<h1>Utilisation avancée de VQE<a class="headerlink" href="#Utilisation-avancée-de-VQE" title="Lien permanent vers cette rubrique">¶</a></h1>
 <p>Il existe plusieurs paramètres permettant de configurer et d’utiliser des fonctionnalités plus avancées de <a class="reference external" href="https://qiskit.org/documentation/stubs/qiskit.aqua.algorithms.VQE.html">VQE</a> . Ce tutoriel couvrira les paramètres <code class="docutils literal notranslate"><span class="pre">initial_point</span></code>, <code class="docutils literal notranslate"><span class="pre">expectation</span></code> et <code class="docutils literal notranslate"><span class="pre">gradient</span></code>.</p>
 <p>Il couvrira également l’utilisation avancée du simulateur, comme l’utilisation d’Aer avec la méthode Matrix Product State.</p>
 <div class="nbinput nblast docutils container">
@@ -626,7 +626,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="section" id="Point-initial">
-<h2>Point initial<a class="headerlink" href="#Point-initial" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>Point initial<a class="headerlink" href="#Point-initial" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>Le paramètre <code class="docutils literal notranslate"><span class="pre">initial_point</span></code> permet à l’optimisation de commencer au point donné, où le point est une liste de paramètres qui configureront l’ansatz. Par défaut, le point initial est <code class="docutils literal notranslate"><span class="pre">None</span></code>, auquel cas VQE en choisira un. Le choix dans ce cas est : si l’ansatz fournie a un point préféré, basé sur l’état initial qui lui a été fourni, alors il sera choisi, sinon un point initial aléatoire satisfaisant les limites de l’ansatz sera choisi. Si un point initial est fourni, il prendra la priorité et sera utilisé - notez qu’il doit correspondre en longueur au nombre de paramètres dans le circuit de l’ansatz.</p>
 <p>Pourquoi utiliser un point initial ? Si par exemple vous avez deviné un bon point de départ pour le problème ou si des expériences précédentes vous ont déjà permis d’en apprendre un peu sur la solution.</p>
 <p>Pour démontrer l’utilisation, nous allons tout d’abord répéter le premier exemple de travail à partir du tutoriel l’introduction d’algorithmes pour obtenir le point optimal d’une solution.</p>
@@ -724,7 +724,7 @@ optimizer_evals is 9 with initial point versus 65 without it.
 <p>Cela devient utile pour des exemples où nous pouvons utiliser la solution à un problème pour trouver une solution à un problème similaire très proche. La chimie en est un très bon exemple, où nous changeons la distance interatomique de la molécule pour tracer un profil de dissociation. Lorsque les changements de distance sont faibles, nous nous attendons à ce que la solution reste à proximité de la précédente. L’une des techniques consiste à simplement utiliser le point optimal d’une solution comme point de départ pour l’étape suivante. De plus, des techniques plus complexes sont possibles, qui réalisent une extrapolation pour calculer une position initiale basée sur la(les) solution(s) antérieure(s) plutôt que d’utiliser directement la solution précédente.</p>
 </div>
 <div class="section" id="Espérance">
-<h2>Espérance<a class="headerlink" href="#Espérance" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>Espérance<a class="headerlink" href="#Espérance" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>L’énergie de l’opérateur Hamiltonien sur lequel VQE travaille est la valeur moyenne obtenue lors de l’évaluation de l’ansatz paramétrée. Pour calculer cette valeur moyenne, VQE utilise une instance d’un objet <a class="reference external" href="https://qiskit.org/documentation/apidoc/qiskit.aqua.operators.expectations.html">expectation</a>. Une telle instance peut être fournie via le paramètre <code class="docutils literal notranslate"><span class="pre">expectation</span></code>, ou via la valeur par défaut <code class="docutils literal notranslate"><span class="pre">None</span></code>, auquel cas VQE utilisera la <a class="reference external" href="https://qiskit.org/documentation/stubs/qiskit.aqua.operators.expectations.ExpectationFactory.html">ExpectationFactory</a> pour créer une instance appropriée basée sur le backend fourni.</p>
 <p>Dans la plupart des cas, laisser VQE créer une instance appropriée est suffisant. Cependant, le simulateur aer_simulator de Qiskit Aer est capable de réaliser un instantané (snapshot) qui peut être utilisé en conjonction avec le calcul de valeur moyenne de l’opérateur. S’il est utilisé alors le résultat est idéal, c’est-à-dire comme ce que l’on aurait obtenu avec le simulateur statevector, et n’a pas de bruit dû aux mesures. Puisque le simulateur aer_simulator est souvent choisi pour avoir ce bruit de mesure (bruit d’échantillonnage) et être plus proche d’un résultat matériel réel, VQE a un flag <code class="docutils literal notranslate"><span class="pre">include_custom</span></code> qui est passé à l’ExpectationFactory. Lorsque vous utilisez le simulateur Aer aer_simulator et que le paramètre <code class="docutils literal notranslate"><span class="pre">include_custom</span></code> est défini à <code class="docutils literal notranslate"><span class="pre">True</span></code>, l’ExpectationFactory retournera <code class="docutils literal notranslate"><span class="pre">AerPauliExpectation</span></code> qui utilise l’instantané, tandis que la <code class="docutils literal notranslate"><span class="pre">PauliExpectation</span></code> normale sera renvoyée s’il est défini à <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 <p>L’exemple suivant montre <code class="docutils literal notranslate"><span class="pre">include_custom=True</span></code> où le résultat correspond au simulateur statevector. En fait, il peut être mieux/plus rapide de le faire que d’utiliser directement le simulateur statevector_simulator. C’est parce que dans ce dernier cas lorsque le Hamiltonien est une somme de Paulis, il doit être converti en une matrice, ce qui est évité lors de l’utilisation de l’instruction de snapshot lorsque include_custom est True.</p>
@@ -949,12 +949,12 @@ The optimal value can be seen to be wrong too, i.e. -1.074 versus the correct -1
 </div>
 </div>
 <div class="section" id="Gradient">
-<h2>Gradient<a class="headerlink" href="#Gradient" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>Gradient<a class="headerlink" href="#Gradient" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>Les optimiseurs qui utilisent une technique basée sur le gradient peuvent être créés avec un gradient défini par l’utilisateur qui sera utilisé à la place de leur calcul de gradient par défaut, qui est généralement calculé par simple différence finie. Les gradients sont passés indirectement via l’optimiseur au moyen de son paramètre <code class="docutils literal notranslate"><span class="pre">gradient</span></code>.</p>
 <p>Comme l’utilisation d’un <code class="docutils literal notranslate"><span class="pre">gradient</span></code> fourni par un utilisateur a été montrée dans le tutoriel Monitoring VQE Convergence je vais simplement vous y référer. Le <a class="reference internal" href="../operators/02_gradients_framework.html"><span class="doc">Gradients framework</span></a> a aussi beaucoup plus d’informations à propos des gradients eux-mêmes.</p>
 </div>
 <div class="section" id="Instance-Quantum-et-simulation-avancée">
-<h2>Instance Quantum et simulation avancée<a class="headerlink" href="#Instance-Quantum-et-simulation-avancée" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>Instance Quantum et simulation avancée<a class="headerlink" href="#Instance-Quantum-et-simulation-avancée" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>Bien que vous soyez peut-être familiers avec le fait de passer une instance de QuantumInstance créée à partir d’un <code class="docutils literal notranslate"><span class="pre">statevector_simulator</span></code> ou d’un <code class="docutils literal notranslate"><span class="pre">aer_simulator</span></code> ou d’un backend permettant d’accéder à une machine réelle, il est également possible d’utiliser les modes de simulation avancés d’Aer. Par exemple, nous pouvons facilement utiliser la méthode Aer <a class="reference internal" href="../simulators/7_matrix_product_state_method.html"><span class="doc">Matrix Product State</span></a>, qui a le potentiel de simuler un plus grand nombre de qubits.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
@@ -1047,7 +1047,7 @@ The optimal value can be seen to be wrong too, i.e. -1.074 versus the correct -1
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Mis à jour le 2022/05/20.
+      Mis à jour le 2022/05/31.
 
     </p>
   </div>
@@ -1088,6 +1088,7 @@ The optimal value can be seen to be wrong too, i.e. -1.074 versus the correct -1
          <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
          <script src="../../_static/jquery.js"></script>
          <script src="../../_static/underscore.js"></script>
+         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../_static/doctools.js"></script>
          <script src="../../_static/thebelab-helper.js"></script>
          <script src="../../_static/translations.js"></script>
