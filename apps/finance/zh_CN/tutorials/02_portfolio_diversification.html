@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Portfolio Diversification &mdash; Qiskit Finance 0.3.1 文档</title>
+  <title>投资组合多样化 &mdash; Qiskit Finance 0.3.1 文档</title>
   
 
   
@@ -32,8 +32,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -255,7 +255,7 @@
         
           <li><a href="index.html">Finance Tutorials</a> &gt;</li>
         
-      <li>Portfolio Diversification</li>
+      <li>投资组合多样化</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
@@ -500,6 +500,7 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
 div.rendered_html table {
   border: none;
   border-collapse: collapse;
@@ -508,10 +509,14 @@ div.rendered_html table {
   font-size: 12px;
   table-layout: fixed;
 }
+.jp-RenderedHTMLCommon thead,
 div.rendered_html thead {
   border-bottom: 1px solid black;
   vertical-align: bottom;
 }
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
 div.rendered_html tr,
 div.rendered_html th,
 div.rendered_html td {
@@ -523,12 +528,15 @@ div.rendered_html td {
   max-width: none;
   border: none;
 }
+.jp-RenderedHTMLCommon th,
 div.rendered_html th {
   font-weight: bold;
 }
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
 div.rendered_html tbody tr:nth-child(odd) {
   background: #f5f5f5;
 }
+.jp-RenderedHTMLCommon tbody tr:hover,
 div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
@@ -537,8 +545,8 @@ div.rendered_html tbody tr:hover {
 <p class="admonition-title">备注</p>
 <p>此页面是从 <a href="#id1"><span class="problematic" id="id2">`</span></a>docs/tutorials/02_portfolio_diversification.ipynb`__中生成的。</p>
 </div>
-<section id="Portfolio-Diversification">
-<h1>Portfolio Diversification<a class="headerlink" href="#Portfolio-Diversification" title="永久链接至标题">¶</a></h1>
+<section id="投资组合多样化">
+<h1>投资组合多样化<a class="headerlink" href="#投资组合多样化" title="永久链接至标题">¶</a></h1>
 <section id="简介">
 <h2>简介<a class="headerlink" href="#简介" title="永久链接至标题">¶</a></h2>
 <p>In asset management, there are broadly two approaches: active and passive investment management. Within passive investment management, there are index-tracking funds and there are approaches based on portfolio diversification, which aim at representing a portfolio with a large number of assets by a smaller number of representative stocks. This notebook illustrates a portfolio diversification problem, which has recently become popular for two reasons: 1. it makes it possible to mimic the
@@ -547,18 +555,18 @@ difficult, and the transaction costs of the frequent rebalancing to adjust the p
 assets should represent the <span class="math notranslate nohighlight">\(q\)</span> clusters amounts to solving a large-scale optimization problem. In the following we describe the mathematical model for the portfolio diversification problem as introduced in [Cornuejols &amp; Tutuncu, 2006] 2. it allows for similarity measures between time-series beyond the covariance matrix. Notice that traditionally, modern portfolio theory considers the covariance matrix as a measure of similarity between the assets. As such, however, the covariance matrix
 is imperfect. Consider, for instance, a company listed both in London and New York. Although both listings should be very similar, only parts of the time series of the prices of the two listings will overlap, because of the partial overlap of the times the markets open. Instead of covariance, one can consider, for example, dynamic time warping of [Berndt and Clifford, 1994] as a measure of similarity between two time series, which allows for the fact that for some time periods, the data are
 captured by only one of the time series, while for others, both time series exhibit the similarity due to the parallel evolution of the stock price.</p>
-<p>The overall workflow we demonstrate comprises:</p>
+<p>我们展示的整体工作流程包括：</p>
 <ol class="arabic simple">
-<li><p>pick the ground set of assets. In our case, this is a small number of US stocks.</p></li>
-<li><p>load the time series capturing the evolution of the prices of assets. In our case, this is a simplistic load of adjusted daily closing price data from Wikipedia or Nasdaq or LSE or EuroNext, whereas in a real asset management, a much higher frequency may be considered.</p></li>
+<li><p>挑选资产的基础成分股。在我们的案例中，这是一小部分美国股票。</p></li>
+<li><p>载入获取股价的时间演化序列。在我们的案例中，我们只从维基百科、Nasdaq、LSE 或 EuroNext 中简单获取每日收盘价格。而在真正的投资管理中，我们需考虑更高的采样率。</p></li>
 <li><p>compute the pair-wise similarity among the time series. In our case, we run a linear-time approximation of the dynamic time warping, still on the classical computer.</p></li>
 <li><p>compute the actual portfolio of <span class="math notranslate nohighlight">\(q\)</span> representative assets, based on the similarity measure. This step is run twice, actually. First, we obtain a reference value by a run of an IBM solver (IBM ILOG CPLEX or the Exact Eigensolver) on the classical computer. Second, we run an alternative, hybrid algorithm partly on the quantum computer.</p></li>
 <li><p>visualization of the results. In our case, this is again a simplistic plot.</p></li>
 </ol>
 <p>In the following, we first explain the model used in (4) above, before we proceed with the installation of the pre-requisites and the data loading.</p>
 </section>
-<section id="The-Model">
-<h2>The Model<a class="headerlink" href="#The-Model" title="永久链接至标题">¶</a></h2>
+<section id="模型">
+<h2>模型<a class="headerlink" href="#模型" title="永久链接至标题">¶</a></h2>
 <p>As discussed in [Cornuejols &amp; Tutuncu, 2006], we describe a mathematical model that clusters assets into groups of similar ones and selects one representative asset from each group to be included in the index fund portfolio. The model is based on the following data, which we will discuss in more detail later:</p>
 <div class="math notranslate nohighlight">
 \[\rho_{ij} = \textrm{similarity}\, \textrm{between}\, \textrm{stock}\, i \, \textrm{and}\, \textrm{stock}\, j\]</div>
@@ -1160,9 +1168,9 @@ finding optimal solutions of the ILP is harder than finding local optima of the 
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Portfolio Diversification</a><ul>
+<li><a class="reference internal" href="#">投资组合多样化</a><ul>
 <li><a class="reference internal" href="#简介">简介</a></li>
-<li><a class="reference internal" href="#The-Model">The Model</a></li>
+<li><a class="reference internal" href="#模型">模型</a></li>
 <li><a class="reference internal" href="#A-Hybrid-Approach">A Hybrid Approach</a><ul>
 <li><a class="reference internal" href="#Construct-a-binary-polynomial-optimization">Construct a binary polynomial optimization</a></li>
 <li><a class="reference internal" href="#Construct-the-Ising-Hamiltonian">Construct the Ising Hamiltonian</a></li>

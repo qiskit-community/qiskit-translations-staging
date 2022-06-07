@@ -32,8 +32,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
   <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -41,7 +41,7 @@
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜索" href="../search.html" />
     <link rel="next" title="Pricing European Put Options" href="04_european_put_option_pricing.html" />
-    <link rel="prev" title="Portfolio Diversification" href="02_portfolio_diversification.html" /> 
+    <link rel="prev" title="投资组合多样化" href="02_portfolio_diversification.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -500,6 +500,7 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
 div.rendered_html table {
   border: none;
   border-collapse: collapse;
@@ -508,10 +509,14 @@ div.rendered_html table {
   font-size: 12px;
   table-layout: fixed;
 }
+.jp-RenderedHTMLCommon thead,
 div.rendered_html thead {
   border-bottom: 1px solid black;
   vertical-align: bottom;
 }
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
 div.rendered_html tr,
 div.rendered_html th,
 div.rendered_html td {
@@ -523,12 +528,15 @@ div.rendered_html td {
   max-width: none;
   border: none;
 }
+.jp-RenderedHTMLCommon th,
 div.rendered_html th {
   font-weight: bold;
 }
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
 div.rendered_html tbody tr:nth-child(odd) {
   background: #f5f5f5;
 }
+.jp-RenderedHTMLCommon tbody tr:hover,
 div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
@@ -541,16 +549,16 @@ div.rendered_html tbody tr:hover {
 <h1>Pricing European Call Options<a class="headerlink" href="#Pricing-European-Call-Options" title="永久链接至标题">¶</a></h1>
 <section id="简介">
 <h2>简介<a class="headerlink" href="#简介" title="永久链接至标题">¶</a></h2>
-<p>Suppose a European call option with strike price <span class="math notranslate nohighlight">\(K\)</span> and an underlying asset whose spot price at maturity <span class="math notranslate nohighlight">\(S_T\)</span> follows a given random distribution. The corresponding payoff function is defined as:</p>
+<p>假设有一份行使价为 :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>K`的欧式看涨期权，而其标的资产在到期日的现货价 :math:<a href="#id3"><span class="problematic" id="id4">`</span></a>S_T`服从给定的随机分布。相应的回报函数被定义为：</p>
 <div class="math notranslate nohighlight">
 \[\max\{S_T - K, 0\}\]</div>
-<p>In the following, a quantum algorithm based on amplitude estimation is used to estimate the expected payoff, i.e., the fair price before discounting, for the option:</p>
+<p>接下来，我们使用一个基于振幅估计的量子算法来估计期权的期望回报，即其贴现之前的平价：</p>
 <div class="math notranslate nohighlight">
 \[\mathbb{E}\left[ \max\{S_T - K, 0\} \right]\]</div>
-<p>as well as the corresponding <span class="math notranslate nohighlight">\(\Delta\)</span>, i.e., the derivative of the option price with respect to the spot price, defined as:</p>
+<p>以及相应的:math:<cite>Delta</cite>, 即期权价相对于现货价的导数，定义为</p>
 <div class="math notranslate nohighlight">
 \[\Delta = \mathbb{P}\left[S_T \geq K\right]\]</div>
-<p>The approximation of the objective function and a general introduction to option pricing and risk analysis on quantum computers are given in the following papers:</p>
+<p>以下论文给出该目标函数的近似并且对基于量子计算机的期权定价和风险分析进行一般性的介绍：</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://www.nature.com/articles/s41534-019-0130-6">Quantum Risk Analysis. Woerner, Egger. 2018.</a></p></li>
 <li><p><a class="reference external" href="https://quantum-journal.org/papers/q-2020-07-06-291/">Option Pricing using Quantum Computers. Stamatopoulos et al. 2019.</a></p></li>
@@ -573,12 +581,12 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 </section>
-<section id="Uncertainty-Model">
-<h2>Uncertainty Model<a class="headerlink" href="#Uncertainty-Model" title="永久链接至标题">¶</a></h2>
+<section id="不确定性模型">
+<h2>不确定性模型<a class="headerlink" href="#不确定性模型" title="永久链接至标题">¶</a></h2>
 <p>We construct a circuit to load a log-normal random distribution into a quantum state. The distribution is truncated to a given interval <span class="math notranslate nohighlight">\([\text{low}, \text{high}]\)</span> and discretized using <span class="math notranslate nohighlight">\(2^n\)</span> grid points, where <span class="math notranslate nohighlight">\(n\)</span> denotes the number of qubits used. The unitary operator corresponding to the circuit implements the following:</p>
 <div class="math notranslate nohighlight">
 \[\big|0\rangle_{n} \mapsto \big|\psi\rangle_{n} = \sum_{i=0}^{2^n-1} \sqrt{p_i}\big|i\rangle_{n},\]</div>
-<p>where <span class="math notranslate nohighlight">\(p_i\)</span> denote the probabilities corresponding to the truncated and discretized distribution and where <span class="math notranslate nohighlight">\(i\)</span> is mapped to the right interval using the affine map:</p>
+<p>其中 <span class="math notranslate nohighlight">\(p_i\)</span> 表示该被截断而离散化分布中相应的概率，而其中的:math:<a href="#id1"><span class="problematic" id="id2">`</span></a>i`通过仿射映射被映射到右手边的区间：</p>
 <div class="math notranslate nohighlight">
 \[\{0, \ldots, 2^n-1\} \ni i \mapsto \frac{\text{high} - \text{low}}{2^n - 1} * i + \text{low} \in [\text{low}, \text{high}].\]</div>
 <div class="nbinput nblast docutils container">
@@ -637,14 +645,14 @@ div.rendered_html tbody tr:hover {
 <img alt="../_images/tutorials_03_european_call_option_pricing_5_0.svg" src="../_images/tutorials_03_european_call_option_pricing_5_0.svg" /></div>
 </div>
 </section>
-<section id="Payoff-Function">
-<h2>Payoff Function<a class="headerlink" href="#Payoff-Function" title="永久链接至标题">¶</a></h2>
-<p>The payoff function equals zero as long as the spot price at maturity <span class="math notranslate nohighlight">\(S_T\)</span> is less than the strike price <span class="math notranslate nohighlight">\(K\)</span> and then increases linearly. The implementation uses a comparator, that flips an ancilla qubit from <span class="math notranslate nohighlight">\(\big|0\rangle\)</span> to <span class="math notranslate nohighlight">\(\big|1\rangle\)</span> if <span class="math notranslate nohighlight">\(S_T \geq K\)</span>, and this ancilla is used to control the linear part of the payoff function.</p>
+<section id="回报函数">
+<h2>回报函数<a class="headerlink" href="#回报函数" title="永久链接至标题">¶</a></h2>
+<p>只要在到期日现货价 <span class="math notranslate nohighlight">\(S_T\)</span>，回报函数就等于零，随后线性增长。该实现使用一个比较器，如果:math:<cite>S_Tgeq K`那么它将辅助量子比特 从:math:</cite>big|0rangle`翻转到:math:<cite>big|1rangle</cite>，而此辅助量子比特用于控制回报函数的线性部分。</p>
 <p>The linear part itself is then approximated as follows. We exploit the fact that <span class="math notranslate nohighlight">\(\sin^2(y + \pi/4) \approx y + 1/2\)</span> for small <span class="math notranslate nohighlight">\(|y|\)</span>. Thus, for a given approximation rescaling factor <span class="math notranslate nohighlight">\(c_\text{approx} \in [0, 1]\)</span> and <span class="math notranslate nohighlight">\(x \in [0, 1]\)</span> we consider</p>
 <div class="math notranslate nohighlight">
 \[\sin^2( \pi/2 * c_\text{approx} * ( x - 1/2 ) + \pi/4) \approx \pi/2 * c_\text{approx} * ( x - 1/2 ) + 1/2\]</div>
 <p>for small <span class="math notranslate nohighlight">\(c_\text{approx}\)</span>.</p>
-<p>We can easily construct an operator that acts as</p>
+<p>我们可以轻松地建立具有如下作用的算符</p>
 <div class="math notranslate nohighlight">
 \[\big|x\rangle \big|0\rangle \mapsto \big|x\rangle \left( \cos(a*x+b) \big|0\rangle + \sin(a*x+b) \big|1\rangle \right),\]</div>
 <p>using controlled Y-rotations.</p>
@@ -755,8 +763,8 @@ exact delta value:      0.8098
 </pre></div></div>
 </div>
 </section>
-<section id="Evaluate-Expected-Payoff">
-<h2>Evaluate Expected Payoff<a class="headerlink" href="#Evaluate-Expected-Payoff" title="永久链接至标题">¶</a></h2>
+<section id="计算期望回报">
+<h2>计算期望回报<a class="headerlink" href="#计算期望回报" title="永久链接至标题">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -1052,7 +1060,7 @@ Confidence interval:    [0.8005, 0.8120]
         <a href="04_european_put_option_pricing.html" class="btn btn-neutral float-right" title="Pricing European Put Options" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="02_portfolio_diversification.html" class="btn btn-neutral" title="Portfolio Diversification" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="02_portfolio_diversification.html" class="btn btn-neutral" title="投资组合多样化" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -1086,9 +1094,9 @@ Confidence interval:    [0.8005, 0.8120]
               <ul>
 <li><a class="reference internal" href="#">Pricing European Call Options</a><ul>
 <li><a class="reference internal" href="#简介">简介</a></li>
-<li><a class="reference internal" href="#Uncertainty-Model">Uncertainty Model</a></li>
-<li><a class="reference internal" href="#Payoff-Function">Payoff Function</a></li>
-<li><a class="reference internal" href="#Evaluate-Expected-Payoff">Evaluate Expected Payoff</a></li>
+<li><a class="reference internal" href="#不确定性模型">不确定性模型</a></li>
+<li><a class="reference internal" href="#回报函数">回报函数</a></li>
+<li><a class="reference internal" href="#计算期望回报">计算期望回报</a></li>
 <li><a class="reference internal" href="#Evaluate-Delta">Evaluate Delta</a></li>
 </ul>
 </li>
