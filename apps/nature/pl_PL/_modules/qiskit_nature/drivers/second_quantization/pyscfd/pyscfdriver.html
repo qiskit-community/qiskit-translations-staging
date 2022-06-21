@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.drivers.second_quantization.pyscfd.pyscfdriver &mdash; Qiskit Nature 0.3.2 - dokumentacja</title>
+  <title>qiskit_nature.drivers.second_quantization.pyscfd.pyscfdriver &mdash; Qiskit Nature 0.4.1 - dokumentacja</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -293,7 +293,6 @@
 
 <span class="sd">&quot;&quot;&quot;The PySCF Driver.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">importlib</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -304,7 +303,7 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils.validation</span> <span class="kn">import</span> <span class="n">validate_min</span>
-<span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">MissingOptionalLibraryError</span>
+
 <span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.driver_metadata</span> <span class="kn">import</span> <span class="n">DriverMetadata</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.electronic</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">ElectronicStructureDriverResult</span><span class="p">,</span>
@@ -323,6 +322,7 @@
     <span class="n">OneBodyElectronicIntegrals</span><span class="p">,</span>
     <span class="n">TwoBodyElectronicIntegrals</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">import</span> <span class="nn">qiskit_nature.optionals</span> <span class="k">as</span> <span class="nn">_optionals</span>
 
 <span class="kn">from</span> <span class="nn">....exceptions</span> <span class="kn">import</span> <span class="n">QiskitNatureError</span>
 <span class="kn">from</span> <span class="nn">..electronic_structure_driver</span> <span class="kn">import</span> <span class="n">ElectronicStructureDriver</span><span class="p">,</span> <span class="n">MethodType</span>
@@ -331,17 +331,7 @@
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">pyscf_version</span>
-    <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">dft</span><span class="p">,</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
-    <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">chkfile</span> <span class="k">as</span> <span class="n">lib_chkfile</span>
-    <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">logger</span> <span class="k">as</span> <span class="n">pylogger</span>
-    <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">param</span>
-    <span class="kn">from</span> <span class="nn">pyscf.tools</span> <span class="kn">import</span> <span class="n">dump_mat</span>
-
-    <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s2">&quot;pyscf&quot;</span><span class="p">)</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;PySCF is not installed. See https://pyscf.org/install.html&quot;</span><span class="p">)</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s2">&quot;pyscf&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="InitialGuess"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.InitialGuess.html#qiskit_nature.drivers.second_quantization.InitialGuess">[dokumentacja]</a><span class="k">class</span> <span class="nc">InitialGuess</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
@@ -353,7 +343,8 @@
     <span class="n">ATOM</span> <span class="o">=</span> <span class="s2">&quot;atom&quot;</span></div>
 
 
-<div class="viewcode-block" id="PySCFDriver"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.PySCFDriver.html#qiskit_nature.drivers.second_quantization.PySCFDriver">[dokumentacja]</a><span class="k">class</span> <span class="nc">PySCFDriver</span><span class="p">(</span><span class="n">ElectronicStructureDriver</span><span class="p">):</span>
+<div class="viewcode-block" id="PySCFDriver"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.PySCFDriver.html#qiskit_nature.drivers.second_quantization.PySCFDriver">[dokumentacja]</a><span class="nd">@_optionals</span><span class="o">.</span><span class="n">HAS_PYSCF</span><span class="o">.</span><span class="n">require_in_instance</span>
+<span class="k">class</span> <span class="nc">PySCFDriver</span><span class="p">(</span><span class="n">ElectronicStructureDriver</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A Second-Quantization driver for Qiskit Nature using the PySCF library.</span>
 
 <span class="sd">    References:</span>
@@ -424,8 +415,10 @@
 <span class="sd">        .. _7: https://pyscf.org/pyscf_api_docs/pyscf.lib.html#module-pyscf.lib.chkfile</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="c1"># First, ensure that PySCF is actually installed</span>
-        <span class="n">PySCFDriver</span><span class="o">.</span><span class="n">check_installed</span><span class="p">()</span>
+        <span class="c1"># pylint: disable=import-error</span>
+        <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
+
+        <span class="c1"># First, ensure that PySCF supports the method</span>
         <span class="n">PySCFDriver</span><span class="o">.</span><span class="n">check_method_supported</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">atom</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -440,7 +433,7 @@
         <span class="n">validate_min</span><span class="p">(</span><span class="s2">&quot;max_cycle&quot;</span><span class="p">,</span> <span class="n">max_cycle</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="c1"># we use the property-setter to deal with conversion</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="n">atom</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="n">atom</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_unit</span> <span class="o">=</span> <span class="n">unit</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_charge</span> <span class="o">=</span> <span class="n">charge</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_spin</span> <span class="o">=</span> <span class="n">spin</span>
@@ -594,6 +587,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_chkfile</span> <span class="o">=</span> <span class="n">chkfile</span>
 
 <div class="viewcode-block" id="PySCFDriver.from_molecule"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.PySCFDriver.from_molecule.html#qiskit_nature.drivers.second_quantization.PySCFDriver.from_molecule">[dokumentacja]</a>    <span class="nd">@staticmethod</span>
+    <span class="nd">@_optionals</span><span class="o">.</span><span class="n">HAS_PYSCF</span><span class="o">.</span><span class="n">require_in_call</span>
     <span class="k">def</span> <span class="nf">from_molecule</span><span class="p">(</span>
         <span class="n">molecule</span><span class="p">:</span> <span class="n">Molecule</span><span class="p">,</span>
         <span class="n">basis</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sto3g&quot;</span><span class="p">,</span>
@@ -609,19 +603,15 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            driver</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">PySCFDriver</span><span class="o">.</span><span class="n">check_installed</span><span class="p">()</span>
         <span class="n">PySCFDriver</span><span class="o">.</span><span class="n">check_method_supported</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">driver_kwargs</span><span class="p">:</span>
-            <span class="n">args</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getfullargspec</span><span class="p">(</span><span class="n">PySCFDriver</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span><span class="o">.</span><span class="n">args</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">PySCFDriver</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">driver_kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;self&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
                     <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;atom&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>  <span class="c1"># type: ignore</span>
-            <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">coord</span><span class="p">)))</span>  <span class="c1"># type: ignore</span>
-            <span class="k">for</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">coord</span><span class="p">)</span> <span class="ow">in</span> <span class="n">molecule</span><span class="o">.</span><span class="n">geometry</span>
-        <span class="p">]</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;atom&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">coord</span><span class="p">)))</span> <span class="k">for</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">coord</span><span class="p">)</span> <span class="ow">in</span> <span class="n">molecule</span><span class="o">.</span><span class="n">geometry</span><span class="p">]</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;charge&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">molecule</span><span class="o">.</span><span class="n">charge</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;spin&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">molecule</span><span class="o">.</span><span class="n">multiplicity</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">molecule</span><span class="o">.</span><span class="n">units</span>
@@ -639,33 +629,6 @@
 <span class="sd">            driver acceptable basis</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">basis</span></div>
-
-<div class="viewcode-block" id="PySCFDriver.check_installed"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.PySCFDriver.check_installed.html#qiskit_nature.drivers.second_quantization.PySCFDriver.check_installed">[dokumentacja]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">check_installed</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Checks that PySCF is actually installed.</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            MissingOptionalLibraryError: If PySCF is not installed.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">spec</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;pyscf&quot;</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
-            <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;PySCF check error </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ex</span><span class="p">))</span>
-            <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-                <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;PySCF&quot;</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;PySCFDriver&quot;</span><span class="p">,</span>
-                <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install &#39;qiskit-nature[pyscf]&#39;&quot;</span><span class="p">,</span>
-                <span class="n">msg</span><span class="o">=</span><span class="s2">&quot;See https://pyscf.org/install.html&quot;</span><span class="p">,</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span>
-
-        <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-            <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;PySCF&quot;</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;PySCFDriver&quot;</span><span class="p">,</span>
-            <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install &#39;qiskit-nature[pyscf]&#39;&quot;</span><span class="p">,</span>
-            <span class="n">msg</span><span class="o">=</span><span class="s2">&quot;See https://pyscf.org/install.html&quot;</span><span class="p">,</span>
-        <span class="p">)</span></div>
 
 <div class="viewcode-block" id="PySCFDriver.check_method_supported"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.PySCFDriver.check_method_supported.html#qiskit_nature.drivers.second_quantization.PySCFDriver.check_method_supported">[dokumentacja]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">check_method_supported</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="n">MethodType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -704,6 +667,10 @@
         <span class="c1"># molecule is in PySCF atom string format e.g. &quot;H .0 .0 .0; H .0 .0 0.2&quot;</span>
         <span class="c1">#          or in Z-Matrix format e.g. &quot;H; O 1 1.08; H 2 1.08 1 107.5&quot;</span>
         <span class="c1"># other parameters are as per PySCF got.Mole format</span>
+        <span class="c1"># pylint: disable=import-error</span>
+        <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
+        <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">logger</span> <span class="k">as</span> <span class="n">pylogger</span>
+        <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">param</span>
 
         <span class="n">atom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_molecule_format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atom</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_memory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -755,13 +722,16 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            The coordinates in XYZ format.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># pylint: disable=import-error</span>
+        <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
+
         <span class="n">atoms</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">val</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)]</span>
-        <span class="k">if</span> <span class="n">atoms</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># pylint: disable=len-as-condition</span>
+        <span class="k">if</span> <span class="n">atoms</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span><span class="s2">&quot;Molecule format error: &quot;</span> <span class="o">+</span> <span class="n">val</span><span class="p">)</span>
 
         <span class="c1"># An xyz format has 4 parts in each atom, if not then do zmatrix convert</span>
         <span class="c1"># Allows dummy atoms, using symbol &#39;X&#39; in zmatrix format for coord computation to xyz</span>
-        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)]</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">newval</span> <span class="o">=</span> <span class="p">[]</span>
@@ -783,6 +753,10 @@
 <span class="sd">        Raises:</span>
 <span class="sd">            QiskitNatureError: If an invalid HF method type was supplied.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># pylint: disable=import-error</span>
+        <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">dft</span><span class="p">,</span> <span class="n">scf</span>
+        <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">chkfile</span> <span class="k">as</span> <span class="n">lib_chkfile</span>
+
         <span class="n">method_name</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">method_cls</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">try</span><span class="p">:</span>
@@ -815,10 +789,6 @@
             <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_construct_driver_result</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ElectronicStructureDriverResult</span><span class="p">:</span>
-        <span class="c1"># NOTE: under Python 3.6, pylint appears to be unable to properly identify this case of</span>
-        <span class="c1"># nested abstract classes (cf. https://github.com/Qiskit/qiskit-nature/runs/3245395353).</span>
-        <span class="c1"># However, since the tests pass I am adding an exception for this specific case.</span>
-        <span class="c1"># pylint: disable=abstract-class-instantiated</span>
         <span class="n">driver_result</span> <span class="o">=</span> <span class="n">ElectronicStructureDriverResult</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_populate_driver_result_molecule</span><span class="p">(</span><span class="n">driver_result</span><span class="p">)</span>
@@ -828,9 +798,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_populate_driver_result_electronic_energy</span><span class="p">(</span><span class="n">driver_result</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_populate_driver_result_electronic_dipole_moment</span><span class="p">(</span><span class="n">driver_result</span><span class="p">)</span>
 
-        <span class="c1"># TODO: once https://github.com/Qiskit/qiskit-terra/issues/6772 is resolved, we no longer</span>
-        <span class="c1"># _have_ to add these properties. However, until then the interpret method relies on indices</span>
-        <span class="c1"># of the aux_operators which are incorrect if these properties are not added.</span>
+        <span class="c1"># TODO: once https://github.com/Qiskit/qiskit-nature/issues/312 is fixed we can stop adding</span>
+        <span class="c1"># these properties by default.</span>
+        <span class="c1"># if not settings.dict_aux_operators:</span>
         <span class="n">driver_result</span><span class="o">.</span><span class="n">add_property</span><span class="p">(</span><span class="n">AngularMomentum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mol</span><span class="o">.</span><span class="n">nao</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
         <span class="n">driver_result</span><span class="o">.</span><span class="n">add_property</span><span class="p">(</span><span class="n">Magnetization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mol</span><span class="o">.</span><span class="n">nao</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
 
@@ -852,6 +822,9 @@
     <span class="k">def</span> <span class="nf">_populate_driver_result_metadata</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">driver_result</span><span class="p">:</span> <span class="n">ElectronicStructureDriverResult</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># pylint: disable=import-error</span>
+        <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">pyscf_version</span>
+
         <span class="n">cfg</span> <span class="o">=</span> <span class="p">[</span>
             <span class="sa">f</span><span class="s2">&quot;atom=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_atom</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="sa">f</span><span class="s2">&quot;unit=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_unit</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
@@ -878,6 +851,9 @@
     <span class="k">def</span> <span class="nf">_populate_driver_result_basis_transform</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">driver_result</span><span class="p">:</span> <span class="n">ElectronicStructureDriverResult</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># pylint: disable=import-error</span>
+        <span class="kn">from</span> <span class="nn">pyscf.tools</span> <span class="kn">import</span> <span class="n">dump_mat</span>
+
         <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_coeff_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_mo_data</span><span class="p">(</span><span class="s2">&quot;mo_coeff&quot;</span><span class="p">,</span> <span class="n">array_dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">logger</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
@@ -919,6 +895,9 @@
     <span class="k">def</span> <span class="nf">_populate_driver_result_electronic_energy</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">driver_result</span><span class="p">:</span> <span class="n">ElectronicStructureDriverResult</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># pylint: disable=import-error</span>
+        <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
+
         <span class="n">basis_transform</span> <span class="o">=</span> <span class="n">driver_result</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="n">ElectronicBasisTransform</span><span class="p">)</span>
 
         <span class="n">one_body_ao</span> <span class="o">=</span> <span class="n">OneBodyElectronicIntegrals</span><span class="p">(</span>
@@ -1033,14 +1012,14 @@
 <span class="sd">            logfile: the path of the PySCF logfile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">logfile</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="n">content</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+            <span class="n">contents</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
 
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">content</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">content</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;System:&quot;</span><span class="p">):</span>
-                <span class="n">content</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="n">i</span><span class="p">:]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">content</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">contents</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">content</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;System:&quot;</span><span class="p">):</span>
+                <span class="n">contents</span> <span class="o">=</span> <span class="n">contents</span><span class="p">[</span><span class="n">i</span><span class="p">:]</span>
                 <span class="k">break</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;PySCF processing messages log:</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">content</span><span class="p">))</span></div>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;PySCF processing messages log:</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">contents</span><span class="p">))</span></div>
 </pre></div>
 
              </article>

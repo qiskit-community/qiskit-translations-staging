@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.algorithms.ground_state_solvers.minimum_eigensolver_factories.numpy_minimum_eigensolver_factory &mdash; документация Qiskit Nature 0.3.2</title>
+  <title>qiskit_nature.algorithms.ground_state_solvers.minimum_eigensolver_factories.numpy_minimum_eigensolver_factory &mdash; документация Qiskit Nature 0.4.1</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -281,7 +281,7 @@
   <h1>Исходный код qiskit_nature.algorithms.ground_state_solvers.minimum_eigensolver_factories.numpy_minimum_eigensolver_factory</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2020, 2021.</span>
+<span class="c1"># (C) Copyright IBM 2020, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -294,10 +294,13 @@
 <span class="sd">&quot;&quot;&quot;The numpy minimum eigensolver factory for ground state calculation algorithms.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Callable</span>
-
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">qiskit.algorithms</span> <span class="kn">import</span> <span class="n">MinimumEigensolver</span><span class="p">,</span> <span class="n">NumPyMinimumEigensolver</span>
-
+<span class="kn">from</span> <span class="nn">qiskit_nature.deprecation</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DeprecatedType</span><span class="p">,</span>
+    <span class="n">deprecate_property</span><span class="p">,</span>
+    <span class="n">deprecate_positional_arguments</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.converters.second_quantization</span> <span class="kn">import</span> <span class="n">QubitConverter</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.problems.second_quantization</span> <span class="kn">import</span> <span class="n">BaseProblem</span>
 <span class="kn">from</span> <span class="nn">.minimum_eigensolver_factory</span> <span class="kn">import</span> <span class="n">MinimumEigensolverFactory</span>
@@ -306,48 +309,69 @@
 <div class="viewcode-block" id="NumPyMinimumEigensolverFactory"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.algorithms.NumPyMinimumEigensolverFactory.html#qiskit_nature.algorithms.NumPyMinimumEigensolverFactory">[документация]</a><span class="k">class</span> <span class="nc">NumPyMinimumEigensolverFactory</span><span class="p">(</span><span class="n">MinimumEigensolverFactory</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A factory to construct a NumPyMinimumEigensolver.&quot;&quot;&quot;</span>
 
+    <span class="nd">@deprecate_positional_arguments</span><span class="p">(</span>
+        <span class="n">version</span><span class="o">=</span><span class="s2">&quot;0.4&quot;</span><span class="p">,</span>
+        <span class="n">func_name</span><span class="o">=</span><span class="s2">&quot;NumPyMinimumEigensolver Constructor&quot;</span><span class="p">,</span>
+        <span class="n">old_function_arguments</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;self&quot;</span><span class="p">,</span> <span class="s2">&quot;filter_criterion&quot;</span><span class="p">,</span> <span class="s2">&quot;use_default_filter_criterion&quot;</span><span class="p">],</span>
+        <span class="n">stack_level</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">filter_criterion</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span>
-            <span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span> <span class="nb">bool</span>
-        <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">use_default_filter_criterion</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
-<span class="sd">            filter_criterion: callable that allows to filter eigenvalues/eigenstates. The minimum</span>
-<span class="sd">                eigensolver is only searching over feasible states and returns an eigenstate that</span>
-<span class="sd">                has the smallest eigenvalue among feasible states. The callable has the signature</span>
-<span class="sd">                `filter(eigenstate, eigenvalue, aux_values)` and must return a boolean to indicate</span>
-<span class="sd">                whether to consider this value or not. If there is no</span>
-<span class="sd">                feasible element, the result can even be empty.</span>
 <span class="sd">            use_default_filter_criterion: whether to use the transformation&#39;s default filter</span>
-<span class="sd">                criterion if ``filter_criterion`` is ``None``.</span>
+<span class="sd">            criterion if ``filter_criterion`` is ``None``.</span>
+<span class="sd">            kwargs: keyword arguments passed to NumpyMinimumEigensolver to construct</span>
+<span class="sd">            the internal `MinimumEigensolver`. Note that filter_criterion is now accessed through</span>
+<span class="sd">            NumpyMinimumEigensolver.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_filter_criterion</span> <span class="o">=</span> <span class="n">filter_criterion</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_use_default_filter_criterion</span> <span class="o">=</span> <span class="n">use_default_filter_criterion</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_eigensolver</span> <span class="o">=</span> <span class="n">NumPyMinimumEigensolver</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="nd">@property</span>
+    <span class="nd">@property</span>  <span class="c1"># type: ignore</span>
+    <span class="nd">@deprecate_property</span><span class="p">(</span>
+        <span class="s2">&quot;0.4&quot;</span><span class="p">,</span>
+        <span class="n">new_type</span><span class="o">=</span><span class="n">DeprecatedType</span><span class="o">.</span><span class="n">FUNCTION</span><span class="p">,</span>
+        <span class="n">new_name</span><span class="o">=</span><span class="s2">&quot;__init__&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="k">def</span> <span class="nf">filter_criterion</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span> <span class="nb">bool</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;returns filter criterion&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_criterion</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimum_eigensolver</span><span class="o">.</span><span class="n">filter_criterion</span>
 
-    <span class="nd">@filter_criterion</span><span class="o">.</span><span class="n">setter</span>
+    <span class="nd">@filter_criterion</span><span class="o">.</span><span class="n">setter</span>  <span class="c1"># type: ignore</span>
+    <span class="nd">@deprecate_property</span><span class="p">(</span>
+        <span class="s2">&quot;0.4&quot;</span><span class="p">,</span>
+        <span class="n">new_type</span><span class="o">=</span><span class="n">DeprecatedType</span><span class="o">.</span><span class="n">FUNCTION</span><span class="p">,</span>
+        <span class="n">new_name</span><span class="o">=</span><span class="s2">&quot;__init__&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="k">def</span> <span class="nf">filter_criterion</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">value</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span> <span class="nb">bool</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;sets filter criterion&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_filter_criterion</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">minimum_eigensolver</span><span class="o">.</span><span class="n">filter_criterion</span> <span class="o">=</span> <span class="n">value</span>
 
-    <span class="nd">@property</span>
+    <span class="nd">@property</span>  <span class="c1"># type: ignore</span>
+    <span class="nd">@deprecate_property</span><span class="p">(</span>
+        <span class="s2">&quot;0.4&quot;</span><span class="p">,</span>
+        <span class="n">new_type</span><span class="o">=</span><span class="n">DeprecatedType</span><span class="o">.</span><span class="n">FUNCTION</span><span class="p">,</span>
+        <span class="n">new_name</span><span class="o">=</span><span class="s2">&quot;__init__&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="k">def</span> <span class="nf">use_default_filter_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;returns whether to use the default filter criterion&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_default_filter_criterion</span>
 
-    <span class="nd">@use_default_filter_criterion</span><span class="o">.</span><span class="n">setter</span>
+    <span class="nd">@use_default_filter_criterion</span><span class="o">.</span><span class="n">setter</span>  <span class="c1"># type: ignore</span>
+    <span class="nd">@deprecate_property</span><span class="p">(</span>
+        <span class="s2">&quot;0.4&quot;</span><span class="p">,</span>
+        <span class="n">new_type</span><span class="o">=</span><span class="n">DeprecatedType</span><span class="o">.</span><span class="n">FUNCTION</span><span class="p">,</span>
+        <span class="n">new_name</span><span class="o">=</span><span class="s2">&quot;__init__&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="k">def</span> <span class="nf">use_default_filter_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;sets whether to use the default filter criterion&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_use_default_filter_criterion</span> <span class="o">=</span> <span class="n">value</span>
@@ -365,15 +389,19 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            A NumPyMinimumEigensolver suitable to compute the ground state of the molecule.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">filter_criterion</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_criterion</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">filter_criterion</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_default_filter_criterion</span><span class="p">:</span>
-            <span class="n">filter_criterion</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">get_default_filter_criterion</span><span class="p">()</span>
 
-        <span class="n">npme</span> <span class="o">=</span> <span class="n">NumPyMinimumEigensolver</span><span class="p">(</span><span class="n">filter_criterion</span><span class="o">=</span><span class="n">filter_criterion</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">npme</span></div>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimum_eigensolver</span><span class="o">.</span><span class="n">filter_criterion</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_default_filter_criterion</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_eigensolver</span><span class="o">.</span><span class="n">filter_criterion</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">get_default_filter_criterion</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_eigensolver</span></div>
 
 <div class="viewcode-block" id="NumPyMinimumEigensolverFactory.supports_aux_operators"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.algorithms.NumPyMinimumEigensolverFactory.supports_aux_operators.html#qiskit_nature.algorithms.NumPyMinimumEigensolverFactory.supports_aux_operators">[документация]</a>    <span class="k">def</span> <span class="nf">supports_aux_operators</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">NumPyMinimumEigensolver</span><span class="o">.</span><span class="n">supports_aux_operators</span><span class="p">()</span></div></div>
+        <span class="k">return</span> <span class="n">NumPyMinimumEigensolver</span><span class="o">.</span><span class="n">supports_aux_operators</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">minimum_eigensolver</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumPyMinimumEigensolver</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the solver instance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_eigensolver</span></div>
 </pre></div>
 
              </article>

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.runtime.vqe_client &mdash; документация Qiskit Nature 0.3.2</title>
+  <title>qiskit_nature.runtime.vqe_client &mdash; документация Qiskit Nature 0.4.1</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -281,7 +281,7 @@
   <h1>Исходный код qiskit_nature.runtime.vqe_client</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2021.</span>
+<span class="c1"># (C) Copyright IBM 2021, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -294,20 +294,28 @@
 <span class="sd">&quot;&quot;&quot;The Qiskit Nature VQE Runtime Client.&quot;&quot;&quot;</span>
 
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
 <span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">QiskitError</span>
 <span class="kn">from</span> <span class="nn">qiskit.providers</span> <span class="kn">import</span> <span class="n">Provider</span>
 <span class="kn">from</span> <span class="nn">qiskit.providers.backend</span> <span class="kn">import</span> <span class="n">Backend</span>
-<span class="kn">from</span> <span class="nn">qiskit.algorithms</span> <span class="kn">import</span> <span class="n">MinimumEigensolver</span><span class="p">,</span> <span class="n">MinimumEigensolverResult</span><span class="p">,</span> <span class="n">VQEResult</span>
+<span class="kn">from</span> <span class="nn">qiskit.algorithms</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MinimumEigensolver</span><span class="p">,</span>
+    <span class="n">MinimumEigensolverResult</span><span class="p">,</span>
+    <span class="n">VQEResult</span><span class="p">,</span>
+    <span class="n">VariationalAlgorithm</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">qiskit.algorithms.optimizers</span> <span class="kn">import</span> <span class="n">Optimizer</span><span class="p">,</span> <span class="n">SPSA</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">OperatorBase</span><span class="p">,</span> <span class="n">PauliSumOp</span>
 <span class="kn">from</span> <span class="nn">qiskit.quantum_info</span> <span class="kn">import</span> <span class="n">SparsePauliOp</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature</span> <span class="kn">import</span> <span class="n">ListOrDictType</span>
+
+<span class="kn">from</span> <span class="nn">..converters.second_quantization.utils</span> <span class="kn">import</span> <span class="n">ListOrDict</span>
 
 
-<div class="viewcode-block" id="VQEClient"><a class="viewcode-back" href="../../../stubs/qiskit_nature.runtime.VQEClient.html#qiskit_nature.runtime.VQEClient">[документация]</a><span class="k">class</span> <span class="nc">VQEClient</span><span class="p">(</span><span class="n">MinimumEigensolver</span><span class="p">):</span>
+<div class="viewcode-block" id="VQEClient"><a class="viewcode-back" href="../../../stubs/qiskit_nature.runtime.VQEClient.html#qiskit_nature.runtime.VQEClient">[документация]</a><span class="k">class</span> <span class="nc">VQEClient</span><span class="p">(</span><span class="n">VariationalAlgorithm</span><span class="p">,</span> <span class="n">MinimumEigensolver</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The Qiskit Nature VQE Runtime Client.</span>
 
 <span class="sd">    This class is a client to call the VQE program in Qiskit Runtime.&quot;&quot;&quot;</span>
@@ -510,13 +518,14 @@
             <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="VQEClient.compute_minimum_eigenvalue"><a class="viewcode-back" href="../../../stubs/qiskit_nature.runtime.VQEClient.compute_minimum_eigenvalue.html#qiskit_nature.runtime.VQEClient.compute_minimum_eigenvalue">[документация]</a>    <span class="k">def</span> <span class="nf">compute_minimum_eigenvalue</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">OperatorBase</span><span class="p">,</span> <span class="n">aux_operators</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">OperatorBase</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">OperatorBase</span><span class="p">,</span> <span class="n">aux_operators</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ListOrDictType</span><span class="p">[</span><span class="n">OperatorBase</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MinimumEigensolverResult</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Calls the VQE Runtime to approximate the ground state of the given operator.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            operator: Qubit operator of the observable</span>
-<span class="sd">            aux_operators: Optional list of auxiliary operators to be evaluated with the</span>
+<span class="sd">            aux_operators: Optional list of auxiliary operators or dictionary with</span>
+<span class="sd">                auxiliary operators as values and their names as keys to be evaluated with the</span>
 <span class="sd">                (approximate) eigenstate of the minimum eigenvalue main result and their expectation</span>
 <span class="sd">                values returned. For instance in chemistry these can be dipole operators, total</span>
 <span class="sd">                particle count operators so we can get values for these at the ground state.</span>
@@ -538,13 +547,15 @@
 
         <span class="c1"># try to convert the operators to a PauliSumOp, if it isn&#39;t already one</span>
         <span class="n">operator</span> <span class="o">=</span> <span class="n">_convert_to_paulisumop</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">aux_operators</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">aux_operators</span> <span class="o">=</span> <span class="p">[</span><span class="n">_convert_to_paulisumop</span><span class="p">(</span><span class="n">aux_op</span><span class="p">)</span> <span class="k">for</span> <span class="n">aux_op</span> <span class="ow">in</span> <span class="n">aux_operators</span><span class="p">]</span>
+        <span class="n">wrapped_aux_operators</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">aux_op_name_or_idx</span><span class="p">):</span> <span class="n">_convert_to_paulisumop</span><span class="p">(</span><span class="n">aux_op</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">aux_op_name_or_idx</span><span class="p">,</span> <span class="n">aux_op</span> <span class="ow">in</span> <span class="n">ListOrDict</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
 
         <span class="c1"># combine the settings with the given operator to runtime inputs</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="n">operator</span><span class="p">,</span>
-            <span class="s2">&quot;aux_operators&quot;</span><span class="p">:</span> <span class="n">aux_operators</span><span class="p">,</span>
+            <span class="s2">&quot;aux_operators&quot;</span><span class="p">:</span> <span class="n">wrapped_aux_operators</span><span class="p">,</span>
             <span class="s2">&quot;ansatz&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ansatz</span><span class="p">,</span>
             <span class="s2">&quot;optimizer&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span>
             <span class="s2">&quot;initial_point&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_point</span><span class="p">,</span>
@@ -575,7 +586,12 @@
         <span class="n">vqe_result</span><span class="o">.</span><span class="n">cost_function_evals</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_function_evals&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">vqe_result</span><span class="o">.</span><span class="n">eigenstate</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;eigenstate&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">vqe_result</span><span class="o">.</span><span class="n">eigenvalue</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;eigenvalue&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">vqe_result</span><span class="o">.</span><span class="n">aux_operator_eigenvalues</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;aux_operator_eigenvalues&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">aux_op_eigenvalues</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;aux_operator_eigenvalues&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">aux_operators</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">aux_op_eigenvalues</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">aux_op_eigenvalues</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">wrapped_aux_operators</span><span class="p">,</span> <span class="n">aux_op_eigenvalues</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">aux_op_eigenvalues</span><span class="p">:</span>  <span class="c1"># For consistency set to None for empty dict</span>
+                <span class="n">aux_op_eigenvalues</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">vqe_result</span><span class="o">.</span><span class="n">aux_operator_eigenvalues</span> <span class="o">=</span> <span class="n">aux_op_eigenvalues</span>
         <span class="n">vqe_result</span><span class="o">.</span><span class="n">optimal_parameters</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optimal_parameters&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">vqe_result</span><span class="o">.</span><span class="n">optimal_point</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optimal_point&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">vqe_result</span><span class="o">.</span><span class="n">optimal_value</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optimal_value&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>

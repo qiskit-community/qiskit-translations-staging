@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.drivers.second_quantization.hdf5d.hdf5driver &mdash; Qiskit Nature 0.3.2 - dokumentacja</title>
+  <title>qiskit_nature.drivers.second_quantization.hdf5d.hdf5driver &mdash; Qiskit Nature 0.4.1 - dokumentacja</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -281,7 +281,7 @@
   <h1>Kod źródłowy modułu qiskit_nature.drivers.second_quantization.hdf5d.hdf5driver</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2018, 2021.</span>
+<span class="c1"># (C) Copyright IBM 2018, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -293,20 +293,32 @@
 
 <span class="sd">&quot;&quot;&quot; HDF5 Driver &quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 
+<span class="kn">import</span> <span class="nn">h5py</span>
+
+<span class="kn">from</span> <span class="nn">qiskit_nature</span> <span class="kn">import</span> <span class="n">QiskitNatureError</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.hdf5</span> <span class="kn">import</span> <span class="n">load_from_hdf5</span><span class="p">,</span> <span class="n">save_to_hdf5</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.second_quantized_property</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">GroupedSecondQuantizedProperty</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.electronic</span> <span class="kn">import</span> <span class="n">ElectronicStructureDriverResult</span>
 
+<span class="kn">from</span> <span class="nn">....deprecation</span> <span class="kn">import</span> <span class="n">warn_deprecated</span><span class="p">,</span> <span class="n">DeprecatedType</span>
 <span class="kn">from</span> <span class="nn">...qmolecule</span> <span class="kn">import</span> <span class="n">QMolecule</span>
-<span class="kn">from</span> <span class="nn">..electronic_structure_driver</span> <span class="kn">import</span> <span class="n">ElectronicStructureDriver</span>
+<span class="kn">from</span> <span class="nn">..base_driver</span> <span class="kn">import</span> <span class="n">BaseDriver</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="HDF5Driver"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.HDF5Driver.html#qiskit_nature.drivers.second_quantization.HDF5Driver">[dokumentacja]</a><span class="k">class</span> <span class="nc">HDF5Driver</span><span class="p">(</span><span class="n">ElectronicStructureDriver</span><span class="p">):</span>
+<div class="viewcode-block" id="HDF5Driver"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.HDF5Driver.html#qiskit_nature.drivers.second_quantization.HDF5Driver">[dokumentacja]</a><span class="k">class</span> <span class="nc">HDF5Driver</span><span class="p">(</span><span class="n">BaseDriver</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Qiskit Nature driver for reading an HDF5 file.</span>
 
-<span class="sd">    The HDF5 file is one as saved from a :class:`~qiskit_nature.drivers.QMolecule` instance.</span>
+<span class="sd">    The HDF5 file is one constructed with :func:`~qiskit_nature.hdf5.save_to_hdf5` or a file</span>
+<span class="sd">    containing a legacy :class:`~qiskit_nature.drivers.QMolecule` instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hdf5_input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;molecule.hdf5&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -328,26 +340,94 @@
         <span class="sd">&quot;&quot;&quot;Sets work path.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_work_path</span> <span class="o">=</span> <span class="n">new_work_path</span>
 
-<div class="viewcode-block" id="HDF5Driver.run"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.HDF5Driver.run.html#qiskit_nature.drivers.second_quantization.HDF5Driver.run">[dokumentacja]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ElectronicStructureDriverResult</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_get_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the absolute path to the HDF5 file.</span>
+
 <span class="sd">        Returns:</span>
-<span class="sd">            ElectronicStructureDriverResult re-constructed from the HDF5 file.</span>
+<span class="sd">            The absolute path to the HDF5 file.</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            LookupError: file not found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">hdf5_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hdf5_input</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">work_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">hdf5_file</span><span class="p">):</span>
-            <span class="n">hdf5_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">work_path</span><span class="p">,</span> <span class="n">hdf5_file</span><span class="p">))</span>
+        <span class="n">hdf5_file</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_hdf5_input</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">work_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">hdf5_file</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
+            <span class="n">hdf5_file</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">work_path</span><span class="p">)</span> <span class="o">/</span> <span class="n">hdf5_file</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">hdf5_file</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">hdf5_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">LookupError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HDF5 file not found: </span><span class="si">{</span><span class="n">hdf5_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
+        <span class="k">return</span> <span class="n">hdf5_file</span>
+
+<div class="viewcode-block" id="HDF5Driver.convert"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.HDF5Driver.convert.html#qiskit_nature.drivers.second_quantization.HDF5Driver.convert">[dokumentacja]</a>    <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">replace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Converts a legacy QMolecule HDF5 file into the new Property-framework.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            replace: if True, will replace the original HDF5 file. Otherwise `_new.hdf5` will be</span>
+<span class="sd">                used as a suffix.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            LookupError: file not found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hdf5_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_path</span><span class="p">()</span>
+
         <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">)</span>
-        <span class="n">molecule</span> <span class="o">=</span> <span class="n">QMolecule</span><span class="p">(</span><span class="n">hdf5_file</span><span class="p">)</span>
+        <span class="n">q_mol</span> <span class="o">=</span> <span class="n">QMolecule</span><span class="p">(</span><span class="n">hdf5_file</span><span class="p">)</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">)</span>
-        <span class="n">molecule</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">ElectronicStructureDriverResult</span><span class="o">.</span><span class="n">from_legacy_driver_result</span><span class="p">(</span><span class="n">molecule</span><span class="p">)</span></div></div>
+        <span class="n">q_mol</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+
+        <span class="n">new_hdf5_file</span> <span class="o">=</span> <span class="n">hdf5_file</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">replace</span><span class="p">:</span>
+            <span class="n">new_hdf5_file</span> <span class="o">=</span> <span class="n">hdf5_file</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">hdf5_file</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_new.hdf5&quot;</span><span class="p">)</span>
+
+        <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="n">driver_result</span> <span class="o">=</span> <span class="n">ElectronicStructureDriverResult</span><span class="o">.</span><span class="n">from_legacy_driver_result</span><span class="p">(</span><span class="n">q_mol</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="n">save_to_hdf5</span><span class="p">(</span><span class="n">driver_result</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">new_hdf5_file</span><span class="p">),</span> <span class="n">replace</span><span class="o">=</span><span class="n">replace</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HDF5Driver.run"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.HDF5Driver.run.html#qiskit_nature.drivers.second_quantization.HDF5Driver.run">[dokumentacja]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GroupedSecondQuantizedProperty</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            GroupedSecondQuantizedProperty re-constructed from the HDF5 file.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            LookupError: file not found.</span>
+<span class="sd">            QiskitNatureError: if the HDF5 file did not contain a GroupedSecondQuantizedProperty.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hdf5_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_path</span><span class="p">()</span>
+
+        <span class="n">legacy_hdf5_file</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">hdf5_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;origin_driver&quot;</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">legacy_hdf5_file</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">warn_deprecated</span><span class="p">(</span>
+                    <span class="s2">&quot;0.4.0&quot;</span><span class="p">,</span>
+                    <span class="n">DeprecatedType</span><span class="o">.</span><span class="n">METHOD</span><span class="p">,</span>
+                    <span class="s2">&quot;HDF5Driver.run with legacy HDF5 file&quot;</span><span class="p">,</span>
+                    <span class="n">additional_msg</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">&quot;. Your HDF5 file contains the legacy QMolecule object! You should consider &quot;</span>
+                        <span class="s2">&quot;converting it to the new property framework. See also HDF5Driver.convert&quot;</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">legacy_hdf5_file</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">molecule</span> <span class="o">=</span> <span class="n">QMolecule</span><span class="p">(</span><span class="n">hdf5_file</span><span class="p">)</span>
+                <span class="n">molecule</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">ElectronicStructureDriverResult</span><span class="o">.</span><span class="n">from_legacy_driver_result</span><span class="p">(</span><span class="n">molecule</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">)</span>
+
+        <span class="n">driver_result</span> <span class="o">=</span> <span class="n">load_from_hdf5</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">hdf5_file</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">driver_result</span><span class="p">,</span> <span class="n">GroupedSecondQuantizedProperty</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Expected a GroupedSecondQuantizedProperty but found a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">driver_result</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="s2">&quot;object instead.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">driver_result</span></div></div>
 </pre></div>
 
              </article>

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.algorithms.ground_state_solvers.adapt_vqe &mdash; Qiskit Nature 0.3.2 documentation</title>
+  <title>qiskit_nature.algorithms.ground_state_solvers.adapt_vqe &mdash; Qiskit Nature 0.4.1 documentation</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -303,7 +303,8 @@
 
 <span class="kn">from</span> <span class="nn">qiskit.algorithms</span> <span class="kn">import</span> <span class="n">VQE</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
-<span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">OperatorBase</span><span class="p">,</span> <span class="n">PauliSumOp</span>
+<span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">OperatorBase</span><span class="p">,</span> <span class="n">PauliSumOp</span><span class="p">,</span> <span class="n">CircuitSampler</span>
+<span class="kn">from</span> <span class="nn">qiskit.opflow.gradients</span> <span class="kn">import</span> <span class="n">GradientBase</span><span class="p">,</span> <span class="n">Gradient</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils.validation</span> <span class="kn">import</span> <span class="n">validate_min</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature</span> <span class="kn">import</span> <span class="n">ListOrDictType</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.exceptions</span> <span class="kn">import</span> <span class="n">QiskitNatureError</span>
@@ -313,6 +314,7 @@
 <span class="kn">from</span> <span class="nn">qiskit_nature.converters.second_quantization.utils</span> <span class="kn">import</span> <span class="n">ListOrDict</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.problems.second_quantization</span> <span class="kn">import</span> <span class="n">BaseProblem</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.results</span> <span class="kn">import</span> <span class="n">ElectronicStructureResult</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.deprecation</span> <span class="kn">import</span> <span class="n">deprecate_arguments</span>
 
 <span class="kn">from</span> <span class="nn">.minimum_eigensolver_factories</span> <span class="kn">import</span> <span class="n">MinimumEigensolverFactory</span>
 <span class="kn">from</span> <span class="nn">.ground_state_eigensolver</span> <span class="kn">import</span> <span class="n">GroundStateEigensolver</span>
@@ -321,15 +323,36 @@
 
 
 <div class="viewcode-block" id="AdaptVQE"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.algorithms.AdaptVQE.html#qiskit_nature.algorithms.AdaptVQE">[docs]</a><span class="k">class</span> <span class="nc">AdaptVQE</span><span class="p">(</span><span class="n">GroundStateEigensolver</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A ground state calculation employing the AdaptVQE algorithm.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;A ground state calculation employing the AdaptVQE algorithm.</span>
 
+<span class="sd">    The performance of AdaptVQE significantly depends on the choice of `gradient` (see also</span>
+<span class="sd">    `qiskit.opflow.gradients`) and its parameters such as `grad_method`, `qfi_method` (if</span>
+<span class="sd">    applicable) and `epilson`.</span>
+
+<span class="sd">    To reproduce the default behavior of AdaptVQE prior to Qiskit Nature 0.4 you should supply</span>
+<span class="sd">    `delta=1` explicitly. This will use a finite difference scheme for the gradient evaluation</span>
+<span class="sd">    whereas after version 0.4 a parameter shift gradient will be used.</span>
+<span class="sd">    For more information refer to the gradient framework of Qiskit Terra:</span>
+<span class="sd">    https://qiskit.org/documentation/tutorials/operators/02_gradients_framework.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@deprecate_arguments</span><span class="p">(</span>
+        <span class="s2">&quot;0.4.0&quot;</span><span class="p">,</span>
+        <span class="p">{</span><span class="s2">&quot;delta&quot;</span><span class="p">:</span> <span class="s2">&quot;gradient&quot;</span><span class="p">},</span>
+        <span class="n">additional_msg</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Instead of `delta=1.0` you have to construct a gradient, like so &quot;</span>
+            <span class="s2">&quot;`gradient=Gradient(grad_method=&#39;fin_diff&#39;, epsilon=1.0)`.&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="c1"># pylint: disable=unused-argument</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">qubit_converter</span><span class="p">:</span> <span class="n">QubitConverter</span><span class="p">,</span>
         <span class="n">solver</span><span class="p">:</span> <span class="n">MinimumEigensolverFactory</span><span class="p">,</span>
         <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="p">,</span>
-        <span class="n">delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>  <span class="c1"># delta is copied into gradient by the deprecate_arguments wrapper</span>
         <span class="n">max_iterations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">gradient</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientBase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -339,23 +362,43 @@
 <span class="sd">            delta: the finite difference step size for the gradient computation. It has a minimum</span>
 <span class="sd">                value of 1e-5.</span>
 <span class="sd">            max_iterations: the maximum number of iterations of the AdaptVQE algorithm.</span>
+<span class="sd">            gradient: a class that converts operator expression to the first-order gradient based</span>
+<span class="sd">                on the method mentioned.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">validate_min</span><span class="p">(</span><span class="s2">&quot;threshold&quot;</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="mf">1e-15</span><span class="p">)</span>
-        <span class="n">validate_min</span><span class="p">(</span><span class="s2">&quot;delta&quot;</span><span class="p">,</span> <span class="n">delta</span><span class="p">,</span> <span class="mf">1e-5</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gradient</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="c1"># this scenario can only occur while using the deprecate_arguments wrapper which will</span>
+            <span class="c1"># move any argument supplied to delta into gradient.</span>
+            <span class="n">gradient</span> <span class="o">=</span> <span class="n">Gradient</span><span class="p">(</span><span class="n">grad_method</span><span class="o">=</span><span class="s2">&quot;fin_diff&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="n">gradient</span><span class="p">)</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">qubit_converter</span><span class="p">,</span> <span class="n">solver</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span> <span class="o">=</span> <span class="n">threshold</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_delta</span> <span class="o">=</span> <span class="n">delta</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_max_iterations</span> <span class="o">=</span> <span class="n">max_iterations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gradient</span> <span class="o">=</span> <span class="n">gradient</span>  <span class="c1"># use the property setter to handle `None` case consistently</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_excitation_pool</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">OperatorBase</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_excitation_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">OperatorBase</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_main_operator</span><span class="p">:</span> <span class="n">PauliSumOp</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ansatz</span><span class="p">:</span> <span class="n">QuantumCircuit</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="p">:</span> <span class="n">CircuitSampler</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GradientBase</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the gradient.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gradient</span>
+
+    <span class="nd">@gradient</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grad</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientBase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets the gradient.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">grad</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">grad</span> <span class="o">=</span> <span class="n">Gradient</span><span class="p">(</span><span class="n">grad_method</span><span class="o">=</span><span class="s2">&quot;param_shift&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gradient</span> <span class="o">=</span> <span class="n">grad</span>
 
 <div class="viewcode-block" id="AdaptVQE.returns_groundstate"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.algorithms.AdaptVQE.returns_groundstate.html#qiskit_nature.algorithms.AdaptVQE.returns_groundstate">[docs]</a>    <span class="k">def</span> <span class="nf">returns_groundstate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Whether this class returns only the ground state energy or also the ground state itself.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
     <span class="k">def</span> <span class="nf">_compute_gradients</span><span class="p">(</span>
@@ -378,16 +421,22 @@
         <span class="k">for</span> <span class="n">exc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excitation_pool</span><span class="p">:</span>
             <span class="c1"># add next excitation to ansatz</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_ansatz</span><span class="o">.</span><span class="n">operators</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excitation_list</span> <span class="o">+</span> <span class="p">[</span><span class="n">exc</span><span class="p">]</span>
-            <span class="c1"># set the current ansatz</span>
-            <span class="n">vqe</span><span class="o">.</span><span class="n">ansatz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ansatz</span>
-            <span class="c1"># evaluate energies</span>
-            <span class="n">parameter_sets</span> <span class="o">=</span> <span class="n">theta</span> <span class="o">+</span> <span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_delta</span><span class="p">]</span> <span class="o">+</span> <span class="n">theta</span> <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_delta</span><span class="p">]</span>
-            <span class="n">energy_evaluation</span> <span class="o">=</span> <span class="n">vqe</span><span class="o">.</span><span class="n">get_energy_evaluation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_main_operator</span><span class="p">)</span>
-            <span class="n">energy_results</span> <span class="o">=</span> <span class="n">energy_evaluation</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">parameter_sets</span><span class="p">))</span>
+            <span class="c1"># Due to an outstanding issue in Terra, the ansatz needs to be decomposed for all</span>
+            <span class="c1"># gradient to work correctly. Once this issue is resolved, this workaround can be</span>
+            <span class="c1"># removed.</span>
+            <span class="n">vqe</span><span class="o">.</span><span class="n">ansatz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ansatz</span><span class="o">.</span><span class="n">decompose</span><span class="p">()</span>
+            <span class="c1"># We need to explicitly convert this to a list in order to make the object hash-able</span>
+            <span class="n">param_sets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">vqe</span><span class="o">.</span><span class="n">ansatz</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+            <span class="c1"># zip will only iterate the length of the shorter list</span>
+            <span class="n">theta1</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">vqe</span><span class="o">.</span><span class="n">ansatz</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">theta</span><span class="p">))</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">vqe</span><span class="o">.</span><span class="n">construct_expectation</span><span class="p">(</span><span class="n">theta1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_main_operator</span><span class="p">)</span>
             <span class="c1"># compute gradient</span>
-            <span class="n">gradient</span> <span class="o">=</span> <span class="p">(</span><span class="n">energy_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">energy_results</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delta</span><span class="p">)</span>
-            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">gradient</span><span class="p">),</span> <span class="n">exc</span><span class="p">))</span>
-
+            <span class="n">state_grad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">operator</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">param_sets</span><span class="p">)</span>
+            <span class="c1"># Assign the parameters and evaluate the gradient</span>
+            <span class="n">value_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">param_sets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span> <span class="mf">0.0</span><span class="p">}</span>
+            <span class="n">state_grad_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">state_grad</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">value_dict</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Gradient computed : </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">state_grad_result</span><span class="p">))</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">state_grad_result</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">exc</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">res</span>
 
     <span class="nd">@staticmethod</span>
@@ -436,6 +485,7 @@
 <span class="sd">                with an internally constructed auxiliary operator. Note: the names used for the</span>
 <span class="sd">                internal auxiliary operators correspond to the `Property.name` attributes which</span>
 <span class="sd">                generated the respective operators.</span>
+<span class="sd">            QiskitNatureError: if the chosen gradient method appears to result in all-zero gradients.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            An AdaptVQEResult which is an ElectronicStructureResult but also includes runtime</span>
@@ -495,6 +545,9 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vqe</span><span class="o">.</span><span class="n">ansatz</span><span class="p">,</span> <span class="n">UCC</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span><span class="s2">&quot;The AdaptVQE algorithm requires the use of the UCC ansatz&quot;</span><span class="p">)</span>
 
+        <span class="c1"># setup circuit sampler</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span> <span class="o">=</span> <span class="n">CircuitSampler</span><span class="p">(</span><span class="n">vqe</span><span class="o">.</span><span class="n">quantum_instance</span><span class="p">)</span>
+
         <span class="c1"># We construct the ansatz once to be able to extract the full set of excitation operators.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ansatz</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">vqe</span><span class="o">.</span><span class="n">ansatz</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ansatz</span><span class="o">.</span><span class="n">_build</span><span class="p">()</span>
@@ -529,6 +582,11 @@
                         <span class="n">gradlog</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">(*)&quot;</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">gradlog</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">max_grad</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">iteration</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span>
+                        <span class="s2">&quot;Gradient choice is not suited as it leads to all zero gradients gradients. &quot;</span>
+                        <span class="s2">&quot;Try a different gradient method.&quot;</span>
+                    <span class="p">)</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                     <span class="s2">&quot;Adaptive VQE terminated successfully with a final maximum gradient: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">max_grad</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>

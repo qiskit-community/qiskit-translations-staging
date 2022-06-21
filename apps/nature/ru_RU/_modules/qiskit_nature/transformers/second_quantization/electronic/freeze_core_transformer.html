@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.transformers.second_quantization.electronic.freeze_core_transformer &mdash; документация Qiskit Nature 0.3.2</title>
+  <title>qiskit_nature.transformers.second_quantization.electronic.freeze_core_transformer &mdash; документация Qiskit Nature 0.4.1</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -281,7 +281,7 @@
   <h1>Исходный код qiskit_nature.transformers.second_quantization.electronic.freeze_core_transformer</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2021.</span>
+<span class="c1"># (C) Copyright IBM 2021, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -293,9 +293,10 @@
 
 <span class="sd">&quot;&quot;&quot;The Freeze-Core Reduction interface.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">cast</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">from</span> <span class="nn">qiskit_nature</span> <span class="kn">import</span> <span class="n">QiskitNatureError</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.constants</span> <span class="kn">import</span> <span class="n">PERIODIC_TABLE</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.electronic</span> <span class="kn">import</span> <span class="n">ElectronicStructureDriverResult</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.electronic.types</span> <span class="kn">import</span> <span class="n">GroupedElectronicProperty</span>
 
@@ -359,12 +360,13 @@
                 <span class="s2">&quot;The FreezeCoreTransformer requires an `ElectronicStructureDriverResult`, not a &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;property of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">grouped_property</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
-        <span class="n">grouped_property</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">ElectronicStructureDriverResult</span><span class="p">,</span> <span class="n">grouped_property</span><span class="p">)</span>
 
         <span class="n">molecule</span> <span class="o">=</span> <span class="n">grouped_property</span><span class="o">.</span><span class="n">molecule</span>
         <span class="n">particle_number</span> <span class="o">=</span> <span class="n">grouped_property</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s2">&quot;ParticleNumber&quot;</span><span class="p">)</span>
 
-        <span class="n">inactive_orbs_idxs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count_core_orbitals</span><span class="p">(</span><span class="n">molecule</span><span class="o">.</span><span class="n">atoms</span><span class="p">)))</span>
+        <span class="n">inactive_orbs_idxs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_freeze_core</span><span class="p">:</span>
+            <span class="n">inactive_orbs_idxs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count_core_orbitals</span><span class="p">(</span><span class="n">molecule</span><span class="o">.</span><span class="n">atoms</span><span class="p">)))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remove_orbitals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">inactive_orbs_idxs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_remove_orbitals</span><span class="p">)</span>
         <span class="n">active_orbs_idxs</span> <span class="o">=</span> <span class="p">[</span>
@@ -410,23 +412,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            The atomic number of the queried atom kind.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">periodic_table</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">atom</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">capitalize</span><span class="p">())</span></div>
-
-    <span class="n">periodic_table</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="c1"># pylint: disable=bad-option-value,bad-whitespace,line-too-long</span>
-        <span class="c1"># fmt: off</span>
-        <span class="s2">&quot;_&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="s2">&quot;He&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Li&quot;</span><span class="p">,</span> <span class="s2">&quot;Be&quot;</span><span class="p">,</span>                                                              <span class="s2">&quot;B&quot;</span><span class="p">,</span>  <span class="s2">&quot;C&quot;</span><span class="p">,</span>  <span class="s2">&quot;N&quot;</span><span class="p">,</span>  <span class="s2">&quot;O&quot;</span><span class="p">,</span>  <span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="s2">&quot;Ne&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Na&quot;</span><span class="p">,</span> <span class="s2">&quot;Mg&quot;</span><span class="p">,</span>                                                             <span class="s2">&quot;Al&quot;</span><span class="p">,</span> <span class="s2">&quot;Si&quot;</span><span class="p">,</span>  <span class="s2">&quot;P&quot;</span><span class="p">,</span>  <span class="s2">&quot;S&quot;</span><span class="p">,</span> <span class="s2">&quot;Cl&quot;</span><span class="p">,</span> <span class="s2">&quot;Ar&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;K&quot;</span><span class="p">,</span> <span class="s2">&quot;Ca&quot;</span><span class="p">,</span> <span class="s2">&quot;Sc&quot;</span><span class="p">,</span> <span class="s2">&quot;Ti&quot;</span><span class="p">,</span>  <span class="s2">&quot;V&quot;</span><span class="p">,</span> <span class="s2">&quot;Cr&quot;</span><span class="p">,</span> <span class="s2">&quot;Mn&quot;</span><span class="p">,</span> <span class="s2">&quot;Fe&quot;</span><span class="p">,</span> <span class="s2">&quot;Co&quot;</span><span class="p">,</span> <span class="s2">&quot;Ni&quot;</span><span class="p">,</span> <span class="s2">&quot;Cu&quot;</span><span class="p">,</span> <span class="s2">&quot;Zn&quot;</span><span class="p">,</span> <span class="s2">&quot;Ga&quot;</span><span class="p">,</span> <span class="s2">&quot;Ge&quot;</span><span class="p">,</span> <span class="s2">&quot;As&quot;</span><span class="p">,</span> <span class="s2">&quot;Se&quot;</span><span class="p">,</span> <span class="s2">&quot;Br&quot;</span><span class="p">,</span> <span class="s2">&quot;Kr&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Rb&quot;</span><span class="p">,</span> <span class="s2">&quot;Sr&quot;</span><span class="p">,</span>  <span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="s2">&quot;Zr&quot;</span><span class="p">,</span> <span class="s2">&quot;Nb&quot;</span><span class="p">,</span> <span class="s2">&quot;Mo&quot;</span><span class="p">,</span> <span class="s2">&quot;Tc&quot;</span><span class="p">,</span> <span class="s2">&quot;Ru&quot;</span><span class="p">,</span> <span class="s2">&quot;Rh&quot;</span><span class="p">,</span> <span class="s2">&quot;Pd&quot;</span><span class="p">,</span> <span class="s2">&quot;Ag&quot;</span><span class="p">,</span> <span class="s2">&quot;Cd&quot;</span><span class="p">,</span> <span class="s2">&quot;In&quot;</span><span class="p">,</span> <span class="s2">&quot;Sn&quot;</span><span class="p">,</span> <span class="s2">&quot;Sb&quot;</span><span class="p">,</span> <span class="s2">&quot;Te&quot;</span><span class="p">,</span>  <span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="s2">&quot;Xe&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Cs&quot;</span><span class="p">,</span> <span class="s2">&quot;Ba&quot;</span><span class="p">,</span> <span class="s2">&quot;La&quot;</span><span class="p">,</span> <span class="s2">&quot;Ce&quot;</span><span class="p">,</span> <span class="s2">&quot;Pr&quot;</span><span class="p">,</span> <span class="s2">&quot;Nd&quot;</span><span class="p">,</span> <span class="s2">&quot;Pm&quot;</span><span class="p">,</span> <span class="s2">&quot;Sm&quot;</span><span class="p">,</span> <span class="s2">&quot;Eu&quot;</span><span class="p">,</span> <span class="s2">&quot;Gd&quot;</span><span class="p">,</span> <span class="s2">&quot;Tb&quot;</span><span class="p">,</span> <span class="s2">&quot;Dy&quot;</span><span class="p">,</span> <span class="s2">&quot;Ho&quot;</span><span class="p">,</span> <span class="s2">&quot;Er&quot;</span><span class="p">,</span> <span class="s2">&quot;Tm&quot;</span><span class="p">,</span> <span class="s2">&quot;Yb&quot;</span><span class="p">,</span> <span class="s2">&quot;Lu&quot;</span><span class="p">,</span>
-                          <span class="s2">&quot;Hf&quot;</span><span class="p">,</span> <span class="s2">&quot;Ta&quot;</span><span class="p">,</span>  <span class="s2">&quot;W&quot;</span><span class="p">,</span> <span class="s2">&quot;Re&quot;</span><span class="p">,</span> <span class="s2">&quot;Os&quot;</span><span class="p">,</span> <span class="s2">&quot;Ir&quot;</span><span class="p">,</span> <span class="s2">&quot;Pt&quot;</span><span class="p">,</span> <span class="s2">&quot;Au&quot;</span><span class="p">,</span> <span class="s2">&quot;Hg&quot;</span><span class="p">,</span> <span class="s2">&quot;Tl&quot;</span><span class="p">,</span> <span class="s2">&quot;Pb&quot;</span><span class="p">,</span> <span class="s2">&quot;Bi&quot;</span><span class="p">,</span> <span class="s2">&quot;Po&quot;</span><span class="p">,</span> <span class="s2">&quot;At&quot;</span><span class="p">,</span> <span class="s2">&quot;Rn&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Fr&quot;</span><span class="p">,</span> <span class="s2">&quot;Ra&quot;</span><span class="p">,</span> <span class="s2">&quot;Ac&quot;</span><span class="p">,</span> <span class="s2">&quot;Th&quot;</span><span class="p">,</span> <span class="s2">&quot;Pa&quot;</span><span class="p">,</span>  <span class="s2">&quot;U&quot;</span><span class="p">,</span> <span class="s2">&quot;Np&quot;</span><span class="p">,</span> <span class="s2">&quot;Pu&quot;</span><span class="p">,</span> <span class="s2">&quot;Am&quot;</span><span class="p">,</span> <span class="s2">&quot;Cm&quot;</span><span class="p">,</span> <span class="s2">&quot;Bk&quot;</span><span class="p">,</span> <span class="s2">&quot;Cf&quot;</span><span class="p">,</span> <span class="s2">&quot;Es&quot;</span><span class="p">,</span> <span class="s2">&quot;Fm&quot;</span><span class="p">,</span> <span class="s2">&quot;Md&quot;</span><span class="p">,</span> <span class="s2">&quot;No&quot;</span><span class="p">,</span> <span class="s2">&quot;Lr&quot;</span><span class="p">,</span>
-                          <span class="s2">&quot;Rf&quot;</span><span class="p">,</span> <span class="s2">&quot;Db&quot;</span><span class="p">,</span> <span class="s2">&quot;Sg&quot;</span><span class="p">,</span> <span class="s2">&quot;Bh&quot;</span><span class="p">,</span> <span class="s2">&quot;Hs&quot;</span><span class="p">,</span> <span class="s2">&quot;Mt&quot;</span><span class="p">,</span> <span class="s2">&quot;Ds&quot;</span><span class="p">,</span> <span class="s2">&quot;Rg&quot;</span><span class="p">,</span> <span class="s2">&quot;Cn&quot;</span><span class="p">,</span> <span class="s2">&quot;Nh&quot;</span><span class="p">,</span> <span class="s2">&quot;Fl&quot;</span><span class="p">,</span> <span class="s2">&quot;Mc&quot;</span><span class="p">,</span> <span class="s2">&quot;Lv&quot;</span><span class="p">,</span> <span class="s2">&quot;Ts&quot;</span><span class="p">,</span> <span class="s2">&quot;Og&quot;</span><span class="p">,</span>
-        <span class="c1"># fmt: on</span>
-    <span class="p">]</span></div>
+        <span class="k">return</span> <span class="n">PERIODIC_TABLE</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">atom</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">capitalize</span><span class="p">())</span></div></div>
 </pre></div>
 
              </article>

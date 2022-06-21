@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.operators.second_quantization.spin_op &mdash; Tài liệu Qiskit Nature 0.3.2</title>
+  <title>qiskit_nature.operators.second_quantization.spin_op &mdash; Tài liệu Qiskit Nature 0.4.1</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -303,12 +303,12 @@
 <span class="kn">from</span> <span class="nn">fractions</span> <span class="kn">import</span> <span class="n">Fraction</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span><span class="p">,</span> <span class="n">partial</span><span class="p">,</span> <span class="n">reduce</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">qiskit.utils.validation</span> <span class="kn">import</span> <span class="n">validate_min</span>
-
 <span class="kn">from</span> <span class="nn">qiskit_nature</span> <span class="kn">import</span> <span class="n">QiskitNatureError</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.deprecation</span> <span class="kn">import</span> <span class="n">deprecate_function</span>
 
 <span class="kn">from</span> <span class="nn">.second_quantized_op</span> <span class="kn">import</span> <span class="n">SecondQuantizedOp</span>
 
@@ -656,24 +656,42 @@
         <span class="c1"># to simply complex conjugating the coefficient.</span>
         <span class="k">return</span> <span class="n">SpinOp</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_spin_array</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coeffs</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()),</span> <span class="n">spin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">spin</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SpinOp.reduce"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.SpinOp.reduce.html#qiskit_nature.operators.second_quantization.SpinOp.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">rtol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SpinOp&quot;</span><span class="p">:</span>
+<div class="viewcode-block" id="SpinOp.reduce"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.SpinOp.reduce.html#qiskit_nature.operators.second_quantization.SpinOp.reduce">[docs]</a>    <span class="nd">@deprecate_function</span><span class="p">(</span><span class="s2">&quot;0.4.0&quot;</span><span class="p">,</span> <span class="n">new_name</span><span class="o">=</span><span class="s2">&quot;simplify&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">atol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">rtol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># pylint: disable=unused-argument</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SpinOp&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reduce the operator.</span>
+
+<span class="sd">        This method is deprecated. Use `simplify` instead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">simplify</span><span class="p">(</span><span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpinOp.simplify"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.SpinOp.simplify.html#qiskit_nature.operators.second_quantization.SpinOp.simplify">[docs]</a>    <span class="k">def</span> <span class="nf">simplify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SpinOp&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Simplify the operator.</span>
+
+<span class="sd">        Merges terms with same labels and eliminates terms with coefficients close to 0.</span>
+<span class="sd">        Returns a new operator (the original operator is not modified).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            atol: Absolute tolerance for checking if coefficients are zero (Default: 1e-8).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The simplified operator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">atol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">atol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atol</span>
-        <span class="k">if</span> <span class="n">rtol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">rtol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rtol</span>
 
         <span class="n">flatten_array</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">Sequence</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spin_array</span><span class="p">)),</span>
             <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">coeff_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coeffs</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coeffs</span><span class="p">):</span>
-            <span class="n">coeff_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">val</span>
-        <span class="n">non_zero</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">coeff_list</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">rtol</span><span class="p">)</span>
-        <span class="p">]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">non_zero</span><span class="p">:</span>
+        <span class="n">coeff_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">flatten_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">coeff_list</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coeffs</span><span class="p">)</span>
+        <span class="n">is_zero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">coeff_list</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">is_zero</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">SpinOp</span><span class="p">(</span>
                 <span class="p">(</span>
                     <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">register_length</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">),</span>
@@ -681,9 +699,10 @@
                 <span class="p">),</span>
                 <span class="n">spin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">spin</span><span class="p">,</span>
             <span class="p">)</span>
+        <span class="n">non_zero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">is_zero</span><span class="p">)</span>
         <span class="n">new_array</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">flatten_array</span><span class="p">[</span><span class="n">non_zero</span><span class="p">]</span>
-            <span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">non_zero</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">register_length</span><span class="p">))</span>
+            <span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">non_zero</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">register_length</span><span class="p">))</span>
             <span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="n">new_coeff</span> <span class="o">=</span> <span class="n">coeff_list</span><span class="p">[</span><span class="n">non_zero</span><span class="p">]</span>

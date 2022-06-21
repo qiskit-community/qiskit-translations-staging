@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.algorithms.pes_samplers.bopes_sampler &mdash; Τεκμηρίωση του Qiskit Nature - 0.3.2</title>
+  <title>qiskit_nature.algorithms.pes_samplers.bopes_sampler &mdash; Τεκμηρίωση του Qiskit Nature - 0.4.1</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -281,7 +281,7 @@
   <h1>Πηγαίος κώδικας για το qiskit_nature.algorithms.pes_samplers.bopes_sampler</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2020, 2021.</span>
+<span class="c1"># (C) Copyright IBM 2020, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -294,22 +294,28 @@
 <span class="sd">&quot;&quot;&quot;The calculation of points on the Born-Oppenheimer Potential Energy Surface (BOPES).&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Callable</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
 <span class="kn">from</span> <span class="nn">qiskit.algorithms</span> <span class="kn">import</span> <span class="n">VariationalAlgorithm</span>
-<span class="kn">from</span> <span class="nn">qiskit_nature.deprecation</span> <span class="kn">import</span> <span class="n">DeprecatedType</span><span class="p">,</span> <span class="n">warn_deprecated</span>
-<span class="kn">from</span> <span class="nn">qiskit_nature.drivers.base_driver</span> <span class="kn">import</span> <span class="n">BaseDriver</span> <span class="k">as</span> <span class="n">DeprecatedBaseDriver</span>
+<span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">PauliSumOp</span>
+<span class="kn">from</span> <span class="nn">qiskit.utils.deprecation</span> <span class="kn">import</span> <span class="n">deprecate_arguments</span>
+
 <span class="kn">from</span> <span class="nn">qiskit_nature.drivers.second_quantization</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaseDriver</span><span class="p">,</span>
     <span class="n">ElectronicStructureMoleculeDriver</span><span class="p">,</span>
     <span class="n">VibrationalStructureMoleculeDriver</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature</span> <span class="kn">import</span> <span class="n">ListOrDictType</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.converters.second_quantization.utils</span> <span class="kn">import</span> <span class="n">ListOrDict</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.exceptions</span> <span class="kn">import</span> <span class="n">QiskitNatureError</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.operators.second_quantization</span> <span class="kn">import</span> <span class="n">SecondQuantizedOp</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.problems.second_quantization</span> <span class="kn">import</span> <span class="n">BaseProblem</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.results</span> <span class="kn">import</span> <span class="n">BOPESSamplerResult</span><span class="p">,</span> <span class="n">EigenstateResult</span>
-<span class="kn">from</span> <span class="nn">..ground_state_solvers</span> <span class="kn">import</span> <span class="n">GroundStateSolver</span>
 <span class="kn">from</span> <span class="nn">.extrapolator</span> <span class="kn">import</span> <span class="n">Extrapolator</span><span class="p">,</span> <span class="n">WindowExtrapolator</span>
+<span class="kn">from</span> <span class="nn">..ground_state_solvers</span> <span class="kn">import</span> <span class="n">GroundStateSolver</span>
+<span class="kn">from</span> <span class="nn">..excited_states_solvers</span> <span class="kn">import</span> <span class="n">ExcitedStatesSolver</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -317,17 +323,20 @@
 <div class="viewcode-block" id="BOPESSampler"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.algorithms.pes_samplers.BOPESSampler.html#qiskit_nature.algorithms.pes_samplers.BOPESSampler">[τεκμηρίωση]</a><span class="k">class</span> <span class="nc">BOPESSampler</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Class to evaluate the Born-Oppenheimer Potential Energy Surface (BOPES).&quot;&quot;&quot;</span>
 
+    <span class="nd">@deprecate_arguments</span><span class="p">({</span><span class="s2">&quot;gss&quot;</span><span class="p">:</span> <span class="s2">&quot;state_solver&quot;</span><span class="p">})</span>
+    <span class="c1"># pylint: disable=unused-argument</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">gss</span><span class="p">:</span> <span class="n">GroundStateSolver</span><span class="p">,</span>
+        <span class="n">state_solver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">GroundStateSolver</span><span class="p">,</span> <span class="n">ExcitedStatesSolver</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-3</span><span class="p">,</span>
         <span class="n">bootstrap</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">num_bootstrap</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">extrapolator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Extrapolator</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">gss</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GroundStateSolver</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
-<span class="sd">            gss: GroundStateSolver</span>
+<span class="sd">            state_solver: GroundStateSolver or ExcitedStatesSolver.</span>
 <span class="sd">            tolerance: Tolerance desired for minimum energy.</span>
 <span class="sd">            bootstrap: Whether to warm-start the solution of variational minimum eigensolvers.</span>
 <span class="sd">            num_bootstrap: Number of previous points for extrapolation</span>
@@ -337,6 +346,8 @@
 <span class="sd">                all previous points will be used for bootstrapping.</span>
 <span class="sd">            extrapolator: Extrapolator objects that define space/window</span>
 <span class="sd">                           and method to extrapolate variational parameters.</span>
+<span class="sd">            gss: (DEPRECATED) Old name for the solver when it only supported GroundStateSolver.</span>
+<span class="sd">                Note that gss is copied into state_solver by the deprecate_arguments wrapper.</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            QiskitNatureError: If ``num_boostrap`` is an integer smaller than 2, or</span>
@@ -344,13 +355,15 @@
 <span class="sd">                ``WindowExtrapolator``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_gss</span> <span class="o">=</span> <span class="n">gss</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_state_solver</span> <span class="o">=</span> <span class="n">state_solver</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_variational_solver</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tolerance</span> <span class="o">=</span> <span class="n">tolerance</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_bootstrap</span> <span class="o">=</span> <span class="n">bootstrap</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_aux_operators</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="p">:</span> <span class="n">BaseProblem</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_driver</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DeprecatedBaseDriver</span><span class="p">,</span> <span class="n">BaseDriver</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_driver</span><span class="p">:</span> <span class="n">BaseDriver</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_energies</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_energies</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_raw_results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">EigenstateResult</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_points_optparams</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_bootstrap</span> <span class="o">=</span> <span class="n">num_bootstrap</span>
@@ -372,19 +385,41 @@
                 <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span>
                     <span class="s2">&quot;num_bootstrap must be None or an integer greater than or equal to 2&quot;</span>
                 <span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gss</span><span class="o">.</span><span class="n">solver</span><span class="p">,</span> <span class="n">VariationalAlgorithm</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_variational_solver</span><span class="p">:</span>
             <span class="c1"># Save initial point passed to min_eigensolver;</span>
             <span class="c1"># this will be used when NOT bootstrapping</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_initial_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gss</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">initial_point</span>  <span class="c1"># type: ignore</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initial_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_solver</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">initial_point</span>
 
-<div class="viewcode-block" id="BOPESSampler.sample"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.algorithms.pes_samplers.BOPESSampler.sample.html#qiskit_nature.algorithms.pes_samplers.BOPESSampler.sample">[τεκμηρίωση]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">BaseProblem</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">BOPESSamplerResult</span><span class="p">:</span>
+<div class="viewcode-block" id="BOPESSampler.sample"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.algorithms.pes_samplers.BOPESSampler.sample.html#qiskit_nature.algorithms.pes_samplers.BOPESSampler.sample">[τεκμηρίωση]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">problem</span><span class="p">:</span> <span class="n">BaseProblem</span><span class="p">,</span>
+        <span class="n">points</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">aux_operators</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
+            <span class="n">ListOrDictType</span><span class="p">[</span>
+                <span class="n">Union</span><span class="p">[</span>
+                    <span class="n">SecondQuantizedOp</span><span class="p">,</span>
+                    <span class="n">PauliSumOp</span><span class="p">,</span>
+                    <span class="n">Callable</span><span class="p">[[</span><span class="n">BaseProblem</span><span class="p">],</span> <span class="n">Union</span><span class="p">[</span><span class="n">SecondQuantizedOp</span><span class="p">,</span> <span class="n">PauliSumOp</span><span class="p">]],</span>
+                <span class="p">]</span>
+            <span class="p">]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BOPESSamplerResult</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Run the sampler at the given points, potentially with repetitions.</span>
+<span class="sd">        Auxiliary operators can be evaluated at each step.</span>
+<span class="sd">        If they are given as operators, the given operator will be evaluated at each step of the</span>
+<span class="sd">        BOPESSampler.</span>
+<span class="sd">        The signature also allows `Callable` object to define geometry dependent operators.</span>
+<span class="sd">        The `evaluate_callable_aux_operators()` will convert all the `Callable` object of the input</span>
+<span class="sd">        `aux_operators` to their corresponding auxiliaries at the current step.</span>
+<span class="sd">        The resulting ListOrDict of aux_operators will then be passed to the solver.</span>
+<span class="sd">        `Callable` auxiliary operators should access the properties of the current step through a</span>
+<span class="sd">        `BaseProblem` argument and return a valid auxiliary operator.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            problem: BaseProblem whose driver should be based on a Molecule object that has</span>
 <span class="sd">                     perturbations to be varied.</span>
 <span class="sd">            points: The points along the degrees of freedom to evaluate.</span>
+<span class="sd">            aux_operators: Auxiliary operators to pass to the state_solver object.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            BOPES Sampler Result</span>
@@ -394,16 +429,20 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span> <span class="o">=</span> <span class="n">problem</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_driver</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">driver</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_aux_operators</span> <span class="o">=</span> <span class="n">aux_operators</span>
+        <span class="c1"># We have to force the creation of the solver so that we work on the same solver</span>
+        <span class="c1"># instance before and after `_state_solver.solve`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_state_solver</span><span class="o">.</span><span class="n">get_qubit_operators</span><span class="p">(</span><span class="n">problem</span><span class="o">=</span><span class="n">problem</span><span class="p">,</span> <span class="n">aux_operators</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># this must be called after self._state_solver.get_qubit_operators to account for</span>
+        <span class="c1"># EigenSolverFactories.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_variational_solver</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state_solver</span><span class="o">.</span><span class="n">solver</span><span class="p">,</span> <span class="n">VariationalAlgorithm</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_driver</span><span class="p">,</span> <span class="n">DeprecatedBaseDriver</span><span class="p">):</span>
-            <span class="n">warn_deprecated</span><span class="p">(</span>
-                <span class="s2">&quot;0.2.0&quot;</span><span class="p">,</span>
-                <span class="n">DeprecatedType</span><span class="o">.</span><span class="n">CLASS</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_driver</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_driver</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__qualname__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="n">new_name</span><span class="o">=</span><span class="s2">&quot;ElectronicStructureMoleculeDriver or VibrationalStructureMoleculeDriver&quot;</span><span class="p">,</span>
-                <span class="n">additional_msg</span><span class="o">=</span><span class="s2">&quot;from qiskit_nature.drivers.second_quantization&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_variational_solver</span><span class="p">:</span>
+            <span class="c1"># Save initial point passed to min_eigensolver;</span>
+            <span class="c1"># this will be used when NOT bootstrapping</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initial_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_solver</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">initial_point</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_driver</span><span class="p">,</span> <span class="p">(</span><span class="n">ElectronicStructureMoleculeDriver</span><span class="p">,</span> <span class="n">VibrationalStructureMoleculeDriver</span><span class="p">)</span>
         <span class="p">):</span>
             <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span>
@@ -417,10 +456,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_raw_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_points</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
         <span class="c1"># create results dictionary with (point, energy)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_results</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_energies</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_results</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="n">energy</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">total_energies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_energies</span> <span class="o">=</span> <span class="p">[</span><span class="n">res</span><span class="o">.</span><span class="n">total_energies</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_results</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
 
         <span class="n">result</span> <span class="o">=</span> <span class="n">BOPESSamplerResult</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_energies</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_results</span><span class="p">)</span>
 
@@ -436,9 +472,9 @@
 <span class="sd">            The results for all points.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">raw_results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">EigenstateResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gss</span><span class="o">.</span><span class="n">solver</span><span class="p">,</span> <span class="n">VariationalAlgorithm</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_variational_solver</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_points_optparams</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_gss</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">initial_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initial_point</span>  <span class="c1"># type: ignore</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_state_solver</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">initial_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initial_point</span>
 
         <span class="c1"># Iterate over the points</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
@@ -462,15 +498,7 @@
 
         <span class="c1"># update molecule geometry and thus resulting Hamiltonian based on specified point</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_driver</span><span class="p">,</span> <span class="n">DeprecatedBaseDriver</span><span class="p">):</span>
-            <span class="n">warn_deprecated</span><span class="p">(</span>
-                <span class="s2">&quot;0.2.0&quot;</span><span class="p">,</span>
-                <span class="n">DeprecatedType</span><span class="o">.</span><span class="n">CLASS</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_driver</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_driver</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__qualname__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="n">new_name</span><span class="o">=</span><span class="s2">&quot;ElectronicStructureMoleculeDriver or VibrationalStructureMoleculeDriver&quot;</span><span class="p">,</span>
-                <span class="n">additional_msg</span><span class="o">=</span><span class="s2">&quot;from qiskit_nature.drivers.second_quantization&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_driver</span><span class="p">,</span> <span class="p">(</span><span class="n">ElectronicStructureMoleculeDriver</span><span class="p">,</span> <span class="n">VibrationalStructureMoleculeDriver</span><span class="p">)</span>
         <span class="p">):</span>
             <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span>
@@ -480,7 +508,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_driver</span><span class="o">.</span><span class="n">molecule</span><span class="o">.</span><span class="n">perturbations</span> <span class="o">=</span> <span class="p">[</span><span class="n">point</span><span class="p">]</span>
 
         <span class="c1"># find closest previously run point and take optimal parameters</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gss</span><span class="o">.</span><span class="n">solver</span><span class="p">,</span> <span class="n">VariationalAlgorithm</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bootstrap</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bootstrap</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_variational_solver</span><span class="p">:</span>
             <span class="n">prev_points</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points_optparams</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
             <span class="n">prev_params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points_optparams</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
             <span class="n">n_pp</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prev_points</span><span class="p">)</span>
@@ -496,27 +524,49 @@
                 <span class="k">if</span> <span class="n">n_pp</span> <span class="o">&lt;=</span> <span class="n">n_boot</span><span class="p">:</span>
                     <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">point</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">prev_points</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_pp</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
                     <span class="c1"># find min &#39;distance&#39; from point to previous points</span>
-                    <span class="n">min_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+                    <span class="n">min_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
                     <span class="c1"># update initial point</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_gss</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">initial_point</span> <span class="o">=</span> <span class="n">prev_params</span><span class="p">[</span><span class="n">min_index</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_state_solver</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">initial_point</span> <span class="o">=</span> <span class="n">prev_params</span><span class="p">[</span><span class="n">min_index</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>  <span class="c1"># extrapolate using saved parameters</span>
                     <span class="n">opt_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points_optparams</span>
                     <span class="n">param_sets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolator</span><span class="o">.</span><span class="n">extrapolate</span><span class="p">(</span>
                         <span class="n">points</span><span class="o">=</span><span class="p">[</span><span class="n">point</span><span class="p">],</span> <span class="n">param_dict</span><span class="o">=</span><span class="n">opt_params</span>
                     <span class="p">)</span>
                     <span class="c1"># update initial point, note param_set is a dictionary</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_gss</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">initial_point</span> <span class="o">=</span> <span class="n">param_sets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_state_solver</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">initial_point</span> <span class="o">=</span> <span class="n">param_sets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
 
         <span class="c1"># the output is an instance of EigenstateResult</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gss</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="p">)</span>
+        <span class="n">aux_ops_current_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_callable_aux_operators</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="p">,</span> <span class="n">aux_ops_current_step</span><span class="p">)</span>
 
         <span class="c1"># Save optimal point to bootstrap</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gss</span><span class="o">.</span><span class="n">solver</span><span class="p">,</span> <span class="n">VariationalAlgorithm</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
-            <span class="c1"># at every point evaluation, the optimal params are updated</span>
-            <span class="n">optimal_params</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">raw_result</span><span class="o">.</span><span class="n">optimal_point</span>  <span class="c1"># type: ignore</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_variational_solver</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state_solver</span><span class="p">,</span> <span class="n">ExcitedStatesSolver</span><span class="p">):</span>
+                <span class="n">optimal_params</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">raw_result</span><span class="o">.</span><span class="n">ground_state_raw_result</span><span class="o">.</span><span class="n">optimal_point</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state_solver</span><span class="p">,</span> <span class="n">GroundStateSolver</span><span class="p">):</span>
+                <span class="n">optimal_params</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">raw_result</span><span class="o">.</span><span class="n">optimal_point</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_points_optparams</span><span class="p">[</span><span class="n">point</span><span class="p">]</span> <span class="o">=</span> <span class="n">optimal_params</span>
 
-        <span class="k">return</span> <span class="n">result</span></div>
+        <span class="k">return</span> <span class="n">result</span>
+
+<div class="viewcode-block" id="BOPESSampler.evaluate_callable_aux_operators"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.algorithms.pes_samplers.BOPESSampler.evaluate_callable_aux_operators.html#qiskit_nature.algorithms.pes_samplers.BOPESSampler.evaluate_callable_aux_operators">[τεκμηρίωση]</a>    <span class="k">def</span> <span class="nf">evaluate_callable_aux_operators</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ListOrDictType</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">SecondQuantizedOp</span><span class="p">,</span> <span class="n">PauliSumOp</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Convert the dictionary of auxiliary observables stored in self at the beginning of the</span>
+<span class="sd">        sample() method into a dictionary of auxiliary observables where the possible `Callable`</span>
+<span class="sd">        observables have been evaluated for the current step.</span>
+<span class="sd">        For example, this can be used to specify nuclear coordinate dependent observables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">aux_ops_current_step</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aux_operators</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">aux_ops_current_step</span> <span class="o">=</span> <span class="n">ListOrDict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">aux_name</span><span class="p">,</span> <span class="n">aux_op</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">ListOrDict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_aux_operators</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">aux_op</span><span class="p">):</span>
+                    <span class="n">aux_ops_current_step</span><span class="p">[</span><span class="n">aux_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">aux_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">aux_ops_current_step</span><span class="p">[</span><span class="n">aux_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">aux_op</span>
+        <span class="k">return</span> <span class="n">aux_ops_current_step</span></div></div>
 </pre></div>
 
              </article>

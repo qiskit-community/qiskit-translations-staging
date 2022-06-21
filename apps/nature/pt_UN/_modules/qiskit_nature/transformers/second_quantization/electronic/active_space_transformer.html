@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.transformers.second_quantization.electronic.active_space_transformer &mdash; Documentação Qiskit Nature 0.3.2</title>
+  <title>qiskit_nature.transformers.second_quantization.electronic.active_space_transformer &mdash; Documentação Qiskit Nature 0.4.1</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -281,7 +281,7 @@
   <h1>Código fonte de qiskit_nature.transformers.second_quantization.electronic.active_space_transformer</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2021.</span>
+<span class="c1"># (C) Copyright IBM 2021, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -306,7 +306,12 @@
     <span class="n">SecondQuantizedProperty</span><span class="p">,</span>
     <span class="n">GroupedSecondQuantizedProperty</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.electronic</span> <span class="kn">import</span> <span class="n">ParticleNumber</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.driver_metadata</span> <span class="kn">import</span> <span class="n">DriverMetadata</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.electronic</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ElectronicStructureDriverResult</span><span class="p">,</span>
+    <span class="n">ElectronicDipoleMoment</span><span class="p">,</span>
+    <span class="n">ParticleNumber</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.electronic.bases</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">ElectronicBasis</span><span class="p">,</span>
     <span class="n">ElectronicBasisTransform</span><span class="p">,</span>
@@ -316,7 +321,6 @@
     <span class="n">OneBodyElectronicIntegrals</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.electronic.types</span> <span class="kn">import</span> <span class="n">GroupedElectronicProperty</span>
-<span class="kn">from</span> <span class="nn">qiskit_nature.results</span> <span class="kn">import</span> <span class="n">ElectronicStructureResult</span>
 
 <span class="kn">from</span> <span class="nn">..base_transformer</span> <span class="kn">import</span> <span class="n">BaseTransformer</span>
 
@@ -528,9 +532,11 @@
         <span class="p">)</span>
 
         <span class="c1"># construct new GroupedElectronicProperty</span>
-        <span class="n">grouped_property_transformed</span> <span class="o">=</span> <span class="n">ElectronicStructureResult</span><span class="p">()</span>
-        <span class="n">grouped_property_transformed</span><span class="o">.</span><span class="n">electronic_basis_transform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_active</span>
+        <span class="n">grouped_property_transformed</span> <span class="o">=</span> <span class="n">ElectronicStructureDriverResult</span><span class="p">()</span>
         <span class="n">grouped_property_transformed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_property</span><span class="p">(</span><span class="n">grouped_property</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="n">grouped_property_transformed</span><span class="o">.</span><span class="n">molecule</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">grouped_property</span><span class="o">.</span><span class="n">molecule</span>  <span class="c1"># type: ignore[attr-defined]</span>
+        <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">grouped_property_transformed</span></div>
 
@@ -629,7 +635,7 @@
 
     <span class="c1"># TODO: can we efficiently extract this into the base class? At least the logic dealing with</span>
     <span class="c1"># recursion is general and we should avoid having to duplicate it.</span>
-    <span class="k">def</span> <span class="nf">_transform_property</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">:</span> <span class="n">Property</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Property</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_transform_property</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">:</span> <span class="n">Property</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Property</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Transforms a Property object.</span>
 
 <span class="sd">        This is a recursive reduction, iterating GroupedProperty objects when encountering one.</span>
@@ -643,36 +649,35 @@
 <span class="sd">        Raises:</span>
 <span class="sd">            TypeError: if an unexpected Property subtype is encountered.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">transformed_property</span><span class="p">:</span> <span class="n">Property</span>
+        <span class="n">transformed_property</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Property</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">GroupedProperty</span><span class="p">):</span>
-            <span class="n">transformed_property</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
+            <span class="n">transformed_property</span> <span class="o">=</span> <span class="n">prop</span><span class="o">.</span><span class="vm">__class__</span><span class="p">()</span>  <span class="c1"># type: ignore[call-arg]</span>
+            <span class="n">transformed_property</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">prop</span><span class="o">.</span><span class="n">name</span>
 
-            <span class="c1"># Get the iterator of the Group&#39;s properties. We access __iter__() directly to make</span>
-            <span class="c1"># mypy happy :-)</span>
-            <span class="n">iterator</span> <span class="o">=</span> <span class="n">transformed_property</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span>
-
-            <span class="n">transformed_internal_property</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="c1"># Send the transformed internal property to the GroupedProperty generator.</span>
-                    <span class="c1"># NOTE: in the first iteration, this variable is None, which is equivalent to</span>
-                    <span class="c1"># starting the iterator.</span>
-                    <span class="c1"># NOTE: a Generator&#39;s send method returns the iterators next value [2].</span>
-                    <span class="c1"># [2]: https://docs.python.org/3/reference/expressions.html#generator.send</span>
-                    <span class="n">internal_property</span> <span class="o">=</span> <span class="n">iterator</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">transformed_internal_property</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-                    <span class="k">break</span>
-
+            <span class="k">for</span> <span class="n">internal_property</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">prop</span><span class="p">):</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">transformed_internal_property</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_property</span><span class="p">(</span><span class="n">internal_property</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">transformed_internal_property</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">transformed_property</span><span class="o">.</span><span class="n">add_property</span><span class="p">(</span><span class="n">transformed_internal_property</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                        <span class="s2">&quot;The Property </span><span class="si">%s</span><span class="s2"> of type </span><span class="si">%s</span><span class="s2"> could not be transformed! Thus, it will not be &quot;</span>
-                        <span class="s2">&quot;included in the simulation from here onwards.&quot;</span><span class="p">,</span>
-                        <span class="n">prop</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                        <span class="nb">type</span><span class="p">(</span><span class="n">prop</span><span class="p">),</span>
+                        <span class="s2">&quot;The Property </span><span class="si">%s</span><span class="s2"> of type </span><span class="si">%s</span><span class="s2"> could not be transformed!&quot;</span><span class="p">,</span>
+                        <span class="n">internal_property</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="nb">type</span><span class="p">(</span><span class="n">internal_property</span><span class="p">),</span>
                     <span class="p">)</span>
                     <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">ElectronicDipoleMoment</span><span class="p">):</span>
+                <span class="n">transformed_property</span><span class="o">.</span><span class="n">reverse_dipole_sign</span> <span class="o">=</span> <span class="p">(</span>  <span class="c1"># type: ignore[attr-defined]</span>
+                    <span class="n">prop</span><span class="o">.</span><span class="n">reverse_dipole_sign</span>
+                <span class="p">)</span>
+                <span class="n">transformed_property</span><span class="o">.</span><span class="n">nuclear_dipole_moment</span> <span class="o">=</span> <span class="p">(</span>  <span class="c1"># type: ignore[attr-defined]</span>
+                    <span class="n">prop</span><span class="o">.</span><span class="n">nuclear_dipole_moment</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">transformed_property</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># empty GroupedProperty instance</span>
+                <span class="n">transformed_property</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">IntegralProperty</span><span class="p">):</span>
             <span class="c1"># get matrix operator of IntegralProperty</span>
@@ -691,7 +696,7 @@
             <span class="n">transformed_property</span><span class="o">.</span><span class="n">_shift</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="n">e_inactive</span>
 
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">ParticleNumber</span><span class="p">):</span>
-            <span class="n">p_n</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">ParticleNumber</span><span class="p">,</span> <span class="n">prop</span><span class="p">)</span>
+            <span class="n">p_n</span> <span class="o">=</span> <span class="n">prop</span>
             <span class="n">active_occ_alpha</span> <span class="o">=</span> <span class="n">p_n</span><span class="o">.</span><span class="n">occupation_alpha</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_active_orbs_indices</span><span class="p">]</span>
             <span class="n">active_occ_beta</span> <span class="o">=</span> <span class="n">p_n</span><span class="o">.</span><span class="n">occupation_beta</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_active_orbs_indices</span><span class="p">]</span>
             <span class="n">transformed_property</span> <span class="o">=</span> <span class="n">ParticleNumber</span><span class="p">(</span>
@@ -704,8 +709,14 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">SecondQuantizedProperty</span><span class="p">):</span>
             <span class="n">transformed_property</span> <span class="o">=</span> <span class="n">prop</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_active_orbs_indices</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span><span class="si">}</span><span class="s2"> is an unsupported Property-type for this Transformer!&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">ElectronicBasisTransform</span><span class="p">):</span>
+            <span class="c1"># transformation done manually during `transform`</span>
+            <span class="n">transformed_property</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_active</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">DriverMetadata</span><span class="p">):</span>
+            <span class="c1"># for the time being we manually catch this to avoid unnecessary warnings</span>
+            <span class="c1"># TODO: support storing transformer information in the DriverMetadata container</span>
+            <span class="n">transformed_property</span> <span class="o">=</span> <span class="n">prop</span>
 
         <span class="k">return</span> <span class="n">transformed_property</span></div>
 </pre></div>

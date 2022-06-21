@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.properties.second_quantization.vibrational.integrals.vibrational_integrals &mdash; Qiskit Nature 0.3.2 說明文件</title>
+  <title>qiskit_nature.properties.second_quantization.vibrational.integrals.vibrational_integrals &mdash; Qiskit Nature 0.4.1 說明文件</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -281,7 +281,7 @@
   <h1>qiskit_nature.properties.second_quantization.vibrational.integrals.vibrational_integrals 的原始碼</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2021.</span>
+<span class="c1"># (C) Copyright IBM 2021, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -293,11 +293,14 @@
 
 <span class="sd">&quot;&quot;&quot;A container for arbitrary ``n-body`` vibrational integrals.&quot;&quot;&quot;</span>
 
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">cycle</span><span class="p">,</span> <span class="n">permutations</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">tee</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 
+<span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">qiskit_nature</span> <span class="kn">import</span> <span class="n">QiskitNatureError</span>
@@ -314,12 +317,14 @@
 <span class="sd">    ``VibrationalIntegrals.set_truncation`` to change this value.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">VERSION</span> <span class="o">=</span> <span class="mi">1</span>
+
     <span class="n">_truncate</span> <span class="o">=</span> <span class="mi">5</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_body_terms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">integrals</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]],</span>
+        <span class="n">integrals</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -333,10 +338,8 @@
 <span class="sd">        Raises:</span>
 <span class="sd">            ValueError: if the number of body terms is less than 1.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">num_body_terms</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The number of body terms must be greater than 0, not &#39;</span><span class="si">{</span><span class="n">num_body_terms</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
-            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_num_body_terms</span><span class="p">(</span><span class="n">num_body_terms</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">num_body_terms</span><span class="si">}</span><span class="s2">Body</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_body_terms</span> <span class="o">=</span> <span class="n">num_body_terms</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_integrals</span> <span class="o">=</span> <span class="n">integrals</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span><span class="p">:</span> <span class="n">VibrationalBasis</span> <span class="o">=</span> <span class="kc">None</span>
@@ -352,12 +355,22 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">=</span> <span class="n">basis</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]:</span>
+    <span class="k">def</span> <span class="nf">num_body_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the num_body_terms.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_body_terms</span>
+
+    <span class="nd">@num_body_terms</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">num_body_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_body_terms</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets the num_body_terms.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_body_terms</span> <span class="o">=</span> <span class="n">num_body_terms</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]:</span>
         <span class="sd">&quot;&quot;&quot;Returns the integrals.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrals</span>
 
     <span class="nd">@integrals</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">integrals</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">integrals</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Sets the integrals.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_integrals</span> <span class="o">=</span> <span class="n">integrals</span>
 
@@ -376,6 +389,51 @@
             <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
 
+<div class="viewcode-block" id="VibrationalIntegrals.to_hdf5"><a class="viewcode-back" href="../../../../../../stubs/qiskit_nature.properties.second_quantization.vibrational.integrals.VibrationalIntegrals.to_hdf5.html#qiskit_nature.properties.second_quantization.vibrational.integrals.VibrationalIntegrals.to_hdf5">[文件]</a>    <span class="k">def</span> <span class="nf">to_hdf5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Stores this instance in an HDF5 group inside of the provided parent group.</span>
+
+<span class="sd">        See also :func:`~qiskit_nature.hdf5.HDF5Storable.to_hdf5` for more details.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            parent: the parent HDF5 group.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">require_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;__class__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;__module__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;__version__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">VERSION</span>
+
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;num_body_terms&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_body_terms</span>
+
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">vlen_dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">))</span>
+        <span class="n">integrals_dset</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;integrals&quot;</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">integrals</span><span class="p">),),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">coeffs_dset</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;coefficients&quot;</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">integrals</span><span class="p">),),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">ints</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">integrals</span><span class="p">):</span>
+            <span class="n">coeffs_dset</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">ints</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">integrals_dset</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ints</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="VibrationalIntegrals.from_hdf5"><a class="viewcode-back" href="../../../../../../stubs/qiskit_nature.properties.second_quantization.vibrational.integrals.VibrationalIntegrals.from_hdf5.html#qiskit_nature.properties.second_quantization.vibrational.integrals.VibrationalIntegrals.from_hdf5">[文件]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_hdf5</span><span class="p">(</span><span class="n">h5py_group</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VibrationalIntegrals</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Constructs a new instance from the data stored in the provided HDF5 group.</span>
+
+<span class="sd">        See also :func:`~qiskit_nature.hdf5.HDF5Storable.from_hdf5` for more details.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            h5py_group: the HDF5 group from which to load the data.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A new instance of this class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">integrals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">coeff</span><span class="p">,</span> <span class="n">ints</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">h5py_group</span><span class="p">[</span><span class="s2">&quot;coefficients&quot;</span><span class="p">][</span><span class="bp">Ellipsis</span><span class="p">],</span> <span class="n">h5py_group</span><span class="p">[</span><span class="s2">&quot;integrals&quot;</span><span class="p">][</span><span class="bp">Ellipsis</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="n">integrals</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">coeff</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ints</span><span class="p">)))</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">VibrationalIntegrals</span><span class="p">(</span><span class="n">h5py_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;num_body_terms&quot;</span><span class="p">],</span> <span class="n">integrals</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ret</span></div>
+
 <div class="viewcode-block" id="VibrationalIntegrals.set_truncation"><a class="viewcode-back" href="../../../../../../stubs/qiskit_nature.properties.second_quantization.vibrational.integrals.VibrationalIntegrals.set_truncation.html#qiskit_nature.properties.second_quantization.vibrational.integrals.VibrationalIntegrals.set_truncation">[文件]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">set_truncation</span><span class="p">(</span><span class="n">max_num_entries</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Set the maximum number of integral values to display before truncation.</span>
@@ -387,6 +445,14 @@
 <span class="sd">            Truncation will be disabled if `max_num_entries` is set to 0.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">VibrationalIntegrals</span><span class="o">.</span><span class="n">_truncate</span> <span class="o">=</span> <span class="n">max_num_entries</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_validate_num_body_terms</span><span class="p">(</span><span class="n">num_body_terms</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Validates the number of body terms.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">num_body_terms</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The number of body terms must be greater than 0, not &#39;</span><span class="si">{</span><span class="n">num_body_terms</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+            <span class="p">)</span>
 
 <div class="viewcode-block" id="VibrationalIntegrals.to_basis"><a class="viewcode-back" href="../../../../../../stubs/qiskit_nature.properties.second_quantization.vibrational.integrals.VibrationalIntegrals.to_basis.html#qiskit_nature.properties.second_quantization.vibrational.integrals.VibrationalIntegrals.to_basis">[文件]</a>    <span class="k">def</span> <span class="nf">to_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Maps the integrals into a basis which permits mapping into second-quantization.</span>
@@ -409,7 +475,7 @@
 
         <span class="c1"># we can cache already evaluated integrals to improve cases in which a basis is very</span>
         <span class="c1"># expensive to compute</span>
-        <span class="n">coeff_cache</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">coeff_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">coeff0</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrals</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_body_terms</span><span class="p">:</span>
@@ -426,7 +492,7 @@
                 <span class="n">indices_np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">indices_np</span><span class="p">)</span>
 
             <span class="c1"># the number of times which an index occurs corresponds to the power of the operator</span>
-            <span class="n">powers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">indices_np</span><span class="p">)</span>
+            <span class="n">powers</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">indices_np</span><span class="p">)</span>
 
             <span class="n">index_list</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -507,7 +573,7 @@
         <span class="k">return</span> <span class="n">VibrationalOp</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">num_modes</span><span class="p">,</span> <span class="n">num_modals_per_mode</span><span class="p">)</span></div>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_create_label_for_coeff</span><span class="p">(</span><span class="n">indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_create_label_for_coeff</span><span class="p">(</span><span class="n">indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Generates the operator label for the given indices.</span>
 
 <span class="sd">        Args:</span>

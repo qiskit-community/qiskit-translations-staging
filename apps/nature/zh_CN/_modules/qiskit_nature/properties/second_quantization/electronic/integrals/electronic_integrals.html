@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.properties.second_quantization.electronic.integrals.electronic_integrals &mdash; Qiskit Nature 0.3.2 文档</title>
+  <title>qiskit_nature.properties.second_quantization.electronic.integrals.electronic_integrals &mdash; Qiskit Nature 0.4.1 文档</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -293,11 +293,14 @@
 
 <span class="sd">&quot;&quot;&quot;A base class for raw electronic integrals.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">importlib</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
+<span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">qiskit_nature.operators.second_quantization</span> <span class="kn">import</span> <span class="n">FermionicOp</span>
@@ -322,7 +325,11 @@
 <span class="sd">    ``ElectronicIntegrals.set_truncation`` to change this value.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">VERSION</span> <span class="o">=</span> <span class="mi">1</span>
+
     <span class="n">INTEGRAL_TRUNCATION_LEVEL</span> <span class="o">=</span> <span class="mf">1e-12</span>
+
+    <span class="n">_MATRIX_REPRESENTATIONS</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="n">_truncate</span> <span class="o">=</span> <span class="mi">5</span>
 
@@ -330,7 +337,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_body_terms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">basis</span><span class="p">:</span> <span class="n">ElectronicBasis</span><span class="p">,</span>
-        <span class="n">matrices</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">matrices</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="o">...</span><span class="p">]],</span>
         <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">INTEGRAL_TRUNCATION_LEVEL</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># pylint: disable=line-too-long</span>
@@ -356,11 +363,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_num_body_terms</span><span class="p">(</span><span class="n">num_body_terms</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_matrices</span><span class="p">(</span><span class="n">matrices</span><span class="p">,</span> <span class="n">basis</span><span class="p">,</span> <span class="n">num_body_terms</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">=</span> <span class="n">basis</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_body_terms</span> <span class="o">=</span> <span class="n">num_body_terms</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span> <span class="o">=</span> <span class="n">threshold</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix_representations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">matrices</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="o">...</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="o">...</span><span class="p">]]</span>
         <span class="k">if</span> <span class="n">basis</span> <span class="o">==</span> <span class="n">ElectronicBasis</span><span class="o">.</span><span class="n">SO</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">matrices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span><span class="p">,</span> <span class="n">matrices</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -369,17 +376,143 @@
                 <span class="k">for</span> <span class="n">mat</span> <span class="ow">in</span> <span class="n">matrices</span>
             <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">basis</span> <span class="o">!=</span> <span class="n">ElectronicBasis</span><span class="o">.</span><span class="n">SO</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_matrices</span><span class="p">()</span>
+<div class="viewcode-block" id="ElectronicIntegrals.get_matrix"><a class="viewcode-back" href="../../../../../../stubs/qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.get_matrix.html#qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.get_matrix">[文档]</a>    <span class="k">def</span> <span class="nf">get_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the integral matrix at the requested index.</span>
+
+<span class="sd">        When the integrals are in the :class:`ElectronicBasis.SO` basis the index has no effect</span>
+<span class="sd">        because only a single matrix exists.</span>
+<span class="sd">        In any other case, the index may not exceed the length of the internal matrices being</span>
+<span class="sd">        stored. This length depends on the number of body terms for the specific implementation of</span>
+<span class="sd">        this base class.</span>
+
+<span class="sd">        Finally, when the internal matrix encountered at the requested index is `None`, it will be</span>
+<span class="sd">        replaced by the matrix at index 0, which for most common purposes is the default fallback</span>
+<span class="sd">        (pure alpha-spin) integral matrix used in place of other mixed spin matrices.</span>
+<span class="sd">        If a subclass must follow another convention it should overwrite the implementation of this</span>
+<span class="sd">        method.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            index: the index of the integral matrix to get.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The requested integral matrix.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            IndexError: when the requested index exceeds the number of internal matrices.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span>
+
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The requested index </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> exceeds the number of internal matrices &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mat</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">mat</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">basis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ElectronicBasis</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the basis.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span>
+
+    <span class="nd">@basis</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">basis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basis</span><span class="p">:</span> <span class="n">ElectronicBasis</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets the basis.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">=</span> <span class="n">basis</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">num_body_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the num_body_terms.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_body_terms</span>
+
+    <span class="nd">@num_body_terms</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">num_body_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_body_terms</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets the num_body_terms.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_body_terms</span> <span class="o">=</span> <span class="n">num_body_terms</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the threshold.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span>
+
+    <span class="nd">@threshold</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets the threshold.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+
+<div class="viewcode-block" id="ElectronicIntegrals.to_hdf5"><a class="viewcode-back" href="../../../../../../stubs/qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.to_hdf5.html#qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.to_hdf5">[文档]</a>    <span class="k">def</span> <span class="nf">to_hdf5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Stores this instance in an HDF5 group inside of the provided parent group.</span>
+
+<span class="sd">        See also :func:`~qiskit_nature.hdf5.HDF5Storable.to_hdf5` for more details.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            parent: the parent HDF5 group.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">require_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;__class__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;__module__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;__version__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">VERSION</span>
+
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;threshold&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">==</span> <span class="n">ElectronicBasis</span><span class="o">.</span><span class="n">SO</span><span class="p">:</span>
+            <span class="n">group</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;Spin&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">mat</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_MATRIX_REPRESENTATIONS</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">mat</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">group</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">mat</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ElectronicIntegrals.from_hdf5"><a class="viewcode-back" href="../../../../../../stubs/qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.from_hdf5.html#qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.from_hdf5">[文档]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_hdf5</span><span class="p">(</span><span class="n">h5py_group</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ElectronicIntegrals</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Constructs a new instance from the data stored in the provided HDF5 group.</span>
+
+<span class="sd">        See also :func:`~qiskit_nature.hdf5.HDF5Storable.from_hdf5` for more details.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            h5py_group: the HDF5 group from which to load the data.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A new instance of this class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">class_name</span> <span class="o">=</span> <span class="n">h5py_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;__class__&quot;</span><span class="p">]</span>
+        <span class="n">module_path</span> <span class="o">=</span> <span class="n">h5py_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;__module__&quot;</span><span class="p">]</span>
+
+        <span class="n">loaded_module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module_path</span><span class="p">)</span>
+        <span class="n">loaded_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">loaded_module</span><span class="p">,</span> <span class="n">class_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">basis</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ElectronicBasis</span><span class="p">,</span> <span class="n">h5py_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">])</span>
+        <span class="n">threshold</span> <span class="o">=</span> <span class="n">h5py_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;threshold&quot;</span><span class="p">]</span>
+        <span class="n">matrices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">rep</span> <span class="ow">in</span> <span class="n">loaded_class</span><span class="o">.</span><span class="n">_MATRIX_REPRESENTATIONS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">rep</span> <span class="ow">in</span> <span class="n">h5py_group</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">matrices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h5py_group</span><span class="p">[</span><span class="n">rep</span><span class="p">][</span><span class="o">...</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">matrices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">loaded_class</span><span class="p">(</span>
+            <span class="n">basis</span><span class="o">=</span><span class="n">basis</span><span class="p">,</span>
+            <span class="n">matrices</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">matrices</span><span class="p">),</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">string</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_basis</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">) </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_body_terms</span><span class="si">}</span><span class="s2">-Body Terms:&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">==</span> <span class="n">ElectronicBasis</span><span class="o">.</span><span class="n">SO</span><span class="p">:</span>
             <span class="n">string</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_matrix_as_sparse_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">title</span><span class="p">,</span> <span class="n">mat</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_matrix_representations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">):</span>
-                <span class="n">rendered_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_matrix_as_sparse_list</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">title</span><span class="p">,</span> <span class="n">mat</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_MATRIX_REPRESENTATIONS</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">):</span>
                 <span class="n">string</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">mat</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">string</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Same values as the corresponding primary-spin data.&quot;</span><span class="p">]</span>
+                    <span class="k">continue</span>
+                <span class="n">rendered_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_matrix_as_sparse_list</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">rendered_matrix</span><span class="p">:</span>
                     <span class="n">string</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="s2">&quot; is all zero&quot;</span>
                     <span class="k">continue</span>
@@ -387,7 +520,7 @@
         <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_render_matrix_as_sparse_list</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">_render_matrix_as_sparse_list</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="n">string</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">nonzero</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span>
         <span class="n">nonzero_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nonzero</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -402,6 +535,14 @@
             <span class="n">string</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="n">indices</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
             <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="n">string</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;An iterator over the internal matrices.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">mat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">mat</span>
 
 <div class="viewcode-block" id="ElectronicIntegrals.set_truncation"><a class="viewcode-back" href="../../../../../../stubs/qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.set_truncation.html#qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.set_truncation">[文档]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">set_truncation</span><span class="p">(</span><span class="n">max_num_entries</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -425,7 +566,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_validate_matrices</span><span class="p">(</span>
-        <span class="n">matrices</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">matrices</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="o">...</span><span class="p">]],</span>
         <span class="n">basis</span><span class="p">:</span> <span class="n">ElectronicBasis</span><span class="p">,</span>
         <span class="n">num_body_terms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -450,23 +591,8 @@
                     <span class="sa">f</span><span class="s2">&quot;match the number of provided matrices, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">matrices</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_fill_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Fills the internal matrices where ``None`` placeholders were inserted.</span>
-
-<span class="sd">        This method iterates the internal list of matrices and replaces any occurrences of ``None``</span>
-<span class="sd">        with the first matrix of the list. In case, more symmetry arguments need to be considered a</span>
-<span class="sd">        subclass should overwrite this method.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">filled_matrices</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">mat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">mat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">filled_matrices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">filled_matrices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">filled_matrices</span><span class="p">)</span>
-
 <div class="viewcode-block" id="ElectronicIntegrals.transform_basis"><a class="viewcode-back" href="../../../../../../stubs/qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.transform_basis.html#qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.transform_basis">[文档]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">transform_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transform</span><span class="p">:</span> <span class="n">ElectronicBasisTransform</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ElectronicIntegrals&quot;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">transform_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transform</span><span class="p">:</span> <span class="n">ElectronicBasisTransform</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ElectronicIntegrals</span><span class="p">:</span>
         <span class="c1"># pylint: disable=line-too-long</span>
         <span class="sd">&quot;&quot;&quot;Transforms the integrals according to the given transform object.</span>
 
@@ -510,32 +636,20 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">spin_matrix</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">FermionicOp</span><span class="o">.</span><span class="n">zero</span><span class="p">(</span><span class="n">register_length</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_create_base_op</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">spin_matrix</span><span class="p">[</span><span class="n">indices</span><span class="p">],</span> <span class="n">register_length</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span>
-                <span class="nb">range</span><span class="p">(</span><span class="n">register_length</span><span class="p">),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_body_terms</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">spin_matrix</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
-        <span class="p">)</span></div>
+        <span class="n">spin_matrix_iter</span> <span class="o">=</span> <span class="n">spin_matrix</span><span class="o">.</span><span class="n">flat</span>
+        <span class="c1"># NOTE: we need to access `.coords` before `.next()` is called for the first time!</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="n">spin_matrix_iter</span><span class="o">.</span><span class="n">coords</span>
+        <span class="n">op_data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">spin_matrix_iter</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">coeff</span><span class="p">:</span>
+                <span class="n">op_data</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_calc_coeffs_with_ops</span><span class="p">(</span><span class="n">coords</span><span class="p">),</span> <span class="n">coeff</span><span class="p">))</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">spin_matrix_iter</span><span class="o">.</span><span class="n">coords</span>
 
-    <span class="k">def</span> <span class="nf">_create_base_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">coeff</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FermionicOp</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Creates a single base operator for the given coefficient.</span>
+        <span class="k">return</span> <span class="n">FermionicOp</span><span class="p">(</span><span class="n">op_data</span><span class="p">,</span> <span class="n">register_length</span><span class="o">=</span><span class="n">register_length</span><span class="p">,</span> <span class="n">display_format</span><span class="o">=</span><span class="s2">&quot;sparse&quot;</span><span class="p">)</span></div>
 
-<span class="sd">        Args:</span>
-<span class="sd">            indices: the indices of the current integral.</span>
-<span class="sd">            coeff: the current integral value.</span>
-<span class="sd">            length: the register length of the created operator.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            The base operator.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">base_op</span> <span class="o">=</span> <span class="n">FermionicOp</span><span class="p">((</span><span class="s2">&quot;I_0&quot;</span><span class="p">,</span> <span class="n">coeff</span><span class="p">),</span> <span class="n">register_length</span><span class="o">=</span><span class="n">length</span><span class="p">,</span> <span class="n">display_format</span><span class="o">=</span><span class="s2">&quot;sparse&quot;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_coeffs_with_ops</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
-            <span class="n">base_op</span> <span class="o">@=</span> <span class="n">FermionicOp</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">op</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">display_format</span><span class="o">=</span><span class="s2">&quot;sparse&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">base_op</span>
-
+    <span class="nd">@staticmethod</span>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_calc_coeffs_with_ops</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">_calc_coeffs_with_ops</span><span class="p">(</span><span class="n">indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Maps indices to creation/annihilation operator symbols.</span>
 
 <span class="sd">        Args:</span>
@@ -545,7 +659,7 @@
 <span class="sd">            A list of tuples associating each index with a creation/annihilation operator symbol.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="ElectronicIntegrals.add"><a class="viewcode-back" href="../../../../../../stubs/qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.add.html#qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.add">[文档]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;ElectronicIntegrals&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ElectronicIntegrals&quot;</span><span class="p">:</span>
+<div class="viewcode-block" id="ElectronicIntegrals.add"><a class="viewcode-back" href="../../../../../../stubs/qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.add.html#qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.add">[文档]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ElectronicIntegrals</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ElectronicIntegrals</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Adds two ElectronicIntegrals instances.</span>
 
 <span class="sd">        Args:</span>
@@ -555,15 +669,25 @@
 <span class="sd">            The added ElectronicIntegrals.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">==</span> <span class="n">ElectronicBasis</span><span class="o">.</span><span class="n">SO</span><span class="p">:</span>
             <span class="n">ret</span><span class="o">.</span><span class="n">_matrices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">_matrices</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">ret</span><span class="o">.</span><span class="n">_matrices</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_matrices</span><span class="p">)]</span>  <span class="c1"># type: ignore</span>
+            <span class="n">ret_matrices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">mat_a</span><span class="p">,</span> <span class="n">mat_b</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_matrices</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">mat_a</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mat_b</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">ret_matrices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">mat_a</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">mat_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">mat_b</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">mat_b</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+                <span class="n">ret_matrices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mat_a</span> <span class="o">+</span> <span class="n">mat_b</span><span class="p">)</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_matrices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ret_matrices</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
 <div class="viewcode-block" id="ElectronicIntegrals.compose"><a class="viewcode-back" href="../../../../../../stubs/qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.compose.html#qiskit_nature.properties.second_quantization.electronic.integrals.ElectronicIntegrals.compose">[文档]</a>    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;ElectronicIntegrals&quot;</span><span class="p">,</span> <span class="n">einsum_subscript</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="s2">&quot;ElectronicIntegrals&quot;</span><span class="p">]:</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ElectronicIntegrals</span><span class="p">,</span> <span class="n">einsum_subscript</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="n">ElectronicIntegrals</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Composes two ``ElectronicIntegrals`` instances.</span>
 
 <span class="sd">        Args:</span>
@@ -575,15 +699,15 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">complex</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ElectronicIntegrals&quot;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">complex</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ElectronicIntegrals</span><span class="p">:</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="n">ret</span><span class="o">.</span><span class="n">_matrices</span> <span class="o">=</span> <span class="n">other</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">ret</span><span class="o">.</span><span class="n">_matrices</span> <span class="o">=</span> <span class="p">[</span><span class="n">other</span> <span class="o">*</span> <span class="n">mat</span> <span class="k">for</span> <span class="n">mat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_matrices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="n">mat</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">other</span> <span class="o">*</span> <span class="n">mat</span> <span class="k">for</span> <span class="n">mat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span>
 
-    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;ElectronicIntegrals&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ElectronicIntegrals&quot;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ElectronicIntegrals</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ElectronicIntegrals</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">_basis</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;The basis of self, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_basis</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">, does not match the basis of other, &quot;</span>
@@ -591,7 +715,7 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;ElectronicIntegrals&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ElectronicIntegrals&quot;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ElectronicIntegrals</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ElectronicIntegrals</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">other</span></div>
 </pre></div>
 

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.drivers.molecule &mdash; Qiskit Nature 0.3.2 documentation</title>
+  <title>qiskit_nature.drivers.molecule &mdash; Qiskit Nature 0.4.1 documentation</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -293,9 +293,12 @@
 
 <span class="sd">&quot;&quot;&quot;Driver-independent Molecule definition.&quot;&quot;&quot;</span>
 
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">cast</span>
 <span class="kn">import</span> <span class="nn">copy</span>
 
+<span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">scipy.linalg</span>
 
@@ -315,11 +318,14 @@
 <span class="sd">    directly if its needed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">VERSION</span> <span class="o">=</span> <span class="mi">1</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">geometry</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span>
         <span class="n">multiplicity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">charge</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">units</span><span class="p">:</span> <span class="n">UnitsType</span> <span class="o">=</span> <span class="n">UnitsType</span><span class="o">.</span><span class="n">ANGSTROM</span><span class="p">,</span>
         <span class="n">degrees_of_freedom</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">masses</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -327,9 +333,10 @@
 <span class="sd">        Args:</span>
 <span class="sd">            geometry: A list of atoms defining a given molecule where each item in the list</span>
 <span class="sd">                is an atom name together with a list of 3 floats representing the x,y and z</span>
-<span class="sd">                Cartesian coordinates of the atom&#39;s position in units of **Angstrom**.</span>
+<span class="sd">                Cartesian coordinates of the atom&#39;s position.</span>
 <span class="sd">            multiplicity: Multiplicity (2S+1) of the molecule</span>
 <span class="sd">            charge: Charge on the molecule</span>
+<span class="sd">            units: the `UnitsType` of the geometry.</span>
 <span class="sd">            degrees_of_freedom: List of functions taking a</span>
 <span class="sd">                perturbation value and geometry and returns a perturbed</span>
 <span class="sd">                geometry. Helper functions for typical perturbations are</span>
@@ -344,6 +351,7 @@
         <span class="n">Molecule</span><span class="o">.</span><span class="n">_check_consistency</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">masses</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_geometry</span> <span class="o">=</span> <span class="n">geometry</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_units</span> <span class="o">=</span> <span class="n">units</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_degrees_of_freedom</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">degrees_of_freedom</span> <span class="o">=</span> <span class="n">degrees_of_freedom</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_multiplicity</span> <span class="o">=</span> <span class="n">multiplicity</span>
@@ -352,10 +360,76 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_perturbations</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: Optional[List[float]]</span>
 
+<div class="viewcode-block" id="Molecule.to_hdf5"><a class="viewcode-back" href="../../../stubs/qiskit_nature.drivers.Molecule.to_hdf5.html#qiskit_nature.drivers.Molecule.to_hdf5">[docs]</a>    <span class="k">def</span> <span class="nf">to_hdf5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Stores this instance in an HDF5 group inside of the provided parent group.</span>
+
+<span class="sd">        See also :func:`~qiskit_nature.hdf5.HDF5Storable.to_hdf5` for more details.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            parent: the parent HDF5 group.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">require_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;__class__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;__module__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;__version__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">VERSION</span>
+
+        <span class="n">geometry_group</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;geometry&quot;</span><span class="p">,</span> <span class="n">track_order</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">geom</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_geometry</span><span class="p">):</span>
+            <span class="n">symbol</span><span class="p">,</span> <span class="n">coords</span> <span class="o">=</span> <span class="n">geom</span>
+            <span class="n">geometry_group</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span> <span class="n">data</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span>
+            <span class="n">geometry_group</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;symbol&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">symbol</span>
+
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;units&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;multiplicity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplicity</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;charge&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">charge</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masses</span><span class="p">:</span>
+            <span class="n">group</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;masses&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_masses</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Molecule.from_hdf5"><a class="viewcode-back" href="../../../stubs/qiskit_nature.drivers.Molecule.from_hdf5.html#qiskit_nature.drivers.Molecule.from_hdf5">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_hdf5</span><span class="p">(</span><span class="n">h5py_group</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Molecule</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Constructs a new instance from the data stored in the provided HDF5 group.</span>
+
+<span class="sd">        See also :func:`~qiskit_nature.hdf5.HDF5Storable.from_hdf5` for more details.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            h5py_group: the HDF5 group from which to load the data.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A new instance of this class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">geometry</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">h5py_group</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">geometry</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">atom</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;symbol&quot;</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="n">atom</span><span class="p">[</span><span class="o">...</span><span class="p">])))</span>
+
+        <span class="n">units</span><span class="p">:</span> <span class="n">UnitsType</span>
+        <span class="k">for</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">UnitsType</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">unit</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">h5py_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;units&quot;</span><span class="p">]:</span>
+                <span class="n">units</span> <span class="o">=</span> <span class="n">unit</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="n">UnitsType</span><span class="o">.</span><span class="n">ANGSTROM</span>
+
+        <span class="n">multiplicity</span> <span class="o">=</span> <span class="n">h5py_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;multiplicity&quot;</span><span class="p">]</span>
+        <span class="n">charge</span> <span class="o">=</span> <span class="n">h5py_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;charge&quot;</span><span class="p">]</span>
+
+        <span class="n">masses</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="s2">&quot;masses&quot;</span> <span class="ow">in</span> <span class="n">h5py_group</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">masses</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">h5py_group</span><span class="p">[</span><span class="s2">&quot;masses&quot;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">Molecule</span><span class="p">(</span>
+            <span class="n">geometry</span><span class="p">,</span>
+            <span class="n">multiplicity</span><span class="o">=</span><span class="n">multiplicity</span><span class="p">,</span>
+            <span class="n">charge</span><span class="o">=</span><span class="n">charge</span><span class="p">,</span>
+            <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
+            <span class="n">masses</span><span class="o">=</span><span class="n">masses</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">string</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Molecule:&quot;</span><span class="p">]</span>
         <span class="n">string</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Multiplicity: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_multiplicity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
         <span class="n">string</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Charge: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_charge</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Unit: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
         <span class="n">string</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Geometry:&quot;</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">atom</span><span class="p">,</span> <span class="n">xyz</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_geometry</span><span class="p">:</span>
             <span class="n">string</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="si">{</span><span class="n">atom</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">xyz</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
@@ -636,7 +710,7 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">units</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The geometry coordinate units&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">UnitsType</span><span class="o">.</span><span class="n">ANGSTROM</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_units</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.drivers.second_quantization.pyquanted.pyquantedriver &mdash; Qiskit Nature 0.3.2 문서</title>
+  <title>qiskit_nature.drivers.second_quantization.pyquanted.pyquantedriver &mdash; Qiskit Nature 0.4.1 문서</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -281,7 +281,7 @@
   <h1>qiskit_nature.drivers.second_quantization.pyquanted.pyquantedriver의 소스 코드</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2018, 2021.</span>
+<span class="c1"># (C) Copyright IBM 2018, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -293,19 +293,36 @@
 
 <span class="sd">&quot;&quot;&quot; PyQuante Driver &quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">importlib</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span>
 
-<span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">MissingOptionalLibraryError</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
 <span class="kn">from</span> <span class="nn">qiskit.utils.validation</span> <span class="kn">import</span> <span class="n">validate_min</span>
 
 <span class="kn">from</span> <span class="nn">qiskit_nature</span> <span class="kn">import</span> <span class="n">QiskitNatureError</span>
-<span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.electronic</span> <span class="kn">import</span> <span class="n">ElectronicStructureDriverResult</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.constants</span> <span class="kn">import</span> <span class="n">BOHR</span><span class="p">,</span> <span class="n">PERIODIC_TABLE</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.driver_metadata</span> <span class="kn">import</span> <span class="n">DriverMetadata</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.electronic</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ElectronicStructureDriverResult</span><span class="p">,</span>
+    <span class="n">AngularMomentum</span><span class="p">,</span>
+    <span class="n">Magnetization</span><span class="p">,</span>
+    <span class="n">ParticleNumber</span><span class="p">,</span>
+    <span class="n">ElectronicEnergy</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.electronic.bases</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ElectronicBasis</span><span class="p">,</span>
+    <span class="n">ElectronicBasisTransform</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.electronic.integrals</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">OneBodyElectronicIntegrals</span><span class="p">,</span>
+    <span class="n">TwoBodyElectronicIntegrals</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">import</span> <span class="nn">qiskit_nature.optionals</span> <span class="k">as</span> <span class="nn">_optionals</span>
 
-<span class="kn">from</span> <span class="nn">.integrals</span> <span class="kn">import</span> <span class="n">compute_integrals</span>
 <span class="kn">from</span> <span class="nn">..electronic_structure_driver</span> <span class="kn">import</span> <span class="n">ElectronicStructureDriver</span><span class="p">,</span> <span class="n">MethodType</span>
 <span class="kn">from</span> <span class="nn">...molecule</span> <span class="kn">import</span> <span class="n">Molecule</span>
 <span class="kn">from</span> <span class="nn">...units_type</span> <span class="kn">import</span> <span class="n">UnitsType</span>
@@ -338,7 +355,8 @@
         <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid Basis type basis </span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="PyQuanteDriver"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.PyQuanteDriver.html#qiskit_nature.drivers.second_quantization.PyQuanteDriver">[문서]</a><span class="k">class</span> <span class="nc">PyQuanteDriver</span><span class="p">(</span><span class="n">ElectronicStructureDriver</span><span class="p">):</span>
+<div class="viewcode-block" id="PyQuanteDriver"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.PyQuanteDriver.html#qiskit_nature.drivers.second_quantization.PyQuanteDriver">[문서]</a><span class="nd">@_optionals</span><span class="o">.</span><span class="n">HAS_PYQUANTE2</span><span class="o">.</span><span class="n">require_in_instance</span>
+<span class="k">class</span> <span class="nc">PyQuanteDriver</span><span class="p">(</span><span class="n">ElectronicStructureDriver</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Qiskit Nature driver using the PyQuante2 library.</span>
 
@@ -374,8 +392,11 @@
 <span class="sd">            QiskitNatureError: Invalid Input</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="c1"># pylint: disable=import-error</span>
+        <span class="kn">from</span> <span class="nn">pyquante2</span> <span class="kn">import</span> <span class="n">molecule</span> <span class="k">as</span> <span class="n">pyquante_molecule</span>
+        <span class="kn">from</span> <span class="nn">pyquante2</span> <span class="kn">import</span> <span class="n">rhf</span><span class="p">,</span> <span class="n">uhf</span><span class="p">,</span> <span class="n">rohf</span><span class="p">,</span> <span class="n">basisset</span>
+
         <span class="n">validate_min</span><span class="p">(</span><span class="s2">&quot;maxiters&quot;</span><span class="p">,</span> <span class="n">maxiters</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">PyQuanteDriver</span><span class="o">.</span><span class="n">check_installed</span><span class="p">()</span>
         <span class="n">PyQuanteDriver</span><span class="o">.</span><span class="n">check_method_supported</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid atom input for PYQUANTE Driver &#39;</span><span class="si">{</span><span class="n">atoms</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
@@ -393,6 +414,53 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_method</span> <span class="o">=</span> <span class="n">method</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tol</span> <span class="o">=</span> <span class="n">tol</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_maxiters</span> <span class="o">=</span> <span class="n">maxiters</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mol</span><span class="p">:</span> <span class="n">pyquante_molecule</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bfs</span><span class="p">:</span> <span class="n">basisset</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">rhf</span><span class="p">,</span> <span class="n">rohf</span><span class="p">,</span> <span class="n">uhf</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nmo</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the atom.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_atoms</span>
+
+    <span class="nd">@atoms</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atom</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets the atom.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">atom</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">atom</span> <span class="o">=</span> <span class="s2">&quot;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">atom</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_atoms</span> <span class="o">=</span> <span class="n">atom</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;;&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">units</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UnitsType</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the units.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_units</span>
+
+    <span class="nd">@units</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="p">:</span> <span class="n">UnitsType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets the units.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_units</span> <span class="o">=</span> <span class="n">units</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">charge</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the charge.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charge</span>
+
+    <span class="nd">@charge</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">charge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">charge</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets the charge.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charge</span> <span class="o">=</span> <span class="n">charge</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">multiplicity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the multiplicity.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiplicity</span>
+
+    <span class="nd">@multiplicity</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">multiplicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">multiplicity</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets the multiplicity.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiplicity</span> <span class="o">=</span> <span class="n">multiplicity</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">basis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BasisType</span><span class="p">:</span>
@@ -414,7 +482,28 @@
         <span class="sd">&quot;&quot;&quot;set Hartree-Fock method&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_method</span> <span class="o">=</span> <span class="n">value</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tol</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the SCF convergence tolerance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tol</span>
+
+    <span class="nd">@tol</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">tol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets the SCF convergence tolerance.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tol</span> <span class="o">=</span> <span class="n">tol</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">maxiters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the maximum number of SCF iterations.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_maxiters</span>
+
+    <span class="nd">@maxiters</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">maxiters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maxiters</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets the maximum number of SCF iterations.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maxiters</span> <span class="o">=</span> <span class="n">maxiters</span>
+
 <div class="viewcode-block" id="PyQuanteDriver.from_molecule"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.PyQuanteDriver.from_molecule.html#qiskit_nature.drivers.second_quantization.PyQuanteDriver.from_molecule">[문서]</a>    <span class="nd">@staticmethod</span>
+    <span class="nd">@_optionals</span><span class="o">.</span><span class="n">HAS_PYQUANTE2</span><span class="o">.</span><span class="n">require_in_call</span>
     <span class="k">def</span> <span class="nf">from_molecule</span><span class="p">(</span>
         <span class="n">molecule</span><span class="p">:</span> <span class="n">Molecule</span><span class="p">,</span>
         <span class="n">basis</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sto3g&quot;</span><span class="p">,</span>
@@ -430,11 +519,10 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            driver</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">PyQuanteDriver</span><span class="o">.</span><span class="n">check_installed</span><span class="p">()</span>
         <span class="n">PyQuanteDriver</span><span class="o">.</span><span class="n">check_method_supported</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">driver_kwargs</span><span class="p">:</span>
-            <span class="n">args</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getfullargspec</span><span class="p">(</span><span class="n">PyQuanteDriver</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span><span class="o">.</span><span class="n">args</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">PyQuanteDriver</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">driver_kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;self&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
                     <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
@@ -460,32 +548,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">BasisType</span><span class="o">.</span><span class="n">type_from_string</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PyQuanteDriver.check_installed"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.PyQuanteDriver.check_installed.html#qiskit_nature.drivers.second_quantization.PyQuanteDriver.check_installed">[문서]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">check_installed</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Checks if PyQuante is installed and available</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            MissingOptionalLibraryError: if not installed.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">spec</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;pyquante2&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;PyQuante2 check error </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ex</span><span class="p">))</span>
-            <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-                <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;PyQuante2&quot;</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;PyQuanteDriver&quot;</span><span class="p">,</span>
-                <span class="n">msg</span><span class="o">=</span><span class="s2">&quot;See https://github.com/rpmuller/pyquante2&quot;</span><span class="p">,</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span>
-
-        <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-            <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;PyQuante2&quot;</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;PyQuanteDriver&quot;</span><span class="p">,</span>
-            <span class="n">msg</span><span class="o">=</span><span class="s2">&quot;See https://github.com/rpmuller/pyquante2&quot;</span><span class="p">,</span>
-        <span class="p">)</span></div>
-
 <div class="viewcode-block" id="PyQuanteDriver.check_method_supported"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.PyQuanteDriver.check_method_supported.html#qiskit_nature.drivers.second_quantization.PyQuanteDriver.check_method_supported">[문서]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">check_method_supported</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="n">MethodType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -500,39 +562,247 @@
             <span class="k">raise</span> <span class="n">UnsupportMethodError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid Pyquante method </span><span class="si">{</span><span class="n">method</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PyQuanteDriver.run"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.PyQuanteDriver.run.html#qiskit_nature.drivers.second_quantization.PyQuanteDriver.run">[문서]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ElectronicStructureDriverResult</span><span class="p">:</span>
-        <span class="n">atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_atoms</span>
-        <span class="n">charge</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charge</span>
-        <span class="n">multiplicity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiplicity</span>
-        <span class="n">units</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_units</span>
-        <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span>
-        <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            ElectronicStructureDriverResult produced by the run driver.</span>
 
-        <span class="n">q_mol</span> <span class="o">=</span> <span class="n">compute_integrals</span><span class="p">(</span>
-            <span class="n">atoms</span><span class="o">=</span><span class="n">atoms</span><span class="p">,</span>
-            <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-            <span class="n">charge</span><span class="o">=</span><span class="n">charge</span><span class="p">,</span>
-            <span class="n">multiplicity</span><span class="o">=</span><span class="n">multiplicity</span><span class="p">,</span>
-            <span class="n">basis</span><span class="o">=</span><span class="n">basis</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-            <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tol</span><span class="p">,</span>
-            <span class="n">maxiters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_maxiters</span><span class="p">,</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            QiskitNatureError: if an error during the PyQuante setup or calculation occurred.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_molecule</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_pyquante</span><span class="p">()</span>
+
+        <span class="n">driver_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_driver_result</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">driver_result</span></div>
+
+    <span class="k">def</span> <span class="nf">_build_molecule</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># pylint: disable=import-error</span>
+        <span class="kn">from</span> <span class="nn">pyquante2</span> <span class="kn">import</span> <span class="n">molecule</span> <span class="k">as</span> <span class="n">pyquante_molecule</span>
+
+        <span class="n">atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_molecule_format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span>
+
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">parts</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span><span class="s2">&quot;Molecule format error: &quot;</span> <span class="o">+</span> <span class="n">atoms</span><span class="p">)</span>
+        <span class="n">geom</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+            <span class="n">geom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parse_atom</span><span class="p">(</span><span class="n">part</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span><span class="s2">&quot;Molecule format error: &quot;</span> <span class="o">+</span> <span class="n">atoms</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mol</span> <span class="o">=</span> <span class="n">pyquante_molecule</span><span class="p">(</span>
+            <span class="n">geom</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">charge</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">charge</span><span class="p">,</span> <span class="n">multiplicity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">multiplicity</span>
         <span class="p">)</span>
 
-        <span class="n">q_mol</span><span class="o">.</span><span class="n">origin_driver_name</span> <span class="o">=</span> <span class="s2">&quot;PYQUANTE&quot;</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_molecule_format</span><span class="p">(</span><span class="n">val</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;If it seems to be zmatrix rather than xyz format we convert before returning&quot;&quot;&quot;</span>
+        <span class="c1"># pylint: disable=import-error</span>
+        <span class="kn">from</span> <span class="nn">pyquante2.geo.zmatrix</span> <span class="kn">import</span> <span class="n">z2xyz</span>
+
+        <span class="n">atoms</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">val</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">atoms</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span><span class="s2">&quot;Molecule format error: &quot;</span> <span class="o">+</span> <span class="n">val</span><span class="p">)</span>
+
+        <span class="c1"># An xyz format has 4 parts in each atom, if not then do zmatrix convert</span>
+        <span class="c1"># Allows dummy atoms, using symbol &#39;X&#39; in zmatrix format for coord computation to xyz</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">zmat</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
+                    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">atom</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>
+                    <span class="n">z</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">),</span> <span class="mi">2</span><span class="p">):</span>
+                        <span class="n">z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                        <span class="n">z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]))</span>
+                    <span class="n">zmat</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+                <span class="n">xyz</span> <span class="o">=</span> <span class="n">z2xyz</span><span class="p">(</span><span class="n">zmat</span><span class="p">)</span>
+                <span class="n">new_val</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                <span class="k">for</span> <span class="n">atm</span> <span class="ow">in</span> <span class="n">xyz</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">atm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;X&quot;</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">if</span> <span class="n">new_val</span><span class="p">:</span>
+                        <span class="n">new_val</span> <span class="o">+=</span> <span class="s2">&quot;; &quot;</span>
+                    <span class="n">new_val</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">atm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">atm</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">atm</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">atm</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">return</span> <span class="n">new_val</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span><span class="s2">&quot;Failed to convert atom string: &quot;</span> <span class="o">+</span> <span class="n">val</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+        <span class="k">return</span> <span class="n">val</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_atom</span><span class="p">(</span><span class="n">val</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span><span class="s2">&quot;Molecule atom format error: empty&quot;</span><span class="p">)</span>
+
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span><span class="s2">&quot;Molecule atom format error: &quot;</span> <span class="o">+</span> <span class="n">val</span><span class="p">)</span>
+
+        <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">PERIODIC_TABLE</span><span class="p">:</span>
+                <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">PERIODIC_TABLE</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span><span class="s2">&quot;Molecule atom symbol error: &quot;</span> <span class="o">+</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+
+<div class="viewcode-block" id="PyQuanteDriver.run_pyquante"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.PyQuanteDriver.run_pyquante.html#qiskit_nature.drivers.second_quantization.PyQuanteDriver.run_pyquante">[문서]</a>    <span class="k">def</span> <span class="nf">run_pyquante</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Runs the PyQuante calculation.</span>
+
+<span class="sd">        This method is part of the public interface to allow the user to easily overwrite it in a</span>
+<span class="sd">        subclass to further tailor the behavior to some specific use case.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            QiskitNatureError: If an invalid HF method type was supplied.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># pylint: disable=import-error</span>
+        <span class="kn">from</span> <span class="nn">pyquante2</span> <span class="kn">import</span> <span class="n">rhf</span><span class="p">,</span> <span class="n">uhf</span><span class="p">,</span> <span class="n">rohf</span><span class="p">,</span> <span class="n">basisset</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bfs</span> <span class="o">=</span> <span class="n">basisset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">MethodType</span><span class="o">.</span><span class="n">RHF</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_calc</span> <span class="o">=</span> <span class="n">rhf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bfs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">MethodType</span><span class="o">.</span><span class="n">ROHF</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_calc</span> <span class="o">=</span> <span class="n">rohf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bfs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">MethodType</span><span class="o">.</span><span class="n">UHF</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_calc</span> <span class="o">=</span> <span class="n">uhf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bfs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QiskitNatureError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid method type: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="o">.</span><span class="n">converge</span><span class="p">(</span><span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">,</span> <span class="n">maxiters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">maxiters</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;PyQuante2 processing information:</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_construct_driver_result</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ElectronicStructureDriverResult</span><span class="p">:</span>
+        <span class="n">driver_result</span> <span class="o">=</span> <span class="n">ElectronicStructureDriverResult</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_populate_driver_result_molecule</span><span class="p">(</span><span class="n">driver_result</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_populate_driver_result_metadata</span><span class="p">(</span><span class="n">driver_result</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_populate_driver_result_basis_transform</span><span class="p">(</span><span class="n">driver_result</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_populate_driver_result_particle_number</span><span class="p">(</span><span class="n">driver_result</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_populate_driver_result_electronic_energy</span><span class="p">(</span><span class="n">driver_result</span><span class="p">)</span>
+
+        <span class="c1"># TODO: once https://github.com/Qiskit/qiskit-nature/issues/312 is fixed we can stop adding</span>
+        <span class="c1"># these properties by default.</span>
+        <span class="c1"># if not settings.dict_aux_operators:</span>
+        <span class="n">driver_result</span><span class="o">.</span><span class="n">add_property</span><span class="p">(</span><span class="n">AngularMomentum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nmo</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">driver_result</span><span class="o">.</span><span class="n">add_property</span><span class="p">(</span><span class="n">Magnetization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nmo</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">driver_result</span>
+
+    <span class="k">def</span> <span class="nf">_populate_driver_result_molecule</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">driver_result</span><span class="p">:</span> <span class="n">ElectronicStructureDriverResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">geometry</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mol</span><span class="o">.</span><span class="n">atoms</span><span class="p">:</span>
+            <span class="n">atuple</span> <span class="o">=</span> <span class="n">atom</span><span class="o">.</span><span class="n">atuple</span><span class="p">()</span>
+            <span class="n">geometry</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">PERIODIC_TABLE</span><span class="p">[</span><span class="n">atuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">a</span> <span class="o">*</span> <span class="n">BOHR</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atuple</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]))</span>
+
+        <span class="n">driver_result</span><span class="o">.</span><span class="n">molecule</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+            <span class="n">geometry</span><span class="p">,</span> <span class="n">multiplicity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_mol</span><span class="o">.</span><span class="n">multiplicity</span><span class="p">,</span> <span class="n">charge</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_mol</span><span class="o">.</span><span class="n">charge</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_populate_driver_result_metadata</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">driver_result</span><span class="p">:</span> <span class="n">ElectronicStructureDriverResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">cfg</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="sa">f</span><span class="s2">&quot;atoms=</span><span class="si">{</span><span class="n">atoms</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;units=</span><span class="si">{</span><span class="n">units</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;charge=</span><span class="si">{</span><span class="n">charge</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;multiplicity=</span><span class="si">{</span><span class="n">multiplicity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;basis=</span><span class="si">{</span><span class="n">basis</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;method=</span><span class="si">{</span><span class="n">method</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;atoms=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;units=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;charge=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">charge</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;multiplicity=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">multiplicity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;basis=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;method=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="sa">f</span><span class="s2">&quot;tol=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_tol</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="sa">f</span><span class="s2">&quot;maxiters=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_maxiters</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="s2">&quot;&quot;</span><span class="p">,</span>
         <span class="p">]</span>
-        <span class="n">q_mol</span><span class="o">.</span><span class="n">origin_driver_config</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">ElectronicStructureDriverResult</span><span class="o">.</span><span class="n">from_legacy_driver_result</span><span class="p">(</span><span class="n">q_mol</span><span class="p">)</span></div></div>
+        <span class="n">driver_result</span><span class="o">.</span><span class="n">add_property</span><span class="p">(</span><span class="n">DriverMetadata</span><span class="p">(</span><span class="s2">&quot;PYQUANTE&quot;</span><span class="p">,</span> <span class="s2">&quot;?&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cfg</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">_populate_driver_result_basis_transform</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">driver_result</span><span class="p">:</span> <span class="n">ElectronicStructureDriverResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="p">,</span> <span class="s2">&quot;orbs&quot;</span><span class="p">):</span>
+            <span class="n">mo_coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="o">.</span><span class="n">orbs</span>
+            <span class="n">mo_coeff_b</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mo_coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="o">.</span><span class="n">orbsa</span>
+            <span class="n">mo_coeff_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="o">.</span><span class="n">orbsb</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nmo</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">)</span>
+
+        <span class="n">driver_result</span><span class="o">.</span><span class="n">add_property</span><span class="p">(</span>
+            <span class="n">ElectronicBasisTransform</span><span class="p">(</span>
+                <span class="n">ElectronicBasis</span><span class="o">.</span><span class="n">AO</span><span class="p">,</span>
+                <span class="n">ElectronicBasis</span><span class="o">.</span><span class="n">MO</span><span class="p">,</span>
+                <span class="n">mo_coeff</span><span class="p">,</span>
+                <span class="n">mo_coeff_b</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_populate_driver_result_particle_number</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">driver_result</span><span class="p">:</span> <span class="n">ElectronicStructureDriverResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">driver_result</span><span class="o">.</span><span class="n">add_property</span><span class="p">(</span>
+            <span class="n">ParticleNumber</span><span class="p">(</span>
+                <span class="n">num_spin_orbitals</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_nmo</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="n">num_particles</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mol</span><span class="o">.</span><span class="n">nup</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mol</span><span class="o">.</span><span class="n">ndown</span><span class="p">()),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_populate_driver_result_electronic_energy</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">driver_result</span><span class="p">:</span> <span class="n">ElectronicStructureDriverResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># pylint: disable=import-error</span>
+        <span class="kn">from</span> <span class="nn">pyquante2</span> <span class="kn">import</span> <span class="n">onee_integrals</span>
+        <span class="kn">from</span> <span class="nn">pyquante2.ints.integrals</span> <span class="kn">import</span> <span class="n">twoe_integrals</span>
+
+        <span class="n">basis_transform</span> <span class="o">=</span> <span class="n">driver_result</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="n">ElectronicBasisTransform</span><span class="p">)</span>
+
+        <span class="n">integrals</span> <span class="o">=</span> <span class="n">onee_integrals</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bfs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mol</span><span class="p">)</span>
+
+        <span class="n">hij</span> <span class="o">=</span> <span class="n">integrals</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="n">integrals</span><span class="o">.</span><span class="n">V</span>
+        <span class="n">hijkl</span> <span class="o">=</span> <span class="n">twoe_integrals</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bfs</span><span class="p">)</span>
+
+        <span class="n">one_body_ao</span> <span class="o">=</span> <span class="n">OneBodyElectronicIntegrals</span><span class="p">(</span><span class="n">ElectronicBasis</span><span class="o">.</span><span class="n">AO</span><span class="p">,</span> <span class="p">(</span><span class="n">hij</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+
+        <span class="n">two_body_ao</span> <span class="o">=</span> <span class="n">TwoBodyElectronicIntegrals</span><span class="p">(</span>
+            <span class="n">ElectronicBasis</span><span class="o">.</span><span class="n">AO</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">hijkl</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nmo</span><span class="p">)),</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">one_body_mo</span> <span class="o">=</span> <span class="n">one_body_ao</span><span class="o">.</span><span class="n">transform_basis</span><span class="p">(</span><span class="n">basis_transform</span><span class="p">)</span>
+        <span class="n">two_body_mo</span> <span class="o">=</span> <span class="n">two_body_ao</span><span class="o">.</span><span class="n">transform_basis</span><span class="p">(</span><span class="n">basis_transform</span><span class="p">)</span>
+
+        <span class="n">electronic_energy</span> <span class="o">=</span> <span class="n">ElectronicEnergy</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">one_body_ao</span><span class="p">,</span> <span class="n">two_body_ao</span><span class="p">,</span> <span class="n">one_body_mo</span><span class="p">,</span> <span class="n">two_body_mo</span><span class="p">],</span>
+            <span class="n">nuclear_repulsion_energy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_mol</span><span class="o">.</span><span class="n">nuclear_repulsion</span><span class="p">(),</span>
+            <span class="n">reference_energy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="p">,</span> <span class="s2">&quot;orbe&quot;</span><span class="p">):</span>
+            <span class="n">orbs_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="o">.</span><span class="n">orbe</span>
+            <span class="n">orbs_energy_b</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">orbs_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="o">.</span><span class="n">orbea</span>
+            <span class="n">orbs_energy_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="o">.</span><span class="n">orbeb</span>
+
+        <span class="n">orbital_energies</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">orbs_energy</span><span class="p">,</span> <span class="n">orbs_energy_b</span><span class="p">)</span> <span class="k">if</span> <span class="n">orbs_energy_b</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">orbs_energy</span>
+        <span class="p">)</span>
+        <span class="n">electronic_energy</span><span class="o">.</span><span class="n">orbital_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">orbital_energies</span><span class="p">)</span>
+
+        <span class="n">electronic_energy</span><span class="o">.</span><span class="n">kinetic</span> <span class="o">=</span> <span class="n">OneBodyElectronicIntegrals</span><span class="p">(</span>
+            <span class="n">ElectronicBasis</span><span class="o">.</span><span class="n">AO</span><span class="p">,</span> <span class="p">(</span><span class="n">integrals</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">electronic_energy</span><span class="o">.</span><span class="n">overlap</span> <span class="o">=</span> <span class="n">OneBodyElectronicIntegrals</span><span class="p">(</span>
+            <span class="n">ElectronicBasis</span><span class="o">.</span><span class="n">AO</span><span class="p">,</span> <span class="p">(</span><span class="n">integrals</span><span class="o">.</span><span class="n">S</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">driver_result</span><span class="o">.</span><span class="n">add_property</span><span class="p">(</span><span class="n">electronic_energy</span><span class="p">)</span></div>
 </pre></div>
 
              </article>

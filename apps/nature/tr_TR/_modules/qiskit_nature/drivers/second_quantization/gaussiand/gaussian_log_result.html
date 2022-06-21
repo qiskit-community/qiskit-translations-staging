@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.drivers.second_quantization.gaussiand.gaussian_log_result &mdash; Qiskit Nature 0.3.2 belgelendirmesi</title>
+  <title>qiskit_nature.drivers.second_quantization.gaussiand.gaussian_log_result &mdash; Qiskit Nature 0.4.1 belgelendirmesi</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -292,14 +292,20 @@
 <span class="c1"># that they have been altered from the originals.</span>
 
 <span class="sd">&quot;&quot;&quot; Gaussian Log File Result &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
 <span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">cast</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
 <span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
 
-<span class="kn">from</span> <span class="nn">...watson_hamiltonian</span> <span class="kn">import</span> <span class="n">WatsonHamiltonian</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.deprecation</span> <span class="kn">import</span> <span class="n">deprecate_method</span><span class="p">,</span> <span class="n">DeprecatedType</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.drivers</span> <span class="kn">import</span> <span class="n">WatsonHamiltonian</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.vibrational</span> <span class="kn">import</span> <span class="n">VibrationalEnergy</span>
+<span class="kn">from</span> <span class="nn">qiskit_nature.properties.second_quantization.vibrational.integrals</span> <span class="kn">import</span> <span class="n">VibrationalIntegrals</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -312,7 +318,7 @@
 <span class="sd">    Since this parses the text output it is subject to the format of the log file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            log: The log contents conforming to Gaussian™ 16 format either as a single string</span>
@@ -341,7 +347,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid input for Gaussian Log Parser &#39;</span><span class="si">{</span><span class="n">log</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;The complete Gaussian log in the form of a list of strings.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="p">)</span>
 
@@ -354,7 +360,7 @@
     <span class="n">_SECTION_QUARTIC</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;:\s+QUARTIC\sFORCE\sCONSTANTS\sIN\sNORMAL\sMODES&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">quadratic_force_constants</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">quadratic_force_constants</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Quadratic force constants. (2 indices, 3 values)</span>
 
 <span class="sd">        Returns:</span>
@@ -365,7 +371,7 @@
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="n">qfc</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">cubic_force_constants</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">cubic_force_constants</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Cubic force constants. (3 indices, 3 values)</span>
 
 <span class="sd">        Returns:</span>
@@ -378,7 +384,7 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">quartic_force_constants</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Quartic force constants. (4 indices, 3 values)</span>
 
 <span class="sd">        Returns:</span>
@@ -388,7 +394,7 @@
         <span class="n">qfc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_SECTION_QUARTIC</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="n">qfc</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_force_constants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">_force_constants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]:</span>
         <span class="n">constants</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">pattern_constants</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
@@ -422,7 +428,7 @@
                     <span class="c1"># such point as it does not match anymore then we break out</span>
                     <span class="n">const</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">pattern_constants</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">const</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">clist</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># type: List[Union[str, float]]</span>
+                        <span class="n">clist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
                         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
                             <span class="n">clist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;index</span><span class="si">{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">))</span>
                         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
@@ -434,14 +440,14 @@
         <span class="k">return</span> <span class="n">constants</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">a_to_h_numbering</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">a_to_h_numbering</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;A to H numbering mapping.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Dictionary mapping string A numbering such as &#39;1&#39;, &#39;3a&#39; etc from forces modes</span>
 <span class="sd">            to H integer numbering</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a2h</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: Dict[str, int]</span>
+        <span class="n">a2h</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="n">found_section</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">found_h</span> <span class="o">=</span> <span class="kc">False</span>
@@ -474,7 +480,7 @@
     <span class="c1"># but for now they are here</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_multinomial</span><span class="p">(</span><span class="n">indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_multinomial</span><span class="p">(</span><span class="n">indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="c1"># For a given list of integers, computes the associated multinomial</span>
         <span class="n">tmp</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>  <span class="c1"># Set of unique indices</span>
         <span class="n">multinomial</span> <span class="o">=</span> <span class="mi">1</span>
@@ -483,7 +489,7 @@
             <span class="n">multinomial</span> <span class="o">=</span> <span class="n">multinomial</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">multinomial</span>
 
-    <span class="k">def</span> <span class="nf">_process_entry_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entry</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">_process_entry_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entry</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
         <span class="c1"># a2h gives us say &#39;3a&#39; -&gt; 1, &#39;3b&#39; -&gt; 2 etc. The H values can be 1 through 4</span>
         <span class="c1"># but we want them numbered in reverse order so the &#39;a2h_vals + 1 - a2h[x]&#39;</span>
         <span class="c1"># takes care of this</span>
@@ -495,13 +501,61 @@
         <span class="n">num_indices</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span> <span class="o">-</span> <span class="mi">3</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">a2h_vals</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">a2h</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">x</span><span class="p">)]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">num_indices</span><span class="p">]]</span>
 
-<div class="viewcode-block" id="GaussianLogResult.get_watson_hamiltonian"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.GaussianLogResult.get_watson_hamiltonian.html#qiskit_nature.drivers.second_quantization.GaussianLogResult.get_watson_hamiltonian">[belgeler]</a>    <span class="k">def</span> <span class="nf">get_watson_hamiltonian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WatsonHamiltonian</span><span class="p">:</span>
+<div class="viewcode-block" id="GaussianLogResult.get_vibrational_energy"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.GaussianLogResult.get_vibrational_energy.html#qiskit_nature.drivers.second_quantization.GaussianLogResult.get_vibrational_energy">[belgeler]</a>    <span class="k">def</span> <span class="nf">get_vibrational_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VibrationalEnergy</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the force constants as a WatsonHamiltonian</span>
+<span class="sd">        Get the force constants as a VibrationalEnergy property.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            normalize: Whether to normalize the factors or not</span>
 
+<span class="sd">        Returns:</span>
+<span class="sd">            A VibrationalEnergy property.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sorted_integrals</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="p">[],</span> <span class="mi">2</span><span class="p">:</span> <span class="p">[],</span> <span class="mi">3</span><span class="p">:</span> <span class="p">[]}</span>
+
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">quadratic_force_constants</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_entry_indices</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">entry</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">indices</span><span class="p">:</span>
+                <span class="n">factor</span> <span class="o">=</span> <span class="mf">2.0</span>
+                <span class="n">factor</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multinomial</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="k">if</span> <span class="n">normalize</span> <span class="k">else</span> <span class="mf">1.0</span>
+                <span class="n">coeff</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">factor</span>
+                <span class="n">num_body</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>
+                <span class="n">sorted_integrals</span><span class="p">[</span><span class="n">num_body</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">coeff</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">indices</span><span class="p">)))</span>
+                <span class="n">sorted_integrals</span><span class="p">[</span><span class="n">num_body</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="o">-</span><span class="n">coeff</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="o">-</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">)))</span>
+
+        <span class="k">for</span> <span class="n">entry_c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cubic_force_constants</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_entry_indices</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">entry_c</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">indices</span><span class="p">:</span>
+                <span class="n">factor</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+                <span class="n">factor</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multinomial</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="k">if</span> <span class="n">normalize</span> <span class="k">else</span> <span class="mf">1.0</span>
+                <span class="n">coeff</span> <span class="o">=</span> <span class="n">entry_c</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="n">factor</span>
+                <span class="n">num_body</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>
+                <span class="n">sorted_integrals</span><span class="p">[</span><span class="n">num_body</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">coeff</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">indices</span><span class="p">)))</span>
+
+        <span class="k">for</span> <span class="n">entry_q</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">quartic_force_constants</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_entry_indices</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">entry_q</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">indices</span><span class="p">:</span>
+                <span class="n">factor</span> <span class="o">=</span> <span class="mf">4.0</span>
+                <span class="n">factor</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multinomial</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="k">if</span> <span class="n">normalize</span> <span class="k">else</span> <span class="mf">1.0</span>
+                <span class="n">coeff</span> <span class="o">=</span> <span class="n">entry_q</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="n">factor</span>
+                <span class="n">num_body</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>
+                <span class="n">sorted_integrals</span><span class="p">[</span><span class="n">num_body</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">coeff</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">indices</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">VibrationalEnergy</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">VibrationalIntegrals</span><span class="p">(</span><span class="n">num_body</span><span class="p">,</span> <span class="n">ints</span><span class="p">)</span> <span class="k">for</span> <span class="n">num_body</span><span class="p">,</span> <span class="n">ints</span> <span class="ow">in</span> <span class="n">sorted_integrals</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="GaussianLogResult.get_watson_hamiltonian"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.drivers.second_quantization.GaussianLogResult.get_watson_hamiltonian.html#qiskit_nature.drivers.second_quantization.GaussianLogResult.get_watson_hamiltonian">[belgeler]</a>    <span class="nd">@deprecate_method</span><span class="p">(</span>
+        <span class="s2">&quot;0.4.0&quot;</span><span class="p">,</span>
+        <span class="n">DeprecatedType</span><span class="o">.</span><span class="n">METHOD</span><span class="p">,</span>
+        <span class="s2">&quot;get_vibrational_energy&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Construct a VibrationalEnergy instead of the deprecated WatsonHamiltonian directly&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get_watson_hamiltonian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WatsonHamiltonian</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the force constants as a WatsonHamiltonian</span>
+<span class="sd">        Args:</span>
+<span class="sd">            normalize: Whether to normalize the factors or not</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            A WatsonHamiltonian</span>
 <span class="sd">        &quot;&quot;&quot;</span>

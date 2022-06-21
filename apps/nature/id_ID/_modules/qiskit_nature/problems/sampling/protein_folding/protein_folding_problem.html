@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.problems.sampling.protein_folding.protein_folding_problem &mdash; Dokumentasi Qiskit Nature 0.3.2</title>
+  <title>qiskit_nature.problems.sampling.protein_folding.protein_folding_problem &mdash; Dokumentasi Qiskit Nature 0.4.1</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -281,7 +281,7 @@
   <h1>Kode sumber untuk qiskit_nature.problems.sampling.protein_folding.protein_folding_problem</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2021.</span>
+<span class="c1"># (C) Copyright IBM 2021, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -291,16 +291,21 @@
 <span class="c1"># copyright notice, and modified files need to carry a notice indicating</span>
 <span class="c1"># that they have been altered from the originals.</span>
 <span class="sd">&quot;&quot;&quot;Defines a protein folding problem that can be passed to algorithms.&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">PauliSumOp</span><span class="p">,</span> <span class="n">PauliOp</span>
-
+<span class="kn">from</span> <span class="nn">qiskit.algorithms</span> <span class="kn">import</span> <span class="n">MinimumEigensolverResult</span>
 <span class="kn">from</span> <span class="nn">.peptide.peptide</span> <span class="kn">import</span> <span class="n">Peptide</span>
 <span class="kn">from</span> <span class="nn">.interactions.interaction</span> <span class="kn">import</span> <span class="n">Interaction</span>
 <span class="kn">from</span> <span class="nn">.penalty_parameters</span> <span class="kn">import</span> <span class="n">PenaltyParameters</span>
 <span class="kn">from</span> <span class="nn">.qubit_op_builder</span> <span class="kn">import</span> <span class="n">QubitOpBuilder</span>
 <span class="kn">from</span> <span class="nn">.qubit_utils</span> <span class="kn">import</span> <span class="n">qubit_number_reducer</span>
 <span class="kn">from</span> <span class="nn">..sampling_problem</span> <span class="kn">import</span> <span class="n">SamplingProblem</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">qiskit_nature.results.protein_folding_result</span> <span class="kn">import</span> <span class="n">ProteinFoldingResult</span>
 
 
 <div class="viewcode-block" id="ProteinFoldingProblem"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.problems.sampling.protein_folding.ProteinFoldingProblem.html#qiskit_nature.problems.sampling.protein_folding.ProteinFoldingProblem">[docs]</a><span class="k">class</span> <span class="nc">ProteinFoldingProblem</span><span class="p">(</span><span class="n">SamplingProblem</span><span class="p">):</span>
@@ -311,11 +316,8 @@
 <span class="sd">        penalty_terms = PenaltyParameters(15, 15, 15)</span>
 <span class="sd">        main_chain_residue_seq = &quot;SAASSASAAG&quot;</span>
 <span class="sd">        side_chain_residue_sequences = [&quot;&quot;, &quot;&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;S&quot;, &quot;&quot;]</span>
-
 <span class="sd">        peptide = Peptide(main_chain_residue_seq, side_chain_residue_sequences)</span>
-
 <span class="sd">        mj_interaction = MiyazawaJerniganInteraction()</span>
-
 <span class="sd">        protein_folding_problem = ProteinFoldingProblem(peptide, mj_interaction, penalty_terms)</span>
 <span class="sd">        qubit_op = protein_folding_problem.qubit_op()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -369,15 +371,37 @@
         <span class="n">qubit_operator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qubit_op_builder</span><span class="o">.</span><span class="n">_build_qubit_op</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">qubit_operator</span>
 
-    <span class="c1"># TODO will be implemented in another issue, including the type hint</span>
-<div class="viewcode-block" id="ProteinFoldingProblem.interpret"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.problems.sampling.protein_folding.ProteinFoldingProblem.interpret.html#qiskit_nature.problems.sampling.protein_folding.ProteinFoldingProblem.interpret">[docs]</a>    <span class="k">def</span> <span class="nf">interpret</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">pass</span></div>
+<div class="viewcode-block" id="ProteinFoldingProblem.interpret"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.problems.sampling.protein_folding.ProteinFoldingProblem.interpret.html#qiskit_nature.problems.sampling.protein_folding.ProteinFoldingProblem.interpret">[docs]</a>    <span class="k">def</span> <span class="nf">interpret</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_result</span><span class="p">:</span> <span class="n">MinimumEigensolverResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ProteinFoldingResult&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Interprets the raw algorithm result, in the context of this problem, and returns a</span>
+<span class="sd">        ProteinFoldingResult. The returned class can plot the protein and generate a</span>
+<span class="sd">        .xyz file with the coordinates of each of its atoms.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            raw_result: The raw result of solving the protein folding problem.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A :class:`~qiskit_nature.results.ProteinFoldingResult`</span>
+<span class="sd">            instance that contains the protein folding result.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">qiskit_nature.results</span> <span class="kn">import</span> <span class="n">ProteinFoldingResult</span>
+
+        <span class="n">best_turn_sequence</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">raw_result</span><span class="o">.</span><span class="n">eigenstate</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">raw_result</span><span class="o">.</span><span class="n">eigenstate</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ProteinFoldingResult</span><span class="p">(</span>
+            <span class="n">unused_qubits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">unused_qubits</span><span class="p">,</span>
+            <span class="n">peptide</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">peptide</span><span class="p">,</span>
+            <span class="n">turn_sequence</span><span class="o">=</span><span class="n">best_turn_sequence</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">unused_qubits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Returns the list of indices for qubits in the original problem formulation that were</span>
 <span class="sd">        removed during compression.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unused_qubits</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unused_qubits</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">peptide</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Peptide</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the peptide defining the protein subject to the folding problem.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_peptide</span></div>
 </pre></div>
 
              </article>

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.properties.second_quantization.vibrational.vibrational_energy &mdash; документация Qiskit Nature 0.3.2</title>
+  <title>qiskit_nature.properties.second_quantization.vibrational.vibrational_energy &mdash; документация Qiskit Nature 0.4.1</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -281,7 +281,7 @@
   <h1>Исходный код qiskit_nature.properties.second_quantization.vibrational.vibrational_energy</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2021.</span>
+<span class="c1"># (C) Copyright IBM 2021, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -293,7 +293,11 @@
 
 <span class="sd">&quot;&quot;&quot;The VibrationalEnergy property.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">h5py</span>
 
 <span class="kn">from</span> <span class="nn">qiskit_nature</span> <span class="kn">import</span> <span class="n">ListOrDictType</span><span class="p">,</span> <span class="n">settings</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.drivers</span> <span class="kn">import</span> <span class="n">WatsonHamiltonian</span>
@@ -304,6 +308,7 @@
 <span class="kn">from</span> <span class="nn">.bases</span> <span class="kn">import</span> <span class="n">VibrationalBasis</span>
 <span class="kn">from</span> <span class="nn">.integrals</span> <span class="kn">import</span> <span class="n">VibrationalIntegrals</span>
 <span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">VibrationalProperty</span>
+<span class="kn">from</span> <span class="nn">....deprecation</span> <span class="kn">import</span> <span class="n">deprecate_method</span>
 
 
 <div class="viewcode-block" id="VibrationalEnergy"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.properties.second_quantization.vibrational.VibrationalEnergy.html#qiskit_nature.properties.second_quantization.vibrational.VibrationalEnergy">[документация]</a><span class="k">class</span> <span class="nc">VibrationalEnergy</span><span class="p">(</span><span class="n">VibrationalProperty</span><span class="p">):</span>
@@ -315,7 +320,7 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">vibrational_integrals</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">VibrationalIntegrals</span><span class="p">],</span>
+        <span class="n">vibrational_integrals</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">VibrationalIntegrals</span><span class="p">],</span>
         <span class="n">truncation_order</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">basis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VibrationalBasis</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -332,7 +337,7 @@
 <span class="sd">                be set before the second-quantized operator can be constructed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">basis</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_vibrational_integrals</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">VibrationalIntegrals</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vibrational_integrals</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">VibrationalIntegrals</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">integral</span> <span class="ow">in</span> <span class="n">vibrational_integrals</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_vibrational_integral</span><span class="p">(</span><span class="n">integral</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_truncation_order</span> <span class="o">=</span> <span class="n">truncation_order</span>
@@ -353,8 +358,45 @@
             <span class="n">string</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="n">ints</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
 
+<div class="viewcode-block" id="VibrationalEnergy.to_hdf5"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.properties.second_quantization.vibrational.VibrationalEnergy.to_hdf5.html#qiskit_nature.properties.second_quantization.vibrational.VibrationalEnergy.to_hdf5">[документация]</a>    <span class="k">def</span> <span class="nf">to_hdf5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Stores this instance in an HDF5 group inside of the provided parent group.</span>
+
+<span class="sd">        See also :func:`~qiskit_nature.hdf5.HDF5Storable.to_hdf5` for more details.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            parent: the parent HDF5 group.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">to_hdf5</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">require_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="n">ints_group</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;vibrational_integrals&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">integral</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vibrational_integrals</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">integral</span><span class="o">.</span><span class="n">to_hdf5</span><span class="p">(</span><span class="n">ints_group</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">truncation_order</span><span class="p">:</span>
+            <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;truncation_order&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">truncation_order</span></div>
+
+<div class="viewcode-block" id="VibrationalEnergy.from_hdf5"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.properties.second_quantization.vibrational.VibrationalEnergy.from_hdf5.html#qiskit_nature.properties.second_quantization.vibrational.VibrationalEnergy.from_hdf5">[документация]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_hdf5</span><span class="p">(</span><span class="n">h5py_group</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VibrationalEnergy</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Constructs a new instance from the data stored in the provided HDF5 group.</span>
+
+<span class="sd">        See also :func:`~qiskit_nature.hdf5.HDF5Storable.from_hdf5` for more details.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            h5py_group: the HDF5 group from which to load the data.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A new instance of this class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ints</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">int_group</span> <span class="ow">in</span> <span class="n">h5py_group</span><span class="p">[</span><span class="s2">&quot;vibrational_integrals&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">ints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">VibrationalIntegrals</span><span class="o">.</span><span class="n">from_hdf5</span><span class="p">(</span><span class="n">int_group</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">VibrationalEnergy</span><span class="p">(</span><span class="n">ints</span><span class="p">,</span> <span class="n">h5py_group</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;truncation_order&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span></div>
+
 <div class="viewcode-block" id="VibrationalEnergy.from_legacy_driver_result"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.properties.second_quantization.vibrational.VibrationalEnergy.from_legacy_driver_result.html#qiskit_nature.properties.second_quantization.vibrational.VibrationalEnergy.from_legacy_driver_result">[документация]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_legacy_driver_result</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">LegacyDriverResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;VibrationalEnergy&quot;</span><span class="p">:</span>
+    <span class="nd">@deprecate_method</span><span class="p">(</span><span class="s2">&quot;0.4.0&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">from_legacy_driver_result</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">LegacyDriverResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VibrationalEnergy</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Construct a VibrationalEnergy instance from a</span>
 <span class="sd">        :class:`~qiskit_nature.drivers.WatsonHamiltonian`.</span>
 
@@ -372,7 +414,7 @@
 
         <span class="n">w_h</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">WatsonHamiltonian</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 
-        <span class="n">sorted_integrals</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="p">[],</span> <span class="mi">2</span><span class="p">:</span> <span class="p">[],</span> <span class="mi">3</span><span class="p">:</span> <span class="p">[]}</span>
+        <span class="n">sorted_integrals</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="p">[],</span> <span class="mi">2</span><span class="p">:</span> <span class="p">[],</span> <span class="mi">3</span><span class="p">:</span> <span class="p">[]}</span>
         <span class="k">for</span> <span class="n">coeff</span><span class="p">,</span> <span class="o">*</span><span class="n">indices</span> <span class="ow">in</span> <span class="n">w_h</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
             <span class="n">ints</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">]</span>
             <span class="n">num_body</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ints</span><span class="p">))</span>
@@ -381,6 +423,18 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="p">[</span><span class="n">VibrationalIntegrals</span><span class="p">(</span><span class="n">num_body</span><span class="p">,</span> <span class="n">ints</span><span class="p">)</span> <span class="k">for</span> <span class="n">num_body</span><span class="p">,</span> <span class="n">ints</span> <span class="ow">in</span> <span class="n">sorted_integrals</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
         <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">VibrationalIntegrals</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the generator-iterator method.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generator</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">VibrationalIntegrals</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;A generator-iterator method [1] iterating over all internal ``VibrationalIntegrals``.</span>
+
+<span class="sd">        [1]: https://docs.python.org/3/reference/expressions.html#generator-iterator-methods</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">ints</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vibrational_integrals</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">ints</span>
 
 <div class="viewcode-block" id="VibrationalEnergy.add_vibrational_integral"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.properties.second_quantization.vibrational.VibrationalEnergy.add_vibrational_integral.html#qiskit_nature.properties.second_quantization.vibrational.VibrationalEnergy.add_vibrational_integral">[документация]</a>    <span class="k">def</span> <span class="nf">add_vibrational_integral</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">integral</span><span class="p">:</span> <span class="n">VibrationalIntegrals</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># pylint: disable=line-too-long</span>
@@ -430,9 +484,9 @@
             <span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ints</span><span class="o">.</span><span class="n">to_second_q_op</span><span class="p">())</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">settings</span><span class="o">.</span><span class="n">dict_aux_operators</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">ops</span><span class="p">)]</span>  <span class="c1"># type: ignore[list-item]</span>
+            <span class="k">return</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">ops</span><span class="p">)]</span>
 
-        <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ops</span><span class="p">)}</span>  <span class="c1"># type: ignore[dict-item]</span></div>
+        <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ops</span><span class="p">)}</span></div>
 
 <div class="viewcode-block" id="VibrationalEnergy.interpret"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.properties.second_quantization.vibrational.VibrationalEnergy.interpret.html#qiskit_nature.properties.second_quantization.vibrational.VibrationalEnergy.interpret">[документация]</a>    <span class="k">def</span> <span class="nf">interpret</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">EigenstateResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Interprets an :class:`~qiskit_nature.results.EigenstateResult` in this property&#39;s context.</span>

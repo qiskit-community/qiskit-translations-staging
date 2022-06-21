@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.properties.second_quantization.electronic.magnetization &mdash; Qiskit Nature 0.3.2 documentazione</title>
+  <title>qiskit_nature.properties.second_quantization.electronic.magnetization &mdash; Qiskit Nature 0.4.1 documentazione</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -281,7 +281,7 @@
   <h1>Codice sorgente per qiskit_nature.properties.second_quantization.electronic.magnetization</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2021.</span>
+<span class="c1"># (C) Copyright IBM 2021, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -293,7 +293,11 @@
 
 <span class="sd">&quot;&quot;&quot;The Magnetization property.&quot;&quot;&quot;</span>
 
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">cast</span>
+
+<span class="kn">import</span> <span class="nn">h5py</span>
 
 <span class="kn">from</span> <span class="nn">qiskit_nature</span> <span class="kn">import</span> <span class="n">ListOrDictType</span><span class="p">,</span> <span class="n">settings</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.drivers</span> <span class="kn">import</span> <span class="n">QMolecule</span>
@@ -302,6 +306,7 @@
 
 <span class="kn">from</span> <span class="nn">..second_quantized_property</span> <span class="kn">import</span> <span class="n">LegacyDriverResult</span>
 <span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">ElectronicProperty</span>
+<span class="kn">from</span> <span class="nn">....deprecation</span> <span class="kn">import</span> <span class="n">deprecate_method</span>
 
 
 <div class="viewcode-block" id="Magnetization"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.properties.second_quantization.electronic.Magnetization.html#qiskit_nature.properties.second_quantization.electronic.Magnetization">[documenti]</a><span class="k">class</span> <span class="nc">Magnetization</span><span class="p">(</span><span class="n">ElectronicProperty</span><span class="p">):</span>
@@ -315,13 +320,51 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_spin_orbitals</span> <span class="o">=</span> <span class="n">num_spin_orbitals</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">num_spin_orbitals</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the number of spin orbitals.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_spin_orbitals</span>
+
+    <span class="nd">@num_spin_orbitals</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">num_spin_orbitals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_spin_orbitals</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets the number of spin orbitals.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_spin_orbitals</span> <span class="o">=</span> <span class="n">num_spin_orbitals</span>
+
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">string</span> <span class="o">=</span> <span class="p">[</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span><span class="p">]</span>
         <span class="n">string</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_spin_orbitals</span><span class="si">}</span><span class="s2"> SOs&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
 
+<div class="viewcode-block" id="Magnetization.to_hdf5"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.properties.second_quantization.electronic.Magnetization.to_hdf5.html#qiskit_nature.properties.second_quantization.electronic.Magnetization.to_hdf5">[documenti]</a>    <span class="k">def</span> <span class="nf">to_hdf5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Stores this instance in an HDF5 group inside of the provided parent group.</span>
+
+<span class="sd">        See also :func:`~qiskit_nature.hdf5.HDF5Storable.to_hdf5` for more details.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            parent: the parent HDF5 group.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">to_hdf5</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">require_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;num_spin_orbitals&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_spin_orbitals</span></div>
+
+<div class="viewcode-block" id="Magnetization.from_hdf5"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.properties.second_quantization.electronic.Magnetization.from_hdf5.html#qiskit_nature.properties.second_quantization.electronic.Magnetization.from_hdf5">[documenti]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_hdf5</span><span class="p">(</span><span class="n">h5py_group</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Magnetization</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Constructs a new instance from the data stored in the provided HDF5 group.</span>
+
+<span class="sd">        See also :func:`~qiskit_nature.hdf5.HDF5Storable.from_hdf5` for more details.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            h5py_group: the HDF5 group from which to load the data.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A new instance of this class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Magnetization</span><span class="p">(</span><span class="n">h5py_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;num_spin_orbitals&quot;</span><span class="p">])</span></div>
+
 <div class="viewcode-block" id="Magnetization.from_legacy_driver_result"><a class="viewcode-back" href="../../../../../stubs/qiskit_nature.properties.second_quantization.electronic.Magnetization.from_legacy_driver_result.html#qiskit_nature.properties.second_quantization.electronic.Magnetization.from_legacy_driver_result">[documenti]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_legacy_driver_result</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">LegacyDriverResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Magnetization&quot;</span><span class="p">:</span>
+    <span class="nd">@deprecate_method</span><span class="p">(</span><span class="s2">&quot;0.4.0&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">from_legacy_driver_result</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">LegacyDriverResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Magnetization</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Construct a Magnetization instance from a :class:`~qiskit_nature.drivers.QMolecule`.</span>
 
 <span class="sd">        Args:</span>
@@ -375,7 +418,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">aux_operator_eigenvalues</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">aux_operator_eigenvalues</span> <span class="o">=</span> <span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">aux_operator_eigenvalues</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">aux_operator_eigenvalues</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">aux_operator_eigenvalues</span>  <span class="c1"># type: ignore[assignment]</span>
+            <span class="n">aux_operator_eigenvalues</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">aux_operator_eigenvalues</span>
         <span class="k">for</span> <span class="n">aux_op_eigenvalues</span> <span class="ow">in</span> <span class="n">aux_operator_eigenvalues</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">aux_op_eigenvalues</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">continue</span>
@@ -383,7 +426,7 @@
             <span class="n">_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">aux_op_eigenvalues</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="mi">2</span>
 
             <span class="k">if</span> <span class="n">aux_op_eigenvalues</span><span class="p">[</span><span class="n">_key</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">result</span><span class="o">.</span><span class="n">magnetization</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">aux_op_eigenvalues</span><span class="p">[</span><span class="n">_key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">magnetization</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">aux_op_eigenvalues</span><span class="p">[</span><span class="n">_key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">result</span><span class="o">.</span><span class="n">magnetization</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span></div></div>
 </pre></div>

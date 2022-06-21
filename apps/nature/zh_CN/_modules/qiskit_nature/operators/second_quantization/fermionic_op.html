@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_nature.operators.second_quantization.fermionic_op &mdash; Qiskit Nature 0.3.2 文档</title>
+  <title>qiskit_nature.operators.second_quantization.fermionic_op &mdash; Qiskit Nature 0.4.1 文档</title>
   
 
   
@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
@@ -177,7 +177,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.1
                 </div>
               
             
@@ -293,15 +293,18 @@
 
 <span class="sd">&quot;&quot;&quot;The Fermionic-particle Operator.&quot;&quot;&quot;</span>
 
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
 <span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">csc_matrix</span>
 
+<span class="kn">from</span> <span class="nn">qiskit_nature.deprecation</span> <span class="kn">import</span> <span class="n">deprecate_function</span>
 <span class="kn">from</span> <span class="nn">qiskit_nature.operators.second_quantization.second_quantized_op</span> <span class="kn">import</span> <span class="n">SecondQuantizedOp</span>
 
 <span class="n">_ZERO_LABELS</span> <span class="o">=</span> <span class="p">{</span>
@@ -333,30 +336,6 @@
     <span class="p">(</span><span class="s2">&quot;E&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">):</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span>
     <span class="p">(</span><span class="s2">&quot;E&quot;</span><span class="p">,</span> <span class="s2">&quot;E&quot;</span><span class="p">):</span> <span class="s2">&quot;E&quot;</span><span class="p">,</span>
 <span class="p">}</span>
-
-
-<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">_FermionLabelPrimitive</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Represent Label for Fermion +_{n} or -_{n}&quot;&quot;&quot;</span>
-
-    <span class="n">is_creation</span><span class="p">:</span> <span class="nb">bool</span>  <span class="c1"># if True creation operator, otherwise annihilation operator</span>
-    <span class="n">index</span><span class="p">:</span> <span class="nb">int</span>
-
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_creation</span><span class="p">:</span>
-            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;+_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;-_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span>
-
-    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;_FermionLabelPrimitive&quot;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Calculate adjoint</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            The adjoint label</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_FermionLabelPrimitive</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_creation</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-
-
-<span class="n">_FermionLabel</span> <span class="o">=</span> <span class="n">List</span><span class="p">[</span><span class="n">_FermionLabelPrimitive</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="FermionicOp"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.html#qiskit_nature.operators.second_quantization.FermionicOp">[文档]</a><span class="k">class</span> <span class="nc">FermionicOp</span><span class="p">(</span><span class="n">SecondQuantizedOp</span><span class="p">):</span>
@@ -421,6 +400,20 @@
 <span class="sd">        &quot;+_0 -_1 +_4 +_10&quot;</span>
 
 <span class="sd">    are possible labels.</span>
+
+<span class="sd">    As a programmatic approach, you can input a list of tuples as the labels,</span>
+<span class="sd">    too. Thus, a FermionicOp can be initialized using a list of tuples of the</span>
+<span class="sd">    form, `(action, index)`. `action` is a string where `-` denotes an</span>
+<span class="sd">    annihilation and `+` a creation operation. The `index` is also an integer</span>
+<span class="sd">    denoting the fermionic mode.</span>
+<span class="sd">    The following labels are equivalent to the example given for sparse labels</span>
+<span class="sd">    above:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        [(&quot;+&quot;, 0)]</span>
+<span class="sd">        [(&quot;-&quot;, 2)]</span>
+<span class="sd">        [(&quot;+&quot;, 0), (&quot;-&quot;, 1), (&quot;+&quot;, 4), (&quot;+&quot;, 10)]</span>
 
 <span class="sd">    **Initialization**</span>
 
@@ -497,9 +490,13 @@
 <span class="sd">            some processing</span>
 <span class="sd">            fermion += FermionicOp(somedata)</span>
 
+<span class="sd">    **Iteration**</span>
+
+<span class="sd">    FermionicOps are iterable. Iterating a FermionicOp yields (term, coefficient) pairs</span>
+<span class="sd">    describing the terms contained in the operator. Each term is a list of tuples of the</span>
+<span class="sd">    form (action, index), where the action is either &quot;+&quot; or &quot;-&quot; and the index is the integer</span>
+<span class="sd">    index of the factor in the term.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Warn only once</span>
-    <span class="n">_display_format_warn</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="n">_truncate</span> <span class="o">=</span> <span class="mi">200</span>
 
@@ -507,13 +504,14 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
             <span class="nb">str</span><span class="p">,</span>
-            <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">complex</span><span class="p">],</span>
-            <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]],</span>
-            <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
-            <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">_FermionLabel</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]],</span>
+            <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">complex</span><span class="p">],</span>
+            <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]],</span>
+            <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+            <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span> <span class="nb">complex</span><span class="p">]],</span>
+            <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span> <span class="nb">complex</span><span class="p">]],</span>
         <span class="p">],</span>
         <span class="n">register_length</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">display_format</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">display_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -521,30 +519,33 @@
 <span class="sd">                  tuple (label, coeff), or list [(label, coeff)].</span>
 <span class="sd">            register_length: positive integer that represents the length of registers.</span>
 <span class="sd">            display_format: If sparse, the label is represented sparsely during output.</span>
-<span class="sd">                            if dense, the label is represented densely during output. (default: dense)</span>
+<span class="sd">                            if dense, the label is represented densely during output. (default: sparse)</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            ValueError: given data is invalid value.</span>
 <span class="sd">            TypeError: given data has invalid type.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">display_format</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">display_format</span> <span class="o">=</span> <span class="s2">&quot;dense&quot;</span>
-            <span class="k">if</span> <span class="n">FermionicOp</span><span class="o">.</span><span class="n">_display_format_warn</span><span class="p">:</span>
-                <span class="n">FermionicOp</span><span class="o">.</span><span class="n">_display_format_warn</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                    <span class="s2">&quot;The default value for `display_format` will be changed from &#39;dense&#39; &quot;</span>
-                    <span class="s2">&quot;to &#39;sparse&#39; in version 0.3.0. Once that happens, you must specify &quot;</span>
-                    <span class="s2">&quot;display_format=&#39;dense&#39; directly.&quot;</span><span class="p">,</span>
-                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                <span class="p">)</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">display_format</span> <span class="o">=</span> <span class="n">display_format</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">_FermionLabel</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span> <span class="nb">complex</span><span class="p">]]</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="n">register_length</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">data</span>  <span class="c1"># type: ignore</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_register_length</span> <span class="o">=</span> <span class="n">register_length</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="s2">&quot;list[tuple[tuple[tuple[str, int], ...], complex]]&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">elif</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">Iterable</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="s2">&quot;Iterable[tuple[str, int]]&quot;</span><span class="p">,</span> <span class="n">term</span><span class="p">)),</span> <span class="n">coeff</span><span class="p">)</span> <span class="k">for</span> <span class="n">term</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">data</span>
+            <span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Type of data must be str, tuple, or list, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
@@ -557,61 +558,63 @@
                     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;Data tuple must be (str, number), not (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="si">}</span><span class="s2">).&quot;</span>
                     <span class="p">)</span>
-                <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">]</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">complex</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]))]</span>
 
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
-                    <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">))</span>
                 <span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Data list must be [(str, number)].&quot;</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                        <span class="s2">&quot;Data list must be [(str, number)] or [([(int, int)], number)].&quot;</span>
+                    <span class="p">)</span>
 
+            <span class="n">data</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="s2">&quot;list[tuple[str, complex]]&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="c1"># dense label</span>
             <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="s2">&quot;_&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">label</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">data</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_substituted_label</span><span class="p">([(</span><span class="n">c</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">label</span><span class="p">)]),</span>
-                        <span class="nb">complex</span><span class="p">(</span><span class="n">coeff</span><span class="p">),</span>  <span class="c1"># type: ignore</span>
+                        <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_substituted_label</span><span class="p">([(</span><span class="n">c</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">label</span><span class="p">)])),</span>
+                        <span class="nb">complex</span><span class="p">(</span><span class="n">coeff</span><span class="p">),</span>
                     <span class="p">)</span>
                     <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">data</span>
                 <span class="p">]</span>
+                <span class="c1"># sparse label</span>
                 <span class="k">if</span> <span class="n">register_length</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">register_length</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_substituted_label</span><span class="p">(</span>
-                            <span class="p">[(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">:]))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">label</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>  <span class="c1"># type: ignore</span>
-                        <span class="p">),</span>
-                        <span class="nb">complex</span><span class="p">(</span><span class="n">coeff</span><span class="p">),</span>  <span class="c1"># type: ignore</span>
+                        <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_substituted_label</span><span class="p">([(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">:]))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">label</span><span class="o">.</span><span class="n">split</span><span class="p">()])),</span>
+                        <span class="nb">complex</span><span class="p">(</span><span class="n">coeff</span><span class="p">),</span>
                     <span class="p">)</span>
                     <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">data</span>
                 <span class="p">]</span>
 
-            <span class="k">if</span> <span class="n">register_length</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_register_length</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">((</span><span class="n">p</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">l</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_register_length</span> <span class="o">=</span> <span class="n">register_length</span>
+        <span class="k">if</span> <span class="n">register_length</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_register_length</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">((</span><span class="n">index</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">l</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_register_length</span> <span class="o">=</span> <span class="n">register_length</span>
 
-    <span class="k">def</span> <span class="nf">_substituted_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
-        <span class="n">new_label</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">_substituted_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
         <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">label</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot;+&quot;</span><span class="p">:</span>
-                <span class="n">new_label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_FermionLabelPrimitive</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">index</span><span class="p">))</span>
+                <span class="k">yield</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="n">index</span>
             <span class="k">elif</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span><span class="p">:</span>
-                <span class="n">new_label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_FermionLabelPrimitive</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">index</span><span class="p">))</span>
+                <span class="k">yield</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">index</span>
             <span class="k">elif</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot;N&quot;</span><span class="p">:</span>
-                <span class="n">new_label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_FermionLabelPrimitive</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">index</span><span class="p">))</span>
-                <span class="n">new_label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_FermionLabelPrimitive</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">index</span><span class="p">))</span>
+                <span class="k">yield</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="n">index</span>
+                <span class="k">yield</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">index</span>
             <span class="k">elif</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot;E&quot;</span><span class="p">:</span>
-                <span class="n">new_label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_FermionLabelPrimitive</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">index</span><span class="p">))</span>
-                <span class="n">new_label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_FermionLabelPrimitive</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">index</span><span class="p">))</span>
+                <span class="k">yield</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">index</span>
+                <span class="k">yield</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="n">index</span>
             <span class="k">elif</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot;I&quot;</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid label </span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> is given.&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">new_label</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
@@ -631,6 +634,10 @@
             <span class="s2">&quot;)&quot;</span>
         <span class="p">)</span>
 
+<div class="viewcode-block" id="FermionicOp.terms"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.terms.html#qiskit_nature.operators.second_quantization.FermionicOp.terms">[文档]</a>    <span class="k">def</span> <span class="nf">terms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span> <span class="nb">complex</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Iterate through operator terms.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="FermionicOp.set_truncation"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.set_truncation.html#qiskit_nature.operators.second_quantization.FermionicOp.set_truncation">[文档]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">set_truncation</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Set the max number of characters to display before truncation.</span>
@@ -647,7 +654,10 @@
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">label</span><span class="p">,</span> <span class="n">coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">coeff</span><span class="si">}</span><span class="s2"> * (</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="k">if</span> <span class="n">label</span><span class="p">:</span>
+                <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">coeff</span><span class="si">}</span><span class="s2"> * (</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">coeff</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">pre</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s2">&quot;Fermionic Operator</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;register length=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">register_length</span><span class="si">}</span><span class="s2">, number terms=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -667,7 +677,7 @@
         <span class="sd">&quot;&quot;&quot;Gets the register length.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_register_length</span>
 
-<div class="viewcode-block" id="FermionicOp.mul"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.mul.html#qiskit_nature.operators.second_quantization.FermionicOp.mul">[文档]</a>    <span class="k">def</span> <span class="nf">mul</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">complex</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FermionicOp&quot;</span><span class="p">:</span>
+<div class="viewcode-block" id="FermionicOp.mul"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.mul.html#qiskit_nature.operators.second_quantization.FermionicOp.mul">[文档]</a>    <span class="k">def</span> <span class="nf">mul</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">complex</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FermionicOp</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Unsupported operand type(s) for *: &#39;FermionicOp&#39; and &#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
@@ -678,7 +688,7 @@
             <span class="n">display_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">display_format</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="FermionicOp.compose"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.compose.html#qiskit_nature.operators.second_quantization.FermionicOp.compose">[文档]</a>    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;FermionicOp&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FermionicOp&quot;</span><span class="p">:</span>
+<div class="viewcode-block" id="FermionicOp.compose"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.compose.html#qiskit_nature.operators.second_quantization.FermionicOp.compose">[文档]</a>    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">FermionicOp</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FermionicOp</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">FermionicOp</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Unsupported operand type(s) for *: &#39;FermionicOp&#39; and &#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
@@ -704,7 +714,7 @@
             <span class="k">return</span> <span class="n">FermionicOp</span><span class="p">((</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">register_length</span><span class="p">,</span> <span class="n">display_format</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">FermionicOp</span><span class="p">(</span><span class="n">new_data</span><span class="p">,</span> <span class="n">register_length</span><span class="p">,</span> <span class="n">display_format</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="FermionicOp.add"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.add.html#qiskit_nature.operators.second_quantization.FermionicOp.add">[文档]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;FermionicOp&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FermionicOp&quot;</span><span class="p">:</span>
+<div class="viewcode-block" id="FermionicOp.add"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.add.html#qiskit_nature.operators.second_quantization.FermionicOp.add">[文档]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">FermionicOp</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FermionicOp</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">FermionicOp</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Unsupported operand type(s) for +: &#39;FermionicOp&#39; and &#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
@@ -720,7 +730,7 @@
 <div class="viewcode-block" id="FermionicOp.to_list"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.to_list.html#qiskit_nature.operators.second_quantization.FermionicOp.to_list">[文档]</a>    <span class="k">def</span> <span class="nf">to_list</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">display_format</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]]:</span>  <span class="c1"># type: ignore</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Returns the operators internal contents in list-format.</span>
 
 <span class="sd">        Args:</span>
@@ -744,8 +754,8 @@
             <span class="n">display_format</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">display_format</span>
         <span class="k">if</span> <span class="n">display_format</span> <span class="o">==</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span>
-                <span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">label_data</span><span class="p">),</span> <span class="n">coeff</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">label_data</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+                <span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">char</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">char</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">label_list</span><span class="p">),</span> <span class="n">coeff</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">label_list</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
             <span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_dense_label_data</span><span class="p">()</span></div>
 
@@ -770,7 +780,7 @@
         <span class="k">for</span> <span class="n">col_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dimension</span><span class="p">):</span>
             <span class="n">initial_occupations</span> <span class="o">=</span> <span class="p">[</span><span class="n">occ</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span> <span class="k">for</span> <span class="n">occ</span> <span class="ow">in</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">col_idx</span><span class="si">:</span><span class="s2">0</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">register_length</span><span class="si">}</span><span class="s2">b</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
             <span class="c1"># loop over the terms in the operator data</span>
-            <span class="k">for</span> <span class="n">opstring</span><span class="p">,</span> <span class="n">prefactor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce</span><span class="p">()</span><span class="o">.</span><span class="n">_data</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">opstring</span><span class="p">,</span> <span class="n">prefactor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span><span class="o">.</span><span class="n">_data</span><span class="p">:</span>
                 <span class="c1"># check if op string is the identity</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">opstring</span><span class="p">:</span>
                     <span class="n">csc_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefactor</span><span class="p">)</span>
@@ -782,15 +792,15 @@
                     <span class="n">mapped_to_zero</span> <span class="o">=</span> <span class="kc">False</span>
 
                     <span class="c1"># apply terms sequentially to the current basis state</span>
-                    <span class="k">for</span> <span class="n">label_primitive</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">opstring</span><span class="p">):</span>
-                        <span class="n">occ</span> <span class="o">=</span> <span class="n">occupations</span><span class="p">[</span><span class="n">label_primitive</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
-                        <span class="k">if</span> <span class="n">label_primitive</span><span class="o">.</span><span class="n">is_creation</span> <span class="o">==</span> <span class="n">occ</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">char</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">opstring</span><span class="p">):</span>
+                        <span class="n">occ</span> <span class="o">=</span> <span class="n">occupations</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="n">char</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;+&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">occ</span><span class="p">:</span>
                             <span class="c1"># Applying the creation operator on an occupied state maps to zero. So</span>
                             <span class="c1"># does applying the annihilation operator on an unoccupied state.</span>
                             <span class="n">mapped_to_zero</span> <span class="o">=</span> <span class="kc">True</span>
                             <span class="k">break</span>
-                        <span class="n">sign</span> <span class="o">*=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="nb">sum</span><span class="p">(</span><span class="n">occupations</span><span class="p">[:</span> <span class="n">label_primitive</span><span class="o">.</span><span class="n">index</span><span class="p">])</span>
-                        <span class="n">occupations</span><span class="p">[</span><span class="n">label_primitive</span><span class="o">.</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">occ</span>
+                        <span class="n">sign</span> <span class="o">*=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="nb">sum</span><span class="p">(</span><span class="n">occupations</span><span class="p">[:</span><span class="n">index</span><span class="p">])</span>
+                        <span class="n">occupations</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">occ</span>
 
                     <span class="c1"># add data point to matrix in the correct row</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">mapped_to_zero</span><span class="p">:</span>
@@ -810,24 +820,34 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">sparse_mat</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="FermionicOp.adjoint"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.adjoint.html#qiskit_nature.operators.second_quantization.FermionicOp.adjoint">[文档]</a>    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FermionicOp&quot;</span><span class="p">:</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">:</span>
-            <span class="n">conjugated_coeff</span> <span class="o">=</span> <span class="n">coeff</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span>
-            <span class="n">adjoint_label</span> <span class="o">=</span> <span class="p">[</span><span class="n">fer_label</span><span class="o">.</span><span class="n">adjoint</span><span class="p">()</span> <span class="k">for</span> <span class="n">fer_label</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">label</span><span class="p">)]</span>
-            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">adjoint_label</span><span class="p">,</span> <span class="n">conjugated_coeff</span><span class="p">))</span>
-
+<div class="viewcode-block" id="FermionicOp.adjoint"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.adjoint.html#qiskit_nature.operators.second_quantization.FermionicOp.adjoint">[文档]</a>    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FermionicOp</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">FermionicOp</span><span class="p">(</span>
-            <span class="n">data</span><span class="p">,</span> <span class="n">register_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">register_length</span><span class="p">,</span> <span class="n">display_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">display_format</span>
+            <span class="p">[</span>
+                <span class="p">(</span>
+                    <span class="nb">tuple</span><span class="p">((</span><span class="s2">&quot;+&quot;</span> <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">label</span><span class="p">)),</span>
+                    <span class="n">coeff</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+            <span class="p">],</span>
+            <span class="n">register_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">register_length</span><span class="p">,</span>
+            <span class="n">display_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">display_format</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="FermionicOp.reduce"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.reduce.html#qiskit_nature.operators.second_quantization.FermionicOp.reduce">[文档]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">rtol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FermionicOp&quot;</span><span class="p">:</span>
+<div class="viewcode-block" id="FermionicOp.reduce"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.reduce.html#qiskit_nature.operators.second_quantization.FermionicOp.reduce">[文档]</a>    <span class="nd">@deprecate_function</span><span class="p">(</span>
+        <span class="s2">&quot;0.4.0&quot;</span><span class="p">,</span>
+        <span class="n">additional_msg</span><span class="o">=</span><span class="s2">&quot;Instead, use `simplify` and optionally `normal_ordered`.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">rtol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FermionicOp</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reduce the operator.</span>
+
+<span class="sd">        This method is deprecated. It is equivalent to `normal_ordered` followed by `simplify`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">atol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">atol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atol</span>
         <span class="k">if</span> <span class="n">rtol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">rtol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rtol</span>
 
-        <span class="n">labels</span><span class="p">,</span> <span class="n">coeffs</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">to_normal_order</span><span class="p">()</span><span class="o">.</span><span class="n">_to_dense_label_data</span><span class="p">())</span>
+        <span class="n">labels</span><span class="p">,</span> <span class="n">coeffs</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">normal_ordered</span><span class="p">()</span><span class="o">.</span><span class="n">_to_dense_label_data</span><span class="p">())</span>
         <span class="n">label_list</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">coeff_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">coeffs</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">):</span>
@@ -841,6 +861,29 @@
             <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">label_list</span><span class="p">[</span><span class="n">non_zero</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">coeff_list</span><span class="p">[</span><span class="n">non_zero</span><span class="p">])),</span>
             <span class="n">display_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">display_format</span><span class="p">,</span>
         <span class="p">)</span></div>
+
+<div class="viewcode-block" id="FermionicOp.simplify"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.simplify.html#qiskit_nature.operators.second_quantization.FermionicOp.simplify">[文档]</a>    <span class="k">def</span> <span class="nf">simplify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FermionicOp</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Simplify the operator.</span>
+
+<span class="sd">        Merges terms with same labels and eliminates terms with coefficients close to 0.</span>
+<span class="sd">        Returns a new operator (the original operator is not modified).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            atol: Absolute tolerance for checking if coefficients are zero (Default: 1e-8).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The simplified operator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">atol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">atol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atol</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">complex</span><span class="p">)</span>  <span class="c1"># type: dict[str, complex]</span>
+        <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_dense_label_data</span><span class="p">():</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">+=</span> <span class="n">coeff</span>
+        <span class="n">terms</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">coeff</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">FermionicOp</span><span class="p">(</span><span class="n">terms</span><span class="p">,</span> <span class="n">display_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">display_format</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">display_format</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -865,13 +908,11 @@
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_display_format</span> <span class="o">=</span> <span class="n">display_format</span>
 
-    <span class="k">def</span> <span class="nf">_to_dense_label_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">_to_dense_label_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]]:</span>
         <span class="n">dense_label_data</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">:</span>
             <span class="n">label_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;I&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">register_length</span>
-            <span class="k">for</span> <span class="n">fer_label</span> <span class="ow">in</span> <span class="n">label</span><span class="p">:</span>
-                <span class="n">char</span> <span class="o">=</span> <span class="s2">&quot;+&quot;</span> <span class="k">if</span> <span class="n">fer_label</span><span class="o">.</span><span class="n">is_creation</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
-                <span class="n">index</span> <span class="o">=</span> <span class="n">fer_label</span><span class="o">.</span><span class="n">index</span>
+            <span class="k">for</span> <span class="n">char</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">label</span><span class="p">:</span>
                 <span class="k">if</span> <span class="p">(</span><span class="n">label_list</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">char</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_ZERO_LABELS</span><span class="p">:</span>
                     <span class="k">break</span>
                 <span class="n">label_list</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">_MAPPING</span><span class="p">[(</span><span class="n">label_list</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">char</span><span class="p">)]</span>
@@ -885,7 +926,11 @@
             <span class="k">return</span> <span class="p">[(</span><span class="s2">&quot;I&quot;</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">register_length</span><span class="p">,</span> <span class="mi">0</span><span class="n">j</span><span class="p">)]</span>
         <span class="k">return</span> <span class="n">dense_label_data</span>
 
-<div class="viewcode-block" id="FermionicOp.to_normal_order"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.to_normal_order.html#qiskit_nature.operators.second_quantization.FermionicOp.to_normal_order">[文档]</a>    <span class="k">def</span> <span class="nf">to_normal_order</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FermionicOp&quot;</span><span class="p">:</span>
+<div class="viewcode-block" id="FermionicOp.to_normal_order"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.to_normal_order.html#qiskit_nature.operators.second_quantization.FermionicOp.to_normal_order">[文档]</a>    <span class="nd">@deprecate_function</span><span class="p">(</span>
+        <span class="s2">&quot;0.4.0&quot;</span><span class="p">,</span>
+        <span class="n">additional_msg</span><span class="o">=</span><span class="s2">&quot;Instead, use `normal_ordered`.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">to_normal_order</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FermionicOp</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Convert to the equivalent operator with normal order.</span>
 <span class="sd">        The returned operator is a sparse label mode.</span>
 
@@ -930,8 +975,57 @@
             <span class="k">return</span> <span class="n">ret</span>
         <span class="k">return</span> <span class="n">FermionicOp</span><span class="p">((</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">register_length</span><span class="p">,</span> <span class="s2">&quot;sparse&quot;</span><span class="p">)</span></div>
 
+<div class="viewcode-block" id="FermionicOp.normal_ordered"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.normal_ordered.html#qiskit_nature.operators.second_quantization.FermionicOp.normal_ordered">[文档]</a>    <span class="k">def</span> <span class="nf">normal_ordered</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FermionicOp</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Convert to the equivalent operator with normal order.</span>
+
+<span class="sd">        Returns a new operator (the original operator is not modified).</span>
+<span class="sd">        The returned operator is in sparse label mode.</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            This method implements the transformation of an operator to the normal ordered operator.</span>
+<span class="sd">            The transformation is calculated by considering all commutation relations between the</span>
+<span class="sd">            operators. For example, for the case :math:`\\colon c_0 c_0^\\dagger\\colon`</span>
+<span class="sd">            where :math:`c_0` is an annihilation operator,</span>
+<span class="sd">            this method returns :math:`1 - c_0^\\dagger c_0` due to commutation relations.</span>
+<span class="sd">            See the reference: https://en.wikipedia.org/wiki/Normal_order#Multiple_fermions.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The normal ordered operator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">temp_display_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">display_format</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_format</span> <span class="o">=</span> <span class="s2">&quot;dense&quot;</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">():</span>
+            <span class="n">splits</span> <span class="o">=</span> <span class="n">label</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;E&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">inter_ops</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="s2">&quot;IN&quot;</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">splits</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">label</span> <span class="o">=</span> <span class="n">splits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">label</span> <span class="o">+=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">link</span> <span class="o">+</span> <span class="n">next_base</span> <span class="k">for</span> <span class="n">link</span><span class="p">,</span> <span class="n">next_base</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inter_ops</span><span class="p">,</span> <span class="n">splits</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+
+                <span class="n">pluses</span> <span class="o">=</span> <span class="p">[</span><span class="n">it</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\+|N&quot;</span><span class="p">,</span> <span class="n">label</span><span class="p">)]</span>
+                <span class="n">minuses</span> <span class="o">=</span> <span class="p">[</span><span class="n">it</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;-|N&quot;</span><span class="p">,</span> <span class="n">label</span><span class="p">)]</span>
+
+                <span class="n">count</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">plus</span> <span class="ow">in</span> <span class="n">pluses</span> <span class="k">for</span> <span class="n">minus</span> <span class="ow">in</span> <span class="n">minuses</span> <span class="k">if</span> <span class="n">plus</span> <span class="o">&gt;</span> <span class="n">minus</span><span class="p">)</span>
+                <span class="n">sign_swap</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">count</span>
+                <span class="n">sign_n</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">inter_ops</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">&quot;N&quot;</span><span class="p">)</span>
+                <span class="n">new_coeff</span> <span class="o">=</span> <span class="n">coeff</span> <span class="o">*</span> <span class="n">sign_n</span> <span class="o">*</span> <span class="n">sign_swap</span>
+
+                <span class="n">ret</span> <span class="o">+=</span> <span class="n">new_coeff</span> <span class="o">*</span> <span class="n">FermionicOp</span><span class="p">(</span>
+                    <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;+_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">pluses</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;-_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">minuses</span><span class="p">]),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">register_length</span><span class="p">,</span>
+                    <span class="s2">&quot;sparse&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_format</span> <span class="o">=</span> <span class="n">temp_display_label</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">FermionicOp</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ret</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">FermionicOp</span><span class="p">((</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">register_length</span><span class="p">,</span> <span class="s2">&quot;sparse&quot;</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="FermionicOp.zero"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.zero.html#qiskit_nature.operators.second_quantization.FermionicOp.zero">[文档]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">zero</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">register_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FermionicOp&quot;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">zero</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">register_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FermionicOp</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Constructs a zero-operator.</span>
 
 <span class="sd">        Args:</span>
@@ -943,7 +1037,7 @@
         <span class="k">return</span> <span class="n">FermionicOp</span><span class="p">((</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">register_length</span><span class="o">=</span><span class="n">register_length</span><span class="p">,</span> <span class="n">display_format</span><span class="o">=</span><span class="s2">&quot;sparse&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="FermionicOp.one"><a class="viewcode-back" href="../../../../stubs/qiskit_nature.operators.second_quantization.FermionicOp.one.html#qiskit_nature.operators.second_quantization.FermionicOp.one">[文档]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">one</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">register_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FermionicOp&quot;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">one</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">register_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FermionicOp</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Constructs a unity-operator.</span>
 
 <span class="sd">        Args:</span>
