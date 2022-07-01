@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.algorithms.optimizers.spsa &mdash; Documentation Qiskit 0.36.2</title>
+  <title>qiskit.algorithms.optimizers.spsa &mdash; Documentation Qiskit 0.37.0</title>
   
 
   
@@ -34,9 +34,7 @@
   <link rel="stylesheet" href="../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -267,7 +265,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (obsolète)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum (Fournisseur)</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Déboggage</span></p>
@@ -369,6 +366,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">algorithm_globals</span>
+<span class="kn">from</span> <span class="nn">qiskit.utils.deprecation</span> <span class="kn">import</span> <span class="n">deprecate_function</span>
 
 <span class="kn">from</span> <span class="nn">.optimizer</span> <span class="kn">import</span> <span class="n">Optimizer</span><span class="p">,</span> <span class="n">OptimizerSupportLevel</span><span class="p">,</span> <span class="n">OptimizerResult</span><span class="p">,</span> <span class="n">POINT</span>
 
@@ -889,7 +887,11 @@
         <span class="c1"># keep track of the last few steps to return their average</span>
         <span class="n">last_steps</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="n">x</span><span class="p">])</span>
 
-        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxiter</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># use a local variable and while loop to keep track of the number of iterations</span>
+        <span class="c1"># if the termination checker terminates early</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxiter</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="n">iteration_start</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
             <span class="c1"># compute update</span>
             <span class="n">fx_estimate</span><span class="p">,</span> <span class="n">update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_update</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="n">eps</span><span class="p">),</span> <span class="n">lse_solver</span><span class="p">)</span>
@@ -973,7 +975,7 @@
         <span class="n">result</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
         <span class="n">result</span><span class="o">.</span><span class="n">fun</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">result</span><span class="o">.</span><span class="n">nfev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nfev</span>
-        <span class="n">result</span><span class="o">.</span><span class="n">nit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxiter</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">nit</span> <span class="o">=</span> <span class="n">k</span>
 
         <span class="k">return</span> <span class="n">result</span></div>
 
@@ -985,14 +987,36 @@
             <span class="s2">&quot;initial_point&quot;</span><span class="p">:</span> <span class="n">OptimizerSupportLevel</span><span class="o">.</span><span class="n">required</span><span class="p">,</span>
         <span class="p">}</span></div>
 
-<div class="viewcode-block" id="SPSA.optimize"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.optimizers.SPSA.optimize.html#qiskit.algorithms.optimizers.SPSA.optimize">[docs]</a>    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span>
+    <span class="c1"># pylint: disable=bad-docstring-quotes</span>
+<div class="viewcode-block" id="SPSA.optimize"><a class="viewcode-back" href="../../../../stubs/qiskit.algorithms.optimizers.SPSA.optimize.html#qiskit.algorithms.optimizers.SPSA.optimize">[docs]</a>    <span class="nd">@deprecate_function</span><span class="p">(</span>
+        <span class="s2">&quot;The SPSA.optimize method is deprecated as of Qiskit Terra 0.21.0 and will be removed no &quot;</span>
+        <span class="s2">&quot;sooner than 3 months after the release date. Instead, use SPSA.minimize as a replacement, &quot;</span>
+        <span class="s2">&quot;which supports the same arguments but follows the interface of scipy.optimize and returns &quot;</span>
+        <span class="s2">&quot;a complete result object containing additional information.&quot;</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">num_vars</span><span class="p">,</span>
+        <span class="n">num_vars</span><span class="p">,</span>  <span class="c1"># pylint: disable=unused-argument</span>
         <span class="n">objective_function</span><span class="p">,</span>
-        <span class="n">gradient_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">variable_bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">gradient_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># pylint: disable=unused-argument</span>
+        <span class="n">variable_bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># pylint: disable=unused-argument</span>
         <span class="n">initial_point</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Perform optimization.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            num_vars (int): Number of parameters to be optimized.</span>
+<span class="sd">            objective_function (callable): A function that computes the objective function.</span>
+<span class="sd">            gradient_function (callable): Not supported for SPSA.</span>
+<span class="sd">            variable_bounds (list[(float, float)]): Not supported for SPSA.</span>
+<span class="sd">            initial_point (numpy.ndarray[float]): Initial point.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: point, value, nfev</span>
+<span class="sd">               point: is a 1D numpy.ndarray[float] containing the solution</span>
+<span class="sd">               value: is a float with the objective function value</span>
+<span class="sd">               nfev: number of objective function calls made if available or None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">objective_function</span><span class="p">,</span> <span class="n">initial_point</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">nfev</span></div></div>
 
@@ -1107,7 +1131,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Mis à jour le 2022/06/21.
+      Mis à jour le 2022/07/01.
 
     </p>
   </div>
@@ -1145,6 +1169,7 @@
          <script src="../../../../_static/translations.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
+         <script src="../../../../_static/design-tabs.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
      
 

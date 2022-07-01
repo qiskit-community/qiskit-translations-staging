@@ -4,7 +4,7 @@
 # In[1]:
 
 
-from qiskit.test.mock import FakeVigo
+from qiskit.providers.fake_provider import FakeVigo
 backend = FakeVigo()
 
 
@@ -32,7 +32,9 @@ qc.draw(output='mpl')
 # In[4]:
 
 
-qc_basis = qc.decompose()
+from qiskit import transpile
+
+qc_basis = transpile(qc, backend)
 qc_basis.draw(output='mpl')
 
 
@@ -63,7 +65,7 @@ ccx_circ.decompose().draw(output='mpl')
 
 from qiskit import QuantumCircuit, transpile
 from qiskit.visualization import plot_circuit_layout
-from qiskit.test.mock import FakeVigo
+from qiskit.providers.fake_provider import FakeVigo
 backend = FakeVigo()
 
 ghz = QuantumCircuit(3, 3)
@@ -105,7 +107,7 @@ plot_circuit_layout(my_ghz, backend)
 
 import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit, transpile
-from qiskit.test.mock import FakeBoeblingen
+from qiskit.providers.fake_provider import FakeBoeblingen
 backend = FakeBoeblingen()
 
 ghz = QuantumCircuit(5)
@@ -135,7 +137,7 @@ plt.ylabel('Counts', fontsize=14);
 
 import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit, transpile
-from qiskit.test.mock import FakeBoeblingen
+from qiskit.providers.fake_provider import FakeBoeblingen
 backend = FakeBoeblingen()
 
 ghz = QuantumCircuit(5)
@@ -159,7 +161,7 @@ for kk in range(4):
 
 
 from qiskit import QuantumCircuit, transpile
-from qiskit.test.mock import FakeBoeblingen
+from qiskit.providers.fake_provider import FakeBoeblingen
 backend = FakeBoeblingen()
 
 ghz = QuantumCircuit(5)

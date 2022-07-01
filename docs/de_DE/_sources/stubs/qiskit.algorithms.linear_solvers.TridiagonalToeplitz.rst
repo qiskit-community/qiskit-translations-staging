@@ -25,6 +25,7 @@ TridiagonalToeplitz
       ~TridiagonalToeplitz.cbit_argument_conversion
       ~TridiagonalToeplitz.ccx
       ~TridiagonalToeplitz.ch
+      ~TridiagonalToeplitz.clear
       ~TridiagonalToeplitz.cls_instances
       ~TridiagonalToeplitz.cls_prefix
       ~TridiagonalToeplitz.cnot
@@ -34,6 +35,7 @@ TridiagonalToeplitz
       ~TridiagonalToeplitz.continue_loop
       ~TridiagonalToeplitz.control
       ~TridiagonalToeplitz.copy
+      ~TridiagonalToeplitz.copy_empty_like
       ~TridiagonalToeplitz.count_ops
       ~TridiagonalToeplitz.cp
       ~TridiagonalToeplitz.crx
@@ -64,6 +66,7 @@ TridiagonalToeplitz
       ~TridiagonalToeplitz.get_instructions
       ~TridiagonalToeplitz.h
       ~TridiagonalToeplitz.hamiltonian
+      ~TridiagonalToeplitz.has_calibration_for
       ~TridiagonalToeplitz.has_register
       ~TridiagonalToeplitz.i
       ~TridiagonalToeplitz.id
@@ -191,6 +194,7 @@ TridiagonalToeplitz
    .. autoattribute:: num_qubits
    .. autoattribute:: num_state_qubits
    .. autoattribute:: off_diag
+   .. autoattribute:: op_start_times
    .. autoattribute:: parameters
    .. autoattribute:: prefix
    .. autoattribute:: qregs

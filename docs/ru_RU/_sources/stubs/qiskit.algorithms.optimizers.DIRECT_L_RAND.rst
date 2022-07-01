@@ -17,7 +17,6 @@ DIRECT\_L\_RAND
       ~DIRECT_L_RAND.get_support_level
       ~DIRECT_L_RAND.gradient_num_diff
       ~DIRECT_L_RAND.minimize
-      ~DIRECT_L_RAND.optimize
       ~DIRECT_L_RAND.print_options
       ~DIRECT_L_RAND.set_max_evals_grouped
       ~DIRECT_L_RAND.set_options

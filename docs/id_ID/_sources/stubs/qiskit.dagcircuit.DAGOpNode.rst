@@ -23,7 +23,4 @@
    .. autoattribute:: qargs
    .. autoattribute:: cargs
    .. autoattribute:: sort_key
-   .. autoattribute:: condition
    .. autoattribute:: name
-   .. autoattribute:: type
-   .. autoattribute:: wire

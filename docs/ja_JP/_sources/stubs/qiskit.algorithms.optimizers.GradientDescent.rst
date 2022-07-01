@@ -16,7 +16,6 @@ GradientDescent
       ~GradientDescent.get_support_level
       ~GradientDescent.gradient_num_diff
       ~GradientDescent.minimize
-      ~GradientDescent.optimize
       ~GradientDescent.print_options
       ~GradientDescent.set_max_evals_grouped
       ~GradientDescent.set_options

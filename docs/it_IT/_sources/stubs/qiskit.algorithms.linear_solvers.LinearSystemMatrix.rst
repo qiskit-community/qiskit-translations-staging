@@ -25,6 +25,7 @@ LinearSystemMatrix
       ~LinearSystemMatrix.cbit_argument_conversion
       ~LinearSystemMatrix.ccx
       ~LinearSystemMatrix.ch
+      ~LinearSystemMatrix.clear
       ~LinearSystemMatrix.cls_instances
       ~LinearSystemMatrix.cls_prefix
       ~LinearSystemMatrix.cnot
@@ -34,6 +35,7 @@ LinearSystemMatrix
       ~LinearSystemMatrix.continue_loop
       ~LinearSystemMatrix.control
       ~LinearSystemMatrix.copy
+      ~LinearSystemMatrix.copy_empty_like
       ~LinearSystemMatrix.count_ops
       ~LinearSystemMatrix.cp
       ~LinearSystemMatrix.crx
@@ -64,6 +66,7 @@ LinearSystemMatrix
       ~LinearSystemMatrix.get_instructions
       ~LinearSystemMatrix.h
       ~LinearSystemMatrix.hamiltonian
+      ~LinearSystemMatrix.has_calibration_for
       ~LinearSystemMatrix.has_register
       ~LinearSystemMatrix.i
       ~LinearSystemMatrix.id
@@ -188,6 +191,7 @@ LinearSystemMatrix
    .. autoattribute:: num_parameters
    .. autoattribute:: num_qubits
    .. autoattribute:: num_state_qubits
+   .. autoattribute:: op_start_times
    .. autoattribute:: parameters
    .. autoattribute:: prefix
    .. autoattribute:: qregs

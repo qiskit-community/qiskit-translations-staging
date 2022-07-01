@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.layout.csp_layout &mdash; Qiskit 0.36.2 Dokumentation</title>
+  <title>qiskit.transpiler.passes.layout.csp_layout &mdash; Qiskit 0.37.0 Dokumentation</title>
   
 
   
@@ -34,9 +34,7 @@
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/gallery.css" type="text/css" />
     <link rel="index" title="Stichwortverzeichnis" href="../../../../../genindex.html" />
@@ -267,7 +265,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aer.html">Qiskit Aer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ignis.html">Qiskit Ignis (veraltet)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Problembehandlung</span></p>
@@ -360,53 +357,14 @@
 <span class="sd">found, no ``property_set[&#39;layout&#39;]`` is set.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
-<span class="kn">from</span> <span class="nn">constraint</span> <span class="kn">import</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">RecursiveBacktrackingSolver</span><span class="p">,</span> <span class="n">AllDifferentConstraint</span>
 
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.layout</span> <span class="kn">import</span> <span class="n">Layout</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.basepasses</span> <span class="kn">import</span> <span class="n">AnalysisPass</span>
+<span class="kn">from</span> <span class="nn">qiskit.utils</span> <span class="kn">import</span> <span class="n">optionals</span> <span class="k">as</span> <span class="n">_optionals</span>
 
 
-<span class="k">class</span> <span class="nc">CustomSolver</span><span class="p">(</span><span class="n">RecursiveBacktrackingSolver</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A wrap to RecursiveBacktrackingSolver to support ``call_limit``&quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">call_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">call_limit</span> <span class="o">=</span> <span class="n">call_limit</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">time_limit</span> <span class="o">=</span> <span class="n">time_limit</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">call_current</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">time_start</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">time_current</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">limit_reached</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Checks if a limit is reached.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">call_current</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_current</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_limit</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">time_current</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_start</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_current</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_limit</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="k">def</span> <span class="nf">getSolution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domains</span><span class="p">,</span> <span class="n">constraints</span><span class="p">,</span> <span class="n">vconstraints</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Wrap RecursiveBacktrackingSolver.getSolution to add the limits.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">call_current</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">time_start</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">getSolution</span><span class="p">(</span><span class="n">domains</span><span class="p">,</span> <span class="n">constraints</span><span class="p">,</span> <span class="n">vconstraints</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">recursiveBacktracking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solutions</span><span class="p">,</span> <span class="n">domains</span><span class="p">,</span> <span class="n">vconstraints</span><span class="p">,</span> <span class="n">assignments</span><span class="p">,</span> <span class="n">single</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Like ``constraint.RecursiveBacktrackingSolver.recursiveBacktracking`` but</span>
-<span class="sd">        limited in the amount of calls by ``self.call_limit``&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit_reached</span><span class="p">():</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">recursiveBacktracking</span><span class="p">(</span><span class="n">solutions</span><span class="p">,</span> <span class="n">domains</span><span class="p">,</span> <span class="n">vconstraints</span><span class="p">,</span> <span class="n">assignments</span><span class="p">,</span> <span class="n">single</span><span class="p">)</span>
-
-
-<div class="viewcode-block" id="CSPLayout"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.CSPLayout.html#qiskit.transpiler.passes.CSPLayout">[Doku]</a><span class="k">class</span> <span class="nc">CSPLayout</span><span class="p">(</span><span class="n">AnalysisPass</span><span class="p">):</span>
+<div class="viewcode-block" id="CSPLayout"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.CSPLayout.html#qiskit.transpiler.passes.CSPLayout">[Doku]</a><span class="nd">@_optionals</span><span class="o">.</span><span class="n">HAS_CONSTRAINT</span><span class="o">.</span><span class="n">require_in_instance</span>
+<span class="k">class</span> <span class="nc">CSPLayout</span><span class="p">(</span><span class="n">AnalysisPass</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;If possible, chooses a Layout as a CSP, using backtracking.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -445,6 +403,9 @@
         <span class="sd">&quot;&quot;&quot;run the layout method&quot;&quot;&quot;</span>
         <span class="n">qubits</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">qubits</span>
         <span class="n">cxs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="kn">from</span> <span class="nn">constraint</span> <span class="kn">import</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">AllDifferentConstraint</span><span class="p">,</span> <span class="n">RecursiveBacktrackingSolver</span>
+        <span class="kn">from</span> <span class="nn">qiskit.transpiler.passes.layout._csp_custom_solver</span> <span class="kn">import</span> <span class="n">CustomSolver</span>
 
         <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">two_qubit_ops</span><span class="p">():</span>
             <span class="n">cxs</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">qubits</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">gate</span><span class="o">.</span><span class="n">qargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">qubits</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">gate</span><span class="o">.</span><span class="n">qargs</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
@@ -509,7 +470,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Zuletzt aktualisiert am 2022/06/21.
+      Zuletzt aktualisiert am 2022/07/01.
 
     </p>
   </div>
@@ -546,6 +507,7 @@
          <script src="../../../../../_static/thebelab-helper.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
+         <script src="../../../../../_static/design-tabs.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
      
 

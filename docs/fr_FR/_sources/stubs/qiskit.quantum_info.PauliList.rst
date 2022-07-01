@@ -28,6 +28,7 @@
       ~PauliList.evolve
       ~PauliList.expand
       ~PauliList.from_symplectic
+      ~PauliList.group_commuting
       ~PauliList.group_qubit_wise_commuting
       ~PauliList.input_dims
       ~PauliList.insert

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.pulse.transforms.alignments &mdash; Qiskit 0.36.2 문서</title>
+  <title>qiskit.pulse.transforms.alignments &mdash; Qiskit 0.37.0 문서</title>
   
 
   
@@ -34,9 +34,7 @@
   <link rel="stylesheet" href="../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
     <link rel="index" title="색인" href="../../../../genindex.html" />
@@ -267,7 +265,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/aer.html">Qiskit Aer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ignis.html">Qiskit Ignis (더 이상 사용되지 않음)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/ibmq-provider.html">Qiskit IBM 양자 공급자</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">문제 해결</span></p>
@@ -356,24 +353,22 @@
 <span class="sd">&quot;&quot;&quot;A collection of passes to reallocate the timeslots of instructions according to context.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">abc</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">qiskit.circuit.parameterexpression</span> <span class="kn">import</span> <span class="n">ParameterExpression</span>
+<span class="kn">from</span> <span class="nn">qiskit.circuit.parameterexpression</span> <span class="kn">import</span> <span class="n">ParameterExpression</span><span class="p">,</span> <span class="n">ParameterValueType</span>
 <span class="kn">from</span> <span class="nn">qiskit.pulse.exceptions</span> <span class="kn">import</span> <span class="n">PulseError</span>
 <span class="kn">from</span> <span class="nn">qiskit.pulse.schedule</span> <span class="kn">import</span> <span class="n">Schedule</span><span class="p">,</span> <span class="n">ScheduleComponent</span>
-<span class="kn">from</span> <span class="nn">qiskit.pulse.utils</span> <span class="kn">import</span> <span class="n">instruction_duration_validation</span>
+<span class="kn">from</span> <span class="nn">qiskit.pulse.utils</span> <span class="kn">import</span> <span class="n">instruction_duration_validation</span><span class="p">,</span> <span class="n">deprecated_functionality</span>
 
 
 <div class="viewcode-block" id="AlignmentKind"><a class="viewcode-back" href="../../../../apidoc/pulse.html#qiskit.pulse.transforms.AlignmentKind">[문서]</a><span class="k">class</span> <span class="nc">AlignmentKind</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;An abstract class for schedule alignment.&quot;&quot;&quot;</span>
 
-    <span class="n">is_sequential</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context_params</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ParameterValueType</span><span class="p">,</span> <span class="o">...</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Create new context.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_context_params</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context_params</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">context_params</span><span class="p">)</span>
 
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span> <span class="nf">align</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schedule</span><span class="p">:</span> <span class="n">Schedule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Schedule</span><span class="p">:</span>
@@ -390,20 +385,52 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span>
 
+    <span class="nd">@deprecated_functionality</span>
     <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Returns dictionary to represent this alignment.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;alignment&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">}</span>
 
+    <span class="nd">@property</span>
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">is_sequential</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return ``True`` if this is sequential alignment context.</span>
+
+<span class="sd">        This information is used to evaluate DAG equivalency of two :class:`.ScheduleBlock`s.</span>
+<span class="sd">        When the context has two pulses in different channels,</span>
+<span class="sd">        a sequential context subtype intends to return following scheduling outcome.</span>
+
+<span class="sd">        .. parsed-literal::</span>
+
+<span class="sd">                ┌────────┐</span>
+<span class="sd">            D0: ┤ pulse1 ├────────────</span>
+<span class="sd">                └────────┘  ┌────────┐</span>
+<span class="sd">            D1: ────────────┤ pulse2 ├</span>
+<span class="sd">                            └────────┘</span>
+
+<span class="sd">        On the other hand, parallel context with ``is_sequential=False`` returns</span>
+
+<span class="sd">        .. parsed-literal::</span>
+
+<span class="sd">                ┌────────┐</span>
+<span class="sd">            D0: ┤ pulse1 ├</span>
+<span class="sd">                ├────────┤</span>
+<span class="sd">            D1: ┤ pulse2 ├</span>
+<span class="sd">                └────────┘</span>
+
+<span class="sd">        All subclasses must implement this method according to scheduling strategy.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Check equality of two transforms.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_params</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">_context_params</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
-        <span class="n">opts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-        <span class="n">opts</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;alignment&quot;</span><span class="p">)</span>
-        <span class="n">opts_str</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">opts</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">opts_str</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_context_params</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span></div>
 
 
 <div class="viewcode-block" id="AlignLeft"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.transforms.AlignLeft.html#qiskit.pulse.transforms.AlignLeft">[문서]</a><span class="k">class</span> <span class="nc">AlignLeft</span><span class="p">(</span><span class="n">AlignmentKind</span><span class="p">):</span>
@@ -412,7 +439,13 @@
 <span class="sd">    Instructions are placed at earliest available timeslots.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">is_sequential</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create new left-justified context.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">context_params</span><span class="o">=</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_sequential</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="AlignLeft.align"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.transforms.AlignLeft.align.html#qiskit.pulse.transforms.AlignLeft.align">[문서]</a>    <span class="k">def</span> <span class="nf">align</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schedule</span><span class="p">:</span> <span class="n">Schedule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Schedule</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Reallocate instructions according to the policy.</span>
@@ -473,7 +506,13 @@
 <span class="sd">    Instructions are placed at latest available timeslots.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">is_sequential</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create new right-justified context.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">context_params</span><span class="o">=</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_sequential</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="AlignRight.align"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.transforms.AlignRight.align.html#qiskit.pulse.transforms.AlignRight.align">[문서]</a>    <span class="k">def</span> <span class="nf">align</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schedule</span><span class="p">:</span> <span class="n">Schedule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Schedule</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Reallocate instructions according to the policy.</span>
@@ -536,7 +575,13 @@
 <span class="sd">    No buffer time is inserted in between instructions.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">is_sequential</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create new sequential context.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">context_params</span><span class="o">=</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_sequential</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
 
 <div class="viewcode-block" id="AlignSequential.align"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.transforms.AlignSequential.align.html#qiskit.pulse.transforms.AlignSequential.align">[문서]</a>    <span class="k">def</span> <span class="nf">align</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schedule</span><span class="p">:</span> <span class="n">Schedule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Schedule</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Reallocate instructions according to the policy.</span>
@@ -564,8 +609,6 @@
 <span class="sd">    This alignment is convenient to create dynamical decoupling sequences such as PDD.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">is_sequential</span> <span class="o">=</span> <span class="kc">True</span>
-
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Create new equispaced context.</span>
 
@@ -575,9 +618,11 @@
 <span class="sd">                no alignment is performed and the input schedule is just returned.</span>
 <span class="sd">                This duration can be parametrized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">context_params</span><span class="o">=</span><span class="p">(</span><span class="n">duration</span><span class="p">,))</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_context_params</span> <span class="o">=</span> <span class="p">(</span><span class="n">duration</span><span class="p">,)</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_sequential</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">duration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -625,7 +670,8 @@
 
         <span class="k">return</span> <span class="n">aligned</span></div>
 
-<div class="viewcode-block" id="AlignEquispaced.to_dict"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.transforms.AlignEquispaced.to_dict.html#qiskit.pulse.transforms.AlignEquispaced.to_dict">[문서]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<div class="viewcode-block" id="AlignEquispaced.to_dict"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.transforms.AlignEquispaced.to_dict.html#qiskit.pulse.transforms.AlignEquispaced.to_dict">[문서]</a>    <span class="nd">@deprecated_functionality</span>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Returns dictionary to represent this alignment.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;alignment&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">}</span></div></div>
 
@@ -645,9 +691,13 @@
 
 <span class="sd">        def udd10_pos(j):</span>
 <span class="sd">        return np.sin(np.pi*j/(2*10 + 2))**2</span>
-<span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">is_sequential</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="sd">    .. note::</span>
+
+<span class="sd">        This context cannot be QPY serialized because of the callable. If you use this context,</span>
+<span class="sd">        your program cannot be saved in QPY format.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ParameterExpression</span><span class="p">],</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create new equispaced context.</span>
@@ -661,15 +711,21 @@
 <span class="sd">                fractional coordinate of of that sub-schedule. The returned value should be</span>
 <span class="sd">                defined within [0, 1]. The pulse index starts from 1.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">context_params</span><span class="o">=</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="n">func</span><span class="p">))</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_context_params</span> <span class="o">=</span> <span class="p">(</span><span class="n">duration</span><span class="p">,)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_func</span> <span class="o">=</span> <span class="n">func</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_sequential</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">duration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return context duration.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return context alignment function.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
 <div class="viewcode-block" id="AlignFunc.align"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.transforms.AlignFunc.align.html#qiskit.pulse.transforms.AlignFunc.align">[문서]</a>    <span class="k">def</span> <span class="nf">align</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schedule</span><span class="p">:</span> <span class="n">Schedule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Schedule</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Reallocate instructions according to the policy.</span>
@@ -690,7 +746,7 @@
 
         <span class="n">aligned</span> <span class="o">=</span> <span class="n">Schedule</span><span class="o">.</span><span class="n">initialize_from</span><span class="p">(</span><span class="n">schedule</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">child</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">schedule</span><span class="o">.</span><span class="n">children</span><span class="p">):</span>
-            <span class="n">_t_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_func</span><span class="p">(</span><span class="n">ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">_t_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
             <span class="n">_t0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">_t_center</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">child</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">_t0</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">_t0</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">:</span>
                 <span class="n">PulseError</span><span class="p">(</span><span class="s2">&quot;Invalid schedule position t=</span><span class="si">%d</span><span class="s2"> is specified at index=</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">_t0</span><span class="p">,</span> <span class="n">ind</span><span class="p">))</span>
@@ -698,15 +754,16 @@
 
         <span class="k">return</span> <span class="n">aligned</span></div>
 
-<div class="viewcode-block" id="AlignFunc.to_dict"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.transforms.AlignFunc.to_dict.html#qiskit.pulse.transforms.AlignFunc.to_dict">[문서]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<div class="viewcode-block" id="AlignFunc.to_dict"><a class="viewcode-back" href="../../../../stubs/qiskit.pulse.transforms.AlignFunc.to_dict.html#qiskit.pulse.transforms.AlignFunc.to_dict">[문서]</a>    <span class="nd">@deprecated_functionality</span>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Returns dictionary to represent this alignment.</span>
 
 <span class="sd">        .. note:: ``func`` is not presented in this dictionary. Just name.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;alignment&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
-            <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_params</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-            <span class="s2">&quot;func&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_func</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+            <span class="s2">&quot;func&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
         <span class="p">}</span></div></div>
 </pre></div>
 
@@ -725,7 +782,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      최종 업데이트: 2022/06/21
+      최종 업데이트: 2022/07/01
 
     </p>
   </div>
@@ -762,6 +819,7 @@
          <script src="../../../../_static/thebelab-helper.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
+         <script src="../../../../_static/design-tabs.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
      
 

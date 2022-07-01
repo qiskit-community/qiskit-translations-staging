@@ -16,7 +16,6 @@ Optimizer
       ~Optimizer.get_support_level
       ~Optimizer.gradient_num_diff
       ~Optimizer.minimize
-      ~Optimizer.optimize
       ~Optimizer.print_options
       ~Optimizer.set_max_evals_grouped
       ~Optimizer.set_options

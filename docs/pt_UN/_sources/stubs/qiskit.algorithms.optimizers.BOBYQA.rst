@@ -16,7 +16,6 @@ BOBYQA
       ~BOBYQA.get_support_level
       ~BOBYQA.gradient_num_diff
       ~BOBYQA.minimize
-      ~BOBYQA.optimize
       ~BOBYQA.print_options
       ~BOBYQA.set_max_evals_grouped
       ~BOBYQA.set_options

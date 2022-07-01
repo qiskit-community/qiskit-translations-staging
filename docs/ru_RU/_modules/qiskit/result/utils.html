@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.result.utils &mdash; документация Qiskit 0.36.2</title>
+  <title>qiskit.result.utils &mdash; документация Qiskit 0.37.0</title>
   
 
   
@@ -34,9 +34,7 @@
   <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
     <link rel="index" title="Алфавитный указатель" href="../../../genindex.html" />
@@ -267,7 +265,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">Qiskit Aer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">Qiskit Ignis (устарело)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum (Провайдер)</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Устранение неполадок</span></p>
@@ -354,15 +351,26 @@
 <span class="c1"># copyright notice, and modified files need to carry a notice indicating</span>
 <span class="c1"># that they have been altered from the originals.</span>
 
+<span class="c1"># pylint: disable=c-extension-no-member</span>
+
 <span class="sd">&quot;&quot;&quot;Utility functions for working with Results.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
 <span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">QiskitError</span>
 <span class="kn">from</span> <span class="nn">qiskit.result.result</span> <span class="kn">import</span> <span class="n">Result</span>
-<span class="kn">from</span> <span class="nn">qiskit.result.postprocess</span> <span class="kn">import</span> <span class="n">_bin_to_hex</span><span class="p">,</span> <span class="n">_hex_to_bin</span>
+<span class="kn">from</span> <span class="nn">qiskit.result.counts</span> <span class="kn">import</span> <span class="n">Counts</span>
+<span class="kn">from</span> <span class="nn">qiskit.result.distributions.probability</span> <span class="kn">import</span> <span class="n">ProbDistribution</span>
+<span class="kn">from</span> <span class="nn">qiskit.result.distributions.quasi</span> <span class="kn">import</span> <span class="n">QuasiDistribution</span>
+
+<span class="kn">from</span> <span class="nn">qiskit.result.postprocess</span> <span class="kn">import</span> <span class="n">_bin_to_hex</span>
+
+<span class="c1"># pylint: disable=import-error, no-name-in-module</span>
+<span class="kn">from</span> <span class="nn">qiskit._accelerate</span> <span class="kn">import</span> <span class="n">results</span> <span class="k">as</span> <span class="n">results_rs</span>
 
 
 <div class="viewcode-block" id="marginal_counts"><a class="viewcode-back" href="../../../stubs/qiskit.result.marginal_counts.html#qiskit.result.marginal_counts">[документация]</a><span class="k">def</span> <span class="nf">marginal_counts</span><span class="p">(</span>
@@ -410,8 +418,9 @@
 
             <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">experiment_result</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">memory_slots</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
-                <span class="n">csize</span> <span class="o">=</span> <span class="n">experiment_result</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">creg_sizes</span>
-                <span class="n">experiment_result</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">creg_sizes</span> <span class="o">=</span> <span class="n">_adjust_creg_sizes</span><span class="p">(</span><span class="n">csize</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+                <span class="n">csize</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">experiment_result</span><span class="o">.</span><span class="n">header</span><span class="p">,</span> <span class="s2">&quot;creg_sizes&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">csize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">experiment_result</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">creg_sizes</span> <span class="o">=</span> <span class="n">_adjust_creg_sizes</span><span class="p">(</span><span class="n">csize</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">experiment_result</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;memory&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">marginalize_memory</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
@@ -422,12 +431,9 @@
                     <span class="n">sorted_indices</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
                         <span class="n">indices</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span>
                     <span class="p">)</span>  <span class="c1"># same convention as for the counts</span>
-                    <span class="n">bit_strings</span> <span class="o">=</span> <span class="p">[</span><span class="n">_hex_to_bin</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">experiment_result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">memory</span><span class="p">]</span>
-                    <span class="n">marginal_bit_strings</span> <span class="o">=</span> <span class="p">[</span>
-                        <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="o">-</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">sorted_indices</span> <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)])</span> <span class="ow">or</span> <span class="s2">&quot;0&quot;</span>
-                        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">bit_strings</span>
-                    <span class="p">]</span>
-                    <span class="n">experiment_result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">memory</span> <span class="o">=</span> <span class="p">[</span><span class="n">_bin_to_hex</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">marginal_bit_strings</span><span class="p">]</span>
+                    <span class="n">experiment_result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">memory</span> <span class="o">=</span> <span class="n">results_rs</span><span class="o">.</span><span class="n">marginal_memory</span><span class="p">(</span>
+                        <span class="n">experiment_result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">sorted_indices</span><span class="p">,</span> <span class="n">return_hex</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">marg_counts</span> <span class="o">=</span> <span class="n">_marginalize</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
@@ -462,10 +468,125 @@
     <span class="k">return</span> <span class="n">new_creg_sizes</span>
 
 
+<div class="viewcode-block" id="marginal_memory"><a class="viewcode-back" href="../../../stubs/qiskit.result.marginal_memory.html#qiskit.result.marginal_memory">[документация]</a><span class="k">def</span> <span class="nf">marginal_memory</span><span class="p">(</span>
+    <span class="n">memory</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+    <span class="n">indices</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">int_return</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">hex_return</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">avg_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">parallel_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Marginalize shot memory</span>
+
+<span class="sd">    This function is multithreaded and will launch a thread pool with threads equal to the number</span>
+<span class="sd">    of CPUs by default. You can tune the number of threads with the ``RAYON_NUM_THREADS``</span>
+<span class="sd">    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would limit the thread pool</span>
+<span class="sd">    to 4 threads.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        memory: The input memory list, this is either a list of hexadecimal strings to be marginalized</span>
+<span class="sd">            representing measure level 2 memory or a numpy array representing level 0 measurement</span>
+<span class="sd">            memory (single or avg) or level 1 measurement memory (single or avg).</span>
+<span class="sd">        indices: The bit positions of interest to marginalize over. If</span>
+<span class="sd">            ``None`` (default), do not marginalize at all.</span>
+<span class="sd">        int_return: If set to ``True`` the output will be a list of integers.</span>
+<span class="sd">            By default the return type is a bit string. This and ``hex_return``</span>
+<span class="sd">            are mutually exclusive and can not be specified at the same time. This option only has an</span>
+<span class="sd">            effect with memory level 2.</span>
+<span class="sd">        hex_return: If set to ``True`` the output will be a list of hexadecimal</span>
+<span class="sd">            strings. By default the return type is a bit string. This and</span>
+<span class="sd">            ``int_return`` are mutually exclusive and can not be specified</span>
+<span class="sd">            at the same time. This option only has an effect with memory level 2.</span>
+<span class="sd">        avg_data: If a 2 dimensional numpy array is passed in for ``memory`` this can be set to</span>
+<span class="sd">            ``True`` to indicate it&#39;s a avg level 0 data instead of level 1</span>
+<span class="sd">            single data.</span>
+<span class="sd">        parallel_threshold: The number of elements in ``memory`` to start running in multiple</span>
+<span class="sd">            threads. If ``len(memory)`` is &gt;= this value, the function will run in multiple</span>
+<span class="sd">            threads. By default this is set to 1000.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        marginal_memory: The list of marginalized memory</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: if both ``int_return`` and ``hex_return`` are set to ``True``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">int_return</span> <span class="ow">and</span> <span class="n">hex_return</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either int_return or hex_return can be specified but not both&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">memory</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">int_return</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;int_return option only works with memory list input&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hex_return</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;hex_return option only works with memory list input&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">memory</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">memory</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">results_rs</span><span class="o">.</span><span class="n">marginal_measure_level_1_avg</span><span class="p">(</span><span class="n">memory</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">memory</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">avg_data</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">results_rs</span><span class="o">.</span><span class="n">marginal_measure_level_0_avg</span><span class="p">(</span><span class="n">memory</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">results_rs</span><span class="o">.</span><span class="n">marginal_measure_level_1</span><span class="p">(</span><span class="n">memory</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">memory</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">results_rs</span><span class="o">.</span><span class="n">marginal_measure_level_0</span><span class="p">(</span><span class="n">memory</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid input memory array&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">results_rs</span><span class="o">.</span><span class="n">marginal_memory</span><span class="p">(</span>
+        <span class="n">memory</span><span class="p">,</span>
+        <span class="n">indices</span><span class="p">,</span>
+        <span class="n">return_int</span><span class="o">=</span><span class="n">int_return</span><span class="p">,</span>
+        <span class="n">return_hex</span><span class="o">=</span><span class="n">hex_return</span><span class="p">,</span>
+        <span class="n">parallel_threshold</span><span class="o">=</span><span class="n">parallel_threshold</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="marginal_distribution"><a class="viewcode-back" href="../../../stubs/qiskit.result.marginal_distribution.html#qiskit.result.marginal_distribution">[документация]</a><span class="k">def</span> <span class="nf">marginal_distribution</span><span class="p">(</span>
+    <span class="n">counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">format_marginal</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Marginalize counts from an experiment over some indices of interest.</span>
+
+<span class="sd">    Unlike :func:`~.marginal_counts` this function respects the order of</span>
+<span class="sd">    the input ``indices``. If the input ``indices`` list is specified then the order</span>
+<span class="sd">    the bit indices are specified will be the output order of the bitstrings</span>
+<span class="sd">    in the marginalized output.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        counts: result to be marginalized</span>
+<span class="sd">        indices: The bit positions of interest</span>
+<span class="sd">            to marginalize over. If ``None`` (default), do not marginalize at all.</span>
+<span class="sd">        format_marginal: Default: False. If True, takes the output of</span>
+<span class="sd">            marginalize and formats it with placeholders between cregs and</span>
+<span class="sd">            for non-indices.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        dict(str, int): A marginalized dictionary</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        QiskitError: If any value in ``indices`` is invalid or the ``counts`` dict</span>
+<span class="sd">        is invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">num_clbits</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">indices</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_clbits</span><span class="p">))):</span>
+        <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;indices must be in range [0, </span><span class="si">{</span><span class="n">num_clbits</span> <span class="o">-</span> <span class="mi">1</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">Counts</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">results_rs</span><span class="o">.</span><span class="n">marginal_counts</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="p">(</span><span class="n">ProbDistribution</span><span class="p">,</span> <span class="n">QuasiDistribution</span><span class="p">)):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">results_rs</span><span class="o">.</span><span class="n">marginal_distribution</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">first_value</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first_value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">results_rs</span><span class="o">.</span><span class="n">marginal_counts</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first_value</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">results_rs</span><span class="o">.</span><span class="n">marginal_distribution</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QiskitError</span><span class="p">(</span><span class="s2">&quot;Values of counts must be an int or float&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">format_marginal</span> <span class="ow">and</span> <span class="n">indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_format_marginal</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
 <span class="k">def</span> <span class="nf">_marginalize</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get the marginal counts for the given set of indices&quot;&quot;&quot;</span>
     <span class="n">num_clbits</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">counts</span><span class="p">))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
-
     <span class="c1"># Check if we do not need to marginalize and if so, trim</span>
     <span class="c1"># whitespace and &#39;_&#39; and return</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_clbits</span><span class="p">))</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
@@ -530,7 +651,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Обновлено: 2022/06/21.
+      Обновлено: 2022/07/01.
 
     </p>
   </div>
@@ -568,6 +689,7 @@
          <script src="../../../_static/translations.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
+         <script src="../../../_static/design-tabs.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
      
 

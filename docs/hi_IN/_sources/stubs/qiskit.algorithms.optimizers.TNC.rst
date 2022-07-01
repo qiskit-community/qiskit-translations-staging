@@ -16,7 +16,6 @@ TNC
       ~TNC.get_support_level
       ~TNC.gradient_num_diff
       ~TNC.minimize
-      ~TNC.optimize
       ~TNC.print_options
       ~TNC.set_max_evals_grouped
       ~TNC.set_options

@@ -24,6 +24,7 @@
       ~SparsePauliOp.from_list
       ~SparsePauliOp.from_operator
       ~SparsePauliOp.from_sparse_list
+      ~SparsePauliOp.group_commuting
       ~SparsePauliOp.input_dims
       ~SparsePauliOp.is_unitary
       ~SparsePauliOp.label_iter

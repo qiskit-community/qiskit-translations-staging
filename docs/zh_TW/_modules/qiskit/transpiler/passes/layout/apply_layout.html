@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.layout.apply_layout &mdash; Qiskit 0.36.2 說明文件</title>
+  <title>qiskit.transpiler.passes.layout.apply_layout &mdash; Qiskit 0.37.0 說明文件</title>
   
 
   
@@ -34,9 +34,7 @@
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/gallery.css" type="text/css" />
     <link rel="index" title="索引" href="../../../../../genindex.html" />
@@ -267,7 +265,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aer.html">Qiskit Aer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">疑難排解</span></p>
@@ -360,6 +357,7 @@
 <span class="kn">from</span> <span class="nn">qiskit.dagcircuit</span> <span class="kn">import</span> <span class="n">DAGCircuit</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.basepasses</span> <span class="kn">import</span> <span class="n">TransformationPass</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.exceptions</span> <span class="kn">import</span> <span class="n">TranspilerError</span>
+<span class="kn">from</span> <span class="nn">qiskit.transpiler.layout</span> <span class="kn">import</span> <span class="n">Layout</span>
 
 
 <div class="viewcode-block" id="ApplyLayout"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.ApplyLayout.html#qiskit.transpiler.passes.ApplyLayout">[文件]</a><span class="k">class</span> <span class="nc">ApplyLayout</span><span class="p">(</span><span class="n">TransformationPass</span><span class="p">):</span>
@@ -369,6 +367,13 @@
 <span class="sd">    by applying the Layout given in `property_set`.</span>
 <span class="sd">    Requires either of passes to set/select Layout, e.g. `SetLayout`, `TrivialLayout`.</span>
 <span class="sd">    Assumes the Layout has full physical qubits.</span>
+
+<span class="sd">    If a post layout pass is run and sets the ``post_layout`` property set field with</span>
+<span class="sd">    a new layout to use after ``ApplyLayout`` has already run once this pass will</span>
+<span class="sd">    compact the layouts so that we apply</span>
+<span class="sd">    ``original_virtual`` -&gt; ``existing_layout`` -&gt; ``new_layout`` -&gt; ``new_physical``</span>
+<span class="sd">    so that the output circuit and layout combination become:</span>
+<span class="sd">    ``original_virtual`` -&gt; ``new_physical``</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="ApplyLayout.run"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.ApplyLayout.run.html#qiskit.transpiler.passes.ApplyLayout.run">[文件]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag</span><span class="p">):</span>
@@ -391,8 +396,7 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">get_physical_bits</span><span class="p">())):</span>
             <span class="k">raise</span> <span class="n">TranspilerError</span><span class="p">(</span><span class="s2">&quot;The &#39;layout&#39; must be full (with ancilla).&quot;</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">qreg</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">qregs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">property_set</span><span class="p">[</span><span class="s2">&quot;layout&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">add_register</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>
+        <span class="n">post_layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">property_set</span><span class="p">[</span><span class="s2">&quot;post_layout&quot;</span><span class="p">]</span>
 
         <span class="n">q</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">layout</span><span class="p">),</span> <span class="s2">&quot;q&quot;</span><span class="p">)</span>
 
@@ -402,10 +406,33 @@
         <span class="n">new_dag</span><span class="o">.</span><span class="n">add_clbits</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">clbits</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">creg</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">cregs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">new_dag</span><span class="o">.</span><span class="n">add_creg</span><span class="p">(</span><span class="n">creg</span><span class="p">)</span>
-        <span class="n">virtual_phsyical_map</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">get_virtual_bits</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">topological_op_nodes</span><span class="p">():</span>
-            <span class="n">qargs</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="n">virtual_phsyical_map</span><span class="p">[</span><span class="n">qarg</span><span class="p">]]</span> <span class="k">for</span> <span class="n">qarg</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">]</span>
-            <span class="n">new_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">qargs</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">cargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">post_layout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">qreg</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">qregs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">property_set</span><span class="p">[</span><span class="s2">&quot;layout&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">add_register</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>
+            <span class="n">virtual_phsyical_map</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">get_virtual_bits</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">topological_op_nodes</span><span class="p">():</span>
+                <span class="n">qargs</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="n">virtual_phsyical_map</span><span class="p">[</span><span class="n">qarg</span><span class="p">]]</span> <span class="k">for</span> <span class="n">qarg</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">]</span>
+                <span class="n">new_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">qargs</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">cargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># First build a new layout object going from:</span>
+            <span class="c1"># old virtual -&gt; old phsyical -&gt; new virtual -&gt; new physical</span>
+            <span class="c1"># to:</span>
+            <span class="c1"># old virtual -&gt; new physical</span>
+            <span class="n">full_layout</span> <span class="o">=</span> <span class="n">Layout</span><span class="p">()</span>
+            <span class="n">old_phys_to_virtual</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">get_physical_bits</span><span class="p">()</span>
+            <span class="n">new_virtual_to_physical</span> <span class="o">=</span> <span class="n">post_layout</span><span class="o">.</span><span class="n">get_virtual_bits</span><span class="p">()</span>
+            <span class="n">qubit_index_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">bit</span><span class="p">:</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">bit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">qubits</span><span class="p">)}</span>
+            <span class="k">for</span> <span class="n">new_virt</span><span class="p">,</span> <span class="n">new_phys</span> <span class="ow">in</span> <span class="n">new_virtual_to_physical</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">old_phys</span> <span class="o">=</span> <span class="n">qubit_index_map</span><span class="p">[</span><span class="n">new_virt</span><span class="p">]</span>
+                <span class="n">old_virt</span> <span class="o">=</span> <span class="n">old_phys_to_virtual</span><span class="p">[</span><span class="n">old_phys</span><span class="p">]</span>
+                <span class="n">full_layout</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">old_virt</span><span class="p">,</span> <span class="n">new_phys</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">reg</span> <span class="ow">in</span> <span class="n">layout</span><span class="o">.</span><span class="n">get_registers</span><span class="p">():</span>
+                <span class="n">full_layout</span><span class="o">.</span><span class="n">add_register</span><span class="p">(</span><span class="n">reg</span><span class="p">)</span>
+            <span class="c1"># Apply new layout to the circuit</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">topological_op_nodes</span><span class="p">():</span>
+                <span class="n">qargs</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="n">new_virtual_to_physical</span><span class="p">[</span><span class="n">qarg</span><span class="p">]]</span> <span class="k">for</span> <span class="n">qarg</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">]</span>
+                <span class="n">new_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">qargs</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">cargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">property_set</span><span class="p">[</span><span class="s2">&quot;layout&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">full_layout</span>
         <span class="n">new_dag</span><span class="o">.</span><span class="n">_global_phase</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">_global_phase</span>
 
         <span class="k">return</span> <span class="n">new_dag</span></div></div>
@@ -426,7 +453,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      最後更新於 2022/06/21。
+      最後更新於 2022/07/01。
 
     </p>
   </div>
@@ -464,6 +491,7 @@
          <script src="../../../../../_static/translations.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
+         <script src="../../../../../_static/design-tabs.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
      
 

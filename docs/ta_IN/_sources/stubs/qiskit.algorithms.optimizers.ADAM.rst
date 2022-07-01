@@ -17,7 +17,6 @@ ADAM
       ~ADAM.gradient_num_diff
       ~ADAM.load_params
       ~ADAM.minimize
-      ~ADAM.optimize
       ~ADAM.print_options
       ~ADAM.save_params
       ~ADAM.set_max_evals_grouped

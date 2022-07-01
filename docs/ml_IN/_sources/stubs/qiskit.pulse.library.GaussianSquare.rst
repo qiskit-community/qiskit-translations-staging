@@ -22,10 +22,13 @@
 
    .. rubric:: Attributes
 
-   .. autoattribute:: amp
+   .. autoattribute:: constraints
+   .. autoattribute:: duration
+   .. autoattribute:: envelope
    .. autoattribute:: id
    .. autoattribute:: limit_amplitude
+   .. autoattribute:: name
    .. autoattribute:: parameters
+   .. autoattribute:: pulse_type
    .. autoattribute:: risefall_sigma_ratio
-   .. autoattribute:: sigma
-   .. autoattribute:: width
+   .. autoattribute:: valid_amp_conditions

@@ -25,6 +25,7 @@ NumPyMatrix
       ~NumPyMatrix.cbit_argument_conversion
       ~NumPyMatrix.ccx
       ~NumPyMatrix.ch
+      ~NumPyMatrix.clear
       ~NumPyMatrix.cls_instances
       ~NumPyMatrix.cls_prefix
       ~NumPyMatrix.cnot
@@ -34,6 +35,7 @@ NumPyMatrix
       ~NumPyMatrix.continue_loop
       ~NumPyMatrix.control
       ~NumPyMatrix.copy
+      ~NumPyMatrix.copy_empty_like
       ~NumPyMatrix.count_ops
       ~NumPyMatrix.cp
       ~NumPyMatrix.crx
@@ -64,6 +66,7 @@ NumPyMatrix
       ~NumPyMatrix.get_instructions
       ~NumPyMatrix.h
       ~NumPyMatrix.hamiltonian
+      ~NumPyMatrix.has_calibration_for
       ~NumPyMatrix.has_register
       ~NumPyMatrix.i
       ~NumPyMatrix.id
@@ -189,6 +192,7 @@ NumPyMatrix
    .. autoattribute:: num_parameters
    .. autoattribute:: num_qubits
    .. autoattribute:: num_state_qubits
+   .. autoattribute:: op_start_times
    .. autoattribute:: parameters
    .. autoattribute:: prefix
    .. autoattribute:: qregs

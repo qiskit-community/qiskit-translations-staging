@@ -28,6 +28,7 @@
    .. autoattribute:: num_qubits
    .. autoattribute:: num_state_qubits
    .. autoattribute:: offset
+   .. autoattribute:: op_start_times
    .. autoattribute:: parameters
    .. autoattribute:: prefix
    .. autoattribute:: qregs

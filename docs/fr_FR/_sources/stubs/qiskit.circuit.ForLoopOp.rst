@@ -22,6 +22,7 @@
       ~ForLoopOp.is_parameterized
       ~ForLoopOp.qasm
       ~ForLoopOp.repeat
+      ~ForLoopOp.replace_blocks
       ~ForLoopOp.reverse_ops
       ~ForLoopOp.soft_compare
       ~ForLoopOp.validate_parameter

@@ -16,7 +16,6 @@ CG
       ~CG.get_support_level
       ~CG.gradient_num_diff
       ~CG.minimize
-      ~CG.optimize
       ~CG.print_options
       ~CG.set_max_evals_grouped
       ~CG.set_options

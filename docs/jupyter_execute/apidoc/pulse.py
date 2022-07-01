@@ -38,7 +38,7 @@ pulse_prog.draw()
 import math
 
 from qiskit import pulse
-from qiskit.test.mock import FakeOpenPulse3Q
+from qiskit.providers.fake_provider import FakeOpenPulse3Q
 
 # TODO: This example should use a real mock backend.
 backend = FakeOpenPulse3Q()
@@ -67,7 +67,7 @@ import math
 
 from qiskit import pulse, QuantumCircuit
 from qiskit.pulse import library
-from qiskit.test.mock import FakeOpenPulse2Q
+from qiskit.providers.fake_provider import FakeOpenPulse2Q
 
 backend = FakeOpenPulse2Q()
 
@@ -171,7 +171,7 @@ with pulse.build(backend) as pulse_prog:
 
 
 from qiskit import pulse
-from qiskit.test.mock import FakeArmonk
+from qiskit.providers.fake_provider import FakeArmonk
 
 backend = FakeArmonk()
 
@@ -184,7 +184,7 @@ with pulse.build(backend) as drive_sched:
 
 
 from qiskit import pulse
-from qiskit.test.mock import FakeArmonk
+from qiskit.providers.fake_provider import FakeArmonk
 
 backend = FakeArmonk()
 
@@ -231,7 +231,7 @@ pulse_prog.draw()
 
 
 from qiskit import pulse
-from qiskit.test.mock import FakeArmonk
+from qiskit.providers.fake_provider import FakeArmonk
 
 backend = FakeArmonk()
 
@@ -246,7 +246,7 @@ with pulse.build(backend) as measure_sched:
 import math
 
 from qiskit import pulse
-from qiskit.test.mock import FakeArmonk
+from qiskit.providers.fake_provider import FakeArmonk
 
 backend = FakeArmonk()
 
@@ -259,7 +259,7 @@ with pulse.build(backend) as u3_sched:
 
 from qiskit import pulse
 
-from qiskit.test.mock import FakeArmonk
+from qiskit.providers.fake_provider import FakeArmonk
 
 backend = FakeArmonk()
 

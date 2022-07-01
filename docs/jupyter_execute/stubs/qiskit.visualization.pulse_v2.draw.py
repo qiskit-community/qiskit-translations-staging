@@ -6,7 +6,7 @@
 
 from qiskit import QuantumCircuit, transpile, schedule
 from qiskit.visualization.pulse_v2 import draw
-from qiskit.test.mock import FakeAlmaden
+from qiskit.providers.fake_provider import FakeAlmaden
 
 qc = QuantumCircuit(2)
 qc.h(0)
@@ -23,7 +23,7 @@ draw(sched, backend=FakeAlmaden())
 
 from qiskit import QuantumCircuit, transpile, schedule
 from qiskit.visualization.pulse_v2 import draw, IQXSimple
-from qiskit.test.mock import FakeAlmaden
+from qiskit.providers.fake_provider import FakeAlmaden
 
 qc = QuantumCircuit(2)
 qc.h(0)
@@ -40,7 +40,7 @@ draw(sched, style=IQXSimple(), backend=FakeAlmaden())
 
 from qiskit import QuantumCircuit, transpile, schedule
 from qiskit.visualization.pulse_v2 import draw, IQXDebugging
-from qiskit.test.mock import FakeAlmaden
+from qiskit.providers.fake_provider import FakeAlmaden
 
 qc = QuantumCircuit(2)
 qc.h(0)

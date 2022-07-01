@@ -22,7 +22,12 @@
 
    .. rubric:: Attributes
 
-   .. autoattribute:: amp
+   .. autoattribute:: constraints
+   .. autoattribute:: duration
+   .. autoattribute:: envelope
    .. autoattribute:: id
    .. autoattribute:: limit_amplitude
+   .. autoattribute:: name
    .. autoattribute:: parameters
+   .. autoattribute:: pulse_type
+   .. autoattribute:: valid_amp_conditions

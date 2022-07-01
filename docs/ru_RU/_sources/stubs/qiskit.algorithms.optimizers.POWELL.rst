@@ -16,7 +16,6 @@ POWELL
       ~POWELL.get_support_level
       ~POWELL.gradient_num_diff
       ~POWELL.minimize
-      ~POWELL.optimize
       ~POWELL.print_options
       ~POWELL.set_max_evals_grouped
       ~POWELL.set_options

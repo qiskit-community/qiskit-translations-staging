@@ -20,6 +20,8 @@
 
    .. rubric:: Attributes
 
+   .. autoattribute:: duration
+   .. autoattribute:: name
    .. autoattribute:: id
    .. autoattribute:: limit_amplitude
    .. autoattribute:: parameters

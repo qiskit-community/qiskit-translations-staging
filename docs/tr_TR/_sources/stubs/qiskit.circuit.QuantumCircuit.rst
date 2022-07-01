@@ -25,6 +25,7 @@
       ~QuantumCircuit.cbit_argument_conversion
       ~QuantumCircuit.ccx
       ~QuantumCircuit.ch
+      ~QuantumCircuit.clear
       ~QuantumCircuit.cls_instances
       ~QuantumCircuit.cls_prefix
       ~QuantumCircuit.cnot
@@ -33,6 +34,7 @@
       ~QuantumCircuit.continue_loop
       ~QuantumCircuit.control
       ~QuantumCircuit.copy
+      ~QuantumCircuit.copy_empty_like
       ~QuantumCircuit.count_ops
       ~QuantumCircuit.cp
       ~QuantumCircuit.crx
@@ -62,6 +64,7 @@
       ~QuantumCircuit.get_instructions
       ~QuantumCircuit.h
       ~QuantumCircuit.hamiltonian
+      ~QuantumCircuit.has_calibration_for
       ~QuantumCircuit.has_register
       ~QuantumCircuit.i
       ~QuantumCircuit.id
@@ -184,6 +187,7 @@
    .. autoattribute:: num_clbits
    .. autoattribute:: num_parameters
    .. autoattribute:: num_qubits
+   .. autoattribute:: op_start_times
    .. autoattribute:: parameters
    .. autoattribute:: prefix
    .. autoattribute:: qubits

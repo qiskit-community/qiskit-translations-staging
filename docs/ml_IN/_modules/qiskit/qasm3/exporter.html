@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.qasm3.exporter &mdash; Qiskit 0.36.2 documentation</title>
+  <title>qiskit.qasm3.exporter &mdash; Qiskit 0.37.0 documentation</title>
   
 
   
@@ -34,9 +34,7 @@
   <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -267,7 +265,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">ക്വിസ്കിറ്റ് ടെറ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">ക്വിസ്കിറ്റ് എഇർ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">ക്വിസ്കിറ്റ് ഇഗ്നിസ് (നിർതലാക്കി)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">ക്വിസ്കിറ്റ് ഐബിഎം ക്വാണ്ടം പ്രൊവയ്ഡെർ</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
@@ -367,6 +364,7 @@
 
 <span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Barrier</span><span class="p">,</span>
+    <span class="n">CircuitInstruction</span><span class="p">,</span>
     <span class="n">Clbit</span><span class="p">,</span>
     <span class="n">Gate</span><span class="p">,</span>
     <span class="n">Instruction</span><span class="p">,</span>
@@ -377,6 +375,7 @@
     <span class="n">QuantumRegister</span><span class="p">,</span>
     <span class="n">Qubit</span><span class="p">,</span>
     <span class="n">Reset</span><span class="p">,</span>
+    <span class="n">Delay</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.bit</span> <span class="kn">import</span> <span class="n">Bit</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.controlflow</span> <span class="kn">import</span> <span class="p">(</span>
@@ -513,6 +512,8 @@
 <span class="k">class</span> <span class="nc">GlobalNamespace</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Global namespace dict-like.&quot;&quot;&quot;</span>
 
+    <span class="n">BASIS_GATE</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+
     <span class="n">qiskit_gates</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="n">standard_gates</span><span class="o">.</span><span class="n">PhaseGate</span><span class="p">,</span>
         <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">standard_gates</span><span class="o">.</span><span class="n">XGate</span><span class="p">,</span>
@@ -550,7 +551,7 @@
     <span class="n">include_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">abspath</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;..&quot;</span><span class="p">,</span> <span class="s2">&quot;qasm&quot;</span><span class="p">,</span> <span class="s2">&quot;libs&quot;</span><span class="p">))]</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">includelist</span><span class="p">,</span> <span class="n">basis_gates</span><span class="o">=</span><span class="p">()):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="p">{</span><span class="n">gate</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">basis_gates</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="p">{</span><span class="n">gate</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">BASIS_GATE</span> <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">basis_gates</span><span class="p">}</span>
 
         <span class="k">for</span> <span class="n">includefile</span> <span class="ow">in</span> <span class="n">includelist</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">includefile</span> <span class="o">==</span> <span class="s2">&quot;stdgates.inc&quot;</span><span class="p">:</span>
@@ -585,13 +586,13 @@
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">instruction</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">BASIS_GATE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">instruction</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Gate</span><span class="p">,</span> <span class="n">Instruction</span><span class="p">]:</span>  <span class="c1"># user-defined instructions/gate</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="n">instruction</span>
-        <span class="k">if</span> <span class="n">instruction</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># it is a basis gate:</span>
-                <span class="k">return</span> <span class="kc">True</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">name</span><span class="p">)):</span>
-                <span class="k">return</span> <span class="kc">True</span>
+        <span class="n">type_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">type_</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">,</span> <span class="n">type_</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">):</span>
@@ -636,7 +637,7 @@
 <span class="k">class</span> <span class="nc">QASM3Builder</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;QASM3 builder constructs an AST from a QuantumCircuit.&quot;&quot;&quot;</span>
 
-    <span class="n">builtins</span> <span class="o">=</span> <span class="p">(</span><span class="n">Barrier</span><span class="p">,</span> <span class="n">Measure</span><span class="p">,</span> <span class="n">Reset</span><span class="p">,</span> <span class="n">BreakLoopOp</span><span class="p">,</span> <span class="n">ContinueLoopOp</span><span class="p">)</span>
+    <span class="n">builtins</span> <span class="o">=</span> <span class="p">(</span><span class="n">Barrier</span><span class="p">,</span> <span class="n">Measure</span><span class="p">,</span> <span class="n">Reset</span><span class="p">,</span> <span class="n">Delay</span><span class="p">,</span> <span class="n">BreakLoopOp</span><span class="p">,</span> <span class="n">ContinueLoopOp</span><span class="p">)</span>
     <span class="n">gate_parameter_prefix</span> <span class="o">=</span> <span class="s2">&quot;_gate_p&quot;</span>
     <span class="n">gate_qubit_prefix</span> <span class="o">=</span> <span class="s2">&quot;_gate_q&quot;</span>
 
@@ -749,21 +750,23 @@
     <span class="k">def</span> <span class="nf">hoist_declarations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instructions</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Walks the definitions in gates/instructions to make a list of gates to declare.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">instruction</span> <span class="ow">in</span> <span class="n">instructions</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ControlFlowOp</span><span class="p">):</span>
-                <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">,</span> <span class="n">ControlFlowOp</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">hoist_declarations</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
                 <span class="k">continue</span>
-            <span class="k">if</span> <span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_namespace</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">builtins</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">instruction</span><span class="o">.</span><span class="n">operation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_namespace</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">builtins</span>
+            <span class="p">):</span>
                 <span class="k">continue</span>
 
-            <span class="k">if</span> <span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">definition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_register_opaque</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">definition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_register_opaque</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">hoist_declarations</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">definition</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Gate</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_register_gate</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hoist_declarations</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">definition</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">,</span> <span class="n">Gate</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_register_gate</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_register_subroutine</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_register_subroutine</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">global_scope</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">assert_</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the global circuit scope that is used as the basis of the full program.  If</span>
@@ -1119,79 +1122,77 @@
         <span class="sd">&quot;&quot;&quot;Builds a list of call statements&quot;&quot;&quot;</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">instruction</span> <span class="ow">in</span> <span class="n">instructions</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Gate</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">condition</span><span class="p">:</span>
-                    <span class="n">eqcondition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_eqcondition</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">condition</span><span class="p">)</span>
-                    <span class="n">instruction_without_condition</span> <span class="o">=</span> <span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-                    <span class="n">instruction_without_condition</span><span class="o">.</span><span class="n">condition</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">,</span> <span class="n">Gate</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">condition</span><span class="p">:</span>
+                    <span class="n">eqcondition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_eqcondition</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">condition</span><span class="p">)</span>
+                    <span class="n">operation_without_condition</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                    <span class="n">operation_without_condition</span><span class="o">.</span><span class="n">condition</span> <span class="o">=</span> <span class="kc">None</span>
                     <span class="n">true_body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_program_block</span><span class="p">(</span>
-                        <span class="p">[(</span><span class="n">instruction_without_condition</span><span class="p">,</span> <span class="n">instruction</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">instruction</span><span class="p">[</span><span class="mi">2</span><span class="p">])]</span>
+                        <span class="p">[</span><span class="n">instruction</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">operation</span><span class="o">=</span><span class="n">operation_without_condition</span><span class="p">)]</span>
                     <span class="p">)</span>
                     <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">BranchingStatement</span><span class="p">(</span><span class="n">eqcondition</span><span class="p">,</span> <span class="n">true_body</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_gate_call</span><span class="p">(</span><span class="n">instruction</span><span class="p">))</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Barrier</span><span class="p">):</span>
-                <span class="n">operands</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">build_single_bit_reference</span><span class="p">(</span><span class="n">operand</span><span class="p">)</span> <span class="k">for</span> <span class="n">operand</span> <span class="ow">in</span> <span class="n">instruction</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">,</span> <span class="n">Barrier</span><span class="p">):</span>
+                <span class="n">operands</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">build_single_bit_reference</span><span class="p">(</span><span class="n">operand</span><span class="p">)</span> <span class="k">for</span> <span class="n">operand</span> <span class="ow">in</span> <span class="n">instruction</span><span class="o">.</span><span class="n">qubits</span>
+                <span class="p">]</span>
                 <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">QuantumBarrier</span><span class="p">(</span><span class="n">operands</span><span class="p">))</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Measure</span><span class="p">):</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">,</span> <span class="n">Measure</span><span class="p">):</span>
                 <span class="n">measurement</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">QuantumMeasurement</span><span class="p">(</span>
-                    <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">build_single_bit_reference</span><span class="p">(</span><span class="n">operand</span><span class="p">)</span> <span class="k">for</span> <span class="n">operand</span> <span class="ow">in</span> <span class="n">instruction</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+                    <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">build_single_bit_reference</span><span class="p">(</span><span class="n">operand</span><span class="p">)</span> <span class="k">for</span> <span class="n">operand</span> <span class="ow">in</span> <span class="n">instruction</span><span class="o">.</span><span class="n">qubits</span><span class="p">]</span>
                 <span class="p">)</span>
-                <span class="n">qubit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_single_bit_reference</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">qubit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_single_bit_reference</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">clbits</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                 <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">QuantumMeasurementAssignment</span><span class="p">(</span><span class="n">qubit</span><span class="p">,</span> <span class="n">measurement</span><span class="p">))</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Reset</span><span class="p">):</span>
-                <span class="k">for</span> <span class="n">operand</span> <span class="ow">in</span> <span class="n">instruction</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">,</span> <span class="n">Reset</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">operand</span> <span class="ow">in</span> <span class="n">instruction</span><span class="o">.</span><span class="n">qubits</span><span class="p">:</span>
                     <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">QuantumReset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_single_bit_reference</span><span class="p">(</span><span class="n">operand</span><span class="p">)))</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ForLoopOp</span><span class="p">):</span>
-                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_for_loop</span><span class="p">(</span><span class="o">*</span><span class="n">instruction</span><span class="p">))</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">WhileLoopOp</span><span class="p">):</span>
-                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_while_loop</span><span class="p">(</span><span class="o">*</span><span class="n">instruction</span><span class="p">))</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">IfElseOp</span><span class="p">):</span>
-                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_if_statement</span><span class="p">(</span><span class="o">*</span><span class="n">instruction</span><span class="p">))</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">BreakLoopOp</span><span class="p">):</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">,</span> <span class="n">Delay</span><span class="p">):</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_delay</span><span class="p">(</span><span class="n">instruction</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">,</span> <span class="n">ForLoopOp</span><span class="p">):</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_for_loop</span><span class="p">(</span><span class="n">instruction</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">,</span> <span class="n">WhileLoopOp</span><span class="p">):</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_while_loop</span><span class="p">(</span><span class="n">instruction</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">,</span> <span class="n">IfElseOp</span><span class="p">):</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_if_statement</span><span class="p">(</span><span class="n">instruction</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">,</span> <span class="n">BreakLoopOp</span><span class="p">):</span>
                 <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">BreakStatement</span><span class="p">())</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ContinueLoopOp</span><span class="p">):</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">,</span> <span class="n">ContinueLoopOp</span><span class="p">):</span>
                 <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">ContinueStatement</span><span class="p">())</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_subroutine_call</span><span class="p">(</span><span class="n">instruction</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">ret</span>
 
-    <span class="k">def</span> <span class="nf">build_if_statement</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">:</span> <span class="n">IfElseOp</span><span class="p">,</span> <span class="n">qubits</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Qubit</span><span class="p">],</span> <span class="n">clbits</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Clbit</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">BranchingStatement</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">build_if_statement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">:</span> <span class="n">CircuitInstruction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">BranchingStatement</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Build an :obj:`.IfElseOp` into a :obj:`.ast.BranchingStatement`.&quot;&quot;&quot;</span>
-        <span class="n">condition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_eqcondition</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">condition</span><span class="p">)</span>
+        <span class="n">condition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_eqcondition</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">condition</span><span class="p">)</span>
 
-        <span class="n">true_circuit</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">push_scope</span><span class="p">(</span><span class="n">true_circuit</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="n">clbits</span><span class="p">)</span>
+        <span class="n">true_circuit</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">push_scope</span><span class="p">(</span><span class="n">true_circuit</span><span class="p">,</span> <span class="n">instruction</span><span class="o">.</span><span class="n">qubits</span><span class="p">,</span> <span class="n">instruction</span><span class="o">.</span><span class="n">clbits</span><span class="p">)</span>
         <span class="n">true_body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_program_block</span><span class="p">(</span><span class="n">true_circuit</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pop_scope</span><span class="p">()</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">BranchingStatement</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">true_body</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
-        <span class="n">false_circuit</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">push_scope</span><span class="p">(</span><span class="n">false_circuit</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="n">clbits</span><span class="p">)</span>
+        <span class="n">false_circuit</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">push_scope</span><span class="p">(</span><span class="n">false_circuit</span><span class="p">,</span> <span class="n">instruction</span><span class="o">.</span><span class="n">qubits</span><span class="p">,</span> <span class="n">instruction</span><span class="o">.</span><span class="n">clbits</span><span class="p">)</span>
         <span class="n">false_body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_program_block</span><span class="p">(</span><span class="n">false_circuit</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pop_scope</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">BranchingStatement</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">true_body</span><span class="p">,</span> <span class="n">false_body</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">build_while_loop</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">:</span> <span class="n">WhileLoopOp</span><span class="p">,</span> <span class="n">qubits</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Qubit</span><span class="p">],</span> <span class="n">clbits</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Clbit</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">WhileLoopStatement</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">build_while_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">:</span> <span class="n">CircuitInstruction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">WhileLoopStatement</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Build a :obj:`.WhileLoopOp` into a :obj:`.ast.WhileLoopStatement`.&quot;&quot;&quot;</span>
-        <span class="n">condition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_eqcondition</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">condition</span><span class="p">)</span>
-        <span class="n">loop_circuit</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">push_scope</span><span class="p">(</span><span class="n">loop_circuit</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="n">clbits</span><span class="p">)</span>
+        <span class="n">condition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_eqcondition</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">condition</span><span class="p">)</span>
+        <span class="n">loop_circuit</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">push_scope</span><span class="p">(</span><span class="n">loop_circuit</span><span class="p">,</span> <span class="n">instruction</span><span class="o">.</span><span class="n">qubits</span><span class="p">,</span> <span class="n">instruction</span><span class="o">.</span><span class="n">clbits</span><span class="p">)</span>
         <span class="n">loop_body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_program_block</span><span class="p">(</span><span class="n">loop_circuit</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pop_scope</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">WhileLoopStatement</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">loop_body</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">build_for_loop</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">:</span> <span class="n">ForLoopOp</span><span class="p">,</span> <span class="n">qubits</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Qubit</span><span class="p">],</span> <span class="n">clbits</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Clbit</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">ForLoopStatement</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">build_for_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">:</span> <span class="n">CircuitInstruction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">ForLoopStatement</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Build a :obj:`.ForLoopOp` into a :obj:`.ast.ForLoopStatement`.&quot;&quot;&quot;</span>
-        <span class="n">indexset</span><span class="p">,</span> <span class="n">loop_parameter</span><span class="p">,</span> <span class="n">loop_circuit</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">params</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">push_scope</span><span class="p">(</span><span class="n">loop_circuit</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="n">clbits</span><span class="p">)</span>
+        <span class="n">indexset</span><span class="p">,</span> <span class="n">loop_parameter</span><span class="p">,</span> <span class="n">loop_circuit</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">push_scope</span><span class="p">(</span><span class="n">loop_circuit</span><span class="p">,</span> <span class="n">instruction</span><span class="o">.</span><span class="n">qubits</span><span class="p">,</span> <span class="n">instruction</span><span class="o">.</span><span class="n">clbits</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">loop_parameter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># The loop parameter is implicitly declared by the ``for`` loop (see also</span>
             <span class="c1"># _infer_parameter_declaration), so it doesn&#39;t matter that we haven&#39;t declared this.</span>
@@ -1216,6 +1217,28 @@
         <span class="n">body_ast</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_program_block</span><span class="p">(</span><span class="n">loop_circuit</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pop_scope</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">ForLoopStatement</span><span class="p">(</span><span class="n">indexset_ast</span><span class="p">,</span> <span class="n">loop_parameter_ast</span><span class="p">,</span> <span class="n">body_ast</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">build_delay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">:</span> <span class="n">CircuitInstruction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">QuantumDelay</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Build a built-in delay statement.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">instruction</span><span class="o">.</span><span class="n">clbits</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QASM3ExporterError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Found a delay instruction acting on classical bits: </span><span class="si">{</span><span class="n">instruction</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="n">duration_value</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">unit</span>
+        <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;ps&quot;</span><span class="p">:</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">DurationLiteral</span><span class="p">(</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">duration_value</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">DurationUnit</span><span class="o">.</span><span class="n">NANOSECOND</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unit_map</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;ns&quot;</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">DurationUnit</span><span class="o">.</span><span class="n">NANOSECOND</span><span class="p">,</span>
+                <span class="s2">&quot;us&quot;</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">DurationUnit</span><span class="o">.</span><span class="n">MICROSECOND</span><span class="p">,</span>
+                <span class="s2">&quot;ms&quot;</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">DurationUnit</span><span class="o">.</span><span class="n">MILLISECOND</span><span class="p">,</span>
+                <span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">DurationUnit</span><span class="o">.</span><span class="n">SECOND</span><span class="p">,</span>
+                <span class="s2">&quot;dt&quot;</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">DurationUnit</span><span class="o">.</span><span class="n">SAMPLE</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">DurationLiteral</span><span class="p">(</span><span class="n">duration_value</span><span class="p">,</span> <span class="n">unit_map</span><span class="p">[</span><span class="n">unit</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">QuantumDelay</span><span class="p">(</span>
+            <span class="n">duration</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">build_single_bit_reference</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span> <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="n">instruction</span><span class="o">.</span><span class="n">qubits</span><span class="p">]</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">build_integer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">Integer</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Build an integer literal, raising a :obj:`.QASM3ExporterError` if the input is not</span>
@@ -1256,33 +1279,33 @@
             <span class="p">}</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">build_gate_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">build_gate_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">:</span> <span class="n">CircuitInstruction</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Builds a QuantumGateCall&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">standard_gates</span><span class="o">.</span><span class="n">UGate</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">,</span> <span class="n">standard_gates</span><span class="o">.</span><span class="n">UGate</span><span class="p">):</span>
             <span class="n">gate_name</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Identifier</span><span class="p">(</span><span class="s2">&quot;U&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">gate_name</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Identifier</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_namespace</span><span class="p">[</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
-        <span class="n">qubits</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">build_single_bit_reference</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span> <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="n">instruction</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="n">gate_name</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Identifier</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_namespace</span><span class="p">[</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">])</span>
+        <span class="n">qubits</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">build_single_bit_reference</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span> <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="n">instruction</span><span class="o">.</span><span class="n">qubits</span><span class="p">]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">disable_constants</span><span class="p">:</span>
             <span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">ast</span><span class="o">.</span><span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rebind_scoped_parameters</span><span class="p">(</span><span class="n">param</span><span class="p">))</span>
-                <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">params</span>
+                <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">params</span>
             <span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">ast</span><span class="o">.</span><span class="n">Expression</span><span class="p">(</span><span class="n">pi_check</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rebind_scoped_parameters</span><span class="p">(</span><span class="n">param</span><span class="p">),</span> <span class="n">output</span><span class="o">=</span><span class="s2">&quot;qasm&quot;</span><span class="p">))</span>
-                <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">params</span>
+                <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">params</span>
             <span class="p">]</span>
 
         <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">QuantumGateCall</span><span class="p">(</span><span class="n">gate_name</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">build_subroutine_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">build_subroutine_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">:</span> <span class="n">CircuitInstruction</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Builds a SubroutineCall&quot;&quot;&quot;</span>
-        <span class="n">identifier</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Identifier</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_namespace</span><span class="p">[</span><span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
-        <span class="n">expressions</span> <span class="o">=</span> <span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">Expression</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">instruction</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">params</span><span class="p">]</span>
+        <span class="n">identifier</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Identifier</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_namespace</span><span class="p">[</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">])</span>
+        <span class="n">expressions</span> <span class="o">=</span> <span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">Expression</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">params</span><span class="p">]</span>
         <span class="c1"># TODO: qubits should go inside the brackets of subroutine calls, but neither Terra nor the</span>
         <span class="c1"># AST here really support the calls, so there&#39;s no sensible way of writing it yet.</span>
-        <span class="n">bits</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">build_single_bit_reference</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span> <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">instruction</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">bits</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">build_single_bit_reference</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span> <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">instruction</span><span class="o">.</span><span class="n">qubits</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">SubroutineCall</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">bits</span><span class="p">,</span> <span class="n">expressions</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">build_single_bit_reference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bit</span><span class="p">:</span> <span class="n">Bit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">Identifier</span><span class="p">:</span>
@@ -1386,7 +1409,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Last updated on 2022/06/21.
+      Last updated on 2022/07/01.
 
     </p>
   </div>
@@ -1423,6 +1446,7 @@
          <script src="../../../_static/thebelab-helper.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
+         <script src="../../../_static/design-tabs.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
      
 

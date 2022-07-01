@@ -22,6 +22,7 @@
       ~IfElseOp.is_parameterized
       ~IfElseOp.qasm
       ~IfElseOp.repeat
+      ~IfElseOp.replace_blocks
       ~IfElseOp.reverse_ops
       ~IfElseOp.soft_compare
       ~IfElseOp.validate_parameter

@@ -16,7 +16,6 @@ AQGD
       ~AQGD.get_support_level
       ~AQGD.gradient_num_diff
       ~AQGD.minimize
-      ~AQGD.optimize
       ~AQGD.print_options
       ~AQGD.set_max_evals_grouped
       ~AQGD.set_options

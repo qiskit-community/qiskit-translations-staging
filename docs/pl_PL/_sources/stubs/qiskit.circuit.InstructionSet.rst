@@ -21,6 +21,6 @@
 
    .. rubric:: Attributes
 
+   .. autoattribute:: cargs
    .. autoattribute:: instructions
    .. autoattribute:: qargs
-   .. autoattribute:: cargs

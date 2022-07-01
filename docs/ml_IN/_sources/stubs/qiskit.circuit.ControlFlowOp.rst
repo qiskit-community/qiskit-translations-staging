@@ -22,6 +22,7 @@
       ~ControlFlowOp.is_parameterized
       ~ControlFlowOp.qasm
       ~ControlFlowOp.repeat
+      ~ControlFlowOp.replace_blocks
       ~ControlFlowOp.reverse_ops
       ~ControlFlowOp.soft_compare
       ~ControlFlowOp.validate_parameter

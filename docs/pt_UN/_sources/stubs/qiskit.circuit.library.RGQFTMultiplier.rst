@@ -26,6 +26,7 @@
    .. autoattribute:: num_qubits
    .. autoattribute:: num_result_qubits
    .. autoattribute:: num_state_qubits
+   .. autoattribute:: op_start_times
    .. autoattribute:: parameters
    .. autoattribute:: prefix
    .. autoattribute:: qubits

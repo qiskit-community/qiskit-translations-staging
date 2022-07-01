@@ -21,4 +21,5 @@
    .. rubric:: Attributes
 
    .. autoattribute:: duration
+   .. autoattribute:: func
    .. autoattribute:: is_sequential

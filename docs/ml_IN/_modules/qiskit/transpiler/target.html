@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.target &mdash; Qiskit 0.36.2 documentation</title>
+  <title>qiskit.transpiler.target &mdash; Qiskit 0.37.0 documentation</title>
   
 
   
@@ -34,9 +34,7 @@
   <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -267,7 +265,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">ക്വിസ്കിറ്റ് ടെറ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">ക്വിസ്കിറ്റ് എഇർ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">ക്വിസ്കിറ്റ് ഇഗ്നിസ് (നിർതലാക്കി)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">ക്വിസ്കിറ്റ് ഐബിഎം ക്വാണ്ടം പ്രൊവയ്ഡെർ</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
@@ -354,6 +351,8 @@
 <span class="c1"># copyright notice, and modified files need to carry a notice indicating</span>
 <span class="c1"># that they have been altered from the originals.</span>
 
+<span class="c1"># pylint: disable=too-many-return-statements</span>
+
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">A target object represents the minimum set of information the transpiler needs</span>
 <span class="sd">from a backend</span>
@@ -361,11 +360,13 @@
 
 <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Mapping</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">io</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">import</span> <span class="nn">retworkx</span> <span class="k">as</span> <span class="nn">rx</span>
 
+<span class="kn">from</span> <span class="nn">qiskit.circuit.parameter</span> <span class="kn">import</span> <span class="n">Parameter</span>
 <span class="kn">from</span> <span class="nn">qiskit.pulse.instruction_schedule_map</span> <span class="kn">import</span> <span class="n">InstructionScheduleMap</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.coupling</span> <span class="kn">import</span> <span class="n">CouplingMap</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.instruction_durations</span> <span class="kn">import</span> <span class="n">InstructionDurations</span>
@@ -374,6 +375,7 @@
 <span class="c1"># import QubitProperties here to provide convenience alias for building a</span>
 <span class="c1"># full target</span>
 <span class="kn">from</span> <span class="nn">qiskit.providers.backend</span> <span class="kn">import</span> <span class="n">QubitProperties</span>  <span class="c1"># pylint: disable=unused-import</span>
+<span class="kn">from</span> <span class="nn">qiskit.providers.models.backendproperties</span> <span class="kn">import</span> <span class="n">BackendProperties</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -873,20 +875,112 @@
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">qargs</span><span class="si">}</span><span class="s2"> not in target.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qarg_gate_map</span><span class="p">[</span><span class="n">qargs</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Target.instruction_supported"><a class="viewcode-back" href="../../../stubs/qiskit.transpiler.Target.instruction_supported.html#qiskit.transpiler.Target.instruction_supported">[docs]</a>    <span class="k">def</span> <span class="nf">instruction_supported</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation_name</span><span class="p">,</span> <span class="n">qargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Target.instruction_supported"><a class="viewcode-back" href="../../../stubs/qiskit.transpiler.Target.instruction_supported.html#qiskit.transpiler.Target.instruction_supported">[docs]</a>    <span class="k">def</span> <span class="nf">instruction_supported</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">operation_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">operation_class</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return whether the instruction (operation + qubits) is supported by the target</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            operation_name (str): The name of the operation for the instruction</span>
-<span class="sd">            qargs (tuple): The tuple of qubit indices for the instruction</span>
+<span class="sd">            operation_name (str): The name of the operation for the instruction. Either</span>
+<span class="sd">                this or ``operation_class`` must be specified, if both are specified</span>
+<span class="sd">                ``operation_class`` will take priority and this argument will be ignored.</span>
+<span class="sd">            qargs (tuple): The tuple of qubit indices for the instruction. If this is</span>
+<span class="sd">                not specified then this method will return ``True`` if the specified</span>
+<span class="sd">                operation is supported on any qubits. The typical application will</span>
+<span class="sd">                always have this set (otherwise it&#39;s the same as just checking if the</span>
+<span class="sd">                target contains the operation). Normally you would not set this argument</span>
+<span class="sd">                if you wanted to check more generally that the target supports an operation</span>
+<span class="sd">                with the ``parameters`` on any qubits.</span>
+<span class="sd">            operation_class (qiskit.circuit.Instruction): The operation class to check whether</span>
+<span class="sd">                the target supports a particular operation by class rather</span>
+<span class="sd">                than by name. This lookup is more expensive as it needs to</span>
+<span class="sd">                iterate over all operations in the target instead of just a</span>
+<span class="sd">                single lookup. If this is specified it will supersede the</span>
+<span class="sd">                ``operation_name`` argument. The typical use case for this</span>
+<span class="sd">                operation is to check whether a specific variant of an operation</span>
+<span class="sd">                is supported on the backend. For example, if you wanted to</span>
+<span class="sd">                check whether a :class:`~.RXGate` was supported on a specific</span>
+<span class="sd">                qubit with a fixed angle. That fixed angle variant will</span>
+<span class="sd">                typically have a name different than the object&#39;s</span>
+<span class="sd">                :attr:`~.Instruction.name` attribute (``&quot;rx&quot;``) in the target.</span>
+<span class="sd">                This can be used to check if any instances of the class are</span>
+<span class="sd">                available in such a case.</span>
+<span class="sd">            parameters (list): A list of parameters to check if the target</span>
+<span class="sd">                supports them on the specified qubits. If the instruction</span>
+<span class="sd">                supports the parameter values specified in the list on the</span>
+<span class="sd">                operation and qargs specified this will return ``True`` but</span>
+<span class="sd">                if the parameters are not supported on the specified</span>
+<span class="sd">                instruction it will return ``False``. If this argument is not</span>
+<span class="sd">                specified this method will return ``True`` if the instruction</span>
+<span class="sd">                is supported independent of the instruction parameters. If</span>
+<span class="sd">                specified with any :class:`~.Parameter` objects in the list,</span>
+<span class="sd">                that entry will be treated as supporting any value, however parameter names</span>
+<span class="sd">                will not be checked (for example if an operation in the target</span>
+<span class="sd">                is listed as parameterized with ``&quot;theta&quot;`` and ``&quot;phi&quot;`` is</span>
+<span class="sd">                passed into this function that will return ``True``). For</span>
+<span class="sd">                example, if called with::</span>
+
+<span class="sd">                    parameters = [Parameter(&quot;theta&quot;)]</span>
+<span class="sd">                    target.instruction_supported(&quot;rx&quot;, (0,), parameters=parameters)</span>
+
+<span class="sd">                will return ``True`` if an :class:`~.RXGate` is suporrted on qubit 0</span>
+<span class="sd">                that will accept any parameter. If you need to check for a fixed numeric</span>
+<span class="sd">                value parameter this argument is typically paired with the ``operation_class``</span>
+<span class="sd">                argument. For example::</span>
+
+<span class="sd">                    target.instruction_supported(&quot;rx&quot;, (0,), RXGate, parameters=[pi / 4])</span>
+
+<span class="sd">                will return ``True`` if an RXGate(pi/4) exists on qubit 0.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: Returns ``True`` if the instruction is supported and ``False`` if it isn&#39;t.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">check_obj_params</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parameters</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">Parameter</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+                <span class="k">if</span> <span class="n">param</span> <span class="o">!=</span> <span class="n">obj</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">Parameter</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
         <span class="c1"># Case a list if passed in by mistake</span>
-        <span class="n">qargs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">qargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">qargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">qargs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">qargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">operation_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">op_name</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_name_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">operation_class</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+                            <span class="k">continue</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">check_obj_params</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+                            <span class="k">continue</span>
+                    <span class="k">if</span> <span class="n">qargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="kc">True</span>
+                    <span class="k">if</span> <span class="n">qargs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_map</span><span class="p">[</span><span class="n">op_name</span><span class="p">]:</span>
+                        <span class="k">return</span> <span class="kc">True</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_map</span><span class="p">[</span><span class="n">op_name</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="kc">None</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_map</span><span class="p">[</span><span class="n">op_name</span><span class="p">]:</span>
+                        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_name_map</span><span class="p">[</span><span class="n">op_name</span><span class="p">]</span><span class="o">.</span><span class="n">num_qubits</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">qargs</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+                            <span class="n">x</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">qargs</span>
+                        <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="n">operation_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_map</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_name_map</span><span class="p">[</span><span class="n">operation_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parameters</span><span class="p">):</span>
+                    <span class="n">matching_param</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">Parameter</span><span class="p">):</span>
+                        <span class="n">matching_param</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">elif</span> <span class="n">param</span> <span class="o">==</span> <span class="n">obj</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">index</span><span class="p">]:</span>
+                        <span class="n">matching_param</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">matching_param</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="kc">False</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">qargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
             <span class="k">if</span> <span class="n">qargs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_map</span><span class="p">[</span><span class="n">operation_name</span><span class="p">]:</span>
                 <span class="k">return</span> <span class="kc">True</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_map</span><span class="p">[</span><span class="n">operation_name</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="kc">None</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_map</span><span class="p">[</span><span class="n">operation_name</span><span class="p">]:</span>
@@ -1126,6 +1220,88 @@
                     <span class="n">prop_str_pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t\t\t</span><span class="s2">Extra properties:</span><span class="se">\n</span><span class="si">{</span><span class="n">extra_props_str</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">output</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">prop_str_pieces</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">output</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span></div>
+
+
+<span class="k">def</span> <span class="nf">target_to_backend_properties</span><span class="p">(</span><span class="n">target</span><span class="p">:</span> <span class="n">Target</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert a :class:`~.Target` object into a legacy :class:`~.BackendProperties`&quot;&quot;&quot;</span>
+
+    <span class="n">properties_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;backend_name&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;backend_version&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;last_update_date&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;general&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">}</span>
+    <span class="n">gates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">qubits</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">gate</span><span class="p">,</span> <span class="n">qargs_list</span> <span class="ow">in</span> <span class="n">target</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">gate</span> <span class="o">!=</span> <span class="s2">&quot;measure&quot;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">qargs</span><span class="p">,</span> <span class="n">props</span> <span class="ow">in</span> <span class="n">qargs_list</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">property_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="n">props</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">props</span><span class="o">.</span><span class="n">duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">property_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="p">{</span>
+                                <span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
+                                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;gate_length&quot;</span><span class="p">,</span>
+                                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span>
+                                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">props</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                            <span class="p">}</span>
+                        <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">props</span><span class="o">.</span><span class="n">error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">property_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="p">{</span>
+                                <span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
+                                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;gate_error&quot;</span><span class="p">,</span>
+                                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">props</span><span class="o">.</span><span class="n">error</span><span class="p">,</span>
+                            <span class="p">}</span>
+                        <span class="p">)</span>
+                <span class="k">if</span> <span class="n">property_list</span><span class="p">:</span>
+                    <span class="n">gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;gate&quot;</span><span class="p">:</span> <span class="n">gate</span><span class="p">,</span>
+                            <span class="s2">&quot;qubits&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">qargs</span><span class="p">),</span>
+                            <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="n">property_list</span><span class="p">,</span>
+                            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">gate</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">qargs</span><span class="p">]),</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">qubit_props</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)}</span>
+            <span class="k">for</span> <span class="n">qargs</span><span class="p">,</span> <span class="n">props</span> <span class="ow">in</span> <span class="n">qargs_list</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">qargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">qubit</span> <span class="o">=</span> <span class="n">qargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">props_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="n">props</span><span class="o">.</span><span class="n">error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">props_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
+                            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;readout_error&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">props</span><span class="o">.</span><span class="n">error</span><span class="p">,</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="n">props</span><span class="o">.</span><span class="n">duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">props_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
+                            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;readout_length&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">props</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">props_list</span><span class="p">:</span>
+                    <span class="n">qubit_props</span> <span class="o">=</span> <span class="p">{}</span>
+                    <span class="k">break</span>
+                <span class="n">qubit_props</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="o">=</span> <span class="n">props_list</span>
+            <span class="k">if</span> <span class="n">qubit_props</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">qubit_props</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+                <span class="n">qubits</span> <span class="o">=</span> <span class="p">[</span><span class="n">qubit_props</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">gates</span> <span class="ow">or</span> <span class="n">qubits</span><span class="p">:</span>
+        <span class="n">properties_dict</span><span class="p">[</span><span class="s2">&quot;gates&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gates</span>
+        <span class="n">properties_dict</span><span class="p">[</span><span class="s2">&quot;qubits&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">qubits</span>
+        <span class="k">return</span> <span class="n">BackendProperties</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">properties_dict</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
 </pre></div>
 
              </article>
@@ -1143,7 +1319,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Last updated on 2022/06/21.
+      Last updated on 2022/07/01.
 
     </p>
   </div>
@@ -1180,6 +1356,7 @@
          <script src="../../../_static/thebelab-helper.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
+         <script src="../../../_static/design-tabs.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
      
 

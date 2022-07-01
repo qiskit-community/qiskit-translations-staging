@@ -33,6 +33,7 @@
    .. autoattribute:: num_parameters
    .. autoattribute:: num_parameters_settable
    .. autoattribute:: num_qubits
+   .. autoattribute:: op_start_times
    .. autoattribute:: operators
    .. autoattribute:: ordered_parameters
    .. autoattribute:: parameter_bounds

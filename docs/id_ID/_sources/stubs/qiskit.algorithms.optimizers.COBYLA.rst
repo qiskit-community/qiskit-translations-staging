@@ -16,7 +16,6 @@ COBYLA
       ~COBYLA.get_support_level
       ~COBYLA.gradient_num_diff
       ~COBYLA.minimize
-      ~COBYLA.optimize
       ~COBYLA.print_options
       ~COBYLA.set_max_evals_grouped
       ~COBYLA.set_options

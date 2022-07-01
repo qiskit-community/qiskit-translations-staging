@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.execute_function &mdash; Qiskit 0.36.2 documentation</title>
+  <title>qiskit.execute_function &mdash; Qiskit 0.37.0 documentation</title>
   
 
   
@@ -34,9 +34,7 @@
   <link rel="stylesheet" href="../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/gallery.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -267,7 +265,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../apidoc/aer.html">Qiskit Aer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../apidoc/ignis.html">Qiskit Ignis (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
@@ -366,10 +363,8 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">qiskit.compiler</span> <span class="kn">import</span> <span class="n">transpile</span><span class="p">,</span> <span class="n">assemble</span><span class="p">,</span> <span class="n">schedule</span>
-<span class="kn">from</span> <span class="nn">qiskit.providers</span> <span class="kn">import</span> <span class="n">BaseBackend</span>
+<span class="kn">from</span> <span class="nn">qiskit.compiler</span> <span class="kn">import</span> <span class="n">transpile</span><span class="p">,</span> <span class="n">schedule</span>
 <span class="kn">from</span> <span class="nn">qiskit.providers.backend</span> <span class="kn">import</span> <span class="n">Backend</span>
-<span class="kn">from</span> <span class="nn">qiskit.qobj.utils</span> <span class="kn">import</span> <span class="n">MeasLevel</span><span class="p">,</span> <span class="n">MeasReturnType</span>
 <span class="kn">from</span> <span class="nn">qiskit.pulse</span> <span class="kn">import</span> <span class="n">Schedule</span><span class="p">,</span> <span class="n">ScheduleBlock</span>
 <span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">QiskitError</span>
 
@@ -425,7 +420,7 @@
 <span class="sd">        experiments (QuantumCircuit or list[QuantumCircuit] or Schedule or list[Schedule]):</span>
 <span class="sd">            Circuit(s) or pulse schedule(s) to execute</span>
 
-<span class="sd">        backend (BaseBackend or Backend):</span>
+<span class="sd">        backend (Backend):</span>
 <span class="sd">            Backend to execute circuits on.</span>
 <span class="sd">            Transpiler options are automatically grabbed from</span>
 <span class="sd">            backend.configuration() and backend.properties().</span>
@@ -499,11 +494,15 @@
 <span class="sd">            arg is present, auto-selection of pass manager based on the transpile options</span>
 <span class="sd">            will be turned off and this pass manager will be used directly.</span>
 
-<span class="sd">        qobj_id (str): String identifier to annotate the Qobj</span>
+<span class="sd">        qobj_id (str): DEPRECATED: String identifier to annotate the Qobj.  This has no effect</span>
+<span class="sd">            and the :attr:`~.QuantumCircuit.name` attribute of the input circuit(s) should be used</span>
+<span class="sd">            instead.</span>
 
-<span class="sd">        qobj_header (QobjHeader or dict): User input that will be inserted in Qobj header,</span>
-<span class="sd">            and will also be copied to the corresponding :class:`qiskit.result.Result`</span>
-<span class="sd">            header. Headers do not affect the run.</span>
+<span class="sd">        qobj_header (QobjHeader or dict): DEPRECATED: User input that will be inserted in Qobj</span>
+<span class="sd">            header, and will also be copied to the corresponding :class:`qiskit.result.Result`</span>
+<span class="sd">            header. Headers do not affect the run. Headers do not affect the run. This kwarg</span>
+<span class="sd">            has no effect anymore and the :attr:`~.QuantumCircuit.metadata` attribute of the</span>
+<span class="sd">            input circuit(s) should be used instead.</span>
 
 <span class="sd">        shots (int): Number of repetitions of each circuit, for sampling. Default: 1024</span>
 
@@ -511,9 +510,9 @@
 <span class="sd">            (provided the backend supports it). For OpenPulse jobs, only</span>
 <span class="sd">            measurement level 2 supports this option. Default: False</span>
 
-<span class="sd">        max_credits (int): DEPRECATED This parameter is deprecated as of</span>
-<span class="sd">        Qiskit Terra 0.20.0, and will be removed in a future release. This parameter has</span>
-<span class="sd">        no effect on modern IBM Quantum systems, and no alternative is necessary.</span>
+<span class="sd">        max_credits (int): DEPRECATED This parameter is deprecated as of Qiskit Terra 0.20.0</span>
+<span class="sd">            and will be removed in a future release. This parameter has no effect on modern</span>
+<span class="sd">            IBM Quantum systems, no alternative is necessary.</span>
 
 <span class="sd">        seed_simulator (int): Random seed to control sampling, for when backend is a simulator</span>
 
@@ -571,7 +570,7 @@
 <span class="sd">            experiments will be executed. Each list element (bind) should be of the form</span>
 <span class="sd">            ``{Parameter1: value1, Parameter2: value2, ...}``. All binds will be</span>
 <span class="sd">            executed across all experiments, e.g. if parameter_binds is a</span>
-<span class="sd">            length-n list, and there are m experiments, a total of :math:`m x n`</span>
+<span class="sd">            length-:math:`n` list, and there are :math:`m` experiments, a total of :math:`m \\times n`</span>
 <span class="sd">            experiments will be run (one for each experiment/bind pair).</span>
 
 <span class="sd">        schedule_circuit (bool): If ``True``, ``experiments`` will be converted to</span>
@@ -598,7 +597,7 @@
 <span class="sd">            Qobj config, and passed to backend.run()</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        BaseJob: returns job instance derived from BaseJob</span>
+<span class="sd">        Job: returns job instance derived from Job</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        QiskitError: if the execution cannot be interpreted as either circuits or schedules</span>
@@ -666,49 +665,21 @@
             <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">BaseBackend</span><span class="p">):</span>
-        <span class="c1"># assembling the circuits into a qobj to be run on the backend</span>
-        <span class="k">if</span> <span class="n">shots</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">shots</span> <span class="o">=</span> <span class="mi">1024</span>
-        <span class="k">if</span> <span class="n">memory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">memory</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="n">meas_level</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">meas_level</span> <span class="o">=</span> <span class="n">MeasLevel</span><span class="o">.</span><span class="n">CLASSIFIED</span>
-        <span class="k">if</span> <span class="n">meas_return</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">meas_return</span> <span class="o">=</span> <span class="n">MeasReturnType</span><span class="o">.</span><span class="n">AVERAGE</span>
-        <span class="k">if</span> <span class="n">memory_slot_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">memory_slot_size</span> <span class="o">=</span> <span class="mi">100</span>
-
-        <span class="n">qobj</span> <span class="o">=</span> <span class="n">assemble</span><span class="p">(</span>
-            <span class="n">experiments</span><span class="p">,</span>
-            <span class="n">qobj_id</span><span class="o">=</span><span class="n">qobj_id</span><span class="p">,</span>
-            <span class="n">qobj_header</span><span class="o">=</span><span class="n">qobj_header</span><span class="p">,</span>
-            <span class="n">shots</span><span class="o">=</span><span class="n">shots</span><span class="p">,</span>
-            <span class="n">memory</span><span class="o">=</span><span class="n">memory</span><span class="p">,</span>
-            <span class="n">seed_simulator</span><span class="o">=</span><span class="n">seed_simulator</span><span class="p">,</span>
-            <span class="n">qubit_lo_freq</span><span class="o">=</span><span class="n">default_qubit_los</span><span class="p">,</span>
-            <span class="n">meas_lo_freq</span><span class="o">=</span><span class="n">default_meas_los</span><span class="p">,</span>
-            <span class="n">qubit_lo_range</span><span class="o">=</span><span class="n">qubit_lo_range</span><span class="p">,</span>
-            <span class="n">meas_lo_range</span><span class="o">=</span><span class="n">meas_lo_range</span><span class="p">,</span>
-            <span class="n">schedule_los</span><span class="o">=</span><span class="n">schedule_los</span><span class="p">,</span>
-            <span class="n">meas_level</span><span class="o">=</span><span class="n">meas_level</span><span class="p">,</span>
-            <span class="n">meas_return</span><span class="o">=</span><span class="n">meas_return</span><span class="p">,</span>
-            <span class="n">memory_slots</span><span class="o">=</span><span class="n">memory_slots</span><span class="p">,</span>
-            <span class="n">memory_slot_size</span><span class="o">=</span><span class="n">memory_slot_size</span><span class="p">,</span>
-            <span class="n">rep_time</span><span class="o">=</span><span class="n">rep_time</span><span class="p">,</span>
-            <span class="n">rep_delay</span><span class="o">=</span><span class="n">rep_delay</span><span class="p">,</span>
-            <span class="n">parameter_binds</span><span class="o">=</span><span class="n">parameter_binds</span><span class="p">,</span>
-            <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
-            <span class="n">init_qubits</span><span class="o">=</span><span class="n">init_qubits</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">run_config</span><span class="p">,</span>
+    <span class="k">if</span> <span class="n">qobj_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;The qobj_id argument is deprecated as of the Qiskit Terra 0.21.0, &quot;</span>
+            <span class="s2">&quot;and will be remvoed in a future release. This argument has no effect and &quot;</span>
+            <span class="s2">&quot;is not used by any backends.&quot;</span>
         <span class="p">)</span>
 
-        <span class="c1"># executing the circuits on the backend and returning the job</span>
-        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
-        <span class="n">job</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">qobj</span><span class="p">,</span> <span class="o">**</span><span class="n">run_config</span><span class="p">)</span>
-        <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
-        <span class="n">_log_submission_time</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">Backend</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">qobj_header</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;The qobj_header argument is deprecated as of the Qiskit Terra 0.21.0, &quot;</span>
+            <span class="s2">&quot;and will be remvoed in a future release. This argument has no effect and &quot;</span>
+            <span class="s2">&quot;is not used by any backends.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">Backend</span><span class="p">):</span>
         <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
         <span class="n">run_kwargs</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;shots&quot;</span><span class="p">:</span> <span class="n">shots</span><span class="p">,</span>
@@ -774,7 +745,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Last updated on 2022/06/21.
+      Last updated on 2022/07/01.
 
     </p>
   </div>
@@ -811,6 +782,7 @@
          <script src="../../_static/thebelab-helper.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
+         <script src="../../_static/design-tabs.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
      
 

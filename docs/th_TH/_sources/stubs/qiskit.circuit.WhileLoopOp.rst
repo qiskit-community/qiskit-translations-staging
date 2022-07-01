@@ -22,6 +22,7 @@
       ~WhileLoopOp.is_parameterized
       ~WhileLoopOp.qasm
       ~WhileLoopOp.repeat
+      ~WhileLoopOp.replace_blocks
       ~WhileLoopOp.reverse_ops
       ~WhileLoopOp.soft_compare
       ~WhileLoopOp.validate_parameter

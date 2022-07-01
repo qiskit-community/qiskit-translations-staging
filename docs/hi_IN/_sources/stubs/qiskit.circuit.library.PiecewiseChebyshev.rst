@@ -28,6 +28,7 @@
    .. autoattribute:: num_parameters
    .. autoattribute:: num_qubits
    .. autoattribute:: num_state_qubits
+   .. autoattribute:: op_start_times
    .. autoattribute:: parameters
    .. autoattribute:: polynomials
    .. autoattribute:: prefix

@@ -16,7 +16,6 @@ SNOBFIT
       ~SNOBFIT.get_support_level
       ~SNOBFIT.gradient_num_diff
       ~SNOBFIT.minimize
-      ~SNOBFIT.optimize
       ~SNOBFIT.print_options
       ~SNOBFIT.set_max_evals_grouped
       ~SNOBFIT.set_options

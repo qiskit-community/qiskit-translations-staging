@@ -24,6 +24,7 @@
    .. autoattribute:: num_clbits
    .. autoattribute:: num_parameters
    .. autoattribute:: num_qubits
+   .. autoattribute:: op_start_times
    .. autoattribute:: parameters
    .. autoattribute:: prefix
    .. autoattribute:: qubits

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.algorithms.linear_solvers.matrices.tridiagonal_toeplitz &mdash; Qiskit 0.36.2 文档</title>
+  <title>qiskit.algorithms.linear_solvers.matrices.tridiagonal_toeplitz &mdash; Qiskit 0.37.0 文档</title>
   
 
   
@@ -34,9 +34,7 @@
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/gallery.css" type="text/css" />
     <link rel="index" title="索引" href="../../../../../genindex.html" />
@@ -267,7 +265,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aer.html">Qiskit Aer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ignis.html">Qiskit ignis (不推荐)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ibmq-provider.html">Qiskit IBM Quantum Provider</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">故障诊断</span></p>
@@ -546,13 +543,37 @@
         <span class="k">return</span> <span class="n">matrix</span>
 
 <div class="viewcode-block" id="TridiagonalToeplitz.eigs_bounds"><a class="viewcode-back" href="../../../../../stubs/qiskit.algorithms.linear_solvers.TridiagonalToeplitz.eigs_bounds.html#qiskit.algorithms.linear_solvers.TridiagonalToeplitz.eigs_bounds">[文档]</a>    <span class="k">def</span> <span class="nf">eigs_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Return lower and upper bounds on the eigenvalues of the matrix.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Return lower and upper bounds on the absolute eigenvalues of the matrix.&quot;&quot;&quot;</span>
         <span class="n">n_b</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">num_state_qubits</span>
-        <span class="c1"># Calculate the eigenvalues according to the formula for Toeplitz matrices</span>
-        <span class="n">eig_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">main_diag</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">off_diag</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">n_b</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">n_b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>
-        <span class="n">eig_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">main_diag</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">off_diag</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">n_b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>
-        <span class="n">lambda_min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">eig_1</span><span class="p">,</span> <span class="n">eig_2</span><span class="p">)</span>
-        <span class="n">lambda_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">eig_1</span><span class="p">,</span> <span class="n">eig_2</span><span class="p">)</span>
+
+        <span class="c1"># Calculate minimum and maximum of absolute value of eigenvalues</span>
+        <span class="c1"># according to the formula for Toeplitz 3-diagonal matrices</span>
+
+        <span class="c1"># For maximum it&#39;s enough to check border points of segment [1, n_b]</span>
+        <span class="n">candidate_eig_ids</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_b</span><span class="p">]</span>
+
+        <span class="c1"># Trying to add candidates near the minimum value of absolute eigenvalues</span>
+        <span class="c1"># function abs(main_diag - 2 * off_diag * cos(i * pi / (nb + 1))</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">main_diag</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">off_diag</span><span class="p">):</span>
+            <span class="n">optimal_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">main_diag</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">off_diag</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">n_b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+            <span class="k">def</span> <span class="nf">add_candidate_index_if_valid</span><span class="p">(</span><span class="n">index_to_add</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">index_to_add</span> <span class="o">&lt;=</span> <span class="n">n_b</span><span class="p">:</span>
+                    <span class="n">candidate_eig_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index_to_add</span><span class="p">)</span>
+
+            <span class="n">add_candidate_index_if_valid</span><span class="p">(</span><span class="n">optimal_index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">add_candidate_index_if_valid</span><span class="p">(</span><span class="n">optimal_index</span><span class="p">)</span>
+            <span class="n">add_candidate_index_if_valid</span><span class="p">(</span><span class="n">optimal_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">candidate_abs_eigs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">main_diag</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">off_diag</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">eig_id</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">n_b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">eig_id</span> <span class="ow">in</span> <span class="n">candidate_eig_ids</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">lambda_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">candidate_abs_eigs</span><span class="p">)</span>
+        <span class="n">lambda_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">candidate_abs_eigs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">lambda_min</span><span class="p">,</span> <span class="n">lambda_max</span></div>
 
 <div class="viewcode-block" id="TridiagonalToeplitz.condition_bounds"><a class="viewcode-back" href="../../../../../stubs/qiskit.algorithms.linear_solvers.TridiagonalToeplitz.condition_bounds.html#qiskit.algorithms.linear_solvers.TridiagonalToeplitz.condition_bounds">[文档]</a>    <span class="k">def</span> <span class="nf">condition_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
@@ -814,7 +835,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      最后更新于 2022/06/21.
+      最后更新于 2022/07/01.
 
     </p>
   </div>
@@ -852,6 +873,7 @@
          <script src="../../../../../_static/translations.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
+         <script src="../../../../../_static/design-tabs.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
      
 

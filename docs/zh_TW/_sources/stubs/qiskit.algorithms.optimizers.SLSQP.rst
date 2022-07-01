@@ -16,7 +16,6 @@ SLSQP
       ~SLSQP.get_support_level
       ~SLSQP.gradient_num_diff
       ~SLSQP.minimize
-      ~SLSQP.optimize
       ~SLSQP.print_options
       ~SLSQP.set_max_evals_grouped
       ~SLSQP.set_options

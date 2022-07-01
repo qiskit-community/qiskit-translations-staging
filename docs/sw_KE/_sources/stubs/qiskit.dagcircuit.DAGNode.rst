@@ -16,13 +16,3 @@
       ~DAGNode.semantic_eq
 
 
-
-   .. rubric:: Attributes
-
-   .. autoattribute:: cargs
-   .. autoattribute:: condition
-   .. autoattribute:: name
-   .. autoattribute:: op
-   .. autoattribute:: qargs
-   .. autoattribute:: type
-   .. autoattribute:: wire

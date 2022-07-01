@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.utils.quantum_instance &mdash; documentación de Qiskit - 0.36.2</title>
+  <title>qiskit.utils.quantum_instance &mdash; documentación de Qiskit - 0.37.0</title>
   
 
   
@@ -34,9 +34,7 @@
   <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
     <link rel="index" title="Índice" href="../../../genindex.html" />
@@ -267,7 +265,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/aer.html">Qiskit Aer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ignis.html">Qiskit Ignis (obsoleto)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/ibmq-provider.html">Proveedor Qiskit IBM Quantum</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Solución de Problemas</span></p>
@@ -373,7 +370,6 @@
     <span class="n">is_statevector_backend</span><span class="p">,</span>
     <span class="n">is_simulator_backend</span><span class="p">,</span>
     <span class="n">is_local_backend</span><span class="p">,</span>
-    <span class="n">is_aer_qasm</span><span class="p">,</span>
     <span class="n">is_basicaer_provider</span><span class="p">,</span>
     <span class="n">support_backend_options</span><span class="p">,</span>
     <span class="n">_get_backend_provider</span><span class="p">,</span>
@@ -525,7 +521,7 @@
 <span class="sd">        execute the circuits it needs to run using the instance.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            backend (Union[&#39;Backend&#39;, &#39;BaseBackend&#39;]): Instance of selected backend</span>
+<span class="sd">            backend (Backend): Instance of selected backend</span>
 <span class="sd">            shots: Number of repetitions of each circuit, for sampling. If None, the shots are</span>
 <span class="sd">                extracted from the backend. If the backend has none set, the default is 1024.</span>
 <span class="sd">            seed_simulator: Random seed for simulators</span>
@@ -591,10 +587,9 @@
 
         <span class="c1"># if the shots are none, try to get them from the backend</span>
         <span class="k">if</span> <span class="n">shots</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">qiskit.providers.basebackend</span> <span class="kn">import</span> <span class="n">BaseBackend</span>  <span class="c1"># pylint: disable=cyclic-import</span>
             <span class="kn">from</span> <span class="nn">qiskit.providers.backend</span> <span class="kn">import</span> <span class="n">Backend</span>  <span class="c1"># pylint: disable=cyclic-import</span>
 
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="p">(</span><span class="n">BaseBackend</span><span class="p">,</span> <span class="n">Backend</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">Backend</span><span class="p">):</span>
                 <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;options&quot;</span><span class="p">):</span>  <span class="c1"># should always be true for V1</span>
                     <span class="n">backend_shots</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;shots&quot;</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">shots</span> <span class="o">!=</span> <span class="n">backend_shots</span><span class="p">:</span>
@@ -833,12 +828,10 @@
 <span class="sd">        TODO: Maybe we can combine the circuits for the main ones and calibration circuits before</span>
 <span class="sd">              assembling to the qobj.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">qiskit.utils.run_circuits</span> <span class="kn">import</span> <span class="n">run_qobj</span><span class="p">,</span> <span class="n">run_circuits</span>
+        <span class="kn">from</span> <span class="nn">qiskit.utils.run_circuits</span> <span class="kn">import</span> <span class="n">run_circuits</span>
         <span class="kn">from</span> <span class="nn">qiskit.utils.measurement_error_mitigation</span> <span class="kn">import</span> <span class="p">(</span>
-            <span class="n">get_measured_qubits_from_qobj</span><span class="p">,</span>
             <span class="n">get_measured_qubits</span><span class="p">,</span>
             <span class="n">build_measurement_error_mitigation_circuits</span><span class="p">,</span>
-            <span class="n">build_measurement_error_mitigation_qobj</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">had_transpiled</span><span class="p">:</span>
@@ -855,16 +848,13 @@
             <span class="c1"># transpile here, the method always returns a copied list</span>
             <span class="n">circuits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transpile</span><span class="p">(</span><span class="n">circuits</span><span class="p">)</span>
 
-        <span class="kn">from</span> <span class="nn">qiskit.providers</span> <span class="kn">import</span> <span class="n">Backend</span>
-
-        <span class="n">circuit_job</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span> <span class="n">Backend</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_statevector</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend_name</span> <span class="o">==</span> <span class="s2">&quot;aer_simulator_statevector&quot;</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="kn">from</span> <span class="nn">qiskit.providers.aer.library</span> <span class="kn">import</span> <span class="n">SaveStatevector</span>
 
                 <span class="k">def</span> <span class="nf">_find_save_state</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-                    <span class="k">for</span> <span class="n">instr</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instr</span><span class="p">,</span> <span class="n">SaveStatevector</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">instruction</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">operation</span><span class="p">,</span> <span class="n">SaveStatevector</span><span class="p">):</span>
                             <span class="k">return</span> <span class="kc">True</span>
                     <span class="k">return</span> <span class="kc">False</span>
 
@@ -878,16 +868,8 @@
             <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
                 <span class="k">pass</span>
 
-        <span class="c1"># assemble</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">circuit_job</span><span class="p">:</span>
-            <span class="n">qobj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">assemble</span><span class="p">(</span><span class="n">circuits</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meas_error_mitigation_cls</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">qubit_index</span><span class="p">,</span> <span class="n">qubit_mappings</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">get_measured_qubits</span><span class="p">(</span><span class="n">circuits</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">circuit_job</span>
-                <span class="k">else</span> <span class="n">get_measured_qubits_from_qobj</span><span class="p">(</span><span class="n">qobj</span><span class="p">)</span>
-            <span class="p">)</span>
+            <span class="n">qubit_index</span><span class="p">,</span> <span class="n">qubit_mappings</span> <span class="o">=</span> <span class="n">get_measured_qubits</span><span class="p">(</span><span class="n">circuits</span><span class="p">)</span>
             <span class="n">mit_pattern</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mit_pattern</span>
             <span class="k">if</span> <span class="n">mit_pattern</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">mit_pattern</span> <span class="o">=</span> <span class="p">[[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">qubit_index</span><span class="p">))]</span>
@@ -932,128 +914,64 @@
             <span class="n">cal_circuits</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">prepended_calibration_circuits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">if</span> <span class="n">build_cals_matrix</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">circuit_job</span><span class="p">:</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Updating to also run measurement error mitigation.&quot;</span><span class="p">)</span>
-                    <span class="n">use_different_shots</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_meas_error_mitigation_shots</span> <span class="ow">is</span> <span class="kc">None</span>
-                        <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meas_error_mitigation_shots</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_config</span><span class="o">.</span><span class="n">shots</span>
-                    <span class="p">)</span>
-                    <span class="n">temp_run_config</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_config</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">use_different_shots</span><span class="p">:</span>
-                        <span class="n">temp_run_config</span><span class="o">.</span><span class="n">shots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meas_error_mitigation_shots</span>
-                    <span class="p">(</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Updating to also run measurement error mitigation.&quot;</span><span class="p">)</span>
+                <span class="n">use_different_shots</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_meas_error_mitigation_shots</span> <span class="ow">is</span> <span class="kc">None</span>
+                    <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meas_error_mitigation_shots</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_config</span><span class="o">.</span><span class="n">shots</span>
+                <span class="p">)</span>
+                <span class="n">temp_run_config</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_config</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">use_different_shots</span><span class="p">:</span>
+                    <span class="n">temp_run_config</span><span class="o">.</span><span class="n">shots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meas_error_mitigation_shots</span>
+                <span class="p">(</span>
+                    <span class="n">cal_circuits</span><span class="p">,</span>
+                    <span class="n">state_labels</span><span class="p">,</span>
+                    <span class="n">circuit_labels</span><span class="p">,</span>
+                <span class="p">)</span> <span class="o">=</span> <span class="n">build_measurement_error_mitigation_circuits</span><span class="p">(</span>
+                    <span class="n">qubit_index</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_meas_error_mitigation_cls</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_backend_config</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_compile_config</span><span class="p">,</span>
+                    <span class="n">mit_pattern</span><span class="o">=</span><span class="n">mit_pattern</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">use_different_shots</span><span class="p">:</span>
+                    <span class="n">cals_result</span> <span class="o">=</span> <span class="n">run_circuits</span><span class="p">(</span>
                         <span class="n">cal_circuits</span><span class="p">,</span>
-                        <span class="n">state_labels</span><span class="p">,</span>
-                        <span class="n">circuit_labels</span><span class="p">,</span>
-                    <span class="p">)</span> <span class="o">=</span> <span class="n">build_measurement_error_mitigation_circuits</span><span class="p">(</span>
-                        <span class="n">qubit_index</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_meas_error_mitigation_cls</span><span class="p">,</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_backend_config</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_compile_config</span><span class="p">,</span>
-                        <span class="n">mit_pattern</span><span class="o">=</span><span class="n">mit_pattern</span><span class="p">,</span>
+                        <span class="n">qjob_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_qjob_config</span><span class="p">,</span>
+                        <span class="n">backend_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend_options</span><span class="p">,</span>
+                        <span class="n">noise_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_noise_config</span><span class="p">,</span>
+                        <span class="n">run_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+                        <span class="n">job_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_job_callback</span><span class="p">,</span>
+                        <span class="n">max_job_retries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_job_retries</span><span class="p">,</span>
                     <span class="p">)</span>
-                    <span class="k">if</span> <span class="n">use_different_shots</span><span class="p">:</span>
-                        <span class="n">cals_result</span> <span class="o">=</span> <span class="n">run_circuits</span><span class="p">(</span>
-                            <span class="n">cal_circuits</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
-                            <span class="n">qjob_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_qjob_config</span><span class="p">,</span>
-                            <span class="n">backend_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend_options</span><span class="p">,</span>
-                            <span class="n">noise_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_noise_config</span><span class="p">,</span>
-                            <span class="n">run_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
-                            <span class="n">job_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_job_callback</span><span class="p">,</span>
-                            <span class="n">max_job_retries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_job_retries</span><span class="p">,</span>
-                        <span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_time_taken</span> <span class="o">+=</span> <span class="n">cals_result</span><span class="o">.</span><span class="n">time_taken</span>
-                        <span class="n">result</span> <span class="o">=</span> <span class="n">run_circuits</span><span class="p">(</span>
-                            <span class="n">circuits</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
-                            <span class="n">qjob_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">qjob_config</span><span class="p">,</span>
-                            <span class="n">backend_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backend_options</span><span class="p">,</span>
-                            <span class="n">noise_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_noise_config</span><span class="p">,</span>
-                            <span class="n">run_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run_config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
-                            <span class="n">job_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_job_callback</span><span class="p">,</span>
-                            <span class="n">max_job_retries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_job_retries</span><span class="p">,</span>
-                        <span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_time_taken</span> <span class="o">+=</span> <span class="n">result</span><span class="o">.</span><span class="n">time_taken</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">circuits</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">cal_circuits</span>
-                        <span class="n">prepended_calibration_circuits</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cal_circuits</span><span class="p">)</span>
-                        <span class="n">result</span> <span class="o">=</span> <span class="n">run_circuits</span><span class="p">(</span>
-                            <span class="n">circuits</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
-                            <span class="n">qjob_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">qjob_config</span><span class="p">,</span>
-                            <span class="n">backend_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backend_options</span><span class="p">,</span>
-                            <span class="n">noise_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_noise_config</span><span class="p">,</span>
-                            <span class="n">run_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run_config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
-                            <span class="n">job_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_job_callback</span><span class="p">,</span>
-                            <span class="n">max_job_retries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_job_retries</span><span class="p">,</span>
-                        <span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_time_taken</span> <span class="o">+=</span> <span class="n">result</span><span class="o">.</span><span class="n">time_taken</span>
-                        <span class="n">cals_result</span> <span class="o">=</span> <span class="n">result</span>
-
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_time_taken</span> <span class="o">+=</span> <span class="n">cals_result</span><span class="o">.</span><span class="n">time_taken</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">run_circuits</span><span class="p">(</span>
+                        <span class="n">circuits</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
+                        <span class="n">qjob_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">qjob_config</span><span class="p">,</span>
+                        <span class="n">backend_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backend_options</span><span class="p">,</span>
+                        <span class="n">noise_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_noise_config</span><span class="p">,</span>
+                        <span class="n">run_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run_config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+                        <span class="n">job_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_job_callback</span><span class="p">,</span>
+                        <span class="n">max_job_retries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_job_retries</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_time_taken</span> <span class="o">+=</span> <span class="n">result</span><span class="o">.</span><span class="n">time_taken</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Updating qobj with the circuits for measurement error mitigation.&quot;</span><span class="p">)</span>
-                    <span class="n">use_different_shots</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_meas_error_mitigation_shots</span> <span class="ow">is</span> <span class="kc">None</span>
-                        <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meas_error_mitigation_shots</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_config</span><span class="o">.</span><span class="n">shots</span>
-                    <span class="p">)</span>
-                    <span class="n">temp_run_config</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_config</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">use_different_shots</span><span class="p">:</span>
-                        <span class="n">temp_run_config</span><span class="o">.</span><span class="n">shots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meas_error_mitigation_shots</span>
-
-                    <span class="p">(</span>
-                        <span class="n">cals_qobj</span><span class="p">,</span>
-                        <span class="n">state_labels</span><span class="p">,</span>
-                        <span class="n">circuit_labels</span><span class="p">,</span>
-                    <span class="p">)</span> <span class="o">=</span> <span class="n">build_measurement_error_mitigation_qobj</span><span class="p">(</span>
-                        <span class="n">qubit_index</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_meas_error_mitigation_cls</span><span class="p">,</span>
+                    <span class="n">circuits</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">cal_circuits</span>
+                    <span class="n">prepended_calibration_circuits</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cal_circuits</span><span class="p">)</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">run_circuits</span><span class="p">(</span>
+                        <span class="n">circuits</span><span class="p">,</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_backend_config</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_compile_config</span><span class="p">,</span>
-                        <span class="n">temp_run_config</span><span class="p">,</span>
-                        <span class="n">mit_pattern</span><span class="o">=</span><span class="n">mit_pattern</span><span class="p">,</span>
+                        <span class="n">qjob_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">qjob_config</span><span class="p">,</span>
+                        <span class="n">backend_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backend_options</span><span class="p">,</span>
+                        <span class="n">noise_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_noise_config</span><span class="p">,</span>
+                        <span class="n">run_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run_config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+                        <span class="n">job_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_job_callback</span><span class="p">,</span>
+                        <span class="n">max_job_retries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_job_retries</span><span class="p">,</span>
                     <span class="p">)</span>
-                    <span class="k">if</span> <span class="n">use_different_shots</span> <span class="ow">or</span> <span class="n">is_aer_qasm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">):</span>
-                        <span class="n">cals_result</span> <span class="o">=</span> <span class="n">run_qobj</span><span class="p">(</span>
-                            <span class="n">cals_qobj</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_qjob_config</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_backend_options</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_noise_config</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_skip_qobj_validation</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_job_callback</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_max_job_retries</span><span class="p">,</span>
-                        <span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_time_taken</span> <span class="o">+=</span> <span class="n">cals_result</span><span class="o">.</span><span class="n">time_taken</span>
-                        <span class="n">result</span> <span class="o">=</span> <span class="n">run_qobj</span><span class="p">(</span>
-                            <span class="n">qobj</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_qjob_config</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_backend_options</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_noise_config</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_skip_qobj_validation</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_job_callback</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_max_job_retries</span><span class="p">,</span>
-                        <span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_time_taken</span> <span class="o">+=</span> <span class="n">result</span><span class="o">.</span><span class="n">time_taken</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="c1"># insert the calibration circuit into main qobj if the shots are the same</span>
-                        <span class="n">qobj</span><span class="o">.</span><span class="n">experiments</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">cals_qobj</span><span class="o">.</span><span class="n">experiments</span>
-                        <span class="n">result</span> <span class="o">=</span> <span class="n">run_qobj</span><span class="p">(</span>
-                            <span class="n">qobj</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_qjob_config</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_backend_options</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_noise_config</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_skip_qobj_validation</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_job_callback</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_max_job_retries</span><span class="p">,</span>
-                        <span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_time_taken</span> <span class="o">+=</span> <span class="n">result</span><span class="o">.</span><span class="n">time_taken</span>
-                        <span class="n">cals_result</span> <span class="o">=</span> <span class="n">result</span>
-
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_time_taken</span> <span class="o">+=</span> <span class="n">result</span><span class="o">.</span><span class="n">time_taken</span>
+                    <span class="n">cals_result</span> <span class="o">=</span> <span class="n">result</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Building calibration matrix for measurement error mitigation.&quot;</span><span class="p">)</span>
                 <span class="n">meas_type</span> <span class="o">=</span> <span class="n">_MeasFitterType</span><span class="o">.</span><span class="n">type_from_class</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_meas_error_mitigation_cls</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">meas_type</span> <span class="o">==</span> <span class="n">_MeasFitterType</span><span class="o">.</span><span class="n">COMPLETE_MEAS_FITTER</span><span class="p">:</span>
@@ -1069,28 +987,15 @@
                     <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(),</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">run_circuits</span><span class="p">(</span>
-                        <span class="n">circuits</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
-                        <span class="n">qjob_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">qjob_config</span><span class="p">,</span>
-                        <span class="n">backend_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backend_options</span><span class="p">,</span>
-                        <span class="n">noise_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_noise_config</span><span class="p">,</span>
-                        <span class="n">run_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
-                        <span class="n">job_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_job_callback</span><span class="p">,</span>
-                        <span class="n">max_job_retries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_job_retries</span><span class="p">,</span>
-                    <span class="p">)</span>
-                    <span class="k">if</span> <span class="n">circuit_job</span>
-                    <span class="k">else</span> <span class="n">run_qobj</span><span class="p">(</span>
-                        <span class="n">qobj</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_qjob_config</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_backend_options</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_noise_config</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_skip_qobj_validation</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_job_callback</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_max_job_retries</span><span class="p">,</span>
-                    <span class="p">)</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">run_circuits</span><span class="p">(</span>
+                    <span class="n">circuits</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
+                    <span class="n">qjob_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">qjob_config</span><span class="p">,</span>
+                    <span class="n">backend_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backend_options</span><span class="p">,</span>
+                    <span class="n">noise_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_noise_config</span><span class="p">,</span>
+                    <span class="n">run_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+                    <span class="n">job_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_job_callback</span><span class="p">,</span>
+                    <span class="n">max_job_retries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_job_retries</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_time_taken</span> <span class="o">+=</span> <span class="n">result</span><span class="o">.</span><span class="n">time_taken</span>
 
@@ -1141,28 +1046,15 @@
                         <span class="n">result</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_result</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">run_circuits</span><span class="p">(</span>
-                    <span class="n">circuits</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
-                    <span class="n">qjob_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">qjob_config</span><span class="p">,</span>
-                    <span class="n">backend_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backend_options</span><span class="p">,</span>
-                    <span class="n">noise_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_noise_config</span><span class="p">,</span>
-                    <span class="n">run_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
-                    <span class="n">job_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_job_callback</span><span class="p">,</span>
-                    <span class="n">max_job_retries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_job_retries</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="n">circuit_job</span>
-                <span class="k">else</span> <span class="n">run_qobj</span><span class="p">(</span>
-                    <span class="n">qobj</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_qjob_config</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_backend_options</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_noise_config</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_skip_qobj_validation</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_job_callback</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_max_job_retries</span><span class="p">,</span>
-                <span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">run_circuits</span><span class="p">(</span>
+                <span class="n">circuits</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">,</span>
+                <span class="n">qjob_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">qjob_config</span><span class="p">,</span>
+                <span class="n">backend_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backend_options</span><span class="p">,</span>
+                <span class="n">noise_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_noise_config</span><span class="p">,</span>
+                <span class="n">run_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+                <span class="n">job_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_job_callback</span><span class="p">,</span>
+                <span class="n">max_job_retries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_job_retries</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_time_taken</span> <span class="o">+=</span> <span class="n">result</span><span class="o">.</span><span class="n">time_taken</span>
 
@@ -1311,7 +1203,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">backend</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return BaseBackend backend object.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Return Backend backend object.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span>
 
     <span class="nd">@property</span>
@@ -1409,7 +1301,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Actualizado por última vez en 2022/06/21.
+      Actualizado por última vez en 2022/07/01.
 
     </p>
   </div>
@@ -1446,6 +1338,7 @@
          <script src="../../../_static/thebelab-helper.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
+         <script src="../../../_static/design-tabs.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
      
 

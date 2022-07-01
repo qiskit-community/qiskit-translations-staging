@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit.transpiler.passes.routing.lookahead_swap &mdash; Qiskit 0.36.2 documentation</title>
+  <title>qiskit.transpiler.passes.routing.lookahead_swap &mdash; Qiskit 0.37.0 documentation</title>
   
 
   
@@ -34,9 +34,7 @@
   <link rel="stylesheet" href="../../../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/thebelab.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/css/theme-override.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/panels-variables.ade9f9d55df9d2893fc676ecd59723a1.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../_static/gallery.css" type="text/css" />
     <link rel="index" title="அட்டவணை" href="../../../../../genindex.html" />
@@ -267,7 +265,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/terra.html">Qiskit Terra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/aer.html">Qiskit Aer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ignis.html">Qiskit Ignis (நீக்கப்படும்)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../apidoc/ibmq-provider.html">Qiskit IBM குவாண்டம் வழங்குநர்</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">பழுது கண்டறிதல்</span></p>
@@ -356,10 +353,11 @@
 
 <span class="sd">&quot;&quot;&quot;Map input circuit onto a backend topology via insertion of SWAPs.&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">math</span>
 
-<span class="kn">from</span> <span class="nn">qiskit.circuit.quantumregister</span> <span class="kn">import</span> <span class="n">QuantumRegister</span>
 <span class="kn">from</span> <span class="nn">qiskit.circuit.library.standard_gates</span> <span class="kn">import</span> <span class="n">SwapGate</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.basepasses</span> <span class="kn">import</span> <span class="n">TransformationPass</span>
 <span class="kn">from</span> <span class="nn">qiskit.transpiler.exceptions</span> <span class="kn">import</span> <span class="n">TranspilerError</span>
@@ -367,6 +365,25 @@
 <span class="kn">from</span> <span class="nn">qiskit.dagcircuit</span> <span class="kn">import</span> <span class="n">DAGOpNode</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="n">_Step</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;_Step&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="s2">&quot;swaps_added&quot;</span><span class="p">,</span> <span class="s2">&quot;gates_mapped&quot;</span><span class="p">,</span> <span class="s2">&quot;gates_remaining&quot;</span><span class="p">))</span>
+<span class="sd">&quot;&quot;&quot;Describes one possible step in the lookahead process.</span>
+
+<span class="sd">The fields are:</span>
+
+<span class="sd">    state (_SystemState): The current state of the system, including its virtual-to-physical layout.</span>
+<span class="sd">    swaps_added (list): List of qargs of swap gates introduced.</span>
+<span class="sd">    gates_mapped (list): Gates that were mapped, including added SWAPs.</span>
+<span class="sd">    gates_remaining (list): Gates that could not be mapped.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">_SystemState</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span>
+    <span class="s2">&quot;_SystemState&quot;</span><span class="p">,</span>
+    <span class="p">(</span><span class="s2">&quot;layout&quot;</span><span class="p">,</span> <span class="s2">&quot;coupling_map&quot;</span><span class="p">,</span> <span class="s2">&quot;register&quot;</span><span class="p">,</span> <span class="s2">&quot;swaps&quot;</span><span class="p">),</span>
+    <span class="c1"># The None default applies to the right-most element, i.e. `swaps`.</span>
+    <span class="n">defaults</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,),</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="LookaheadSwap"><a class="viewcode-back" href="../../../../../stubs/qiskit.transpiler.passes.LookaheadSwap.html#qiskit.transpiler.passes.LookaheadSwap">[docs]</a><span class="k">class</span> <span class="nc">LookaheadSwap</span><span class="p">(</span><span class="n">TransformationPass</span><span class="p">):</span>
@@ -444,21 +461,20 @@
                 <span class="sa">f</span><span class="s2">&quot;available device qubits (</span><span class="si">{</span><span class="n">number_of_available_qubits</span><span class="si">}</span><span class="s2">).&quot;</span>
             <span class="p">)</span>
 
-        <span class="n">canonical_register</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">qregs</span><span class="p">[</span><span class="s2">&quot;q&quot;</span><span class="p">]</span>
-        <span class="n">trivial_layout</span> <span class="o">=</span> <span class="n">Layout</span><span class="o">.</span><span class="n">generate_trivial_layout</span><span class="p">(</span><span class="n">canonical_register</span><span class="p">)</span>
-        <span class="n">current_layout</span> <span class="o">=</span> <span class="n">trivial_layout</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">register</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">qregs</span><span class="p">[</span><span class="s2">&quot;q&quot;</span><span class="p">]</span>
+        <span class="n">current_state</span> <span class="o">=</span> <span class="n">_SystemState</span><span class="p">(</span>
+            <span class="n">Layout</span><span class="o">.</span><span class="n">generate_trivial_layout</span><span class="p">(</span><span class="n">register</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="p">,</span> <span class="n">register</span>
+        <span class="p">)</span>
 
         <span class="n">mapped_gates</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">ordered_virtual_gates</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">serial_layers</span><span class="p">())</span>
-        <span class="n">gates_remaining</span> <span class="o">=</span> <span class="n">ordered_virtual_gates</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">gates_remaining</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">serial_layers</span><span class="p">())</span>
 
         <span class="k">while</span> <span class="n">gates_remaining</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Top-level routing step: </span><span class="si">%d</span><span class="s2"> gates remaining.&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">gates_remaining</span><span class="p">))</span>
 
             <span class="n">best_step</span> <span class="o">=</span> <span class="n">_search_forward_n_swaps</span><span class="p">(</span>
-                <span class="n">current_layout</span><span class="p">,</span>
+                <span class="n">current_state</span><span class="p">,</span>
                 <span class="n">gates_remaining</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">coupling_map</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">search_depth</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">search_width</span><span class="p">,</span>
             <span class="p">)</span>
@@ -470,108 +486,90 @@
 
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="s2">&quot;Found best step: mapped </span><span class="si">%d</span><span class="s2"> gates. Added swaps: </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span>
-                <span class="nb">len</span><span class="p">(</span><span class="n">best_step</span><span class="p">[</span><span class="s2">&quot;gates_mapped&quot;</span><span class="p">]),</span>
-                <span class="n">best_step</span><span class="p">[</span><span class="s2">&quot;swaps_added&quot;</span><span class="p">],</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">best_step</span><span class="o">.</span><span class="n">gates_mapped</span><span class="p">),</span>
+                <span class="n">best_step</span><span class="o">.</span><span class="n">swaps_added</span><span class="p">,</span>
             <span class="p">)</span>
 
-            <span class="n">current_layout</span> <span class="o">=</span> <span class="n">best_step</span><span class="p">[</span><span class="s2">&quot;layout&quot;</span><span class="p">]</span>
-            <span class="n">gates_mapped</span> <span class="o">=</span> <span class="n">best_step</span><span class="p">[</span><span class="s2">&quot;gates_mapped&quot;</span><span class="p">]</span>
-            <span class="n">gates_remaining</span> <span class="o">=</span> <span class="n">best_step</span><span class="p">[</span><span class="s2">&quot;gates_remaining&quot;</span><span class="p">]</span>
+            <span class="n">current_state</span> <span class="o">=</span> <span class="n">best_step</span><span class="o">.</span><span class="n">state</span>
+            <span class="n">gates_mapped</span> <span class="o">=</span> <span class="n">best_step</span><span class="o">.</span><span class="n">gates_mapped</span>
+            <span class="n">gates_remaining</span> <span class="o">=</span> <span class="n">best_step</span><span class="o">.</span><span class="n">gates_remaining</span>
 
             <span class="n">mapped_gates</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">gates_mapped</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fake_run</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">property_set</span><span class="p">[</span><span class="s2">&quot;final_layout&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_layout</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">property_set</span><span class="p">[</span><span class="s2">&quot;final_layout&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_state</span><span class="o">.</span><span class="n">layout</span>
             <span class="k">return</span> <span class="n">dag</span>
 
         <span class="c1"># Preserve input DAG&#39;s name, regs, wire_map, etc. but replace the graph.</span>
         <span class="n">mapped_dag</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">copy_empty_like</span><span class="p">()</span>
-
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">mapped_gates</span><span class="p">:</span>
             <span class="n">mapped_dag</span><span class="o">.</span><span class="n">apply_operation_back</span><span class="p">(</span><span class="n">op</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">qargs</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">qargs</span><span class="p">,</span> <span class="n">cargs</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">cargs</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">mapped_dag</span></div></div>
 
 
-<span class="k">def</span> <span class="nf">_search_forward_n_swaps</span><span class="p">(</span><span class="n">layout</span><span class="p">,</span> <span class="n">gates</span><span class="p">,</span> <span class="n">coupling_map</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">width</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_search_forward_n_swaps</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">gates</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">width</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Search for SWAPs which allow for application of largest number of gates.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        layout (Layout): Map from virtual qubit index to physical qubit index.</span>
+<span class="sd">        state (_SystemState): The ``namedtuple`` collection containing the state of the physical</span>
+<span class="sd">            system.  This includes the current layout, the coupling map, the canonical register and</span>
+<span class="sd">            the possible swaps available.</span>
 <span class="sd">        gates (list): Gates to be mapped.</span>
-<span class="sd">        coupling_map (CouplingMap): CouplingMap of the target backend.</span>
 <span class="sd">        depth (int): Number of SWAP layers to search before choosing a result.</span>
 <span class="sd">        width (int): Number of SWAPs to consider at each layer.</span>
 <span class="sd">    Returns:</span>
-<span class="sd">        optional(dict): Describes solution step found. If None, no swaps leading</span>
-<span class="sd">            to an improvement were found. Keys:</span>
-<span class="sd">            layout (Layout): Virtual to physical qubit map after SWAPs.</span>
-<span class="sd">            swaps_added (list): List of qargs of swap gates introduced.</span>
-<span class="sd">            gates_remaining (list): Gates that could not be mapped.</span>
-<span class="sd">            gates_mapped (list): Gates that were mapped, including added SWAPs.</span>
-
+<span class="sd">        Optional(_Step): Describes the solution step found.  If ``None``, no swaps leading to an</span>
+<span class="sd">        improvement were found.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">gates_mapped</span><span class="p">,</span> <span class="n">gates_remaining</span> <span class="o">=</span> <span class="n">_map_free_gates</span><span class="p">(</span><span class="n">layout</span><span class="p">,</span> <span class="n">gates</span><span class="p">,</span> <span class="n">coupling_map</span><span class="p">)</span>
-
-    <span class="n">base_step</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;layout&quot;</span><span class="p">:</span> <span class="n">layout</span><span class="p">,</span>
-        <span class="s2">&quot;swaps_added&quot;</span><span class="p">:</span> <span class="p">[],</span>
-        <span class="s2">&quot;gates_mapped&quot;</span><span class="p">:</span> <span class="n">gates_mapped</span><span class="p">,</span>
-        <span class="s2">&quot;gates_remaining&quot;</span><span class="p">:</span> <span class="n">gates_remaining</span><span class="p">,</span>
-    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">swaps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Include symmetric couplings (e.g [0,1] and [1,0]) as one swap.</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span>
+            <span class="n">swaps</span><span class="o">=</span><span class="p">{((</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">if</span> <span class="n">a</span> <span class="o">&lt;</span> <span class="n">b</span> <span class="k">else</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">get_edges</span><span class="p">()}</span>
+        <span class="p">)</span>
+    <span class="n">gates_mapped</span><span class="p">,</span> <span class="n">gates_remaining</span> <span class="o">=</span> <span class="n">_map_free_gates</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">gates</span><span class="p">)</span>
+    <span class="n">base_step</span> <span class="o">=</span> <span class="n">_Step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="p">[],</span> <span class="n">gates_mapped</span><span class="p">,</span> <span class="n">gates_remaining</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">gates_remaining</span> <span class="ow">or</span> <span class="n">depth</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">base_step</span>
 
-    <span class="c1"># Include symmetric 2q gates (e.g coupling maps with both [0,1] and [1,0])</span>
-    <span class="c1"># as one available swap.</span>
-    <span class="n">possible_swaps</span> <span class="o">=</span> <span class="p">{</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">edge</span><span class="p">))</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">coupling_map</span><span class="o">.</span><span class="n">get_edges</span><span class="p">()}</span>
-
-    <span class="k">def</span> <span class="nf">_score_swap</span><span class="p">(</span><span class="n">swap</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Calculate the relative score for a given SWAP.&quot;&quot;&quot;</span>
-        <span class="n">trial_layout</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">trial_layout</span><span class="o">.</span><span class="n">swap</span><span class="p">(</span><span class="o">*</span><span class="n">swap</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_calc_layout_distance</span><span class="p">(</span><span class="n">gates</span><span class="p">,</span> <span class="n">coupling_map</span><span class="p">,</span> <span class="n">trial_layout</span><span class="p">)</span>
-
-    <span class="n">ranked_swaps</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">possible_swaps</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_score_swap</span><span class="p">)</span>
+    <span class="n">ranked_swaps</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">_score_state_with_swap</span><span class="p">(</span><span class="n">swap</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">gates</span><span class="p">)</span> <span class="k">for</span> <span class="n">swap</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">swaps</span><span class="p">),</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
         <span class="s2">&quot;At depth </span><span class="si">%d</span><span class="s2">, ranked candidate swaps: </span><span class="si">%s</span><span class="s2">...&quot;</span><span class="p">,</span>
         <span class="n">depth</span><span class="p">,</span>
-        <span class="p">[(</span><span class="n">swap</span><span class="p">,</span> <span class="n">_score_swap</span><span class="p">(</span><span class="n">swap</span><span class="p">))</span> <span class="k">for</span> <span class="n">swap</span> <span class="ow">in</span> <span class="n">ranked_swaps</span><span class="p">[:</span> <span class="n">width</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]],</span>
+        <span class="p">[(</span><span class="n">swap</span><span class="p">,</span> <span class="n">score</span><span class="p">)</span> <span class="k">for</span> <span class="n">score</span><span class="p">,</span> <span class="n">swap</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">ranked_swaps</span><span class="p">[:</span> <span class="n">width</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]],</span>
     <span class="p">)</span>
 
-    <span class="n">best_swap</span><span class="p">,</span> <span class="n">best_step</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
-    <span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="n">swap</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ranked_swaps</span><span class="p">):</span>
-        <span class="n">trial_layout</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">trial_layout</span><span class="o">.</span><span class="n">swap</span><span class="p">(</span><span class="o">*</span><span class="n">swap</span><span class="p">)</span>
-        <span class="n">next_step</span> <span class="o">=</span> <span class="n">_search_forward_n_swaps</span><span class="p">(</span>
-            <span class="n">trial_layout</span><span class="p">,</span> <span class="n">gates_remaining</span><span class="p">,</span> <span class="n">coupling_map</span><span class="p">,</span> <span class="n">depth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">width</span>
-        <span class="p">)</span>
+    <span class="n">best_swap</span><span class="p">,</span> <span class="n">best_step</span><span class="p">,</span> <span class="n">best_score</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">swap</span><span class="p">,</span> <span class="n">new_state</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ranked_swaps</span><span class="p">):</span>
+        <span class="n">next_step</span> <span class="o">=</span> <span class="n">_search_forward_n_swaps</span><span class="p">(</span><span class="n">new_state</span><span class="p">,</span> <span class="n">gates_remaining</span><span class="p">,</span> <span class="n">depth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">next_step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">continue</span>
 
+        <span class="n">next_score</span> <span class="o">=</span> <span class="n">_score_step</span><span class="p">(</span><span class="n">next_step</span><span class="p">)</span>
         <span class="c1"># ranked_swaps already sorted by distance, so distance is the tie-breaker.</span>
-        <span class="k">if</span> <span class="n">best_swap</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">_score_step</span><span class="p">(</span><span class="n">next_step</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">_score_step</span><span class="p">(</span><span class="n">best_step</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">next_score</span> <span class="o">&gt;</span> <span class="n">best_score</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="s2">&quot;At depth </span><span class="si">%d</span><span class="s2">, updating best step: </span><span class="si">%s</span><span class="s2"> (score: </span><span class="si">%f</span><span class="s2">).&quot;</span><span class="p">,</span>
                 <span class="n">depth</span><span class="p">,</span>
-                <span class="p">[</span><span class="n">swap</span><span class="p">]</span> <span class="o">+</span> <span class="n">next_step</span><span class="p">[</span><span class="s2">&quot;swaps_added&quot;</span><span class="p">],</span>
-                <span class="n">_score_step</span><span class="p">(</span><span class="n">next_step</span><span class="p">),</span>
+                <span class="p">[</span><span class="n">swap</span><span class="p">]</span> <span class="o">+</span> <span class="n">next_step</span><span class="o">.</span><span class="n">swaps_added</span><span class="p">,</span>
+                <span class="n">next_score</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">best_swap</span><span class="p">,</span> <span class="n">best_step</span> <span class="o">=</span> <span class="n">swap</span><span class="p">,</span> <span class="n">next_step</span>
+            <span class="n">best_swap</span><span class="p">,</span> <span class="n">best_step</span><span class="p">,</span> <span class="n">best_score</span> <span class="o">=</span> <span class="n">swap</span><span class="p">,</span> <span class="n">next_step</span><span class="p">,</span> <span class="n">next_score</span>
 
         <span class="k">if</span> <span class="p">(</span>
             <span class="n">rank</span> <span class="o">&gt;=</span> <span class="nb">min</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ranked_swaps</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
             <span class="ow">and</span> <span class="n">best_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="ow">and</span> <span class="p">(</span>
-                <span class="nb">len</span><span class="p">(</span><span class="n">best_step</span><span class="p">[</span><span class="s2">&quot;gates_mapped&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">depth</span>
-                <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">best_step</span><span class="p">[</span><span class="s2">&quot;gates_remaining&quot;</span><span class="p">])</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">gates_remaining</span><span class="p">)</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">best_step</span><span class="o">.</span><span class="n">gates_mapped</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">depth</span>
+                <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">best_step</span><span class="o">.</span><span class="n">gates_remaining</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">gates_remaining</span><span class="p">)</span>
                 <span class="ow">or</span> <span class="p">(</span>
-                    <span class="n">_calc_layout_distance</span><span class="p">(</span>
-                        <span class="n">best_step</span><span class="p">[</span><span class="s2">&quot;gates_remaining&quot;</span><span class="p">],</span> <span class="n">coupling_map</span><span class="p">,</span> <span class="n">best_step</span><span class="p">[</span><span class="s2">&quot;layout&quot;</span><span class="p">]</span>
-                    <span class="p">)</span>
-                    <span class="o">&lt;</span> <span class="n">_calc_layout_distance</span><span class="p">(</span><span class="n">gates_remaining</span><span class="p">,</span> <span class="n">coupling_map</span><span class="p">,</span> <span class="n">layout</span><span class="p">)</span>
+                    <span class="n">_calc_layout_distance</span><span class="p">(</span><span class="n">best_step</span><span class="o">.</span><span class="n">gates_remaining</span><span class="p">,</span> <span class="n">best_step</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+                    <span class="o">&lt;</span> <span class="n">_calc_layout_distance</span><span class="p">(</span><span class="n">gates_remaining</span><span class="p">,</span> <span class="n">new_state</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="p">)</span>
         <span class="p">):</span>
@@ -583,24 +581,24 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;At depth </span><span class="si">%d</span><span class="s2">, best_swap set: </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="p">[</span><span class="n">best_swap</span><span class="p">]</span> <span class="o">+</span> <span class="n">best_step</span><span class="p">[</span><span class="s2">&quot;swaps_added&quot;</span><span class="p">])</span>
+    <span class="n">best_swap_gate</span> <span class="o">=</span> <span class="n">_swap_ops_from_edge</span><span class="p">(</span><span class="n">best_swap</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">_Step</span><span class="p">(</span>
+        <span class="n">best_step</span><span class="o">.</span><span class="n">state</span><span class="p">,</span>
+        <span class="p">[</span><span class="n">best_swap</span><span class="p">]</span> <span class="o">+</span> <span class="n">best_step</span><span class="o">.</span><span class="n">swaps_added</span><span class="p">,</span>
+        <span class="n">gates_mapped</span> <span class="o">+</span> <span class="n">best_swap_gate</span> <span class="o">+</span> <span class="n">best_step</span><span class="o">.</span><span class="n">gates_mapped</span><span class="p">,</span>
+        <span class="n">best_step</span><span class="o">.</span><span class="n">gates_remaining</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;At depth </span><span class="si">%d</span><span class="s2">, best_swap set: </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">swaps_added</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
 
-    <span class="n">best_swap_gate</span> <span class="o">=</span> <span class="n">_swap_ops_from_edge</span><span class="p">(</span><span class="n">best_swap</span><span class="p">,</span> <span class="n">layout</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">&quot;layout&quot;</span><span class="p">:</span> <span class="n">best_step</span><span class="p">[</span><span class="s2">&quot;layout&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;swaps_added&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">best_swap</span><span class="p">]</span> <span class="o">+</span> <span class="n">best_step</span><span class="p">[</span><span class="s2">&quot;swaps_added&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;gates_remaining&quot;</span><span class="p">:</span> <span class="n">best_step</span><span class="p">[</span><span class="s2">&quot;gates_remaining&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;gates_mapped&quot;</span><span class="p">:</span> <span class="n">gates_mapped</span> <span class="o">+</span> <span class="n">best_swap_gate</span> <span class="o">+</span> <span class="n">best_step</span><span class="p">[</span><span class="s2">&quot;gates_mapped&quot;</span><span class="p">],</span>
-    <span class="p">}</span>
 
-
-<span class="k">def</span> <span class="nf">_map_free_gates</span><span class="p">(</span><span class="n">layout</span><span class="p">,</span> <span class="n">gates</span><span class="p">,</span> <span class="n">coupling_map</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_map_free_gates</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">gates</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Map all gates that can be executed with the current layout.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        layout (Layout): Map from virtual qubit index to physical qubit index.</span>
+<span class="sd">        state (_SystemState): The physical characteristics of the system, including its current</span>
+<span class="sd">            layout and the coupling map.</span>
 <span class="sd">        gates (list): Gates to be mapped.</span>
-<span class="sd">        coupling_map (CouplingMap): CouplingMap for target device topology.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tuple:</span>
@@ -611,12 +609,13 @@
 
     <span class="n">mapped_gates</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">remaining_gates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">layout_map</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">_v2p</span>
 
     <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">gates</span><span class="p">:</span>
         <span class="c1"># Gates without a partition (barrier, snapshot, save, load, noise) may</span>
         <span class="c1"># still have associated qubits. Look for them in the qargs.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">gate</span><span class="p">[</span><span class="s2">&quot;partition&quot;</span><span class="p">]:</span>
-            <span class="n">qubits</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">gate</span><span class="p">[</span><span class="s2">&quot;graph&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">DAGOpNode</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">qargs</span>
+            <span class="n">qubits</span> <span class="o">=</span> <span class="n">_first_op_node</span><span class="p">(</span><span class="n">gate</span><span class="p">[</span><span class="s2">&quot;graph&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">qargs</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">qubits</span><span class="p">:</span>
                 <span class="k">continue</span>
@@ -625,7 +624,7 @@
                 <span class="n">blocked_qubits</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">qubits</span><span class="p">)</span>
                 <span class="n">remaining_gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gate</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">mapped_gate</span> <span class="o">=</span> <span class="n">_transform_gate_for_layout</span><span class="p">(</span><span class="n">gate</span><span class="p">,</span> <span class="n">layout</span><span class="p">)</span>
+                <span class="n">mapped_gate</span> <span class="o">=</span> <span class="n">_transform_gate_for_system</span><span class="p">(</span><span class="n">gate</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
                 <span class="n">mapped_gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mapped_gate</span><span class="p">)</span>
             <span class="k">continue</span>
 
@@ -635,10 +634,10 @@
             <span class="n">blocked_qubits</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">qubits</span><span class="p">)</span>
             <span class="n">remaining_gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gate</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">qubits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">mapped_gate</span> <span class="o">=</span> <span class="n">_transform_gate_for_layout</span><span class="p">(</span><span class="n">gate</span><span class="p">,</span> <span class="n">layout</span><span class="p">)</span>
+            <span class="n">mapped_gate</span> <span class="o">=</span> <span class="n">_transform_gate_for_system</span><span class="p">(</span><span class="n">gate</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
             <span class="n">mapped_gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mapped_gate</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">coupling_map</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">layout</span><span class="p">[</span><span class="n">q</span><span class="p">]</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">qubits</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">mapped_gate</span> <span class="o">=</span> <span class="n">_transform_gate_for_layout</span><span class="p">(</span><span class="n">gate</span><span class="p">,</span> <span class="n">layout</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">state</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">layout_map</span><span class="p">[</span><span class="n">qubits</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">layout_map</span><span class="p">[</span><span class="n">qubits</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">mapped_gate</span> <span class="o">=</span> <span class="n">_transform_gate_for_system</span><span class="p">(</span><span class="n">gate</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
             <span class="n">mapped_gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mapped_gate</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">blocked_qubits</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">qubits</span><span class="p">)</span>
@@ -647,46 +646,69 @@
     <span class="k">return</span> <span class="n">mapped_gates</span><span class="p">,</span> <span class="n">remaining_gates</span>
 
 
-<span class="k">def</span> <span class="nf">_calc_layout_distance</span><span class="p">(</span><span class="n">gates</span><span class="p">,</span> <span class="n">coupling_map</span><span class="p">,</span> <span class="n">layout</span><span class="p">,</span> <span class="n">max_gates</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_calc_layout_distance</span><span class="p">(</span><span class="n">gates</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">max_gates</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return the sum of the distances of two-qubit pairs in each CNOT in gates</span>
 <span class="sd">    according to the layout and the coupling.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">max_gates</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">max_gates</span> <span class="o">=</span> <span class="mi">50</span> <span class="o">+</span> <span class="mi">10</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">physical_qubits</span><span class="p">)</span>
+        <span class="n">max_gates</span> <span class="o">=</span> <span class="mi">50</span> <span class="o">+</span> <span class="mi">10</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">physical_qubits</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span>
-        <span class="n">coupling_map</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">layout</span><span class="p">[</span><span class="n">q</span><span class="p">]</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">gate</span><span class="p">[</span><span class="s2">&quot;partition&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
-        <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">gates</span><span class="p">[:</span><span class="n">max_gates</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">gate</span><span class="p">[</span><span class="s2">&quot;partition&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">gate</span><span class="p">[</span><span class="s2">&quot;partition&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">2</span>
-    <span class="p">)</span>
+    <span class="n">layout_map</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">_v2p</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">gates</span><span class="p">[:</span><span class="n">max_gates</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">gate</span><span class="p">[</span><span class="s2">&quot;partition&quot;</span><span class="p">]:</span>
+            <span class="k">continue</span>
+        <span class="n">qubits</span> <span class="o">=</span> <span class="n">gate</span><span class="p">[</span><span class="s2">&quot;partition&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">qubits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="n">state</span><span class="o">.</span><span class="n">coupling_map</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">layout_map</span><span class="p">[</span><span class="n">qubits</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">layout_map</span><span class="p">[</span><span class="n">qubits</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span> <span class="nf">_score_state_with_swap</span><span class="p">(</span><span class="n">swap</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">gates</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate the relative score for a given SWAP.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        float: the score of the given swap.</span>
+<span class="sd">        Tuple[int, int]: the input swap that should be performed.</span>
+<span class="sd">        _SystemState: an updated system state with the new layout contained.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">trial_layout</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">trial_layout</span><span class="o">.</span><span class="n">swap</span><span class="p">(</span><span class="o">*</span><span class="n">swap</span><span class="p">)</span>
+    <span class="n">new_state</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="n">trial_layout</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_calc_layout_distance</span><span class="p">(</span><span class="n">gates</span><span class="p">,</span> <span class="n">new_state</span><span class="p">),</span> <span class="n">swap</span><span class="p">,</span> <span class="n">new_state</span>
 
 
 <span class="k">def</span> <span class="nf">_score_step</span><span class="p">(</span><span class="n">step</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Count the mapped two-qubit gates, less the number of added SWAPs.&quot;&quot;&quot;</span>
     <span class="c1"># Each added swap will add 3 ops to gates_mapped, so subtract 3.</span>
-    <span class="k">return</span> <span class="nb">len</span><span class="p">([</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">step</span><span class="p">[</span><span class="s2">&quot;gates_mapped&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">])</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span>
-        <span class="n">step</span><span class="p">[</span><span class="s2">&quot;swaps_added&quot;</span><span class="p">]</span>
-    <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">([</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">gates_mapped</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">])</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">swaps_added</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_transform_gate_for_layout</span><span class="p">(</span><span class="n">gate</span><span class="p">,</span> <span class="n">layout</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_transform_gate_for_system</span><span class="p">(</span><span class="n">gate</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return op implementing a virtual gate on given layout.&quot;&quot;&quot;</span>
-    <span class="n">mapped_op_node</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">([</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">gate</span><span class="p">[</span><span class="s2">&quot;graph&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">DAGOpNode</span><span class="p">)][</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">mapped_op_node</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">_first_op_node</span><span class="p">(</span><span class="n">gate</span><span class="p">[</span><span class="s2">&quot;graph&quot;</span><span class="p">]))</span>
 
-    <span class="n">device_qreg</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">get_physical_bits</span><span class="p">()),</span> <span class="s2">&quot;q&quot;</span><span class="p">)</span>
-    <span class="n">mapped_qargs</span> <span class="o">=</span> <span class="p">[</span><span class="n">device_qreg</span><span class="p">[</span><span class="n">layout</span><span class="p">[</span><span class="n">a</span><span class="p">]]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">mapped_op_node</span><span class="o">.</span><span class="n">qargs</span><span class="p">]</span>
-    <span class="n">mapped_op_node</span><span class="o">.</span><span class="n">qargs</span> <span class="o">=</span> <span class="n">mapped_qargs</span>
+    <span class="n">device_qreg</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">register</span>
+    <span class="n">layout_map</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">_v2p</span>
+    <span class="n">mapped_op_node</span><span class="o">.</span><span class="n">qargs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">device_qreg</span><span class="p">[</span><span class="n">layout_map</span><span class="p">[</span><span class="n">a</span><span class="p">]]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">mapped_op_node</span><span class="o">.</span><span class="n">qargs</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">mapped_op_node</span>
 
 
-<span class="k">def</span> <span class="nf">_swap_ops_from_edge</span><span class="p">(</span><span class="n">edge</span><span class="p">,</span> <span class="n">layout</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_swap_ops_from_edge</span><span class="p">(</span><span class="n">edge</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generate list of ops to implement a SWAP gate along a coupling edge.&quot;&quot;&quot;</span>
-    <span class="n">device_qreg</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">get_physical_bits</span><span class="p">()),</span> <span class="s2">&quot;q&quot;</span><span class="p">)</span>
-    <span class="n">qreg_edge</span> <span class="o">=</span> <span class="p">[</span><span class="n">device_qreg</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">edge</span><span class="p">]</span>
+    <span class="n">device_qreg</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">register</span>
+    <span class="n">qreg_edge</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">device_qreg</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">edge</span><span class="p">)</span>
 
     <span class="c1"># TODO shouldn&#39;t be making other nodes not by the DAG!!</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">DAGOpNode</span><span class="p">(</span><span class="n">op</span><span class="o">=</span><span class="n">SwapGate</span><span class="p">(),</span> <span class="n">qargs</span><span class="o">=</span><span class="n">qreg_edge</span><span class="p">,</span> <span class="n">cargs</span><span class="o">=</span><span class="p">[])]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">DAGOpNode</span><span class="p">(</span><span class="n">op</span><span class="o">=</span><span class="n">SwapGate</span><span class="p">(),</span> <span class="n">qargs</span><span class="o">=</span><span class="n">qreg_edge</span><span class="p">,</span> <span class="n">cargs</span><span class="o">=</span><span class="p">())]</span>
+
+
+<span class="k">def</span> <span class="nf">_first_op_node</span><span class="p">(</span><span class="n">dag</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get the first op node from a DAG.&quot;&quot;&quot;</span>
+    <span class="c1"># This doesn&#39;t use `DAGCircuit.op_nodes` because that function always consumes the entire</span>
+    <span class="c1"># iterator to create a list, whereas we only need the first element.</span>
+    <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">DAGOpNode</span><span class="p">))</span>
 </pre></div>
 
              </article>
@@ -704,7 +726,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2021, Qiskit Development Team.
-      Last updated on 2022/06/21.
+      Last updated on 2022/07/01.
 
     </p>
   </div>
@@ -741,6 +763,7 @@
          <script src="../../../../../_static/thebelab-helper.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
+         <script src="../../../../../_static/design-tabs.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
      
 

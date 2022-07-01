@@ -5,7 +5,7 @@
 
 
 from qiskit import pulse
-from qiskit.test.mock import FakeOpenPulse3Q
+from qiskit.providers.fake_provider import FakeOpenPulse3Q
 
 backend = FakeOpenPulse3Q()
 
