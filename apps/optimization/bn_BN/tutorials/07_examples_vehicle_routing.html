@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>বাহন(ভেহিকেল) রাউটিং &mdash; Qiskit Optimization 0.3.2 documentation</title>
+  <title>বাহন(ভেহিকেল) রাউটিং &mdash; Qiskit Optimization 0.4.0 documentation</title>
   
 
   
@@ -32,9 +32,7 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
@@ -180,7 +178,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.0
                 </div>
               
             
@@ -545,12 +543,12 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">নোট</p>
-<p>এই পৃষ্ঠাটি <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/07_examples_vehicle_routing.ipynb">docs/tutorials/07_examples_vehicle_routing.ipynb</a> থেকে বানানো হয়েছে।</p>
+<p>এই পৃষ্ঠাটি <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.4/docs/tutorials/07_examples_vehicle_routing.ipynb">docs/tutorials/07_examples_vehicle_routing.ipynb</a> থেকে বানানো হয়েছে।</p>
 </div>
 <section id="বাহন(ভেহিকেল)-রাউটিং">
-<h1>বাহন(ভেহিকেল) রাউটিং<a class="headerlink" href="#বাহন(ভেহিকেল)-রাউটিং" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h1>
+<h1>বাহন(ভেহিকেল) রাউটিং<a class="headerlink" href="#বাহন(ভেহিকেল)-রাউটিং" title="Permalink to this heading">¶</a></h1>
 <section id="ভূমিকা">
-<h2>ভূমিকা<a class="headerlink" href="#ভূমিকা" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
+<h2>ভূমিকা<a class="headerlink" href="#ভূমিকা" title="Permalink to this heading">¶</a></h2>
 <p>সরবরাহ শিল্প একটি বড় শিল্প,২০১৫ সালে যার অনুমাকি বাজার মূল্য ছিল ৮১৮৩ মার্কিন ডলার।প্রায় সমস্ত সেবা প্রদানকারী অনেক গুলি বাহন(যেমন মাল বোঝাই গাড়ি ও জাহাজ),অনেক গুলি ডিপো ব্যাবহার করেন যেখানে বাহন গুলি এক রাতের জন্যে এবং অনেকগুলি খরিদ্দারকে বিভিন্ন জায়গায় সামগ্রী সরবরাহ করে থাকে প্রতিটি বাহন দ্বারা প্রতিদিন। এই স্থিতিমাপ গুলিকে অনেক অপটিমাইজেশন এবং নিয়ন্ত্রণ সমস্যা(কন্ট্রোল প্রবলেম) দ্বারা গণ্য করা হয়। গাণিতিক ভাবে মূল সমস্যা হলো এই রুট বা যাত্রাপথ গুলিকে এমন ভাবে নকশা বা ডিজাইন করা যাতে কম যাত্রা পথ অতিক্রান্ত করে ,কম সময়ে বা অনুরূপ নৈর্ব্যক্তিক অন্বয় (অব্জেক্টিভ ফাংশন) কাজটি করা যায়।এই নোটবুকের মধ্যে আমরা এই সমস্যার একটি আদর্শ সংস্করণ বিধিবদ্ধ করব এবং তার সমাধান দেখাব ফারহি ,গোল্ডস্টেইন এবং গুটম্যানের (২০১৪) কোয়ান্টাম আনুমানিক অপটিমাইজেশন প্রন্থা দ্বারা।</p>
 <p>সামগ্রিকভাবে আমাদের প্রদর্শিত কর্মধারা গঠিত হয়:</p>
 <ol class="arabic simple">
@@ -562,7 +560,7 @@ div.rendered_html tbody tr:hover {
 <p>এটিতে আমরা প্রথমে নকশাটিকে বর্ণনা করবো, পূর্ব প্রয়োজনীয় (প্রী রিকুইসিট) অধিষ্ঠানকরণ(ইনস্টলেশন) এবং তথ্য বোঝাই বা লোডিং করার আগে।</p>
 </section>
 <section id="নকশা">
-<h2>নকশা<a class="headerlink" href="#নকশা" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
+<h2>নকশা<a class="headerlink" href="#নকশা" title="Permalink to this heading">¶</a></h2>
 <p>গাণিতিক ভাবে বললে,ভেহিকেল বা বাহন রাউটিং সমস্যা (ভি.পি.আর.)হলো একটি সমাবেশ সমস্যা,দিয়ে রাখা কিছু সংখ্যক বাহনের জন্যে সবচেয়ে ভালো রাস্তা বা রুট জানতে চাওয়া হয় ডিপো বা গুদামঘর থেকে খরিদ্দার পর্যন্ত।এখানে অনেক গুলি সূত্র সম্ভব,ট্র্যাভেলিইং সেলসম্যান সমস্যার[Applegate et al, 2006] বেশ কয়েকটি সূত্র প্রসারিত করে।আমরা এখানে একটি সূত্র পেশ করছি যাকে বলা হয় এম.টি.জেড [Miller, Tucker, Zemlin, 1960]।</p>
 <p>ধরা জাক <span class="math notranslate nohighlight">\(n\)</span> খরিদ্দারের সংখ্যা(সূচিত হয় <span class="math notranslate nohighlight">\(1,\dots,n\)</span> দ্বারা),এবং  <span class="math notranslate nohighlight">\(K\)</span> হলো বাহন বা গাড়ির সংখ্যা। ধরা জাক  <span class="math notranslate nohighlight">\(x_{ij} = \{0,1\}\)</span> হলোদ্বিমিক (বাইনারি) সিদ্ধান্ত বা ডিসিসন চল রাশি যেটি যদি  <span class="math notranslate nohighlight">\(1\)</span> থাকে তবে সেটি বিভাগটিকে সক্রিয় করে <span class="math notranslate nohighlight">\(i\)</span> নোড থেকে <span class="math notranslate nohighlight">\(j\)</span> নোডে। নোড সূচক চলে <span class="math notranslate nohighlight">\(0\)</span> থেকে <span class="math notranslate nohighlight">\(n\)</span> পর্যন্ত,যেখানে <span class="math notranslate nohighlight">\(0\)</span> হলো ডিপোটি বা গুদামঘরটি (প্রচলিত ভাবে)।প্রান্ত হিসাবে দ্বিগুণ স্বতন্ত্র সিদ্ধান্তের চলরশি রয়েছে। উদাহরণ স্বরূপ একটি পূর্ণ সংযুক্ত গ্রাফে <span class="math notranslate nohighlight">\(n(n+1)\)</span> গুলি দ্বিমিক (বাইনারি) সিদ্ধান্ত চলরাশি রয়েছে।</p>
 <p>যদি দুটি নোড <span class="math notranslate nohighlight">\(i\)</span> এবং math:<cite>j</cite> মধ্যে যোগ থাকে <span class="math notranslate nohighlight">\(i\)</span> থেকে <span class="math notranslate nohighlight">\(j\)</span> তে,তখন আমরা লিখবো <span class="math notranslate nohighlight">\(i \sim j\)</span>। এছাড়াও আমরা সেই নোডের সেট টিকে চিহ্নিত করি <span class="math notranslate nohighlight">\(\delta(i)^+\)</span> দ্বারা যার সাথে <span class="math notranslate nohighlight">\(i\)</span> একটি যোগাযোগ আছে,যেমন  <span class="math notranslate nohighlight">\(j \in \delta(i)^+\)</span> শুধুমাত্র তখন যখন  <span class="math notranslate nohighlight">\(i \sim j\)</span> । একইরকম ভাবে সেই নোডের সেটকে করি <span class="math notranslate nohighlight">\(\delta(i)^-\)</span> দ্বারা যেগুলি  <span class="math notranslate nohighlight">\(i\)</span> sathe সংযুক্ত,এই ভাবে যে  <span class="math notranslate nohighlight">\(j \in \delta(i)^-\)</span> শুধুমাত্র তখন যখন <span class="math notranslate nohighlight">\(j \sim i\)</span>।</p>
@@ -588,14 +586,14 @@ div.rendered_html tbody tr:hover {
 </ul>
 </section>
 <section id="প্রথাগত-(ক্লাসিক্যাল)-সমাধান">
-<h2>প্রথাগত (ক্লাসিক্যাল) সমাধান<a class="headerlink" href="#প্রথাগত-(ক্লাসিক্যাল)-সমাধান" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
+<h2>প্রথাগত (ক্লাসিক্যাল) সমাধান<a class="headerlink" href="#প্রথাগত-(ক্লাসিক্যাল)-সমাধান" title="Permalink to this heading">¶</a></h2>
 <p>আমরা সি.পি.এল.এক্স ব্যবহার করে ক্লাসিকালি বা প্রথাগত ভি.আর.পি সমাধান করতে পারি। ভি.আর.পি-র একটি আনুমানিক সমাধান খুঁজে পেতে সি.পি.এল.এক্স একটি শাখা-এবং-সীমাবদ্ধ এবং কাটা( ব্রাঞ্চ অ্যান্ড বউন্ড অ্যান্ড কাট) পদ্ধতি ব্যবহার করে, যা এই সূচনায়, একটি মিশ্র-পূর্ণসংখ্যার লিনিয়ার প্রোগ্রাম (এম.আই.এল.পি)।স্বরলিপিটির খাতিরে, আমরা সিদ্ধান্ত চল রশিগুলিকে গুচ্ছ করি একটিি ভেক্টরে যেমন</p>
 <div class="math notranslate nohighlight">
 \[{\bf z} = [x_{01},x_{02},\ldots,x_{10}, x_{12},\ldots,x_{n(n-1)}]^T,\]</div>
 <p>যার মধ্যে: <span class="math notranslate nohighlight">\({\bf z} \in \{0,1\}^N\)</span>, সাথে <span class="math notranslate nohighlight">\(N = n (n+1)\)</span>।সুতরাং সমস্যাটির মাত্রা নোডের সংখ্যার সাথে চতুর্ভুজ ভাবে স্কেল করে।আসুন আমরা সর্বোত্তম সমাধানটি  <span class="math notranslate nohighlight">\({\bf z}^*\)</span> এর দ্বারা চিহ্নিত করি, এবং সম্পর্কিত সর্বাপেক্ষা কাম্য ব্যয় <span class="math notranslate nohighlight">\(f^*\)</span>।</p>
 </section>
 <section id="কোয়ান্টাম-সমাধান">
-<h2>কোয়ান্টাম সমাধান<a class="headerlink" href="#কোয়ান্টাম-সমাধান" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
+<h2>কোয়ান্টাম সমাধান<a class="headerlink" href="#কোয়ান্টাম-সমাধান" title="Permalink to this heading">¶</a></h2>
 <p>এখানে, আমরা একটি পদ্ধতির প্রদর্শন করি যা ক্লাসিক্যাল এবং কোয়ান্টাম কম্পিউটিং পদক্ষেপের সংমিশ্রণ করে, ফারহী, গোল্ডস্টোন এবং গুটম্যান (২০১৪) এর কোয়ান্টাম আনুমানিক অপ্টিমাইজেশন পদ্ধতির অনুসরণ করে।বিশেষত, আমরা ভেরিয়েশনাল কোয়ান্টাম আইজেনসলভার (ভিকিউই) ব্যবহার করি।আমরা জোর দিয়েছি যে নিযুক্ত কোয়ান্টাম বর্তনী বা সার্কিটগুলির (ভেরিয়েশনাল ফর্ম)সীমিত গভীরতার ব্যবহারের কারণে,অ্যালগরিদমের গতি বাড়ানো নিয়ে আলোচনা করা শক্ত, কারণ প্রাপ্ত সমাধানটি প্রকৃতিতে হিউরিস্টিক বা তাত্ত্বিক । একই সময়ে, লক্ষ্য বা টার্গেট সমস্যার প্রকৃতি এবং গুরুত্বের কারণে, বৈজ্ঞানিক বা তাত্ত্বিক পদ্ধতির তদন্ত মূল্যবান, যা কিছু সমস্যা শ্রেণীর জন্য উপযুক্ত হতে পারে।</p>
 <p>[৫] অনুসরণ করে প্রাপ্ত ধারাক্রমটি (অ্যালোগরিদম) নিম্নরূপ:</p>
 <ul class="simple">
@@ -621,14 +619,14 @@ div.rendered_html tbody tr:hover {
 \[\big|\psi(\theta)\rangle = [U_\mathrm{single}(\boldsymbol\theta) U_\mathrm{entangler}]^m \big|+\rangle\]</div>
 <p>যেখানে:math:<cite>U_mathrm{entangler}`হ’ল সি-ফেজ(C-Phase) গেটস (সম্পূর্ণভাবে জড়িয়ে পড়ার গেটস) এবং:math:`U_mathrm{single}(theta) = prod_{i=1}^N Y(theta_{i})</cite>, যেখানে <span class="math notranslate nohighlight">\(N\)</span> হল কোয়ান্টাম বর্তনী (সার্কিট) গভীরতা।</p>
 <section id="আইসিং-হ্যামিল্টোনীয়ান-নির্মাণ-করুন">
-<h3>আইসিং হ্যামিল্টোনীয়ান নির্মাণ করুন<a class="headerlink" href="#আইসিং-হ্যামিল্টোনীয়ান-নির্মাণ-করুন" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
+<h3>আইসিং হ্যামিল্টোনীয়ান নির্মাণ করুন<a class="headerlink" href="#আইসিং-হ্যামিল্টোনীয়ান-নির্মাণ-করুন" title="Permalink to this heading">¶</a></h3>
 <p><span class="math notranslate nohighlight">\(VRP\)</span> দ্বিমিক (বাইনারি) পলিনমিয়াল বা বহুপদী অপটিমাইজেশন তৈরি করা যেতে পারে সাম্যতার সীমাবদ্ধতার সাথে শুধুমাত্র  <span class="math notranslate nohighlight">\(K=n-1\)</span> অবস্থাগুলি বিবেচনা করে।এই ক্ষেত্রে উপ - ভ্রমণ অপসারণের সীমাবদ্ধতাগুলি প্রয়োজনীয় নয় এবং সমস্যাটি কেবল চল রাশি  <span class="math notranslate nohighlight">\({\bf z}\)</span> উপর।বিশেষত, আমরা হিসাবে একটি বর্ধিত লাগরঙ্গিয়ান লিখতে পারি</p>
 <div class="math notranslate nohighlight">
 \[(IH) \quad H = \sum_{i \sim j} w_{ij} x_{ij}  + A \sum_{i \in \{1,\dots,n\}} \Big(\sum_{j \in \delta(i)^+} x_{ij} - 1\Big)^2 + A \sum_{i \in \{1,\dots,n\}}\Big(\sum_{j \in \delta(i)^-} x_{ji} - 1\Big)^2 +A \Big(\sum_{i \in \delta(0)^+} x_{0i} - K\Big)^2 + A\Big(\sum_{j \in \delta(0)^+} x_{j0} - K\Big)^2\]</div>
 <p>যেখানে <span class="math notranslate nohighlight">\(A\)</span>  একটি যথেষ্ট বড় পরামিতি।</p>
 </section>
 <section id="হ্যামিল্টোনিয়ান-থেকে-কিউ.পি-সূত্র">
-<h3>হ্যামিল্টোনিয়ান থেকে কিউ.পি সূত্র<a class="headerlink" href="#হ্যামিল্টোনিয়ান-থেকে-কিউ.পি-সূত্র" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
+<h3>হ্যামিল্টোনিয়ান থেকে কিউ.পি সূত্র<a class="headerlink" href="#হ্যামিল্টোনিয়ান-থেকে-কিউ.পি-সূত্র" title="Permalink to this heading">¶</a></h3>
 <p>ভেক্টরে <span class="math notranslate nohighlight">\({\bf z}\)</span> ক্ষেত্রে এবং একটি সম্পূর্ণ গ্রাফের জন্য (<span class="math notranslate nohighlight">\(\delta(i)^+ = \delta(i)^- = \{0,1,\dots,i-1,i+1,\dots,n\}\)</span>), <span class="math notranslate nohighlight">\(H\)</span> এই ভাবে লেখা যেতে পারে লেখা যেতে পারে।</p>
 <div class="math notranslate nohighlight">
 \[\min_{{\bf z}\in \{0,1\}^{n(n+1)}} {\bf w}^T {\bf z}  + A \sum_{i \in \{1,\dots,n\}} \Big({\bf e}_i \otimes {\bf 1}_n^T {\bf z} - 1\Big)^2 + A \sum_{i \in \{1,\dots,n\}}\Big({\bf v}_i^T {\bf z} - 1\Big)^2 + A \Big(({\bf e}_0 \otimes {\bf 1}_n)^T{\bf z} - K\Big)^2 + A\Big({\bf v}_0^T{\bf z} - K\Big)^2 ।\]</div>
@@ -648,20 +646,20 @@ div.rendered_html tbody tr:hover {
 </section>
 </section>
 <section id="তথ্যসূত্র">
-<h2>তথ্যসূত্র<a class="headerlink" href="#তথ্যসূত্র" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
+<h2>তথ্যসূত্র<a class="headerlink" href="#তথ্যসূত্র" title="Permalink to this heading">¶</a></h2>
 <p>[1] E. Farhi, J. Goldstone, S. Gutmann e-print arXiv 1411.4028, 2014</p>
 <p>[২] <a class="reference internal" href="06_examples_max_cut_and_tsp.html"><span class="doc">সর্বোচ্চ লাভ এবং ভ্রাম্যমান বিক্রেতার সমস্যা</span></a></p>
 <p>[3] C. E. Miller, E. W. Tucker, and R. A. Zemlin (1960). “Integer Programming Formulations and Travelling Salesman Problems”. J. ACM. 7: 326–329. doi:10.1145/321043.321046.</p>
 <p>[4] D. L. Applegate, R. M. Bixby, V. Chvátal, and W. J. Cook (2006). The Traveling Salesman Problem. Princeton University Press, ISBN 978-0-691-12993-8.</p>
 </section>
 <section id="আরম্ভ">
-<h2>আরম্ভ<a class="headerlink" href="#আরম্ভ" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
+<h2>আরম্ভ<a class="headerlink" href="#আরম্ভ" title="Permalink to this heading">¶</a></h2>
 <p>সবার আগে আমরা আমাদের প্রয়োজনীয় সমস্ত প্যাকেজ লোড করি: - পাইথন3.6 বা ততোধিক প্রয়োজন; - CPLEX 12.8  বা তারও উন্নত প্রয়োজন প্রথাগত (ক্লাসিক্যাল) গননা বা কম্পিউটেশেনর জন্য প্রয়োজনীয়;  - কোয়ান্টাম গণনার জন্য সর্বশেষতম Qiskit প্রয়োজন।</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the packages that are required</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the packages that are required</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">operator</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
@@ -688,20 +686,12 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Warning: Cplex not found.
-</pre></div></div>
-</div>
 <p>তারপরে আমরা চল রাশি গুলি আরম্ভ করব</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize the problem by defining the parameters</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize the problem by defining the parameters</span>
 <span class="n">n</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># number of nodes + depot (n+1)</span>
 <span class="n">K</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># number of vehicles</span>
 </pre></div>
@@ -712,7 +702,7 @@ Warning: Cplex not found.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the data</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the data</span>
 <span class="k">class</span> <span class="nc">Initializer</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
@@ -741,7 +731,7 @@ Warning: Cplex not found.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize the problem by randomly generating the instance</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize the problem by randomly generating the instance</span>
 <span class="n">initializer</span> <span class="o">=</span> <span class="n">Initializer</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
 <span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">instance</span> <span class="o">=</span> <span class="n">initializer</span><span class="o">.</span><span class="n">generate_instance</span><span class="p">()</span>
 </pre></div>
@@ -749,13 +739,13 @@ Warning: Cplex not found.
 </div>
 </section>
 <section id="প্রথাগত-(ক্লাসিক্যাল)-সমাধান-IBM-ILOG-CPLEX-ব্যাবহার-করে।">
-<h2>প্রথাগত (ক্লাসিক্যাল) সমাধান IBM ILOG CPLEX ব্যাবহার করে।<a class="headerlink" href="#প্রথাগত-(ক্লাসিক্যাল)-সমাধান-IBM-ILOG-CPLEX-ব্যাবহার-করে।" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
+<h2>প্রথাগত (ক্লাসিক্যাল) সমাধান IBM ILOG CPLEX ব্যাবহার করে।<a class="headerlink" href="#প্রথাগত-(ক্লাসিক্যাল)-সমাধান-IBM-ILOG-CPLEX-ব্যাবহার-করে।" title="Permalink to this heading">¶</a></h2>
 <p>একটি প্রথাগত (ক্লাসিক্যাল) সমাধানের জন্য, আমরা আই.বি.এম আই.এল.ও.জি  সি.পি.এল. ই.এক্স  IBM ILOG CPLEX ব্যবহার করি।  সি.পি.এল.ই.এক্স এই সমস্যার সঠিক সমাধান খুঁজে পেতে সক্ষম।  আমরা প্রথমে একটি প্রথাগত (ক্লাসিক্যাল) অপ্টিমাইজার শ্রেণি সংজ্ঞায়িত করি যা এমনভাবে সমস্যাটিকে এনকোড করে যাতে সিপিএলএক্স সমাধান করতে পারে এবং তারপরে ক্লাসটি তাত্ক্ষণিক এবং সেটি সমাধান করে।</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ClassicalOptimizer</span><span class="p">:</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ClassicalOptimizer</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">instance</span> <span class="o">=</span> <span class="n">instance</span>
@@ -854,7 +844,7 @@ Warning: Cplex not found.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate the classical optimizer class</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate the classical optimizer class</span>
 <span class="n">classical_optimizer</span> <span class="o">=</span> <span class="n">ClassicalOptimizer</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
 
 <span class="c1"># Print number of feasible solutions</span>
@@ -874,7 +864,7 @@ Number of feasible solutions = 3.0
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solve the problem in a classical fashion via CPLEX</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solve the problem in a classical fashion via CPLEX</span>
 <span class="n">x</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="n">z</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="k">try</span><span class="p">:</span>
@@ -893,14 +883,14 @@ Number of feasible solutions = 3.0
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPLEX may be missing.
+[1.0, 1.0, 1.0, 0.0, 1.0, 0.0]
 </pre></div></div>
 </div>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Visualize the solution</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Visualize the solution</span>
 <span class="k">def</span> <span class="nf">visualize_solution</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">title_str</span><span class="p">):</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
@@ -933,10 +923,17 @@ CPLEX may be missing.
 </pre></div>
 </div>
 </div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_07_examples_vehicle_routing_12_0.png" src="../_images/tutorials_07_examples_vehicle_routing_12_0.png" />
+</div>
+</div>
 <p>আপনার যদি সি.পি.এল.ই.এক্স থাকে তবে সমাধানটি তারাচিন্হ দিয়ে ডিপো এবং তীরচিন্হ সহ যানবাহনের জন্য নির্বাচিত রুটগুলি বা পথগুলি দেখায়।</p>
 </section>
 <section id="স্থল-থেকে-কোয়ান্টাম-সমাধান">
-<h2>স্থল থেকে কোয়ান্টাম সমাধান<a class="headerlink" href="#স্থল-থেকে-কোয়ান্টাম-সমাধান" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h2>
+<h2>স্থল থেকে কোয়ান্টাম সমাধান<a class="headerlink" href="#স্থল-থেকে-কোয়ান্টাম-সমাধান" title="Permalink to this heading">¶</a></h2>
 <p>কোয়ান্টাম সমাধানের জন্য, আমরা ব্যবহার করি Qiskit</p>
 <p>First, we derive the solution from the ground up, using a class QuantumOptimizer that encodes the quantum approach to solve the problem and then we instantiate it and solve it. We define the following methods inside the class:</p>
 <ul class="simple">
@@ -948,7 +945,7 @@ CPLEX may be missing.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit_optimization</span> <span class="kn">import</span> <span class="n">QuadraticProgram</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit_optimization</span> <span class="kn">import</span> <span class="n">QuadraticProgram</span>
 <span class="kn">from</span> <span class="nn">qiskit_optimization.algorithms</span> <span class="kn">import</span> <span class="n">MinimumEigenOptimizer</span>
 
 
@@ -1049,7 +1046,7 @@ CPLEX may be missing.
 </div>
 </div>
 <section id="ধাপ-1">
-<h3>ধাপ 1<a class="headerlink" href="#ধাপ-1" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
+<h3>ধাপ 1<a class="headerlink" href="#ধাপ-1" title="Permalink to this heading">¶</a></h3>
 <p>Instantiate the quantum optimizer class with parameters:</p>
 <ul class="simple">
 <li><p>the instance;</p></li>
@@ -1059,21 +1056,21 @@ CPLEX may be missing.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate the quantum optimizer class with parameters:</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate the quantum optimizer class with parameters:</span>
 <span class="n">quantum_optimizer</span> <span class="o">=</span> <span class="n">QuantumOptimizer</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </section>
 <section id="ধাপ-2">
-<h3>ধাপ 2<a class="headerlink" href="#ধাপ-2" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
+<h3>ধাপ 2<a class="headerlink" href="#ধাপ-2" title="Permalink to this heading">¶</a></h3>
 <p>দ্বিমিক (বাইনারি) সুত্র বা  গঠনের (আইএইচ-কিউপি) হিসাবে সমস্যাটি এনকোড করুন।</p>
 <p>স্যানিটি বা সদ্বিবেচনা পরীক্ষা: নিশ্চিত করুন যে কোয়ান্টাম অপ্টিমাইজারে দ্বিমিক (বাইনারি) সূত্র বা গঠন সঠিক কিনা (যেমন, একই সমাধানের জন্যে একই ব্যয় হয়)।</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check if the binary representation is correct</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check if the binary representation is correct</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">Q</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">binary_cost</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">binary_representation</span><span class="p">(</span><span class="n">x_sol</span><span class="o">=</span><span class="n">z</span><span class="p">)</span>
@@ -1097,31 +1094,31 @@ CPLEX may be missing.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Could not verify the correctness, due to CPLEX solution being unavailable.
-Binary cost: 0
+Binary cost: 132.11148115684045 classical cost: 132.1114811568365
+Binary formulation is correct
 </pre></div></div>
 </div>
 </section>
 <section id="ধাপ-3">
-<h3>ধাপ 3<a class="headerlink" href="#ধাপ-3" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
+<h3>ধাপ 3<a class="headerlink" href="#ধাপ-3" title="Permalink to this heading">¶</a></h3>
 <p>সমস্যাটি <code class="docutils literal notranslate"><span class="pre">Quadratic</span> <span class="pre">Program</span></code> দৃষ্টান্ত (ইনস্ট্যান্স) হিসাবে এনকোড করুন</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">qp</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">construct_problem</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qp</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">construct_problem</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </section>
 <section id="ধাপ-4">
-<h3>ধাপ 4<a class="headerlink" href="#ধাপ-4" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
+<h3>ধাপ 4<a class="headerlink" href="#ধাপ-4" title="Permalink to this heading">¶</a></h3>
 <p>অপ্টিমাইজেশন স্ট্যাক থেকে <a href="#id1"><span class="problematic" id="id2">``</span></a>MinimumEigenOptimizer``এর মাধ্যমে সমস্যার সমাধান করুন।কুইবিটের সংখ্যার উপর নির্ভর করে, অবস্থা-ভেক্টর সিমুলেশনটি কিছুটা সময় নিতে পারে;  উদাহরণস্বরূপ, 12 কুইটসের সাথে এটি 12 ঘন্টােরও বেশি সময় নেয়।  প্রোগ্রামটি কী করছে তা দেখতে লগিং দরকারী।</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">quantum_solution</span><span class="p">,</span> <span class="n">quantum_cost</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">solve_problem</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">quantum_solution</span><span class="p">,</span> <span class="n">quantum_cost</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">solve_problem</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">quantum_solution</span><span class="p">,</span> <span class="n">quantum_cost</span><span class="p">)</span>
 </pre></div>
@@ -1137,13 +1134,13 @@ Binary cost: 0
 </div>
 </section>
 <section id="ধাপ-5">
-<h3>ধাপ 5<a class="headerlink" href="#ধাপ-5" title="এই শিরোনামের পার্মালিঙ্ক">¶</a></h3>
+<h3>ধাপ 5<a class="headerlink" href="#ধাপ-5" title="Permalink to this heading">¶</a></h3>
 <p>সমাধানটি দৃশ্যায়িত করা</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Put the solution in a way that is compatible with the classical variables</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Put the solution in a way that is compatible with the classical variables</span>
 <span class="n">x_quantum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">kk</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">):</span>
@@ -1161,11 +1158,18 @@ Binary cost: 0
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <img alt="../_images/tutorials_07_examples_vehicle_routing_25_0.png" src="../_images/tutorials_07_examples_vehicle_routing_25_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_07_examples_vehicle_routing_25_1.png" src="../_images/tutorials_07_examples_vehicle_routing_25_1.png" />
 </div>
 </div>
 <p>প্লটগুলি একটি তারা চিন্হ  দিয়ে ডিপো এবং তীরচিন্হ গুলি সহকরে যানবাহনের জন্য নির্বাচিত রুটের উপস্থাপন করে। মনে রাখা দরকার যে এই বিশেষ ক্ষেত্রে, আমরা কিউ.পি গঠনের সর্বোত্তম সমাধানটি খুঁজে পেতে পারি, যা আই.এল.পি. র অনুকূল সমাধানের সাথে মিলে যায়।</p>
@@ -1174,10 +1178,10 @@ Binary cost: 0
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
 
-<span class="o">%</span><span class="k">qiskit_version_table</span>
-<span class="o">%</span><span class="k">qiskit_copyright</span>
+<span class="o">%</span><span class="n">qiskit_version_table</span>
+<span class="o">%</span><span class="n">qiskit_copyright</span>
 </pre></div>
 </div>
 </div>
@@ -1185,20 +1189,19 @@ Binary cost: 0
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td>Qiskit</td><td>None</td></tr><tr><td>Terra</td><td>0.17.0.dev0+3c103ae</td></tr><tr><td>Aer</td><td>0.8.0</td></tr><tr><td>Ignis</td><td>0.6.0.dev0+6103f99</td></tr><tr><td>Aqua</td><td>0.9.0.dev0+0058183</td></tr><tr><td>IBM Q Provider</td><td>0.12.0.dev0+8f3168b</td></tr><tr><th>System information</th></tr><tr><td>Python</td><td>3.7.9 (default, Aug 31 2020, 07:22:35)
-[Clang 10.0.0 ]</td></tr><tr><td>OS</td><td>Darwin</td></tr><tr><td>CPUs</td><td>2</td></tr><tr><td>Memory (Gb)</td><td>12.0</td></tr><tr><td colspan='2'>Fri Mar 05 12:50:09 2021 EST</td></tr></table></div>
+<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td><code>qiskit-terra</code></td><td>0.21.0.dev0+dbd3961</td></tr><tr><td><code>qiskit-aer</code></td><td>0.10.4</td></tr><tr><td><code>qiskit-ibmq-provider</code></td><td>0.19.1</td></tr><tr><td><code>qiskit-optimization</code></td><td>0.4.0</td></tr><tr><th>System information</th></tr><tr><td>Python version</td><td>3.10.4</td></tr><tr><td>Python compiler</td><td>GCC 11.2.0</td></tr><tr><td>Python build</td><td>main, Apr  2 2022 09:04:19</td></tr><tr><td>OS</td><td>Linux</td></tr><tr><td>CPUs</td><td>4</td></tr><tr><td>Memory (Gb)</td><td>14.577545166015625</td></tr><tr><td colspan='2'>Wed May 18 16:05:15 2022 JST</td></tr></table></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2021.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
+<div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2022.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span>
 </pre></div>
 </div>
 </div>
@@ -1286,8 +1289,10 @@ Binary cost: 0
          <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../_static/doctools.js"></script>
          <script src="../_static/thebelab-helper.js"></script>
+         <script src="../_static/design-tabs.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>

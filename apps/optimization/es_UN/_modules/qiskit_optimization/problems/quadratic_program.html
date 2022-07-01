@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_optimization.problems.quadratic_program &mdash; documentación de Qiskit Optimization - 0.3.2</title>
+  <title>qiskit_optimization.problems.quadratic_program &mdash; documentación de Qiskit Optimization - 0.4.0</title>
   
 
   
@@ -31,9 +31,7 @@
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
@@ -177,7 +175,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.0
                 </div>
               
             
@@ -209,7 +207,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Primeros Pasos</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutoriales</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../apidocs/qiskit_optimization.html">Referencias de la API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidocs/qiskit_optimization.html">Referencia de la API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Notas de la Versión</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/Qiskit/qiskit-optimization">GitHub</a></li>
 </ul>
@@ -300,14 +298,15 @@
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">isclose</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">docplex.mp.model_reader</span> <span class="kn">import</span> <span class="n">ModelReader</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">ndarray</span>
+<span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">OperatorBase</span>
 <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">spmatrix</span>
 
-<span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">MissingOptionalLibraryError</span>
-<span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">OperatorBase</span><span class="p">,</span> <span class="n">PauliSumOp</span>
+<span class="kn">import</span> <span class="nn">qiskit_optimization.optionals</span> <span class="k">as</span> <span class="nn">_optionals</span>
 
 <span class="kn">from</span> <span class="nn">..exceptions</span> <span class="kn">import</span> <span class="n">QiskitOptimizationError</span>
 <span class="kn">from</span> <span class="nn">..infinity</span> <span class="kn">import</span> <span class="n">INFINITY</span>
@@ -342,7 +341,10 @@
 <span class="sd">        Args:</span>
 <span class="sd">            name: The name of the quadratic program.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">isprintable</span><span class="p">():</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Problem name is not printable&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">QuadraticProgram</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">VALID</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Variable</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -357,7 +359,32 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_objective</span> <span class="o">=</span> <span class="n">QuadraticObjective</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">export_as_lp_string</span><span class="p">()</span>
+        <span class="kn">from</span> <span class="nn">..translators.prettyprint</span> <span class="kn">import</span> <span class="n">expr2str</span><span class="p">,</span> <span class="n">DEFAULT_TRUNCATE</span>
+
+        <span class="n">objective</span> <span class="o">=</span> <span class="n">expr2str</span><span class="p">(</span>
+            <span class="n">constant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_objective</span><span class="o">.</span><span class="n">constant</span><span class="p">,</span>
+            <span class="n">linear</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">linear</span><span class="p">,</span>
+            <span class="n">quadratic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_objective</span><span class="o">.</span><span class="n">quadratic</span><span class="p">,</span>
+            <span class="n">truncate</span><span class="o">=</span><span class="n">DEFAULT_TRUNCATE</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">num_constraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_linear_constraints</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_quadratic_constraints</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">sense</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">objective</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_num_vars</span><span class="p">()</span><span class="si">}</span><span class="s2"> variables, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">num_constraints</span><span class="si">}</span><span class="s2"> constraints, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">}</span><span class="s2">&#39;&gt;&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">num_constraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_linear_constraints</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_quadratic_constraints</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objective</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_num_vars</span><span class="p">()</span><span class="si">}</span><span class="s2"> variables, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">num_constraints</span><span class="si">}</span><span class="s2"> constraints, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">}</span><span class="s2">&#39;)&quot;</span>
+        <span class="p">)</span>
 
 <div class="viewcode-block" id="QuadraticProgram.clear"><a class="viewcode-back" href="../../../stubs/qiskit_optimization.QuadraticProgram.clear.html#qiskit_optimization.QuadraticProgram.clear">[documentos]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Clears the quadratic program, i.e., deletes all variables, constraints, the</span>
@@ -393,6 +420,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            name: The name of the quadratic program.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;Problem&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
 
     <span class="nd">@property</span>
@@ -430,7 +458,7 @@
         <span class="n">vartype</span><span class="p">:</span> <span class="n">VarType</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Variable</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;x&quot;</span>
             <span class="n">key_format</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span>
         <span class="k">else</span><span class="p">:</span>
@@ -448,7 +476,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Variable</span><span class="p">]]:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">keys</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot create non-positive number of variables: </span><span class="si">{</span><span class="n">keys</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;x&quot;</span>
         <span class="k">if</span> <span class="s2">&quot;{{}}&quot;</span> <span class="ow">in</span> <span class="n">key_format</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span>
@@ -483,6 +511,7 @@
                 <span class="n">indexed_name</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">_find_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">key_format</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">indexed_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variables_index</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Variable name already exists: </span><span class="si">{</span><span class="n">indexed_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_name</span><span class="p">(</span><span class="n">indexed_name</span><span class="p">,</span> <span class="s2">&quot;Variable&quot;</span><span class="p">)</span>
             <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">indexed_name</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_variables_index</span><span class="p">[</span><span class="n">indexed_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_vars</span><span class="p">()</span>
             <span class="n">variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indexed_name</span><span class="p">,</span> <span class="n">lowerbound</span><span class="p">,</span> <span class="n">upperbound</span><span class="p">,</span> <span class="n">vartype</span><span class="p">)</span>
@@ -574,6 +603,7 @@
 <span class="sd">            lowerbound: The lowerbound of the variable.</span>
 <span class="sd">            upperbound: The upperbound of the variable.</span>
 <span class="sd">            name: The name of the variable.</span>
+<span class="sd">                If it&#39;s ``None`` or empty ``&quot;&quot;``, the default name, e.g., ``x0``, is used.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The added variable.</span>
@@ -598,6 +628,7 @@
 <span class="sd">            lowerbound: The lower bound of the variable(s).</span>
 <span class="sd">            upperbound: The upper bound of the variable(s).</span>
 <span class="sd">            name: The name(s) of the variable(s).</span>
+<span class="sd">                If it&#39;s ``None`` or empty ``&quot;&quot;``, the default name, e.g., ``x0``, is used.</span>
 <span class="sd">            key_format: The format used to name/index the variable(s).</span>
 <span class="sd">            keys: If keys: int, it is interpreted as the number of variables to construct.</span>
 <span class="sd">                  Otherwise, the elements of the sequence are converted to strings via &#39;str&#39; and</span>
@@ -631,6 +662,7 @@
 <span class="sd">            lowerbound: The lower bound of the variable(s).</span>
 <span class="sd">            upperbound: The upper bound of the variable(s).</span>
 <span class="sd">            name: The name(s) of the variable(s).</span>
+<span class="sd">                If it&#39;s ``None`` or empty ``&quot;&quot;``, the default name, e.g., ``x0``, is used.</span>
 <span class="sd">            key_format: The format used to name/index the variable(s).</span>
 <span class="sd">            keys: If keys: int, it is interpreted as the number of variables to construct.</span>
 <span class="sd">                  Otherwise, the elements of the sequence are converted to strings via &#39;str&#39; and</span>
@@ -654,6 +686,7 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            name: The name of the variable.</span>
+<span class="sd">                If it&#39;s ``None`` or empty ``&quot;&quot;``, the default name, e.g., ``x0``, is used.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The added variable.</span>
@@ -674,6 +707,7 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            name: The name(s) of the variable(s).</span>
+<span class="sd">                If it&#39;s ``None`` or empty ``&quot;&quot;``, the default name, e.g., ``x0``, is used.</span>
 <span class="sd">            key_format: The format used to name/index the variable(s).</span>
 <span class="sd">            keys: If keys: int, it is interpreted as the number of variables to construct.</span>
 <span class="sd">                  Otherwise, the elements of the sequence are converted to strings via &#39;str&#39; and</span>
@@ -701,6 +735,7 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            name: The name(s) of the variable(s).</span>
+<span class="sd">                If it&#39;s ``None`` or empty ``&quot;&quot;``, the default name, e.g., ``x0``, is used.</span>
 <span class="sd">            key_format: The format used to name/index the variable(s).</span>
 <span class="sd">            keys: If keys: int, it is interpreted as the number of variables to construct.</span>
 <span class="sd">                  Otherwise, the elements of the sequence are converted to strings via &#39;str&#39; and</span>
@@ -729,6 +764,7 @@
 <span class="sd">            lowerbound: The lowerbound of the variable.</span>
 <span class="sd">            upperbound: The upperbound of the variable.</span>
 <span class="sd">            name: The name of the variable.</span>
+<span class="sd">                If it&#39;s ``None`` or empty ``&quot;&quot;``, the default name, e.g., ``x0``, is used.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The added variable.</span>
@@ -753,6 +789,7 @@
 <span class="sd">            lowerbound: The lower bound of the variable(s).</span>
 <span class="sd">            upperbound: The upper bound of the variable(s).</span>
 <span class="sd">            name: The name(s) of the variable(s).</span>
+<span class="sd">                If it&#39;s ``None`` or empty ``&quot;&quot;``, the default name, e.g., ``x0``, is used.</span>
 <span class="sd">            key_format: The format used to name/index the variable(s).</span>
 <span class="sd">            keys: If keys: int, it is interpreted as the number of variables to construct.</span>
 <span class="sd">                  Otherwise, the elements of the sequence are converted to strings via &#39;str&#39; and</span>
@@ -784,6 +821,7 @@
 <span class="sd">            lowerbound: The lower bound of the variable(s).</span>
 <span class="sd">            upperbound: The upper bound of the variable(s).</span>
 <span class="sd">            name: The name(s) of the variable(s).</span>
+<span class="sd">                If it&#39;s ``None`` or empty ``&quot;&quot;``, the default name, e.g., ``x0``, is used.</span>
 <span class="sd">            key_format: The format used to name/index the variable(s).</span>
 <span class="sd">            keys: If keys: int, it is interpreted as the number of variables to construct.</span>
 <span class="sd">                  Otherwise, the elements of the sequence are converted to strings via &#39;str&#39; and</span>
@@ -890,6 +928,7 @@
 
 <span class="sd">            rhs: The right-hand side of the constraint.</span>
 <span class="sd">            name: The name of the constraint.</span>
+<span class="sd">                If it&#39;s ``None`` or empty ``&quot;&quot;``, the default name, e.g., ``c0``, is used.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The added constraint.</span>
@@ -901,6 +940,7 @@
         <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_constraints_index</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Linear constraint&#39;s name already exists: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;Linear constraint&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_linear_constraints</span><span class="p">()</span>
             <span class="k">while</span> <span class="sa">f</span><span class="s2">&quot;c</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_constraints_index</span><span class="p">:</span>
@@ -984,6 +1024,7 @@
 
 <span class="sd">            rhs: The right-hand side of the constraint.</span>
 <span class="sd">            name: The name of the constraint.</span>
+<span class="sd">                If it&#39;s ``None`` or empty ``&quot;&quot;``, the default name, e.g., ``q0``, is used.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The added constraint.</span>
@@ -994,6 +1035,7 @@
         <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">quadratic_constraints_index</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">QiskitOptimizationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Quadratic constraint name already exists: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;Quadratic constraint&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_quadratic_constraints</span><span class="p">()</span>
             <span class="k">while</span> <span class="sa">f</span><span class="s2">&quot;q</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">quadratic_constraints_index</span><span class="p">:</span>
@@ -1160,7 +1202,8 @@
 
         <span class="k">return</span> <span class="n">to_docplex_mp</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">export_as_lp_string</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="QuadraticProgram.read_from_lp_file"><a class="viewcode-back" href="../../../stubs/qiskit_optimization.QuadraticProgram.read_from_lp_file.html#qiskit_optimization.QuadraticProgram.read_from_lp_file">[documentos]</a>    <span class="k">def</span> <span class="nf">read_from_lp_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="QuadraticProgram.read_from_lp_file"><a class="viewcode-back" href="../../../stubs/qiskit_optimization.QuadraticProgram.read_from_lp_file.html#qiskit_optimization.QuadraticProgram.read_from_lp_file">[documentos]</a>    <span class="nd">@_optionals</span><span class="o">.</span><span class="n">HAS_CPLEX</span><span class="o">.</span><span class="n">require_in_call</span>
+    <span class="k">def</span> <span class="nf">read_from_lp_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Loads the quadratic program from a LP file.</span>
 
 <span class="sd">        Args:</span>
@@ -1168,19 +1211,10 @@
 
 <span class="sd">        Raises:</span>
 <span class="sd">            FileNotFoundError: If the file does not exist.</span>
-<span class="sd">            MissingOptionalLibraryError: If CPLEX is not installed.</span>
 
 <span class="sd">        Note:</span>
 <span class="sd">            This method requires CPLEX to be installed and present in ``PYTHONPATH``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="kn">import</span> <span class="nn">cplex</span>  <span class="c1"># pylint: disable=unused-import</span>
-        <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-                <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;CPLEX&quot;</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;QuadraticProgram.read_from_lp_file&quot;</span><span class="p">,</span>
-                <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install &#39;qiskit-optimization[cplex]&#39;&quot;</span><span class="p">,</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span>
 
         <span class="k">def</span> <span class="nf">_parse_problem_name</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
             <span class="c1"># Because docplex model reader uses the base name as model name,</span>
@@ -1276,7 +1310,7 @@
 
 <div class="viewcode-block" id="QuadraticProgram.from_ising"><a class="viewcode-back" href="../../../stubs/qiskit_optimization.QuadraticProgram.from_ising.html#qiskit_optimization.QuadraticProgram.from_ising">[documentos]</a>    <span class="k">def</span> <span class="nf">from_ising</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">qubit_op</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">OperatorBase</span><span class="p">,</span> <span class="n">PauliSumOp</span><span class="p">],</span>
+        <span class="n">qubit_op</span><span class="p">:</span> <span class="n">OperatorBase</span><span class="p">,</span>
         <span class="n">offset</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">linear</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1362,7 +1396,32 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">feasible</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_feasibility_info</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">feasible</span></div></div>
+        <span class="k">return</span> <span class="n">feasible</span></div>
+
+<div class="viewcode-block" id="QuadraticProgram.prettyprint"><a class="viewcode-back" href="../../../stubs/qiskit_optimization.QuadraticProgram.prettyprint.html#qiskit_optimization.QuadraticProgram.prettyprint">[documentos]</a>    <span class="k">def</span> <span class="nf">prettyprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wrap</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">80</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns a pretty printed string of this problem.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            wrap: The text width to wrap the output strings. It is disabled by setting 0.</span>
+<span class="sd">                Note that some strings might exceed this value, for example, a long variable</span>
+<span class="sd">                name won&#39;t be wrapped. The default value is 80.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A pretty printed string representing the problem.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            QiskitOptimizationError: if there is a non-printable name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># pylint: disable=cyclic-import</span>
+        <span class="kn">from</span> <span class="nn">qiskit_optimization.translators.prettyprint</span> <span class="kn">import</span> <span class="n">prettyprint</span>
+
+        <span class="k">return</span> <span class="n">prettyprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wrap</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_name</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Displays a warning message if a name string is not printable&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">isprintable</span><span class="p">():</span>
+            <span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name_type</span><span class="si">}</span><span class="s2"> name is not printable: </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 </pre></div>
 
              </article>
@@ -1411,8 +1470,10 @@
          <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
          <script src="../../../_static/jquery.js"></script>
          <script src="../../../_static/underscore.js"></script>
+         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../_static/doctools.js"></script>
          <script src="../../../_static/thebelab-helper.js"></script>
+         <script src="../../../_static/design-tabs.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>

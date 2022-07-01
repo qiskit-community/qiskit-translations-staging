@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Grover Optimizer &mdash; документация Qiskit Optimization 0.3.2</title>
+  <title>Grover Optimizer &mdash; документация Qiskit Optimization 0.4.0</title>
   
 
   
@@ -32,9 +32,7 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
@@ -180,7 +178,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.0
                 </div>
               
             
@@ -545,22 +543,22 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">Примечание</p>
-<p>This page was generated from <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/04_grover_optimizer.ipynb">docs/tutorials/04_grover_optimizer.ipynb</a>.</p>
+<p>This page was generated from <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.4/docs/tutorials/04_grover_optimizer.ipynb">docs/tutorials/04_grover_optimizer.ipynb</a>.</p>
 </div>
 <section id="Grover-Optimizer">
-<h1>Grover Optimizer<a class="headerlink" href="#Grover-Optimizer" title="Ссылка на этот заголовок">¶</a></h1>
+<h1>Grover Optimizer<a class="headerlink" href="#Grover-Optimizer" title="Permalink to this heading">¶</a></h1>
 <section id="Introduction">
-<h2>Introduction<a class="headerlink" href="#Introduction" title="Ссылка на этот заголовок">¶</a></h2>
+<h2>Introduction<a class="headerlink" href="#Introduction" title="Permalink to this heading">¶</a></h2>
 <p>Grover Adaptive Search (GAS) has been explored as a possible solution for combinatorial optimization problems, alongside variational algorithms such as Variational Quantum Eigensolver (VQE) and Quantum Approximate Optimization Algorithm (QAOA). The algorithm iteratively applies Grover Search to find the optimum value of an objective function, by using the best-known value from the previous run as a threshold. The adaptive oracle used in GAS recognizes all values above or below the current
 threshold (for max and min respectively), decreasing the size of the search space every iteration the threshold is updated, until an optimum is found.</p>
 <p>In this notebook we will explore each component of the <code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code>, which utilizes the techniques described in GAS, by minimizing a Quadratic Unconstrained Binary Optimization (QUBO) problem, as described in [1]</p>
 <section id="References">
-<h3>References<a class="headerlink" href="#References" title="Ссылка на этот заголовок">¶</a></h3>
+<h3>References<a class="headerlink" href="#References" title="Permalink to this heading">¶</a></h3>
 <p>[1] <a class="reference external" href="https://arxiv.org/abs/1912.04088">A. Gilliam, S. Woerner, C. Gonciulea, Grover Adaptive Search for Constrained Polynomial Binary Optimization, arXiv preprint arXiv:1912.04088 (2019).</a></p>
 </section>
 </section>
 <section id="Grover-Adaptive-Search">
-<h2>Grover Adaptive Search<a class="headerlink" href="#Grover-Adaptive-Search" title="Ссылка на этот заголовок">¶</a></h2>
+<h2>Grover Adaptive Search<a class="headerlink" href="#Grover-Adaptive-Search" title="Permalink to this heading">¶</a></h2>
 <p>Grover Search, the core element of GAS, needs three ingredients:</p>
 <ol class="arabic simple">
 <li><p>A state preparation operator <span class="math notranslate nohighlight">\(A\)</span> to construct a superposition of all states in the search space.</p></li>
@@ -568,26 +566,26 @@ threshold (for max and min respectively), decreasing the size of the search spac
 <li><p>The Grover diffusion operator <span class="math notranslate nohighlight">\(D\)</span>, that multiplies the amplitude of the <span class="math notranslate nohighlight">\(|0\rangle_n\)</span> state by -1.</p></li>
 </ol>
 <p>While implementations of GAS vary around the specific use case, the general framework still loosely follows the steps described below.</p>
-<div><p><img alt="f7f96c5cf54143309480ca0edcb44ce4" class="no-scaled-link" src="../_images/GAS-Algorithm.png" style="width: 400px;" /></p>
+<div><p><img alt="5ed875d351324f70becbf362e928420d" class="no-scaled-link" src="../_images/GAS-Algorithm.png" style="width: 400px;" /></p>
 </div><p><code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code> uses <code class="docutils literal notranslate"><span class="pre">QuadraticProgramToNegativeValueOracle</span></code> to construct <span class="math notranslate nohighlight">\(A_y\)</span> such that it prepares a <span class="math notranslate nohighlight">\(n\)</span>-qubit register to represent the equal superposition of all <span class="math notranslate nohighlight">\(|x\rangle_n\)</span> and a <span class="math notranslate nohighlight">\(m\)</span>-qubit register to (approximately) represent the corresponding <span class="math notranslate nohighlight">\(|Q(x)-y\rangle_m\)</span>. Then, all states with <span class="math notranslate nohighlight">\((Q(x) - y)\)</span> negative should be flagged by <span class="math notranslate nohighlight">\(O_y\)</span>. Note that in the implementation discussed, the oracle operator is actually independent of <span class="math notranslate nohighlight">\(y\)</span>, but
 this is not a requirement. For clarity, we will refer to the oracle as <span class="math notranslate nohighlight">\(O\)</span> when the oracle is independent of <span class="math notranslate nohighlight">\(y\)</span>.</p>
 <p>Put formally, <code class="docutils literal notranslate"><span class="pre">QuadraticProgramToNegativeValueOracle</span></code> constructs an <span class="math notranslate nohighlight">\(A_y\)</span> and <span class="math notranslate nohighlight">\(O\)</span> such that:</p>
-<div><p><img alt="e6de477556324557bf6d074dc10394d6" class="no-scaled-link" src="../_images/a-o-dfn.png" style="width: 400px;" /></p>
+<div><p><img alt="08ac875e520e435bbacf6b3bbb8dfc6b" class="no-scaled-link" src="../_images/a-o-dfn.png" style="width: 400px;" /></p>
 </div><p>where <span class="math notranslate nohighlight">\(|x\rangle\)</span> is the binary encoding of the integer <span class="math notranslate nohighlight">\(x\)</span>.</p>
 <p>At each iteration in which the threshold <span class="math notranslate nohighlight">\(y\)</span> is updated, we adapt <span class="math notranslate nohighlight">\(A_y\)</span> such that the function values are shifted up or down (for minimum and maximum respectively) by <span class="math notranslate nohighlight">\(y\)</span>. For example, in the context of finding the minimum, as the value of <span class="math notranslate nohighlight">\(y\)</span> decreases, the search space (negative values) also decreases, until only the minimum value remains. A concrete example will be explored in the next section.</p>
 </section>
 <section id="Find-the-Minimum-of-a-QUBO-Problem-using-GroverOptimizer">
-<h2>Find the Minimum of a QUBO Problem using GroverOptimizer<a class="headerlink" href="#Find-the-Minimum-of-a-QUBO-Problem-using-GroverOptimizer" title="Ссылка на этот заголовок">¶</a></h2>
+<h2>Find the Minimum of a QUBO Problem using GroverOptimizer<a class="headerlink" href="#Find-the-Minimum-of-a-QUBO-Problem-using-GroverOptimizer" title="Permalink to this heading">¶</a></h2>
 <p>The following is a toy example of a minimization problem.</p>
 <p><span class="math">\begin{eqnarray}
-\min_{x \in \{0, 1\}^3} -2x_1x_3 - x_2x_3 - 1x_1 + 2x_2 - 3x_3.
+\min_{x \in \{0, 1\}^3} -2x_0x_2 - x_1x_2 - 1x_0 + 2x_1 - 3x_2.
 \end{eqnarray}</span></p>
 <p>For our initial steps, we create a docplex model that defines the problem above, and then use the <code class="docutils literal notranslate"><span class="pre">from_docplex_mp()</span></code> function to convert the model to a <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code>, which can be used to represent a QUBO in Qiskit Optimization.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit.algorithms</span> <span class="kn">import</span> <span class="n">NumPyMinimumEigensolver</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit.algorithms</span> <span class="kn">import</span> <span class="n">NumPyMinimumEigensolver</span>
 <span class="kn">from</span> <span class="nn">qiskit_optimization.algorithms</span> <span class="kn">import</span> <span class="n">GroverOptimizer</span><span class="p">,</span> <span class="n">MinimumEigenOptimizer</span>
 <span class="kn">from</span> <span class="nn">qiskit_optimization.problems</span> <span class="kn">import</span> <span class="n">QuadraticProgram</span>
 <span class="kn">from</span> <span class="nn">qiskit_optimization.translators</span> <span class="kn">import</span> <span class="n">from_docplex_mp</span>
@@ -602,13 +600,13 @@ this is not a requirement. For clarity, we will refer to the oracle as <span cla
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
 <span class="n">x0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;x0&quot;</span><span class="p">)</span>
 <span class="n">x1</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;x1&quot;</span><span class="p">)</span>
 <span class="n">x2</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;x2&quot;</span><span class="p">)</span>
 <span class="n">model</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="o">-</span><span class="n">x0</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x1</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">x2</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x0</span> <span class="o">*</span> <span class="n">x2</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">x1</span> <span class="o">*</span> <span class="n">x2</span><span class="p">)</span>
 <span class="n">qp</span> <span class="o">=</span> <span class="n">from_docplex_mp</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">qp</span><span class="o">.</span><span class="n">export_as_lp_string</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">qp</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -617,22 +615,16 @@ this is not a requirement. For clarity, we will refer to the oracle as <span cla
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-\ This file has been generated by DOcplex
-\ ENCODING=ISO-8859-1
-\Problem name: docplex_model1
+Problem name: docplex_model1
 
 Minimize
- obj: - x0 + 2 x1 - 3 x2 + [ - 4 x0*x2 - 2 x1*x2 ]/2
-Subject To
+  -2*x0*x2 - x1*x2 - x0 + 2*x1 - 3*x2
 
-Bounds
- 0 &lt;= x0 &lt;= 1
- 0 &lt;= x1 &lt;= 1
- 0 &lt;= x2 &lt;= 1
+Subject to
+  No constraints
 
-Binaries
- x0 x1 x2
-End
+  Binary variables (3)
+    x0 x1 x2
 
 </pre></div></div>
 </div>
@@ -641,10 +633,9 @@ End
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">grover_optimizer</span> <span class="o">=</span> <span class="n">GroverOptimizer</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">num_iterations</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">grover_optimizer</span> <span class="o">=</span> <span class="n">GroverOptimizer</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">num_iterations</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span>
 <span class="n">results</span> <span class="o">=</span> <span class="n">grover_optimizer</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;x=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">x</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;fval=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">fval</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -653,27 +644,27 @@ End
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-x=[1. 0. 1.]
-fval=-6.0
+objective function value: -6.0
+variable values: x0=1.0, x1=0.0, x2=1.0
+status: SUCCESS
 </pre></div></div>
 </div>
 <p>This results in the optimal solution <span class="math notranslate nohighlight">\(x_0=1\)</span>, <span class="math notranslate nohighlight">\(x_1=0\)</span>, <span class="math notranslate nohighlight">\(x_2=1\)</span> and the optimal objective value of <span class="math notranslate nohighlight">\(-6\)</span> (most of the time, since it is a randomized algorithm). In the following, a custom visualization of the quantum state shows a possible run of <code class="docutils literal notranslate"><span class="pre">GroverOptimizer</span></code> applied to this QUBO.</p>
-<div><p><img alt="eb5299ef46754760ae5a0b93aa2f197f" class="no-scaled-link" src="../_images/GAS-QUBO-Example.png" style="width: 800px;" /></p>
+<div><p><img alt="ff1d6d26f46b4bb2a64a06ffe48cb0e7" class="no-scaled-link" src="../_images/GAS-QUBO-Example.png" style="width: 800px;" /></p>
 </div><p>Each graph shows a single iteration of GAS, with the current values of <span class="math notranslate nohighlight">\(r\)</span> (= iteration counter) and <span class="math notranslate nohighlight">\(y\)</span> (= threshold/offset) shown in the title. The X-axis displays the integer equivalent of the input (e.g. ‘101’ <span class="math notranslate nohighlight">\(\rightarrow\)</span> 5), and the Y-axis shows the possible function values. As there are 3 binary variables, there are <span class="math notranslate nohighlight">\(2^3=8\)</span> possible solutions, which are shown in each graph. The color intensity indicates the probability of measuring a certain result (with bright
 intensity being the highest), while the actual color indicates the corresponding phase (see phase color-wheel below). Note that as <span class="math notranslate nohighlight">\(y\)</span> decreases, we shift all of the values up by that amount, meaning there are fewer and fewer negative values in the distribution, until only one remains (the minimum).</p>
-<div><p><img alt="2d110bd3c851408ea56357b615ea061e" class="no-scaled-link" src="../_images/color-wheel-phase.png" style="width: 200px;" /></p>
+<div><p><img alt="de56fa3b25ec419ba14c98794b8f1e91" class="no-scaled-link" src="../_images/color-wheel-phase.png" style="width: 200px;" /></p>
 </div></section>
 <section id="Check-that-GroverOptimizer-finds-the-correct-value">
-<h2>Check that GroverOptimizer finds the correct value<a class="headerlink" href="#Check-that-GroverOptimizer-finds-the-correct-value" title="Ссылка на этот заголовок">¶</a></h2>
+<h2>Check that GroverOptimizer finds the correct value<a class="headerlink" href="#Check-that-GroverOptimizer-finds-the-correct-value" title="Permalink to this heading">¶</a></h2>
 <p>We can verify that the algorithm is working correctly using the <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> in Qiskit.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">exact_solver</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">NumPyMinimumEigensolver</span><span class="p">())</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exact_solver</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">NumPyMinimumEigensolver</span><span class="p">())</span>
 <span class="n">exact_result</span> <span class="o">=</span> <span class="n">exact_solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;x=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exact_result</span><span class="o">.</span><span class="n">x</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;fval=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exact_result</span><span class="o">.</span><span class="n">fval</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">exact_result</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -682,18 +673,19 @@ intensity being the highest), while the actual color indicates the corresponding
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-x=[1. 0. 1.]
-fval=-6.0
+objective function value: -6.0
+variable values: x0=1.0, x1=0.0, x2=1.0
+status: SUCCESS
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
 
-<span class="o">%</span><span class="k">qiskit_version_table</span>
-<span class="o">%</span><span class="k">qiskit_copyright</span>
+<span class="o">%</span><span class="n">qiskit_version_table</span>
+<span class="o">%</span><span class="n">qiskit_copyright</span>
 </pre></div>
 </div>
 </div>
@@ -701,20 +693,19 @@ fval=-6.0
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td>Qiskit</td><td>None</td></tr><tr><td>Terra</td><td>0.17.0.dev0+3c103ae</td></tr><tr><td>Aer</td><td>0.8.0</td></tr><tr><td>Ignis</td><td>0.6.0.dev0+6103f99</td></tr><tr><td>Aqua</td><td>0.9.0.dev0+0058183</td></tr><tr><td>IBM Q Provider</td><td>0.12.0.dev0+8f3168b</td></tr><tr><th>System information</th></tr><tr><td>Python</td><td>3.7.9 (default, Aug 31 2020, 07:22:35)
-[Clang 10.0.0 ]</td></tr><tr><td>OS</td><td>Darwin</td></tr><tr><td>CPUs</td><td>2</td></tr><tr><td>Memory (Gb)</td><td>12.0</td></tr><tr><td colspan='2'>Fri Mar 05 12:30:02 2021 EST</td></tr></table></div>
+<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td><code>qiskit-terra</code></td><td>0.21.0.dev0+dbd3961</td></tr><tr><td><code>qiskit-aer</code></td><td>0.10.4</td></tr><tr><td><code>qiskit-ibmq-provider</code></td><td>0.19.1</td></tr><tr><td><code>qiskit-optimization</code></td><td>0.4.0</td></tr><tr><th>System information</th></tr><tr><td>Python version</td><td>3.10.4</td></tr><tr><td>Python compiler</td><td>GCC 11.2.0</td></tr><tr><td>Python build</td><td>main, Apr  2 2022 09:04:19</td></tr><tr><td>OS</td><td>Linux</td></tr><tr><td>CPUs</td><td>4</td></tr><tr><td>Memory (Gb)</td><td>14.577545166015625</td></tr><tr><td colspan='2'>Wed May 18 16:03:53 2022 JST</td></tr></table></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2021.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
+<div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2022.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span>
 </pre></div>
 </div>
 </div>
@@ -789,8 +780,11 @@ fval=-6.0
          <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../_static/doctools.js"></script>
          <script src="../_static/thebelab-helper.js"></script>
+         <script src="../_static/translations.js"></script>
+         <script src="../_static/design-tabs.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>

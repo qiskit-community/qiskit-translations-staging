@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>最大カット問題とセールスマン巡回問題 &mdash; Qiskit Optimization 0.3.2 ドキュメント</title>
+  <title>最大カット問題とセールスマン巡回問題 &mdash; Qiskit Optimization 0.4.0 ドキュメント</title>
   
 
   
@@ -32,9 +32,7 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
@@ -180,7 +178,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.0
                 </div>
               
             
@@ -545,12 +543,12 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">注釈</p>
-<p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/06_examples_max_cut_and_tsp.ipynb">docs/tutorials/06_examples_max_cut_and_tsp.ipynb</a> から生成されました。</p>
+<p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.4/docs/tutorials/06_examples_max_cut_and_tsp.ipynb">docs/tutorials/06_examples_max_cut_and_tsp.ipynb</a> から生成されました。</p>
 </div>
 <section id="最大カット問題とセールスマン巡回問題">
-<h1>最大カット問題とセールスマン巡回問題<a class="headerlink" href="#最大カット問題とセールスマン巡回問題" title="このヘッドラインへのパーマリンク">¶</a></h1>
+<h1>最大カット問題とセールスマン巡回問題<a class="headerlink" href="#最大カット問題とセールスマン巡回問題" title="Permalink to this heading">¶</a></h1>
 <section id="はじめに">
-<h2>はじめに<a class="headerlink" href="#はじめに" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<h2>はじめに<a class="headerlink" href="#はじめに" title="Permalink to this heading">¶</a></h2>
 <p>金融や工学などの定量的な分野における多くの問題は最適化問題です。最適化問題は、複雑な意思決定と戦略定義の中心にあります。</p>
 <p>最適化(または組合せ最適化) とは、有限あるいは加算無限の潜在的解決策集合から、最適な解決策を探索することを意味します。最適性は、最小化または最大化するいくつかの基準関数に対して定義されます。これは通常、コスト関数あるいは目的関数と呼ばれています。</p>
 <p><strong>典型的な最適化問題</strong></p>
@@ -558,7 +556,7 @@ div.rendered_html tbody tr:hover {
 <p>最大化: 利益、価値、生産高、リターン、利回り、有用性、効率、容量、オブジェクトの数</p>
 <p>ここでは、多くの分野で実用的関心のある最大カット問題を考えます。それらをどのようにすれば量子コンピューターに手動でマッピングできるか、あるいはQiskitの最適化モジュールがこれをどのようにサポートしているかを示します。</p>
 <section id="重み付き最大カット">
-<h3>重み付き最大カット<a class="headerlink" href="#重み付き最大カット" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>重み付き最大カット<a class="headerlink" href="#重み付き最大カット" title="Permalink to this heading">¶</a></h3>
 <p>最大カット問題はNP完全問題であり、クラスタリング、ネットワークサイエンス、統計物理学に応用されています。実用的なアプリケーションが特定の最大カット・インスタンスにどのようにマッピングされるかを把握するために、多くの人々が相互に作用し影響を及ぼしあうことのできるシステムを考えてみてください。個人はグラフの頂点によって表され、それらの相互作用はグラフの頂点またはエッジ間のペアワイズ接続として見られます。この表現を念頭に置くと、典型的なマーケティングの問題を簡単にモデル化できます。たとえば、個人がお互いの購買決定に影響を与えると想定し、それらがお互いにどれほど強い影響を与えるかについての知識が与えられているとします。影響は、グラフの各エッジに割り当てられた重みによってモデル化できます。次に、製品を一部の個人に無料で提供するマーケティング戦略の結果を予測し、収益を最大化するために、無料の製品を入手する必要がある個人の最適なサブセットを問うことができます。</p>
 <p>この問題の正式な定義は以下のとおりです。:</p>
 <p><span class="math notranslate nohighlight">\(n\)</span> ノードの無向グラフ <em>G = (V, E)</em> を考えます。ここで、 <em>|V| = n</em> 、 <span class="math notranslate nohighlight">\((i, j)\in E\)</span> におけるエッジの重みは <span class="math notranslate nohighlight">\(w_{ij}&gt;0\)</span> 、 <span class="math notranslate nohighlight">\(w_{ij}=w_{ji}\)</span> です。カットは、元のセットVを２つのサブセットにするパーティションとして定義されます。この場合、最適化されるコスト関数は、2つの異なるサブセットの点を接続しており、カットと <em>交差</em> しているエッジの重みの合計です。 <span class="math notranslate nohighlight">\(x_i=0\)</span> または <span class="math notranslate nohighlight">\(x_i=1\)</span> を各ノード <span class="math notranslate nohighlight">\(i\)</span> に割り当てることで、全体の利益関数を最大化しようとします (ここと次の合計では、インデックス 0,1,…n-1 に対して実行されます) 。</p>
@@ -576,7 +574,7 @@ div.rendered_html tbody tr:hover {
 <p>Qiskitの最適化モジュールは、最初の利益関数 <span class="math notranslate nohighlight">\(\tilde{C}\)</span> のイジング・ハミルトニアンを生成できます。 この点で、関数 <span class="math notranslate nohighlight">\(\tilde{C}\)</span> は、 <code class="docutils literal notranslate"><span class="pre">to_ising()</span></code> メソッドを提供する <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> としてモデル化できます。</p>
 </section>
 <section id="最適化問題のための近似ユニバーサル量子コンピューティング">
-<h3>最適化問題のための近似ユニバーサル量子コンピューティング<a class="headerlink" href="#最適化問題のための近似ユニバーサル量子コンピューティング" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>最適化問題のための近似ユニバーサル量子コンピューティング<a class="headerlink" href="#最適化問題のための近似ユニバーサル量子コンピューティング" title="Permalink to this heading">¶</a></h3>
 <p>量子コンピューターの使用については、組合せ最適化問題の解決策を見つけるため、近年かなりの関心が向けられています。組合せ問題の古典的な性質を考えると、最良の古典的アルゴリズムとの比較において、量子コンピューターを使用する指数関数的な加速は保証されないということが重要と言えます。しかしながら、対象とする問題の性質と重要性によっては、問題のインスタンスを高速化し得る量子コンピューターでのヒューリスティックなアプローチを調査することは価値をみいだせます。ここでは、Farhi、 Goldstone、および Gutmann (2014) による <em>Quantum Approximate Optimization Algorithm</em> (QAOA) に基づくアプローチを示します。ヒューリスティックな性質を前提として、アルゴリズムを <em>近似量子コンピューティング</em> のコンテキストで構成します。</p>
 <p>アルゴリズムは次のように機能します。</p>
 <ol class="arabic">
@@ -606,13 +604,13 @@ div.rendered_html tbody tr:hover {
 </ul>
 </section>
 <section id="アプリケーション・クラス">
-<h3>アプリケーション・クラス<a class="headerlink" href="#アプリケーション・クラス" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>アプリケーション・クラス<a class="headerlink" href="#アプリケーション・クラス" title="Permalink to this heading">¶</a></h3>
 <p>このページでは、最大カット問題と巡回セールスマンの問題のためにアプリケーション・クラスを使用します。 他の最適化問題用のアプリケーション・クラスもそれぞれあります。詳細については、「<a class="reference internal" href="09_application_classes.html"><span class="doc">最適化問題のアプリケーション・クラス</span></a> 」を参照してください。</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># useful additional packages</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># useful additional packages</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">matplotlib.axes</span> <span class="k">as</span> <span class="nn">axes</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -633,12 +631,12 @@ div.rendered_html tbody tr:hover {
 </section>
 </section>
 <section id="最大カット問題">
-<h2>最大カット問題<a class="headerlink" href="#最大カット問題" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<h2>最大カット問題<a class="headerlink" href="#最大カット問題" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generating a graph of 4 nodes</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generating a graph of 4 nodes</span>
 
 <span class="n">n</span> <span class="o">=</span> <span class="mi">4</span>  <span class="c1"># Number of nodes in graph</span>
 <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
@@ -666,13 +664,14 @@ div.rendered_html tbody tr:hover {
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_5_0.svg" src="../_images/tutorials_06_examples_max_cut_and_tsp_5_0.svg" /></div>
+<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_5_0.png" src="../_images/tutorials_06_examples_max_cut_and_tsp_5_0.png" />
+</div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Computing the weight matrix from the random graph</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Computing the weight matrix from the random graph</span>
 <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">])</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
@@ -695,13 +694,13 @@ div.rendered_html tbody tr:hover {
 </pre></div></div>
 </div>
 <section id="力まかせのアプローチ">
-<h3>力まかせのアプローチ<a class="headerlink" href="#力まかせのアプローチ" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>力まかせのアプローチ<a class="headerlink" href="#力まかせのアプローチ" title="Permalink to this heading">¶</a></h3>
 <p>可能なすべての <span class="math notranslate nohighlight">\(2^n\)</span> の組み合わせを試してください。 <span class="math notranslate nohighlight">\(n = 4\)</span> の場合、この例のように16の組み合わせのみを扱いますが、n = 1000の場合、1.071509e+30の組み合わせを持っているため、力まかせのアプローチを使用して扱うのは非現実的です。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">best_cost_brute</span> <span class="o">=</span> <span class="mi">0</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">best_cost_brute</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span><span class="p">):</span>
     <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">bin</span><span class="p">(</span><span class="n">b</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="n">n</span><span class="p">)))]</span>
     <span class="n">cost</span> <span class="o">=</span> <span class="mi">0</span>
@@ -748,19 +747,20 @@ Best solution = [1, 0, 1, 0] cost = 4.0
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_8_1.svg" src="../_images/tutorials_06_examples_max_cut_and_tsp_8_1.svg" /></div>
+<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_8_1.png" src="../_images/tutorials_06_examples_max_cut_and_tsp_8_1.png" />
+</div>
 </div>
 </section>
 <section id="イジング問題へのマッピング">
-<h3>イジング問題へのマッピング<a class="headerlink" href="#イジング問題へのマッピング" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>イジング問題へのマッピング<a class="headerlink" href="#イジング問題へのマッピング" title="Permalink to this heading">¶</a></h3>
 <p>Qiskit は、問題の仕様から該当するイジング・ハミルトニアンを作成するのと同様に <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> を生成する機能を提供します。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">max_cut</span> <span class="o">=</span> <span class="n">Maxcut</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">max_cut</span> <span class="o">=</span> <span class="n">Maxcut</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
 <span class="n">qp</span> <span class="o">=</span> <span class="n">max_cut</span><span class="o">.</span><span class="n">to_quadratic_program</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">qp</span><span class="o">.</span><span class="n">export_as_lp_string</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">qp</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -769,24 +769,17 @@ Best solution = [1, 0, 1, 0] cost = 4.0
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-\ This file has been generated by DOcplex
-\ ENCODING=ISO-8859-1
-\Problem name: Max-cut
+Problem name: Max-cut
 
 Maximize
- obj: 3 x_0 + 2 x_1 + 3 x_2 + 2 x_3 + [ - 4 x_0*x_1 - 4 x_0*x_2 - 4 x_0*x_3
-      - 4 x_1*x_2 - 4 x_2*x_3 ]/2
-Subject To
+  -2*x_0*x_1 - 2*x_0*x_2 - 2*x_0*x_3 - 2*x_1*x_2 - 2*x_2*x_3 + 3*x_0 + 2*x_1
+  + 3*x_2 + 2*x_3
 
-Bounds
- 0 &lt;= x_0 &lt;= 1
- 0 &lt;= x_1 &lt;= 1
- 0 &lt;= x_2 &lt;= 1
- 0 &lt;= x_3 &lt;= 1
+Subject to
+  No constraints
 
-Binaries
- x_0 x_1 x_2 x_3
-End
+  Binary variables (4)
+    x_0 x_1 x_2 x_3
 
 </pre></div></div>
 </div>
@@ -794,7 +787,7 @@ End
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">qubitOp</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">qp</span><span class="o">.</span><span class="n">to_ising</span><span class="p">()</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qubitOp</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">qp</span><span class="o">.</span><span class="n">to_ising</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Offset:&quot;</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ising Hamiltonian:&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">qubitOp</span><span class="p">))</span>
@@ -808,21 +801,21 @@ End
 <div class="highlight"><pre>
 Offset: -2.5
 Ising Hamiltonian:
-0.5 * ZZII
+0.5 * IIZZ
++ 0.5 * IZIZ
 + 0.5 * IZZI
 + 0.5 * ZIIZ
-+ 0.5 * IZIZ
-+ 0.5 * IIZZ
++ 0.5 * ZZII
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># solving Quadratic Program using exact classical eigensolver</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># solving Quadratic Program using exact classical eigensolver</span>
 <span class="n">exact</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">NumPyMinimumEigensolver</span><span class="p">())</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">exact</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -831,20 +824,20 @@ Ising Hamiltonian:
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-optimal function value: 4.0
-optimal value: [1. 0. 1. 0.]
+objective function value: 4.0
+variable values: x_0=1.0, x_1=0.0, x_2=1.0, x_3=0.0
 status: SUCCESS
 </pre></div></div>
 </div>
 <p>問題は最小化問題に変換されたため、 <span class="math notranslate nohighlight">\(-4\)</span> の解が最適と一致します。</p>
 </section>
 <section id="すべてのハミルトニアンが適切なコストを与えることの確認">
-<h3>すべてのハミルトニアンが適切なコストを与えることの確認<a class="headerlink" href="#すべてのハミルトニアンが適切なコストを与えることの確認" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>すべてのハミルトニアンが適切なコストを与えることの確認<a class="headerlink" href="#すべてのハミルトニアンが適切なコストを与えることの確認" title="Permalink to this heading">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Making the Hamiltonian in its full form and getting the lowest eigenvalue and eigenvector</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Making the Hamiltonian in its full form and getting the lowest eigenvalue and eigenvector</span>
 <span class="n">ee</span> <span class="o">=</span> <span class="n">NumPyMinimumEigensolver</span><span class="p">()</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">ee</span><span class="o">.</span><span class="n">compute_minimum_eigenvalue</span><span class="p">(</span><span class="n">qubitOp</span><span class="p">)</span>
 
@@ -874,17 +867,18 @@ solution objective: 4.0
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_16_1.svg" src="../_images/tutorials_06_examples_max_cut_and_tsp_16_1.svg" /></div>
+<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_16_1.png" src="../_images/tutorials_06_examples_max_cut_and_tsp_16_1.png" />
+</div>
 </div>
 </section>
 <section id="量子コンピューターでの実行">
-<h3>量子コンピューターでの実行<a class="headerlink" href="#量子コンピューターでの実行" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>量子コンピューターでの実行<a class="headerlink" href="#量子コンピューターでの実行" title="Permalink to this heading">¶</a></h3>
 <p>Y量子ビット回転、 <span class="math notranslate nohighlight">\(U_\mathrm{single}(\theta) = \prod_{i=1}^n Y(\theta_{i})\)</span> および エンタングラー・ステップ <span class="math notranslate nohighlight">\(U_\mathrm{entangler}\)</span> で構築された試行関数を使用する量子コンピューターで、フィードバックループを使用して最適化ルーチンを実行します。</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">123</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">123</span>
 <span class="n">seed</span> <span class="o">=</span> <span class="mi">10598</span>
 <span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;aer_simulator_statevector&quot;</span><span class="p">)</span>
 <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">seed_simulator</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
@@ -895,7 +889,7 @@ solution objective: 4.0
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># construct VQE</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># construct VQE</span>
 <span class="n">spsa</span> <span class="o">=</span> <span class="n">SPSA</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
 <span class="n">ry</span> <span class="o">=</span> <span class="n">TwoLocal</span><span class="p">(</span><span class="n">qubitOp</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">,</span> <span class="s2">&quot;ry&quot;</span><span class="p">,</span> <span class="s2">&quot;cz&quot;</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">)</span>
 <span class="n">vqe</span> <span class="o">=</span> <span class="n">VQE</span><span class="p">(</span><span class="n">ry</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="n">spsa</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">)</span>
@@ -922,9 +916,9 @@ solution objective: 4.0
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-energy: -1.4997993934173706
-time: 2.370492458343506
-max-cut objective: -3.9997993934173706
+energy: -1.49968614555873
+time: 1.9054765701293945
+max-cut objective: -3.99968614555873
 solution: [0. 1. 0. 1.]
 solution objective: 4.0
 </pre></div></div>
@@ -933,18 +927,19 @@ solution objective: 4.0
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_19_1.svg" src="../_images/tutorials_06_examples_max_cut_and_tsp_19_1.svg" /></div>
+<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_19_1.png" src="../_images/tutorials_06_examples_max_cut_and_tsp_19_1.png" />
+</div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># create minimum eigen optimizer based on VQE</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create minimum eigen optimizer based on VQE</span>
 <span class="n">vqe_optimizer</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">vqe</span><span class="p">)</span>
 
 <span class="c1"># solve quadratic program</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">vqe_optimizer</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 
 <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;r&quot;</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;c&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
 <span class="n">draw_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
@@ -956,8 +951,8 @@ solution objective: 4.0
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-optimal function value: 4.0
-optimal value: [1. 0. 1. 0.]
+objective function value: 4.0
+variable values: x_0=1.0, x_1=0.0, x_2=1.0, x_3=0.0
 status: SUCCESS
 </pre></div></div>
 </div>
@@ -965,12 +960,13 @@ status: SUCCESS
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_20_1.svg" src="../_images/tutorials_06_examples_max_cut_and_tsp_20_1.svg" /></div>
+<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_20_1.png" src="../_images/tutorials_06_examples_max_cut_and_tsp_20_1.png" />
+</div>
 </div>
 </section>
 </section>
 <section id="巡回セールスマン問題">
-<h2>巡回セールスマン問題<a class="headerlink" href="#巡回セールスマン問題" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<h2>巡回セールスマン問題<a class="headerlink" href="#巡回セールスマン問題" title="Permalink to this heading">¶</a></h2>
 <p>巡回セールスマン問題 (Traveling Salesman Problem, TSP) は、2世紀以上にわたり、コンピューター科学者や数学者の注意を引いた悪名高いNP完全問題であることに加え、その名前が示唆するように、財務とマーケティングに重要な影響を与えます。通俗的に言えば、巡回セールスマンは商品を販売するために都市から都市へ行く人のことです。この場合の目的は、セールスマンがすべての都市を訪れ、その故郷、つまり旅行を始めた都市に戻ることができる最短の道を見つけることです。これを行うことにより、セールスマンは最短時間で潜在的な売上を最大化することができます。</p>
 <p>この問題の重要性は、その “難易度” と、実際に発生する他の関連する組合せ最適化問題との普遍的な等価性に起因します。</p>
 <p>19世紀初頭に、W.R.ハミルトンによっていくつかの初期分析を伴う数学的定式化が提案されました。数学的には、問題は最大カットの場合のように、グラフの観点から最も抽象化されています。グラフのノードのTSPは、各ノードを通過できる最短の <em>ハミルトニアン・サイクル</em> を要求します。ハミルトン・サイクルは、グラフのすべての頂点を一度使用する閉じた経路です。一般的な解決策は不明であり、それを効率的に（たとえば、多項式時間で）見つけるアルゴリズムは存在しないと予想されています。</p>
@@ -994,7 +990,7 @@ status: SUCCESS
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generating a graph of 3 nodes</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generating a graph of 3 nodes</span>
 <span class="n">n</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">num_qubits</span> <span class="o">=</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span>
 <span class="n">tsp</span> <span class="o">=</span> <span class="n">Tsp</span><span class="o">.</span><span class="n">create_random_instance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
@@ -1022,15 +1018,16 @@ distance
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_22_1.svg" src="../_images/tutorials_06_examples_max_cut_and_tsp_22_1.svg" /></div>
+<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_22_1.png" src="../_images/tutorials_06_examples_max_cut_and_tsp_22_1.png" />
+</div>
 </div>
 <section id="id2">
-<h3>力まかせのアプローチ<a class="headerlink" href="#id2" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>力まかせのアプローチ<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">permutations</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">permutations</span>
 
 
 <span class="k">def</span> <span class="nf">brute_force_tsp</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
@@ -1092,17 +1089,18 @@ Best order from brute force = (0, 1, 2) with total distance = 202.0
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_24_1.svg" src="../_images/tutorials_06_examples_max_cut_and_tsp_24_1.svg" /></div>
+<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_24_1.png" src="../_images/tutorials_06_examples_max_cut_and_tsp_24_1.png" />
+</div>
 </div>
 </section>
 <section id="id3">
-<h3>イジング問題へのマッピング<a class="headerlink" href="#id3" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>イジング問題へのマッピング<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">qp</span> <span class="o">=</span> <span class="n">tsp</span><span class="o">.</span><span class="n">to_quadratic_program</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">qp</span><span class="o">.</span><span class="n">export_as_lp_string</span><span class="p">())</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qp</span> <span class="o">=</span> <span class="n">tsp</span><span class="o">.</span><span class="n">to_quadratic_program</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">qp</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -1111,38 +1109,26 @@ Best order from brute force = (0, 1, 2) with total distance = 202.0
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-\ This file has been generated by DOcplex
-\ ENCODING=ISO-8859-1
-\Problem name: TSP
+Problem name: TSP
 
 Minimize
- obj: [ 96 x_0_0*x_1_1 + 96 x_0_0*x_1_2 + 182 x_0_0*x_2_1 + 182 x_0_0*x_2_2
-      + 96 x_0_1*x_1_0 + 96 x_0_1*x_1_2 + 182 x_0_1*x_2_0 + 182 x_0_1*x_2_2
-      + 96 x_0_2*x_1_0 + 96 x_0_2*x_1_1 + 182 x_0_2*x_2_0 + 182 x_0_2*x_2_1
-      + 126 x_1_0*x_2_1 + 126 x_1_0*x_2_2 + 126 x_1_1*x_2_0 + 126 x_1_1*x_2_2
-      + 126 x_1_2*x_2_0 + 126 x_1_2*x_2_1 ]/2
-Subject To
- c0: x_0_0 + x_0_1 + x_0_2 = 1
- c1: x_1_0 + x_1_1 + x_1_2 = 1
- c2: x_2_0 + x_2_1 + x_2_2 = 1
- c3: x_0_0 + x_1_0 + x_2_0 = 1
- c4: x_0_1 + x_1_1 + x_2_1 = 1
- c5: x_0_2 + x_1_2 + x_2_2 = 1
+  48*x_0_0*x_1_1 + 48*x_0_0*x_1_2 + 91*x_0_0*x_2_1 + 91*x_0_0*x_2_2
+  + 48*x_0_1*x_1_0 + 48*x_0_1*x_1_2 + 91*x_0_1*x_2_0 + 91*x_0_1*x_2_2
+  + 48*x_0_2*x_1_0 + 48*x_0_2*x_1_1 + 91*x_0_2*x_2_0 + 91*x_0_2*x_2_1
+  + 63*x_1_0*x_2_1 + 63*x_1_0*x_2_2 + 63*x_1_1*x_2_0 + 63*x_1_1*x_2_2
+  + 63*x_1_2*x_2_0 + 63*x_1_2*x_2_1
 
-Bounds
- 0 &lt;= x_0_0 &lt;= 1
- 0 &lt;= x_0_1 &lt;= 1
- 0 &lt;= x_0_2 &lt;= 1
- 0 &lt;= x_1_0 &lt;= 1
- 0 &lt;= x_1_1 &lt;= 1
- 0 &lt;= x_1_2 &lt;= 1
- 0 &lt;= x_2_0 &lt;= 1
- 0 &lt;= x_2_1 &lt;= 1
- 0 &lt;= x_2_2 &lt;= 1
+Subject to
+  Linear constraints (6)
+    x_0_0 + x_0_1 + x_0_2 == 1  &#39;c0&#39;
+    x_1_0 + x_1_1 + x_1_2 == 1  &#39;c1&#39;
+    x_2_0 + x_2_1 + x_2_2 == 1  &#39;c2&#39;
+    x_0_0 + x_1_0 + x_2_0 == 1  &#39;c3&#39;
+    x_0_1 + x_1_1 + x_2_1 == 1  &#39;c4&#39;
+    x_0_2 + x_1_2 + x_2_2 == 1  &#39;c5&#39;
 
-Binaries
- x_0_0 x_0_1 x_0_2 x_1_0 x_1_1 x_1_2 x_2_0 x_2_1 x_2_2
-End
+  Binary variables (9)
+    x_0_0 x_0_1 x_0_2 x_1_0 x_1_1 x_1_2 x_2_0 x_2_1 x_2_2
 
 </pre></div></div>
 </div>
@@ -1150,7 +1136,7 @@ End
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit_optimization.converters</span> <span class="kn">import</span> <span class="n">QuadraticProgramToQubo</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit_optimization.converters</span> <span class="kn">import</span> <span class="n">QuadraticProgramToQubo</span>
 
 <span class="n">qp2qubo</span> <span class="o">=</span> <span class="n">QuadraticProgramToQubo</span><span class="p">()</span>
 <span class="n">qubo</span> <span class="o">=</span> <span class="n">qp2qubo</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
@@ -1168,59 +1154,59 @@ End
 <div class="highlight"><pre>
 Offset: 7581.0
 Ising Hamiltonian:
--1290.0 * ZIIIIIIII
-- 1290.0 * IZIIIIIII
-+ 606.5 * ZZIIIIIII
-- 1290.0 * IIZIIIIII
-+ 606.5 * ZIZIIIIII
-+ 606.5 * IZZIIIIII
-- 1268.5 * IIIZIIIII
-+ 606.5 * ZIIZIIIII
-+ 15.75 * IZIZIIIII
-+ 15.75 * IIZZIIIII
-- 1268.5 * IIIIZIIII
-+ 15.75 * ZIIIZIIII
-+ 606.5 * IZIIZIIII
-+ 15.75 * IIZIZIIII
-+ 606.5 * IIIZZIIII
-- 1268.5 * IIIIIZIII
-+ 15.75 * ZIIIIZIII
-+ 15.75 * IZIIIZIII
-+ 606.5 * IIZIIZIII
-+ 606.5 * IIIZIZIII
-+ 606.5 * IIIIZZIII
-- 1282.5 * IIIIIIZII
-+ 606.5 * ZIIIIIZII
-+ 22.75 * IZIIIIZII
-+ 22.75 * IIZIIIZII
-+ 606.5 * IIIZIIZII
-+ 12.0 * IIIIZIZII
-+ 12.0 * IIIIIZZII
+-1282.5 * IIIIIIIIZ
 - 1282.5 * IIIIIIIZI
-+ 22.75 * ZIIIIIIZI
-+ 606.5 * IZIIIIIZI
-+ 22.75 * IIZIIIIZI
-+ 12.0 * IIIZIIIZI
-+ 606.5 * IIIIZIIZI
-+ 12.0 * IIIIIZIZI
-+ 606.5 * IIIIIIZZI
-- 1282.5 * IIIIIIIIZ
-+ 22.75 * ZIIIIIIIZ
-+ 22.75 * IZIIIIIIZ
-+ 606.5 * IIZIIIIIZ
-+ 12.0 * IIIZIIIIZ
-+ 12.0 * IIIIZIIIZ
-+ 606.5 * IIIIIZIIZ
-+ 606.5 * IIIIIIZIZ
+- 1282.5 * IIIIIIZII
+- 1268.5 * IIIIIZIII
+- 1268.5 * IIIIZIIII
+- 1268.5 * IIIZIIIII
+- 1290.0 * IIZIIIIII
+- 1290.0 * IZIIIIIII
+- 1290.0 * ZIIIIIIII
 + 606.5 * IIIIIIIZZ
++ 606.5 * IIIIIIZIZ
++ 606.5 * IIIIIIZZI
++ 606.5 * IIIIIZIIZ
++ 12.0 * IIIIIZIZI
++ 12.0 * IIIIIZZII
++ 12.0 * IIIIZIIIZ
++ 606.5 * IIIIZIIZI
++ 12.0 * IIIIZIZII
++ 606.5 * IIIIZZIII
++ 12.0 * IIIZIIIIZ
++ 12.0 * IIIZIIIZI
++ 606.5 * IIIZIIZII
++ 606.5 * IIIZIZIII
++ 606.5 * IIIZZIIII
++ 606.5 * IIZIIIIIZ
++ 22.75 * IIZIIIIZI
++ 22.75 * IIZIIIZII
++ 606.5 * IIZIIZIII
++ 15.75 * IIZIZIIII
++ 15.75 * IIZZIIIII
++ 22.75 * IZIIIIIIZ
++ 606.5 * IZIIIIIZI
++ 22.75 * IZIIIIZII
++ 15.75 * IZIIIZIII
++ 606.5 * IZIIZIIII
++ 15.75 * IZIZIIIII
++ 606.5 * IZZIIIIII
++ 22.75 * ZIIIIIIIZ
++ 22.75 * ZIIIIIIZI
++ 606.5 * ZIIIIIZII
++ 15.75 * ZIIIIZIII
++ 15.75 * ZIIIZIIII
++ 606.5 * ZIIZIIIII
++ 606.5 * ZIZIIIIII
++ 606.5 * ZZIIIIIII
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">exact</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qubo</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">exact</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qubo</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -1229,19 +1215,19 @@ Ising Hamiltonian:
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-optimal function value: 202.0
-optimal value: [1. 0. 0. 0. 1. 0. 0. 0. 1.]
+objective function value: 202.0
+variable values: x_0_0=1.0, x_0_1=0.0, x_0_2=0.0, x_1_0=0.0, x_1_1=1.0, x_1_2=0.0, x_2_0=0.0, x_2_1=0.0, x_2_2=1.0
 status: SUCCESS
 </pre></div></div>
 </div>
 </section>
 <section id="id4">
-<h3>すべてのハミルトニアンが適切なコストを与えることの確認<a class="headerlink" href="#id4" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>すべてのハミルトニアンが適切なコストを与えることの確認<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Making the Hamiltonian in its full form and getting the lowest eigenvalue and eigenvector</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Making the Hamiltonian in its full form and getting the lowest eigenvalue and eigenvector</span>
 <span class="n">ee</span> <span class="o">=</span> <span class="n">NumPyMinimumEigensolver</span><span class="p">()</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">ee</span><span class="o">.</span><span class="n">compute_minimum_eigenvalue</span><span class="p">(</span><span class="n">qubitOp</span><span class="p">)</span>
 
@@ -1272,17 +1258,18 @@ solution objective: 202.0
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_30_1.svg" src="../_images/tutorials_06_examples_max_cut_and_tsp_30_1.svg" /></div>
+<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_30_1.png" src="../_images/tutorials_06_examples_max_cut_and_tsp_30_1.png" />
+</div>
 </div>
 </section>
 <section id="id5">
-<h3>量子コンピューターでの実行<a class="headerlink" href="#id5" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>量子コンピューターでの実行<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h3>
 <p>Y量子ビット回転、 <span class="math notranslate nohighlight">\(U_\mathrm{single}(\theta) = \prod_{i=1}^n Y(\theta_{i})\)</span> および エンタングラー・ステップ <span class="math notranslate nohighlight">\(U_\mathrm{entangler}\)</span> で構築された試行関数を使用する量子コンピューターで、フィードバックループを使用して最適化ルーチンを実行します。</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">123</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">123</span>
 <span class="n">seed</span> <span class="o">=</span> <span class="mi">10598</span>
 <span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;aer_simulator_statevector&quot;</span><span class="p">)</span>
 <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">seed_simulator</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
@@ -1293,7 +1280,7 @@ solution objective: 202.0
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">spsa</span> <span class="o">=</span> <span class="n">SPSA</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">spsa</span> <span class="o">=</span> <span class="n">SPSA</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
 <span class="n">ry</span> <span class="o">=</span> <span class="n">TwoLocal</span><span class="p">(</span><span class="n">qubitOp</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">,</span> <span class="s2">&quot;ry&quot;</span><span class="p">,</span> <span class="s2">&quot;cz&quot;</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">)</span>
 <span class="n">vqe</span> <span class="o">=</span> <span class="n">VQE</span><span class="p">(</span><span class="n">ry</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="n">spsa</span><span class="p">,</span> <span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">)</span>
 
@@ -1315,10 +1302,10 @@ solution objective: 202.0
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-energy: -7341.272944851356
-time: 4.881815195083618
+energy: -7326.024699521837
+time: 5.199239253997803
 feasible: True
-solution: [2, 1, 0]
+solution: [1, 2, 0]
 solution objective: 202.0
 </pre></div></div>
 </div>
@@ -1326,13 +1313,14 @@ solution objective: 202.0
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_33_1.svg" src="../_images/tutorials_06_examples_max_cut_and_tsp_33_1.svg" /></div>
+<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_33_1.png" src="../_images/tutorials_06_examples_max_cut_and_tsp_33_1.png" />
+</div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">123</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">123</span>
 <span class="n">seed</span> <span class="o">=</span> <span class="mi">10598</span>
 <span class="n">backend</span> <span class="o">=</span> <span class="n">Aer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;aer_simulator_statevector&quot;</span><span class="p">)</span>
 <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">seed_simulator</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">seed_transpiler</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
@@ -1343,7 +1331,7 @@ solution objective: 202.0
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># create minimum eigen optimizer based on VQE</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create minimum eigen optimizer based on VQE</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">)</span>
@@ -1351,7 +1339,7 @@ solution objective: 202.0
 
 <span class="c1"># solve quadratic program</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">vqe_optimizer</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 
 <span class="n">z</span> <span class="o">=</span> <span class="n">tsp</span><span class="o">.</span><span class="n">interpret</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;solution:&quot;</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
@@ -1365,10 +1353,10 @@ solution objective: 202.0
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-optimal function value: 202.0
-optimal value: [0. 0. 1. 0. 1. 0. 1. 0. 0.]
+objective function value: 202.0
+variable values: x_0_0=0.0, x_0_1=0.0, x_0_2=1.0, x_1_0=1.0, x_1_1=0.0, x_1_2=0.0, x_2_0=0.0, x_2_1=1.0, x_2_2=0.0
 status: SUCCESS
-solution: [2, 1, 0]
+solution: [1, 2, 0]
 solution objective: 202.0
 </pre></div></div>
 </div>
@@ -1376,16 +1364,17 @@ solution objective: 202.0
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_35_1.svg" src="../_images/tutorials_06_examples_max_cut_and_tsp_35_1.svg" /></div>
+<img alt="../_images/tutorials_06_examples_max_cut_and_tsp_35_1.png" src="../_images/tutorials_06_examples_max_cut_and_tsp_35_1.png" />
+</div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
 
-<span class="o">%</span><span class="k">qiskit_version_table</span>
-<span class="o">%</span><span class="k">qiskit_copyright</span>
+<span class="o">%</span><span class="n">qiskit_version_table</span>
+<span class="o">%</span><span class="n">qiskit_copyright</span>
 </pre></div>
 </div>
 </div>
@@ -1393,20 +1382,19 @@ solution objective: 202.0
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td>Qiskit</td><td>None</td></tr><tr><td>Terra</td><td>0.18.0</td></tr><tr><td>Aer</td><td>0.8.2</td></tr><tr><td>Ignis</td><td>None</td></tr><tr><td>Aqua</td><td>None</td></tr><tr><td>IBM Q Provider</td><td>0.13.1</td></tr><tr><th>System information</th></tr><tr><td>Python</td><td>3.8.5 (default, May 27 2021, 13:30:53)
-[GCC 9.3.0]</td></tr><tr><td>OS</td><td>Linux</td></tr><tr><td>CPUs</td><td>4</td></tr><tr><td>Memory (Gb)</td><td>14.650382995605469</td></tr><tr><td colspan='2'>Sun Jun 13 22:29:17 2021 JST</td></tr></table></div>
+<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td><code>qiskit-terra</code></td><td>0.21.0.dev0+dbd3961</td></tr><tr><td><code>qiskit-aer</code></td><td>0.10.4</td></tr><tr><td><code>qiskit-ibmq-provider</code></td><td>0.19.1</td></tr><tr><td><code>qiskit-optimization</code></td><td>0.4.0</td></tr><tr><th>System information</th></tr><tr><td>Python version</td><td>3.10.4</td></tr><tr><td>Python compiler</td><td>GCC 11.2.0</td></tr><tr><td>Python build</td><td>main, Apr  2 2022 09:04:19</td></tr><tr><td>OS</td><td>Linux</td></tr><tr><td>CPUs</td><td>4</td></tr><tr><td>Memory (Gb)</td><td>14.577545166015625</td></tr><tr><td colspan='2'>Wed May 18 16:05:11 2022 JST</td></tr></table></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2021.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
+<div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2022.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span>
 </pre></div>
 </div>
 </div>
@@ -1495,8 +1483,10 @@ solution objective: 202.0
          <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../_static/doctools.js"></script>
          <script src="../_static/thebelab-helper.js"></script>
+         <script src="../_static/design-tabs.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>

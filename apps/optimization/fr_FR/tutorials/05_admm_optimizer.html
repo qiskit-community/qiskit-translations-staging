@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ADMM Optimizer &mdash; Documentation Qiskit Optimization 0.3.2</title>
+  <title>ADMM Optimizer &mdash; Documentation Qiskit Optimization 0.4.0</title>
   
 
   
@@ -32,9 +32,7 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
@@ -180,7 +178,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.0
                 </div>
               
             
@@ -545,12 +543,12 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This page was generated from <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/05_admm_optimizer.ipynb">docs/tutorials/05_admm_optimizer.ipynb</a>.</p>
+<p>This page was generated from <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.4/docs/tutorials/05_admm_optimizer.ipynb">docs/tutorials/05_admm_optimizer.ipynb</a>.</p>
 </div>
 <section id="ADMM-Optimizer">
-<h1>ADMM Optimizer<a class="headerlink" href="#ADMM-Optimizer" title="Lien permanent vers ce titre">¶</a></h1>
+<h1>ADMM Optimizer<a class="headerlink" href="#ADMM-Optimizer" title="Lien permanent vers cette rubrique">¶</a></h1>
 <section id="Introduction">
-<h2>Introduction<a class="headerlink" href="#Introduction" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>Introduction<a class="headerlink" href="#Introduction" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>The ADMM Optimizer can solve classes of mixed-binary constrained optimization problems, hereafter (MBCO), which often appear in logistic, finance, and operation research. In particular, the ADMM Optimizer here designed can tackle the following optimization problem <span class="math notranslate nohighlight">\((P)\)</span>:</p>
 <div class="math notranslate nohighlight">
 \[\min_{x \in \mathcal{X},u\in\mathcal{U} \subseteq \mathbb{R}^l } \quad q(x) + \varphi(u),\]</div>
@@ -586,18 +584,18 @@ div.rendered_html tbody tr:hover {
 <p>A comprehensive discussion on the conditions for convergence, feasibility and optimality of the algorithm can be found in [1]. A variant with 2 ADMM blocks, namely a QUBO subproblem, and a continuous convex constrained subproblem, is also introduced in [1].</p>
 </section>
 <section id="References">
-<h2>References<a class="headerlink" href="#References" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>References<a class="headerlink" href="#References" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>[1] <a class="reference external" href="https://arxiv.org/abs/2001.02069">C. Gambella and A. Simonetto, Multi-block ADMM heuristics for mixed-binary optimization, on classical and quantum computers, arXiv preprint arXiv:2001.02069 (2020).</a></p>
 <p>[2] <a class="reference external" href="https://web.stanford.edu/~boyd/papers/pdf/admm_distr_stats.pdf">S. Boyd, N. Parikh, E. Chu, B. Peleato, and J. Eckstein, Distributed optimization and statistical learning via the alternating direction method of multipliers, Foundations and Trends in Machine learning, 3, 1–122 (2011).</a></p>
 </section>
 <section id="Initialization">
-<h2>Initialization<a class="headerlink" href="#Initialization" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>Initialization<a class="headerlink" href="#Initialization" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>First of all we load all the packages that we need.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
@@ -636,7 +634,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># define COBYLA optimizer to handle convex continuous problems.</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define COBYLA optimizer to handle convex continuous problems.</span>
 <span class="n">cobyla</span> <span class="o">=</span> <span class="n">CobylaOptimizer</span><span class="p">()</span>
 
 <span class="c1"># define QAOA via the minimum eigen optimizer</span>
@@ -654,13 +652,13 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="Example">
-<h2>Example<a class="headerlink" href="#Example" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>Example<a class="headerlink" href="#Example" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>We test 3-ADMM-H algorithm on a simple Mixed-Binary Quadratic Problem with equality and inequality constraints (Example 6 reported in [1]). We first construct a docplex problem and then load it into a <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code>.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># construct model using docplex</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># construct model using docplex</span>
 <span class="n">mdl</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="s2">&quot;ex6&quot;</span><span class="p">)</span>
 
 <span class="n">v</span> <span class="o">=</span> <span class="n">mdl</span><span class="o">.</span><span class="n">binary_var</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;v&quot;</span><span class="p">)</span>
@@ -675,7 +673,7 @@ div.rendered_html tbody tr:hover {
 
 <span class="c1"># load quadratic program from docplex model</span>
 <span class="n">qp</span> <span class="o">=</span> <span class="n">from_docplex_mp</span><span class="p">(</span><span class="n">mdl</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">qp</span><span class="o">.</span><span class="n">export_as_lp_string</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">qp</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -684,42 +682,39 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-\ This file has been generated by DOcplex
-\ ENCODING=ISO-8859-1
-\Problem name: ex6
+Problem name: ex6
 
 Minimize
- obj: v + w + t - 20 u + [ 10 u^2 ]/2 + 20
-Subject To
- cons1: v + 2 w + t + u &lt;= 3
- cons2: v + w + t &gt;= 1
- cons3: v + w = 1
+  5*u^2 + t - 20*u + v + w + 20
 
-Bounds
- 0 &lt;= v &lt;= 1
- 0 &lt;= w &lt;= 1
- 0 &lt;= t &lt;= 1
+Subject to
+  Linear constraints (3)
+    t + u + v + 2*w &lt;= 3  &#39;cons1&#39;
+    t + v + w &gt;= 1  &#39;cons2&#39;
+    v + w == 1  &#39;cons3&#39;
 
-Binaries
- v w t
-End
+  Continuous variables (1)
+    0 &lt;= u
+
+  Binary variables (3)
+    v w t
 
 </pre></div></div>
 </div>
 </section>
 <section id="Classical-Solution">
-<h2>Classical Solution<a class="headerlink" href="#Classical-Solution" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>Classical Solution<a class="headerlink" href="#Classical-Solution" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>3-ADMM-H needs a QUBO optimizer to solve the QUBO subproblem, and a continuous optimizer to solve the continuous convex constrained subproblem. We first solve the problem classically: we use the <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> with the <code class="docutils literal notranslate"><span class="pre">NumPyMinimumEigenSolver</span></code> as a classical and exact QUBO solver and we use the <code class="docutils literal notranslate"><span class="pre">CobylaOptimizer</span></code> as a continuous convex solver. 3-ADMM-H supports any other suitable solver available in Qiskit. For instance, VQE, QAOA, and GroverOptimizer can be invoked as quantum
 solvers, as demonstrated later. If CPLEX is installed, the <code class="docutils literal notranslate"><span class="pre">CplexOptimizer</span></code> can also be used as both, a QUBO and convex solver.</p>
 <section id="Parameters">
-<h3>Parameters<a class="headerlink" href="#Parameters" title="Lien permanent vers ce titre">¶</a></h3>
+<h3>Parameters<a class="headerlink" href="#Parameters" title="Lien permanent vers cette rubrique">¶</a></h3>
 <p>The 3-ADMM-H are wrapped in class <code class="docutils literal notranslate"><span class="pre">ADMMParameters</span></code>. Customized parameter values can be set as arguments of the class. In this example, parameters <span class="math notranslate nohighlight">\(\rho, \beta\)</span> are initialized to <span class="math notranslate nohighlight">\(1001\)</span> and <span class="math notranslate nohighlight">\(1000\)</span>, respectively. The penalization <code class="docutils literal notranslate"><span class="pre">factor_c</span></code> of equality constraints <span class="math notranslate nohighlight">\(Gx = b\)</span> is set to <span class="math notranslate nohighlight">\(900\)</span>. The tolerance <code class="docutils literal notranslate"><span class="pre">tol</span></code> for primal residual convergence is set to <code class="docutils literal notranslate"><span class="pre">1.e-6</span></code>. In this case, the 3-block implementation is guaranteed to converge for Theorem 4 of [1], because the
 inequality constraint with the continuous variable is always active. The 2-block implementation can be run by setting <code class="docutils literal notranslate"><span class="pre">three_block=False</span></code>, and practically converges to a feasible not optimal solution.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">admm_params</span> <span class="o">=</span> <span class="n">ADMMParameters</span><span class="p">(</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">admm_params</span> <span class="o">=</span> <span class="n">ADMMParameters</span><span class="p">(</span>
     <span class="n">rho_initial</span><span class="o">=</span><span class="mi">1001</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">factor_c</span><span class="o">=</span><span class="mi">900</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">three_block</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.0e-6</span>
 <span class="p">)</span>
 </pre></div>
@@ -727,13 +722,13 @@ inequality constraint with the continuous variable is always active. The 2-block
 </div>
 </section>
 <section id="Calling-3-ADMM-H-algorithm">
-<h3>Calling 3-ADMM-H algorithm<a class="headerlink" href="#Calling-3-ADMM-H-algorithm" title="Lien permanent vers ce titre">¶</a></h3>
+<h3>Calling 3-ADMM-H algorithm<a class="headerlink" href="#Calling-3-ADMM-H-algorithm" title="Lien permanent vers cette rubrique">¶</a></h3>
 <p>To invoke the 3-ADMM-H algorithm, an instance of the <code class="docutils literal notranslate"><span class="pre">ADMMOptimizer</span></code> class needs to be created. This takes ADMM-specific parameters and the subproblem optimizers separately into the constructor. The solution returned is an instance of <code class="docutils literal notranslate"><span class="pre">OptimizationResult</span></code> class.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># define QUBO optimizer</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define QUBO optimizer</span>
 <span class="n">qubo_optimizer</span> <span class="o">=</span> <span class="n">exact</span>
 <span class="c1"># qubo_optimizer = cplex  # uncomment to use CPLEX instead</span>
 
@@ -752,21 +747,20 @@ inequality constraint with the continuous variable is always active. The 2-block
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># run ADMM to solve problem</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># run ADMM to solve problem</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">admm</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </section>
 <section id="Classical-Solver-Result">
-<h3>Classical Solver Result<a class="headerlink" href="#Classical-Solver-Result" title="Lien permanent vers ce titre">¶</a></h3>
+<h3>Classical Solver Result<a class="headerlink" href="#Classical-Solver-Result" title="Lien permanent vers cette rubrique">¶</a></h3>
 <p>The 3-ADMM-H solution can be then printed and visualized. The <code class="docutils literal notranslate"><span class="pre">x</span></code> attribute of the solution contains respectively, the values of the binary decision variables and the values of the continuous decision variables. The <code class="docutils literal notranslate"><span class="pre">fval</span></code> is the objective value of the solution.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;x=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;fval=</span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">fval</span><span class="p">))</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -775,8 +769,9 @@ inequality constraint with the continuous variable is always active. The 2-block
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-x=[1. 0. 0. 2.]
-fval=1.00
+objective function value: 1.0
+variable values: v=1.0, w=0.0, t=0.0, u=2.0
+status: SUCCESS
 </pre></div></div>
 </div>
 <p>Solution statistics can be accessed in the <code class="docutils literal notranslate"><span class="pre">state</span></code> field and visualized. We here display the convergence of 3-ADMM-H, in terms of primal residuals.</p>
@@ -784,7 +779,7 @@ fval=1.00
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">residuals</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">residuals</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Iterations&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Residuals&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -801,13 +796,13 @@ fval=1.00
 </section>
 </section>
 <section id="Quantum-Solution">
-<h2>Quantum Solution<a class="headerlink" href="#Quantum-Solution" title="Lien permanent vers ce titre">¶</a></h2>
+<h2>Quantum Solution<a class="headerlink" href="#Quantum-Solution" title="Lien permanent vers cette rubrique">¶</a></h2>
 <p>We now solve the same optimization problem with QAOA as QUBO optimizer, running on simulated quantum device. First, one need to select the classical optimizer of the eigensolver QAOA. Then, the simulation backend is set. Finally, the eigensolver is wrapped into the <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> class. A new instance of <code class="docutils literal notranslate"><span class="pre">ADMMOptimizer</span></code> is populated with QAOA as QUBO optimizer.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># define QUBO optimizer</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define QUBO optimizer</span>
 <span class="n">qubo_optimizer</span> <span class="o">=</span> <span class="n">qaoa</span>
 
 <span class="c1"># define classical optimizer</span>
@@ -825,20 +820,19 @@ fval=1.00
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># run ADMM to solve problem</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># run ADMM to solve problem</span>
 <span class="n">result_q</span> <span class="o">=</span> <span class="n">admm_q</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <section id="Quantum-Solver-Results">
-<h3>Quantum Solver Results<a class="headerlink" href="#Quantum-Solver-Results" title="Lien permanent vers ce titre">¶</a></h3>
+<h3>Quantum Solver Results<a class="headerlink" href="#Quantum-Solver-Results" title="Lien permanent vers cette rubrique">¶</a></h3>
 <p>Here we present the results obtained from the quantum solver. As in the example above <code class="docutils literal notranslate"><span class="pre">x</span></code> stands for the solution, the <code class="docutils literal notranslate"><span class="pre">fval</span></code> is for objective value.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;x=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result_q</span><span class="o">.</span><span class="n">x</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;fval=</span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result_q</span><span class="o">.</span><span class="n">fval</span><span class="p">))</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -847,15 +841,16 @@ fval=1.00
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-x=[1.         0.         0.         1.99889016]
-fval=1.00
+objective function value: 1.0
+variable values: v=1.0, w=0.0, t=0.0, u=2.0
+status: SUCCESS
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">result_q</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">residuals</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Iterations&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Residuals&quot;</span><span class="p">)</span>
@@ -874,10 +869,10 @@ fval=1.00
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
 
-<span class="o">%</span><span class="k">qiskit_version_table</span>
-<span class="o">%</span><span class="k">qiskit_copyright</span>
+<span class="o">%</span><span class="n">qiskit_version_table</span>
+<span class="o">%</span><span class="n">qiskit_copyright</span>
 </pre></div>
 </div>
 </div>
@@ -885,20 +880,19 @@ fval=1.00
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td>Qiskit</td><td>None</td></tr><tr><td>Terra</td><td>0.17.0.dev0+3c103ae</td></tr><tr><td>Aer</td><td>0.8.0</td></tr><tr><td>Ignis</td><td>0.6.0.dev0+6103f99</td></tr><tr><td>Aqua</td><td>0.9.0.dev0+0058183</td></tr><tr><td>IBM Q Provider</td><td>0.12.0.dev0+8f3168b</td></tr><tr><th>System information</th></tr><tr><td>Python</td><td>3.7.9 (default, Aug 31 2020, 07:22:35)
-[Clang 10.0.0 ]</td></tr><tr><td>OS</td><td>Darwin</td></tr><tr><td>CPUs</td><td>2</td></tr><tr><td>Memory (Gb)</td><td>12.0</td></tr><tr><td colspan='2'>Fri Mar 05 12:32:13 2021 EST</td></tr></table></div>
+<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td><code>qiskit-terra</code></td><td>0.21.0.dev0+dbd3961</td></tr><tr><td><code>qiskit-aer</code></td><td>0.10.4</td></tr><tr><td><code>qiskit-ibmq-provider</code></td><td>0.19.1</td></tr><tr><td><code>qiskit-optimization</code></td><td>0.4.0</td></tr><tr><th>System information</th></tr><tr><td>Python version</td><td>3.10.4</td></tr><tr><td>Python compiler</td><td>GCC 11.2.0</td></tr><tr><td>Python build</td><td>main, Apr  2 2022 09:04:19</td></tr><tr><td>OS</td><td>Linux</td></tr><tr><td>CPUs</td><td>4</td></tr><tr><td>Memory (Gb)</td><td>14.577545166015625</td></tr><tr><td colspan='2'>Wed May 18 16:04:51 2022 JST</td></tr></table></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2021.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
+<div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2022.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span>
 </pre></div>
 </div>
 </div>
@@ -981,9 +975,11 @@ fval=1.00
          <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../_static/doctools.js"></script>
          <script src="../_static/thebelab-helper.js"></script>
          <script src="../_static/translations.js"></script>
+         <script src="../_static/design-tabs.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Warm-starting quantum optimization &mdash; Qiskit Optimization 0.3.2 - dokumentacja</title>
+  <title>Warm-starting quantum optimization &mdash; Qiskit Optimization 0.4.0 - dokumentacja</title>
   
 
   
@@ -32,9 +32,7 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
@@ -180,7 +178,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.0
                 </div>
               
             
@@ -545,12 +543,12 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">Informacja</p>
-<p>This page was generated from <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/10_warm_start_qaoa.ipynb">docs/tutorials/10_warm_start_qaoa.ipynb</a>.</p>
+<p>This page was generated from <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.4/docs/tutorials/10_warm_start_qaoa.ipynb">docs/tutorials/10_warm_start_qaoa.ipynb</a>.</p>
 </div>
 <section id="Warm-starting-quantum-optimization">
-<h1>Warm-starting quantum optimization<a class="headerlink" href="#Warm-starting-quantum-optimization" title="Stały odnośnik do tego nagłówka">¶</a></h1>
+<h1>Warm-starting quantum optimization<a class="headerlink" href="#Warm-starting-quantum-optimization" title="Permalink to this heading">¶</a></h1>
 <section id="Introduction">
-<h2>Introduction<a class="headerlink" href="#Introduction" title="Stały odnośnik do tego nagłówka">¶</a></h2>
+<h2>Introduction<a class="headerlink" href="#Introduction" title="Permalink to this heading">¶</a></h2>
 <p>Optimization problems with integer variables or constraints are often hard to solve. For example, the Quadratic Unconstrained Binary Optimization (QUBO) problem, i.e.</p>
 <p><span class="math">\begin{align}
 \min_{x\in\{0,1\}^n}x^T\Sigma x + \mu^Tx,
@@ -562,13 +560,13 @@ div.rendered_html tbody tr:hover {
 <p>which becomes easy to solve as <span class="math notranslate nohighlight">\(x\)</span> now represents <span class="math notranslate nohighlight">\(n\)</span> continuous variables bound to the range <span class="math notranslate nohighlight">\([0, 1]\)</span>. Such relaxations can be leveraged to warm-start quantum optimization algorithms as shown in [1].</p>
 </section>
 <section id="References">
-<h2>References<a class="headerlink" href="#References" title="Stały odnośnik do tego nagłówka">¶</a></h2>
+<h2>References<a class="headerlink" href="#References" title="Permalink to this heading">¶</a></h2>
 <p>[1] <a class="reference external" href="http://arxiv.org/abs/2009.10095">D. J. Egger, J Marecek, S. Woerner, Warm-starting quantum optimization, arXiv:2009.10095</a></p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">copy</span>
 
 <span class="c1"># Problem modelling imports</span>
@@ -589,13 +587,13 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="Preliminaries:-relaxing-QUBOs">
-<h2>Preliminaries: relaxing QUBOs<a class="headerlink" href="#Preliminaries:-relaxing-QUBOs" title="Stały odnośnik do tego nagłówka">¶</a></h2>
+<h2>Preliminaries: relaxing QUBOs<a class="headerlink" href="#Preliminaries:-relaxing-QUBOs" title="Permalink to this heading">¶</a></h2>
 <p>First, we show how to relax a QUBO built with a semi-definite positive matrix to obtain an easy-to-solve QP.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">create_problem</span><span class="p">(</span><span class="n">mu</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">total</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuadraticProgram</span><span class="p">:</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">create_problem</span><span class="p">(</span><span class="n">mu</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">total</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuadraticProgram</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Solve the quadratic program using docplex.&quot;&quot;&quot;</span>
 
     <span class="n">mdl</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
@@ -628,7 +626,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">3.418</span><span class="p">,</span> <span class="mf">2.0913</span><span class="p">,</span> <span class="mf">6.2415</span><span class="p">,</span> <span class="mf">4.4436</span><span class="p">,</span> <span class="mf">10.892</span><span class="p">,</span> <span class="mf">3.4051</span><span class="p">])</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">3.418</span><span class="p">,</span> <span class="mf">2.0913</span><span class="p">,</span> <span class="mf">6.2415</span><span class="p">,</span> <span class="mf">4.4436</span><span class="p">,</span> <span class="mf">10.892</span><span class="p">,</span> <span class="mf">3.4051</span><span class="p">])</span>
 <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
     <span class="p">[</span>
         <span class="p">[</span><span class="mf">1.07978412</span><span class="p">,</span> <span class="mf">0.00768914</span><span class="p">,</span> <span class="mf">0.11227606</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.06842969</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.01016793</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00839765</span><span class="p">],</span>
@@ -647,45 +645,34 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">qubo</span> <span class="o">=</span> <span class="n">create_problem</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
-<span class="n">qubo</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qubo</span> <span class="o">=</span> <span class="n">create_problem</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">qubo</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-\ This file has been generated by DOcplex
-\ ENCODING=ISO-8859-1
-\Problem name: docplex_model1
+Problem name: docplex_model1
 
 Maximize
- obj: 3.418000000000 x0 + 2.091300000000 x1 + 6.241500000000 x2
-      + 4.443600000000 x3 + 10.892000000000 x4 + 3.405100000000 x5 + [
-      - 4.319136480000 x0^2 - 0.061513120000 x0*x1 - 0.898208480000 x0*x2
-      + 0.547437520000 x0*x3 + 0.081343440000 x0*x4 + 0.067181200000 x0*x5
-      - 0.436915480000 x1^2 + 0.243473920000 x1*x2 + 0.016036000000 x1*x3
-      - 0.053674320000 x1*x4 - 0.118349600000 x1*x5 - 3.941412000000 x2^2
-      - 0.184585040000 x2*x3 + 0.419982800000 x2*x4 - 0.072329520000 x2*x5
-      - 2.417526800000 x3^2 - 0.299209200000 x3*x4 + 0.075625760000 x3*x5
-      - 3.193585360000 x4^2 - 0.609356080000 x4*x5 - 4.338581760000 x5^2 ]/2
-Subject To
- c0: x0 + x1 + x2 + x3 + x4 + x5 = 3
+  -2.15956824*x0^2 - 0.03075656*x0*x1 - 0.44910424*x0*x2 + 0.27371876*x0*x3
+  + 0.04067172*x0*x4 + 0.0335906*x0*x5 - 0.21845774*x1^2 + 0.12173696*x1*x2
+  + 0.008018*x1*x3 - 0.02683716*x1*x4 - 0.0591748*x1*x5 - 1.970706*x2^2
+  - 0.09229252*x2*x3 + 0.2099914*x2*x4 - 0.03616476*x2*x5 - 1.2087634*x3^2
+  - 0.1496046*x3*x4 + 0.03781288*x3*x5 - 1.59679268*x4^2 - 0.30467804*x4*x5
+  - 2.16929088*x5^2 + 3.418*x0 + 2.0913*x1 + 6.2415*x2 + 4.4436*x3 + 10.892*x4
+  + 3.4051*x5
 
-Bounds
- 0 &lt;= x0 &lt;= 1
- 0 &lt;= x1 &lt;= 1
- 0 &lt;= x2 &lt;= 1
- 0 &lt;= x3 &lt;= 1
- 0 &lt;= x4 &lt;= 1
- 0 &lt;= x5 &lt;= 1
+Subject to
+  Linear constraints (1)
+    x0 + x1 + x2 + x3 + x4 + x5 == 3  &#39;c0&#39;
 
-Binaries
- x0 x1 x2 x3 x4 x5
-End
+  Binary variables (6)
+    x0 x1 x2 x3 x4 x5
+
 </pre></div></div>
 </div>
 <p>Such binary problems are hard to deal with but can be solved if the problem instance is small enough. Our example above has as solution</p>
@@ -693,18 +680,18 @@ End
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">CplexOptimizer</span><span class="p">()</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qubo</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">CplexOptimizer</span><span class="p">()</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qubo</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-optimal function value: 16.7689322
-optimal value: [0. 0. 1. 1. 1. 0.]
+objective function value: 16.7689322
+variable values: x0=0.0, x1=0.0, x2=1.0, x3=1.0, x4=1.0, x5=0.0
 status: SUCCESS
 </pre></div></div>
 </div>
@@ -713,42 +700,40 @@ status: SUCCESS
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">qp</span> <span class="o">=</span> <span class="n">relax_problem</span><span class="p">(</span><span class="n">QuadraticProgramToQubo</span><span class="p">()</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">qubo</span><span class="p">))</span>
-<span class="n">qp</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qp</span> <span class="o">=</span> <span class="n">relax_problem</span><span class="p">(</span><span class="n">QuadraticProgramToQubo</span><span class="p">()</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">qubo</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">qp</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-\ This file has been generated by DOcplex
-\ ENCODING=ISO-8859-1
-\Problem name: docplex_model1
+Problem name: docplex_model1
 
-Maximize
- obj: 259.553391640000 x0 + 258.226691640000 x1 + 262.376891640000 x2
-      + 260.578991640000 x3 + 267.027391640000 x4 + 259.540491640000 x5 + [
-      - 89.697600360000 x0^2 - 170.818440880000 x0*x1 - 171.655136240000 x0*x2
-      - 170.209490240000 x0*x3 - 170.675584320000 x0*x4 - 170.689746560000 x0*x5
-      - 85.815379360000 x1^2 - 170.513453840000 x1*x2 - 170.740891760000 x1*x3
-      - 170.810602080000 x1*x4 - 170.875277360000 x1*x5 - 89.319875880000 x2^2
-      - 170.941512800000 x2*x3 - 170.336944960000 x2*x4 - 170.829257280000 x2*x5
-      - 87.795990680000 x3^2 - 171.056136960000 x3*x4 - 170.681302000000 x3*x5
-      - 88.572049240000 x4^2 - 171.366283840000 x4*x5 - 89.717045640000 x5^2 ]/2
-      -384.203087460000
-Subject To
+Minimize
+  44.848800180000005*x0^2 + 85.40922044000001*x0*x1 + 85.82756812000001*x0*x2
+  + 85.10474512000002*x0*x3 + 85.33779216000002*x0*x4 + 85.34487328000002*x0*x5
+  + 42.907689680000004*x1^2 + 85.25672692*x1*x2 + 85.37044588*x1*x3
+  + 85.40530104000001*x1*x4 + 85.43763868000002*x1*x5 + 44.659937940000006*x2^2
+  + 85.47075640000001*x2*x3 + 85.16847248000002*x2*x4 + 85.41462864000002*x2*x5
+  + 43.89799534000001*x3^2 + 85.52806848000002*x3*x4 + 85.34065100000001*x3*x5
+  + 44.286024620000006*x4^2 + 85.68314192000001*x4*x5 + 44.858522820000005*x5^2
+  - 259.55339164000003*x0 - 258.22669164*x1 - 262.37689164*x2 - 260.57899164*x3
+  - 267.02739164*x4 - 259.54049164*x5 + 384.20308746000006
 
-Bounds
-       x0 &lt;= 1
-       x1 &lt;= 1
-       x2 &lt;= 1
-       x3 &lt;= 1
-       x4 &lt;= 1
-       x5 &lt;= 1
-End
+Subject to
+  No constraints
+
+  Continuous variables (6)
+    0 &lt;= x0 &lt;= 1
+    0 &lt;= x1 &lt;= 1
+    0 &lt;= x2 &lt;= 1
+    0 &lt;= x3 &lt;= 1
+    0 &lt;= x4 &lt;= 1
+    0 &lt;= x5 &lt;= 1
+
 </pre></div></div>
 </div>
 <p>The solution of this continuous relaxation is different from the solution to the binary problem but can be used to warm-start a solver when dealing with the binary problem.</p>
@@ -756,20 +741,18 @@ End
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sol</span> <span class="o">=</span> <span class="n">CplexOptimizer</span><span class="p">()</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
-<span class="n">sol</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sol</span> <span class="o">=</span> <span class="n">CplexOptimizer</span><span class="p">()</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-optimal function value: 17.01205502568274
-optimal value: [1.75249958e-01 1.48038882e-07 9.70905326e-01 7.38416868e-01
- 9.99999992e-01 1.44389045e-01]
+objective function value: -17.012055025682855
+variable values: x0=0.1752499576180142, x1=1.4803888163988428e-07, x2=0.9709053264087596, x3=0.7384168677494174, x4=0.9999999916475085, x5=0.14438904470168756
 status: SUCCESS
 </pre></div></div>
 </div>
@@ -777,37 +760,31 @@ status: SUCCESS
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">c_stars</span> <span class="o">=</span> <span class="n">sol</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">x</span>
-<span class="n">c_stars</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c_stars</span> <span class="o">=</span> <span class="n">sol</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">x</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">c_stars</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[0.17524995761801201,
- 1.4803888163984595e-07,
- 0.9709053264087679,
- 0.7384168677494151,
- 0.9999999916475085,
- 0.14438904470168346]
+[0.1752499576180142, 1.4803888163988428e-07, 0.9709053264087596, 0.7384168677494174, 0.9999999916475085, 0.14438904470168756]
 </pre></div></div>
 </div>
 </section>
 <section id="QAOA">
-<h2>QAOA<a class="headerlink" href="#QAOA" title="Stały odnośnik do tego nagłówka">¶</a></h2>
+<h2>QAOA<a class="headerlink" href="#QAOA" title="Permalink to this heading">¶</a></h2>
 <p>Here, we illustrate how to warm-start the quantum approximate optimization algorithm (QAOA) by leveraging the relaxed problem shown above.</p>
 <section id="Standard-QAOA">
-<h3>Standard QAOA<a class="headerlink" href="#Standard-QAOA" title="Stały odnośnik do tego nagłówka">¶</a></h3>
+<h3>Standard QAOA<a class="headerlink" href="#Standard-QAOA" title="Permalink to this heading">¶</a></h3>
 <p>First, we use standard QAOA to solve the QUBO. To do this, we convert the QUBO to Qiskit’s QuadraticProgram class (note that the resulting problem is still a binary problem).</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">12345</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">12345</span>
 <span class="n">quantum_instance</span> <span class="o">=</span> <span class="n">QuantumInstance</span><span class="p">(</span>
     <span class="n">BasicAer</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;statevector_simulator&quot;</span><span class="p">),</span>
     <span class="n">seed_simulator</span><span class="o">=</span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
@@ -822,7 +799,7 @@ status: SUCCESS
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">qaoa</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">qaoa_mes</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qaoa</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">qaoa_mes</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -830,8 +807,8 @@ status: SUCCESS
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">qaoa_result</span> <span class="o">=</span> <span class="n">qaoa</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qubo</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">qaoa_result</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qaoa_result</span> <span class="o">=</span> <span class="n">qaoa</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qubo</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">qaoa_result</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -840,14 +817,14 @@ status: SUCCESS
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-optimal function value: 16.768932200000002
-optimal value: [0. 0. 1. 1. 1. 0.]
+objective function value: 16.768932200000002
+variable values: x0=0.0, x1=0.0, x2=1.0, x3=1.0, x4=1.0, x5=0.0
 status: SUCCESS
 </pre></div></div>
 </div>
 </section>
 <section id="Warm-start-QAOA">
-<h3>Warm-start QAOA<a class="headerlink" href="#Warm-start-QAOA" title="Stały odnośnik do tego nagłówka">¶</a></h3>
+<h3>Warm-start QAOA<a class="headerlink" href="#Warm-start-QAOA" title="Permalink to this heading">¶</a></h3>
 <p>Next, we compare this result to a warm-start QAOA in which we use the solution to the continuous relaxation of the problem. First, we create the initial state</p>
 <p><span class="math">\begin{align}
 |\phi^*\rangle=\bigotimes_{i=0}^{n-1}R_y(\theta_i)|0\rangle_n .
@@ -857,7 +834,7 @@ status: SUCCESS
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit</span> <span class="kn">import</span> <span class="n">QuantumCircuit</span>
 
 <span class="n">thetas</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">c_star</span><span class="p">))</span> <span class="k">for</span> <span class="n">c_star</span> <span class="ow">in</span> <span class="n">c_stars</span><span class="p">]</span>
 
@@ -890,7 +867,7 @@ H_{M,i}^{(ws)}=
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Parameter</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit.circuit</span> <span class="kn">import</span> <span class="n">Parameter</span>
 
 <span class="n">beta</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;β&quot;</span><span class="p">)</span>
 
@@ -917,7 +894,7 @@ H_{M,i}^{(ws)}=
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ws_qaoa_mes</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ws_qaoa_mes</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span>
     <span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span>
     <span class="n">initial_state</span><span class="o">=</span><span class="n">init_qc</span><span class="p">,</span>
     <span class="n">mixer</span><span class="o">=</span><span class="n">ws_mixer</span><span class="p">,</span>
@@ -930,7 +907,7 @@ H_{M,i}^{(ws)}=
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ws_qaoa</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">ws_qaoa_mes</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ws_qaoa</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">ws_qaoa_mes</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -938,8 +915,8 @@ H_{M,i}^{(ws)}=
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ws_qaoa_result</span> <span class="o">=</span> <span class="n">ws_qaoa</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qubo</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">ws_qaoa_result</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ws_qaoa_result</span> <span class="o">=</span> <span class="n">ws_qaoa</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qubo</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ws_qaoa_result</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -948,20 +925,20 @@ H_{M,i}^{(ws)}=
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-optimal function value: 16.768932200000002
-optimal value: [0. 0. 1. 1. 1. 0.]
+objective function value: 16.768932200000002
+variable values: x0=0.0, x1=0.0, x2=1.0, x3=1.0, x4=1.0, x5=0.0
 status: SUCCESS
 </pre></div></div>
 </div>
 </section>
 <section id="Analysis">
-<h3>Analysis<a class="headerlink" href="#Analysis" title="Stały odnośnik do tego nagłówka">¶</a></h3>
+<h3>Analysis<a class="headerlink" href="#Analysis" title="Permalink to this heading">¶</a></h3>
 <p>Both results appear to give the same result. However, when we look at the underlying probability distribution we observe that the warm-start QAOA has a much higher probability of sampling the optimal solution.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">format_qaoa_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">max_len</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">format_qaoa_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">max_len</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
     <span class="n">qaoa_res</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
@@ -982,23 +959,23 @@ status: SUCCESS
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[&#39;001110: value: 16.769, probability: 2.6%&#39;,
- &#39;011010: value: 15.744, probability: 1.1%&#39;,
- &#39;001011: value: 14.671, probability: 1.7%&#39;,
- &#39;101010: value: 14.626, probability: 1.7%&#39;,
- &#39;010110: value: 14.234, probability: 1.7%&#39;,
- &#39;100110: value: 13.953, probability: 4.7%&#39;,
- &#39;000111: value: 13.349, probability: 0.0%&#39;,
- &#39;110010: value: 12.410, probability: 0.4%&#39;,
- &#39;010011: value: 12.013, probability: 4.0%&#39;,
- &#39;100011: value: 11.559, probability: 1.5%&#39;]
+[&#39;001110: value: 16.769, probability: 0.9%&#39;,
+ &#39;011010: value: 15.744, probability: 0.1%&#39;,
+ &#39;001011: value: 14.671, probability: 4.1%&#39;,
+ &#39;101010: value: 14.626, probability: 2.5%&#39;,
+ &#39;010110: value: 14.234, probability: 0.2%&#39;,
+ &#39;100110: value: 13.953, probability: 0.2%&#39;,
+ &#39;000111: value: 13.349, probability: 0.6%&#39;,
+ &#39;110010: value: 12.410, probability: 1.7%&#39;,
+ &#39;010011: value: 12.013, probability: 0.0%&#39;,
+ &#39;100011: value: 11.559, probability: 5.5%&#39;]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">format_qaoa_samples</span><span class="p">(</span><span class="n">ws_qaoa_result</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">format_qaoa_samples</span><span class="p">(</span><span class="n">ws_qaoa_result</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1008,24 +985,24 @@ status: SUCCESS
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[&#39;001110: value: 16.769, probability: 86.3%&#39;,
- &#39;001011: value: 14.671, probability: 0.3%&#39;,
- &#39;101010: value: 14.626, probability: 0.8%&#39;,
- &#39;100110: value: 13.953, probability: 1.7%&#39;,
- &#39;000111: value: 13.349, probability: 0.1%&#39;,
- &#39;100011: value: 11.559, probability: 0.0%&#39;]
+[&#39;001110: value: 16.769, probability: 48.4%&#39;,
+ &#39;001011: value: 14.671, probability: 3.4%&#39;,
+ &#39;101010: value: 14.626, probability: 4.5%&#39;,
+ &#39;100110: value: 13.953, probability: 0.6%&#39;,
+ &#39;000111: value: 13.349, probability: 0.4%&#39;,
+ &#39;100011: value: 11.559, probability: 0.1%&#39;]
 </pre></div></div>
 </div>
 </section>
 </section>
 <section id="id2">
-<h2>Warm-start QAOA<a class="headerlink" href="#id2" title="Stały odnośnik do tego nagłówka">¶</a></h2>
+<h2>Warm-start QAOA<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
 <p>The warm-start features above are available in the Qiskit optimization module as a single optimizer named <code class="docutils literal notranslate"><span class="pre">WarmStartQAOAOptimizer</span></code> which is illustrated below. This solver will solve a QUBO with a warm-start QAOA. It computes <span class="math notranslate nohighlight">\(c^*\)</span> by relaxing the problem. This behavior is controlled by setting <code class="docutils literal notranslate"><span class="pre">relax_for_pre_solver</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit_optimization.algorithms</span> <span class="kn">import</span> <span class="n">WarmStartQAOAOptimizer</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit_optimization.algorithms</span> <span class="kn">import</span> <span class="n">WarmStartQAOAOptimizer</span>
 </pre></div>
 </div>
 </div>
@@ -1033,7 +1010,7 @@ status: SUCCESS
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">qaoa_mes</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span><span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span> <span class="n">initial_point</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qaoa_mes</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span><span class="n">quantum_instance</span><span class="o">=</span><span class="n">quantum_instance</span><span class="p">,</span> <span class="n">initial_point</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
 <span class="n">ws_qaoa</span> <span class="o">=</span> <span class="n">WarmStartQAOAOptimizer</span><span class="p">(</span>
     <span class="n">pre_solver</span><span class="o">=</span><span class="n">CplexOptimizer</span><span class="p">(),</span> <span class="n">relax_for_pre_solver</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">qaoa</span><span class="o">=</span><span class="n">qaoa_mes</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.0</span>
 <span class="p">)</span>
@@ -1044,19 +1021,18 @@ status: SUCCESS
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ws_result</span> <span class="o">=</span> <span class="n">ws_qaoa</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qubo</span><span class="p">)</span>
-<span class="n">ws_result</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ws_result</span> <span class="o">=</span> <span class="n">ws_qaoa</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qubo</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ws_result</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-optimal function value: 16.768932200000002
-optimal value: [0. 0. 1. 1. 1. 0.]
+objective function value: 16.768932200000002
+variable values: x0=0.0, x1=0.0, x2=1.0, x3=1.0, x4=1.0, x5=0.0
 status: SUCCESS
 </pre></div></div>
 </div>
@@ -1064,7 +1040,7 @@ status: SUCCESS
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">format_qaoa_samples</span><span class="p">(</span><span class="n">ws_result</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">format_qaoa_samples</span><span class="p">(</span><span class="n">ws_result</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1074,22 +1050,22 @@ status: SUCCESS
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[&#39;001110: value: 16.769, probability: 86.3%&#39;,
- &#39;001011: value: 14.671, probability: 0.3%&#39;,
- &#39;101010: value: 14.626, probability: 0.8%&#39;,
- &#39;100110: value: 13.953, probability: 1.7%&#39;,
- &#39;000111: value: 13.349, probability: 0.1%&#39;,
- &#39;100011: value: 11.559, probability: 0.0%&#39;]
+[&#39;001110: value: 16.769, probability: 48.4%&#39;,
+ &#39;001011: value: 14.671, probability: 3.4%&#39;,
+ &#39;101010: value: 14.626, probability: 4.5%&#39;,
+ &#39;100110: value: 13.953, probability: 0.6%&#39;,
+ &#39;000111: value: 13.349, probability: 0.4%&#39;,
+ &#39;100011: value: 11.559, probability: 0.1%&#39;]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
 
-<span class="o">%</span><span class="k">qiskit_version_table</span>
-<span class="o">%</span><span class="k">qiskit_copyright</span>
+<span class="o">%</span><span class="n">qiskit_version_table</span>
+<span class="o">%</span><span class="n">qiskit_copyright</span>
 </pre></div>
 </div>
 </div>
@@ -1097,20 +1073,19 @@ status: SUCCESS
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td>Qiskit</td><td>None</td></tr><tr><td>Terra</td><td>0.17.0.dev0+6d2ef86</td></tr><tr><td>Aer</td><td>0.7.4</td></tr><tr><td>Ignis</td><td>0.5.0.dev0+0e869b4</td></tr><tr><td>Aqua</td><td>0.9.0.dev0+3a600d8</td></tr><tr><td>IBM Q Provider</td><td>0.12.0.dev0+de9e1ef</td></tr><tr><th>System information</th></tr><tr><td>Python</td><td>3.8.5 (default, Sep  4 2020, 07:30:14)
-[GCC 7.3.0]</td></tr><tr><td>OS</td><td>Linux</td></tr><tr><td>CPUs</td><td>4</td></tr><tr><td>Memory (Gb)</td><td>15.552055358886719</td></tr><tr><td colspan='2'>Fri Feb 26 16:55:50 2021 CET</td></tr></table></div>
+<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td><code>qiskit-terra</code></td><td>0.21.0.dev0+dbd3961</td></tr><tr><td><code>qiskit-aer</code></td><td>0.10.4</td></tr><tr><td><code>qiskit-ibmq-provider</code></td><td>0.19.1</td></tr><tr><td><code>qiskit-optimization</code></td><td>0.4.0</td></tr><tr><th>System information</th></tr><tr><td>Python version</td><td>3.10.4</td></tr><tr><td>Python compiler</td><td>GCC 11.2.0</td></tr><tr><td>Python build</td><td>main, Apr  2 2022 09:04:19</td></tr><tr><td>OS</td><td>Linux</td></tr><tr><td>CPUs</td><td>4</td></tr><tr><td>Memory (Gb)</td><td>14.577545166015625</td></tr><tr><td colspan='2'>Wed May 18 16:05:39 2022 JST</td></tr></table></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2021.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
+<div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2022.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span>
 </pre></div>
 </div>
 </div>
@@ -1188,8 +1163,10 @@ status: SUCCESS
          <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../_static/doctools.js"></script>
          <script src="../_static/thebelab-helper.js"></script>
+         <script src="../_static/design-tabs.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>

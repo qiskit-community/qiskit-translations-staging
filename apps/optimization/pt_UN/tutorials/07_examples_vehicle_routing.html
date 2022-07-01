@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Roteamento de Veículos &mdash; Documentação Qiskit Optimization 0.3.2</title>
+  <title>Roteamento de Veículos &mdash; Documentação Qiskit Optimization 0.4.0</title>
   
 
   
@@ -32,9 +32,7 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
@@ -180,7 +178,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.0
                 </div>
               
             
@@ -545,12 +543,12 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">Nota</p>
-<p>Esta página foi gerada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/07_examples_vehicle_routing.ipynb">docs/tutorials/07_examples_vehicle_routing.ipynb</a>.</p>
+<p>Esta página foi gerada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.4/docs/tutorials/07_examples_vehicle_routing.ipynb">docs/tutorials/07_examples_vehicle_routing.ipynb</a>.</p>
 </div>
 <section id="Roteamento-de-Veículos">
-<h1>Roteamento de Veículos<a class="headerlink" href="#Roteamento-de-Veículos" title="Link permanente para este título">¶</a></h1>
+<h1>Roteamento de Veículos<a class="headerlink" href="#Roteamento-de-Veículos" title="Permalink to this heading">¶</a></h1>
 <section id="Introdução">
-<h2>Introdução<a class="headerlink" href="#Introdução" title="Link permanente para este título">¶</a></h2>
+<h2>Introdução<a class="headerlink" href="#Introdução" title="Permalink to this heading">¶</a></h2>
 <p>A Logística é uma importante área industrial, pois - com base em algumas estimativas - foi avaliada globalmente em 8183 bilhões de dólares, no ano de 2015. E, a maioria dos prestadores de serviços opera vários veículos (por exemplo, caminhões e navios de contêineres), efetuam vários depósitos, onde os veículos passam a noite e servem vários locais de clientes, com cada veículo, durante cada dia. Existem muitos problemas de otimização e controle, que consideram tais parâmetros. Computacionalmente, o desafio chave é como projetar rotas, a partir de depósitos para vários locais de clientes e retornar aos mesmos, de modo a minimizar os quilômetros viajados pelos veículos, tempo gasto ou funções objetivas semelhantes. Neste artigo, formalizaremos uma versão idealizada do problema e mostraremos sua solução utilizando a abordagem de otimização aproximada quântica de Farhi, Goldstone e Gutman (2014).</p>
 <p>O fluxo de trabalho global que demonstramos inclui:</p>
 <ol class="arabic simple">
@@ -562,7 +560,7 @@ div.rendered_html tbody tr:hover {
 <p>A seguir, explicamos primeiro o modelo, antes de prosseguir com a instalação dos pré-requisitos e o carregamento dos dados.</p>
 </section>
 <section id="O-Modelo">
-<h2>O Modelo<a class="headerlink" href="#O-Modelo" title="Link permanente para este título">¶</a></h2>
+<h2>O Modelo<a class="headerlink" href="#O-Modelo" title="Permalink to this heading">¶</a></h2>
 <p>Matematicamente falando, o problema de roteamento de veículos (VRP) é um problema combinatório, no qual as melhores rotas de um depósito para vários clientes e voltado para o depósito são procuradas, dado um certo número de veículos disponíveis. Há uma série de formulações possíveis, estendendo-se várias formulações do problema do caixeiro viajante [Applegate et al, 2006]. Aqui, apresentamos uma formulação conhecida como MTZ [Miller, Tucker, Zemlin, 1960].</p>
 <p>Seja <span class="math notranslate nohighlight">\(n\)</span> o número de clientes (indexados como <span class="math notranslate nohighlight">\(1,\dots,n\)</span>) e <span class="math notranslate nohighlight">\(K\)</span> o número de veículos disponíveis. Seja <span class="math notranslate nohighlight">\(x_{ij} = \{0,1\}\)</span> a variável de decisão binária que, se for <span class="math notranslate nohighlight">\(1\)</span>, ativa o segmento, a partir do nó <span class="math notranslate nohighlight">\(i\)</span> até o nó <span class="math notranslate nohighlight">\(j\)</span>. O índice do nó vai de <span class="math notranslate nohighlight">\(0\)</span> até <span class="math notranslate nohighlight">\(n\)</span>, sendo que <span class="math notranslate nohighlight">\(0\)</span> é (por convenção) o depósito. Há duas vezes mais variáveis de decisão distintas do que arestas. Por exemplo, em um gráfico completo, há <span class="math notranslate nohighlight">\(n(n+1)\)</span> variáveis de decisão binárias.</p>
 <p>Se dois nós <span class="math notranslate nohighlight">\(i\)</span> e <span class="math notranslate nohighlight">\(j\)</span> possuem uma ligação de <span class="math notranslate nohighlight">\(i\)</span> para <span class="math notranslate nohighlight">\(j\)</span>, escrevemos <span class="math notranslate nohighlight">\(i \sim j\)</span>. Também denotamos por <span class="math notranslate nohighlight">\(\delta(i)^+\)</span> o conjunto de nós para os quais <span class="math notranslate nohighlight">\(i\)</span> possui uma ligação, ou seja, <span class="math notranslate nohighlight">\(j \in \delta(i)^+\)</span> se, e somente se, <span class="math notranslate nohighlight">\(i \sim j\)</span>. Semelhantemente, denotamos por <span class="math notranslate nohighlight">\(\delta(i)^-\)</span> o conjunto de nós, que estão conectados a <span class="math notranslate nohighlight">\(i\)</span>, no sentido que <span class="math notranslate nohighlight">\(j \in \delta(i)^-\)</span> se e somente se <span class="math notranslate nohighlight">\(j \sim i\)</span>.</p>
@@ -588,14 +586,14 @@ div.rendered_html tbody tr:hover {
 </ul>
 </section>
 <section id="Solução-clássica">
-<h2>Solução clássica<a class="headerlink" href="#Solução-clássica" title="Link permanente para este título">¶</a></h2>
+<h2>Solução clássica<a class="headerlink" href="#Solução-clássica" title="Permalink to this heading">¶</a></h2>
 <p>Podemos resolver o VRP, classicamente, por exemplo, usando CPLEX. CPLEX usa um método branch-and-bound-and-cut para encontrar uma solução aproximada para o VRP, que nesta formulação é um programa linear inteiro misto (MILP). Para fins de notação, empacotamos as variáveis de decisão em um vetor como</p>
 <div class="math notranslate nohighlight">
 \[{\bf z} = [x_{01},x_{02},\ldots,x_{10}, x_{12},\ldots,x_{n(n-1)}]^T,\]</div>
 <p>onde <span class="math notranslate nohighlight">\({\bf z} \in \{0,1\}^N\)</span>, com <span class="math notranslate nohighlight">\(N = n (n+1)\)</span>. Portanto, a dimensão do problema escala, quadraticamente, com o número de nós. Vamos denotar a solução ideal por <span class="math notranslate nohighlight">\({\bf z}^*\)</span>, e o custo ideal associado <span class="math notranslate nohighlight">\(f^*\)</span>.</p>
 </section>
 <section id="Solução-quântica">
-<h2>Solução quântica<a class="headerlink" href="#Solução-quântica" title="Link permanente para este título">¶</a></h2>
+<h2>Solução quântica<a class="headerlink" href="#Solução-quântica" title="Permalink to this heading">¶</a></h2>
 <p>Aqui, demonstraremos uma abordagem que combina etapas da computação clássica e quântica, seguindo a abordagem de otimização aproximada quântica de Farhi, Goldstone e Gutman (2014). Em particular, utilizaremos o algoritmo <strong>Variational Quantum Eigensolver (VQE)</strong>. Salientamos que, dada a profundidade limitada dos circuitos quânticos empregados (formas variacionais), é difícil discutir o <em>speedup</em> do algoritmo, já que a solução obtida é heurística por natureza. Ao mesmo tempo, devido à natureza e à importância dos problemas alvo, vale a pena investigar abordagens heurísticas, que podem valer a pena para algumas classes de problemas.</p>
 <p>Seguindo [5], o algoritmo pode ser resumido da seguinte forma:</p>
 <ul class="simple">
@@ -621,14 +619,14 @@ div.rendered_html tbody tr:hover {
 \[\big|\psi(\theta)\rangle = [U_\mathrm{single}(\boldsymbol\theta) U_\mathrm{entangler}]^m \big|+\rangle\]</div>
 <p>onde <span class="math notranslate nohighlight">\(U_\mathrm{entangler} é uma coleção de portas C-Fase (portas totalmente entrelaçadas), e ::math:\)</span>, onde <span class="math notranslate nohighlight">\(N\)</span> é o número de qubits e <span class="math notranslate nohighlight">\(m\)</span> é a profundidade do circuito quântico.</p>
 <section id="Construa-o-Ising-Hamiltonian">
-<h3>Construa o Ising Hamiltonian<a class="headerlink" href="#Construa-o-Ising-Hamiltonian" title="Link permanente para este título">¶</a></h3>
+<h3>Construa o Ising Hamiltonian<a class="headerlink" href="#Construa-o-Ising-Hamiltonian" title="Permalink to this heading">¶</a></h3>
 <p>A partir do <span class="math notranslate nohighlight">\(VRP\)</span>, pode-se construir uma otimização polinomial binária com restrições de igualdade, apenas considerando casos em que <span class="math notranslate nohighlight">\(K=n-1\)</span>. Nestes casos, as restrições de eliminação de subtour não são necessárias e o problema é, apenas, na variável <span class="math notranslate nohighlight">\({\bf z}\)</span>. Em particular, podemos escrever uma Lagrangiana aumentada como</p>
 <div class="math notranslate nohighlight">
 \[(IH) \quad H = \sum_{i \sim j} w_{ij} x_{ij}  + A \sum_{i \in \{1,\dots,n\}} \Big(\sum_{j \in \delta(i)^+} x_{ij} - 1\Big)^2 + A \sum_{i \in \{1,\dots,n\}}\Big(\sum_{j \in \delta(i)^-} x_{ji} - 1\Big)^2 +A \Big(\sum_{i \in \delta(0)^+} x_{0i} - K\Big)^2 + A\Big(\sum_{j \in \delta(0)^+} x_{j0} - K\Big)^2\]</div>
 <p>onde <span class="math notranslate nohighlight">\(A\)</span> é um parâmetro grande o suficiente.</p>
 </section>
 <section id="Do-Hamiltoniano-à-formulação-da-QP">
-<h3>Do Hamiltoniano à formulação da QP<a class="headerlink" href="#Do-Hamiltoniano-à-formulação-da-QP" title="Link permanente para este título">¶</a></h3>
+<h3>Do Hamiltoniano à formulação da QP<a class="headerlink" href="#Do-Hamiltoniano-à-formulação-da-QP" title="Permalink to this heading">¶</a></h3>
 <p>No vetor <span class="math notranslate nohighlight">\({\bf z}\)</span>, e para um grafo completo (<span class="math notranslate nohighlight">\(\delta(i)^+ = \delta(i)^- = \{0,1,\dots,i-1,i+1,\dots,n\}\)</span>), <span class="math notranslate nohighlight">\(H\)</span> pode ser escrito da seguinte forma.</p>
 <div class="math notranslate nohighlight">
 \[\min_{{\bf z}\in \{0,1\}^{n(n+1)}} {\bf w}^T {\bf z}  + A \sum_{i \in \{1,\dots,n\}} \Big({\bf e}_i \otimes {\bf 1}_n^T {\bf z} - 1\Big)^2 + A \sum_{i \in \{1,\dots,n\}}\Big({\bf v}_i^T {\bf z} - 1\Big)^2 + A \Big(({\bf e}_0 \otimes {\bf 1}_n)^T{\bf z} - K\Big)^2 + A\Big({\bf v}_0^T{\bf z} - K\Big)^2.\]</div>
@@ -648,20 +646,20 @@ div.rendered_html tbody tr:hover {
 </section>
 </section>
 <section id="Referências">
-<h2>Referências<a class="headerlink" href="#Referências" title="Link permanente para este título">¶</a></h2>
+<h2>Referências<a class="headerlink" href="#Referências" title="Permalink to this heading">¶</a></h2>
 <p>[1] E. Farhi, J. Goldstone, S. Gutmann e-print arXiv 1411.4028, 2014</p>
 <p>[2] <a class="reference internal" href="06_examples_max_cut_and_tsp.html"><span class="doc">Max-Cut e Problema do Caixeiro Viajante</span></a></p>
 <p>[3] C. E. Miller, E. W. Tucker, and R. A. Zemlin (1960). “Integer Programming Formulations and Travelling Salesman Problems”. J. ACM. 7: 326–329. doi:10.1145/321043.321046.</p>
 <p>[4] D. L. Applegate, R. M. Bixby, V. Chvátal, and W. J. Cook (2006). The Traveling Salesman Problem. Princeton University Press, ISBN 978-0-691-12993-8.</p>
 </section>
 <section id="Inicialização">
-<h2>Inicialização<a class="headerlink" href="#Inicialização" title="Link permanente para este título">¶</a></h2>
+<h2>Inicialização<a class="headerlink" href="#Inicialização" title="Permalink to this heading">¶</a></h2>
 <p>Primeiramente, carregamos todos os pacotes que precisamos: - Python 3.6 ou posterior é necessário; - CPLEX 12.8 ou posterior é necessário para os cálculos clássicos; - Qiskit mais atual é necessário para os cálculos quânticos.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the packages that are required</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the packages that are required</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">operator</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
@@ -688,20 +686,12 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Warning: Cplex not found.
-</pre></div></div>
-</div>
 <p>Inicializamos, então, as variáveis</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize the problem by defining the parameters</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize the problem by defining the parameters</span>
 <span class="n">n</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># number of nodes + depot (n+1)</span>
 <span class="n">K</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># number of vehicles</span>
 </pre></div>
@@ -712,7 +702,7 @@ Warning: Cplex not found.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the data</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the data</span>
 <span class="k">class</span> <span class="nc">Initializer</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
@@ -741,7 +731,7 @@ Warning: Cplex not found.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize the problem by randomly generating the instance</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize the problem by randomly generating the instance</span>
 <span class="n">initializer</span> <span class="o">=</span> <span class="n">Initializer</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
 <span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">instance</span> <span class="o">=</span> <span class="n">initializer</span><span class="o">.</span><span class="n">generate_instance</span><span class="p">()</span>
 </pre></div>
@@ -749,13 +739,13 @@ Warning: Cplex not found.
 </div>
 </section>
 <section id="Solução-clássica-usando-o-IBM-ILOG-CPLEX">
-<h2>Solução clássica usando o IBM ILOG CPLEX<a class="headerlink" href="#Solução-clássica-usando-o-IBM-ILOG-CPLEX" title="Link permanente para este título">¶</a></h2>
+<h2>Solução clássica usando o IBM ILOG CPLEX<a class="headerlink" href="#Solução-clássica-usando-o-IBM-ILOG-CPLEX" title="Permalink to this heading">¶</a></h2>
 <p>Para uma solução clássica, usamos o IBM ILOG CPLEX. O CPLEX é capaz de encontrar a solução exata deste problema. Definimos uma classe ClassicalOptimizer, que codifica o problema de uma forma que o CPLEX possa resolver e, em seguida, instanciamos a classe e a resolvemos.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ClassicalOptimizer</span><span class="p">:</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ClassicalOptimizer</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">instance</span> <span class="o">=</span> <span class="n">instance</span>
@@ -854,7 +844,7 @@ Warning: Cplex not found.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate the classical optimizer class</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate the classical optimizer class</span>
 <span class="n">classical_optimizer</span> <span class="o">=</span> <span class="n">ClassicalOptimizer</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
 
 <span class="c1"># Print number of feasible solutions</span>
@@ -874,7 +864,7 @@ Number of feasible solutions = 3.0
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solve the problem in a classical fashion via CPLEX</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solve the problem in a classical fashion via CPLEX</span>
 <span class="n">x</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="n">z</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="k">try</span><span class="p">:</span>
@@ -893,14 +883,14 @@ Number of feasible solutions = 3.0
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPLEX may be missing.
+[1.0, 1.0, 1.0, 0.0, 1.0, 0.0]
 </pre></div></div>
 </div>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Visualize the solution</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Visualize the solution</span>
 <span class="k">def</span> <span class="nf">visualize_solution</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">title_str</span><span class="p">):</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
@@ -933,10 +923,17 @@ CPLEX may be missing.
 </pre></div>
 </div>
 </div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_07_examples_vehicle_routing_12_0.png" src="../_images/tutorials_07_examples_vehicle_routing_12_0.png" />
+</div>
+</div>
 <p>Se você tem CPLEX, a solução mostra o depósito com uma estrela e as rotas selecionadas para os veículos com flechas.</p>
 </section>
 <section id="Solução-quântica-do-zero">
-<h2>Solução quântica do zero<a class="headerlink" href="#Solução-quântica-do-zero" title="Link permanente para este título">¶</a></h2>
+<h2>Solução quântica do zero<a class="headerlink" href="#Solução-quântica-do-zero" title="Permalink to this heading">¶</a></h2>
 <p>Para a solução quântica, usamos o Qiskit.</p>
 <p>Primeiro, derivamos a solução do zero, usando uma classe QuantumOptimizer que codifica a abordagem quântica para resolver o problema e, em seguida, vamos instanciá-la e resolvê-la. Definimos os seguintes métodos dentro da classe:</p>
 <ul class="simple">
@@ -948,7 +945,7 @@ CPLEX may be missing.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit_optimization</span> <span class="kn">import</span> <span class="n">QuadraticProgram</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit_optimization</span> <span class="kn">import</span> <span class="n">QuadraticProgram</span>
 <span class="kn">from</span> <span class="nn">qiskit_optimization.algorithms</span> <span class="kn">import</span> <span class="n">MinimumEigenOptimizer</span>
 
 
@@ -1049,7 +1046,7 @@ CPLEX may be missing.
 </div>
 </div>
 <section id="Passo-1">
-<h3>Passo 1<a class="headerlink" href="#Passo-1" title="Link permanente para este título">¶</a></h3>
+<h3>Passo 1<a class="headerlink" href="#Passo-1" title="Permalink to this heading">¶</a></h3>
 <p>Instancia a classe de otimizador quântico com os parâmetros:</p>
 <ul class="simple">
 <li><p>a instância;</p></li>
@@ -1059,21 +1056,21 @@ CPLEX may be missing.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate the quantum optimizer class with parameters:</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate the quantum optimizer class with parameters:</span>
 <span class="n">quantum_optimizer</span> <span class="o">=</span> <span class="n">QuantumOptimizer</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </section>
 <section id="Passo-2">
-<h3>Passo 2<a class="headerlink" href="#Passo-2" title="Link permanente para este título">¶</a></h3>
+<h3>Passo 2<a class="headerlink" href="#Passo-2" title="Permalink to this heading">¶</a></h3>
 <p>Codifique o problema como uma formulação binária (IH-QP).</p>
 <p>Verificação de sanidade: certifique-se de que a formulação binária no otimizador quântico esteja correta (ou seja, produz o mesmo custo dada a mesma solução).</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check if the binary representation is correct</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check if the binary representation is correct</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">Q</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">binary_cost</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">binary_representation</span><span class="p">(</span><span class="n">x_sol</span><span class="o">=</span><span class="n">z</span><span class="p">)</span>
@@ -1097,31 +1094,31 @@ CPLEX may be missing.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Could not verify the correctness, due to CPLEX solution being unavailable.
-Binary cost: 0
+Binary cost: 132.11148115684045 classical cost: 132.1114811568365
+Binary formulation is correct
 </pre></div></div>
 </div>
 </section>
 <section id="Passo-3">
-<h3>Passo 3<a class="headerlink" href="#Passo-3" title="Link permanente para este título">¶</a></h3>
+<h3>Passo 3<a class="headerlink" href="#Passo-3" title="Permalink to this heading">¶</a></h3>
 <p>Codifique o problema como uma instância de <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">qp</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">construct_problem</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qp</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">construct_problem</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </section>
 <section id="Passo-4">
-<h3>Passo 4<a class="headerlink" href="#Passo-4" title="Link permanente para este título">¶</a></h3>
+<h3>Passo 4<a class="headerlink" href="#Passo-4" title="Permalink to this heading">¶</a></h3>
 <p>Resolva o problema, via <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> do módulo de otimização. Nota: Dependendo do número de qubits, a simulação statevector pode demorar um pouco; por exemplo, com 12 qubits, leva mais de 12 horas. A criação de logs é útil para ver o que o programa está fazendo.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">quantum_solution</span><span class="p">,</span> <span class="n">quantum_cost</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">solve_problem</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">quantum_solution</span><span class="p">,</span> <span class="n">quantum_cost</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">solve_problem</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">quantum_solution</span><span class="p">,</span> <span class="n">quantum_cost</span><span class="p">)</span>
 </pre></div>
@@ -1137,13 +1134,13 @@ Binary cost: 0
 </div>
 </section>
 <section id="Passo-5">
-<h3>Passo 5<a class="headerlink" href="#Passo-5" title="Link permanente para este título">¶</a></h3>
+<h3>Passo 5<a class="headerlink" href="#Passo-5" title="Permalink to this heading">¶</a></h3>
 <p>Visualize a solução</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Put the solution in a way that is compatible with the classical variables</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Put the solution in a way that is compatible with the classical variables</span>
 <span class="n">x_quantum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">kk</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">):</span>
@@ -1161,11 +1158,18 @@ Binary cost: 0
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <img alt="../_images/tutorials_07_examples_vehicle_routing_25_0.png" src="../_images/tutorials_07_examples_vehicle_routing_25_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_07_examples_vehicle_routing_25_1.png" src="../_images/tutorials_07_examples_vehicle_routing_25_1.png" />
 </div>
 </div>
 <p>Os gráficos apresentam o depósito com uma estrela e as rotas selecionadas para os veículos com flechas. Observe que, neste caso específico, podemos encontrar a solução ideal da formulação do QP, que por acaso coincide com a solução ideal do ILP.</p>
@@ -1174,10 +1178,10 @@ Binary cost: 0
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
 
-<span class="o">%</span><span class="k">qiskit_version_table</span>
-<span class="o">%</span><span class="k">qiskit_copyright</span>
+<span class="o">%</span><span class="n">qiskit_version_table</span>
+<span class="o">%</span><span class="n">qiskit_copyright</span>
 </pre></div>
 </div>
 </div>
@@ -1185,20 +1189,19 @@ Binary cost: 0
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td>Qiskit</td><td>None</td></tr><tr><td>Terra</td><td>0.17.0.dev0+3c103ae</td></tr><tr><td>Aer</td><td>0.8.0</td></tr><tr><td>Ignis</td><td>0.6.0.dev0+6103f99</td></tr><tr><td>Aqua</td><td>0.9.0.dev0+0058183</td></tr><tr><td>IBM Q Provider</td><td>0.12.0.dev0+8f3168b</td></tr><tr><th>System information</th></tr><tr><td>Python</td><td>3.7.9 (default, Aug 31 2020, 07:22:35)
-[Clang 10.0.0 ]</td></tr><tr><td>OS</td><td>Darwin</td></tr><tr><td>CPUs</td><td>2</td></tr><tr><td>Memory (Gb)</td><td>12.0</td></tr><tr><td colspan='2'>Fri Mar 05 12:50:09 2021 EST</td></tr></table></div>
+<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td><code>qiskit-terra</code></td><td>0.21.0.dev0+dbd3961</td></tr><tr><td><code>qiskit-aer</code></td><td>0.10.4</td></tr><tr><td><code>qiskit-ibmq-provider</code></td><td>0.19.1</td></tr><tr><td><code>qiskit-optimization</code></td><td>0.4.0</td></tr><tr><th>System information</th></tr><tr><td>Python version</td><td>3.10.4</td></tr><tr><td>Python compiler</td><td>GCC 11.2.0</td></tr><tr><td>Python build</td><td>main, Apr  2 2022 09:04:19</td></tr><tr><td>OS</td><td>Linux</td></tr><tr><td>CPUs</td><td>4</td></tr><tr><td>Memory (Gb)</td><td>14.577545166015625</td></tr><tr><td colspan='2'>Wed May 18 16:05:15 2022 JST</td></tr></table></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2021.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
+<div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2022.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span>
 </pre></div>
 </div>
 </div>
@@ -1286,8 +1289,10 @@ Binary cost: 0
          <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../_static/doctools.js"></script>
          <script src="../_static/thebelab-helper.js"></script>
+         <script src="../_static/design-tabs.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>

@@ -32,9 +32,7 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
@@ -229,10 +227,10 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">概要</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">はじめに</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">チュートリアル</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../apidocs/qiskit_machine_learning.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../apidocs/qiskit_machine_learning.html">API リファレンス</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">リリースノート</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/Qiskit/qiskit-machine-learning">GitHub</a></li>
 </ul>
@@ -568,17 +566,17 @@ div.rendered_html tbody tr:hover {
 <p>このページは <a class="reference external" href="https://github.com/Qiskit/qiskit-machine-learning/blob/stable/0.4/docs/tutorials/10_effective_dimension.ipynb">docs/tutorials/10_effective_dimension.ipynb</a> から生成されました。</p>
 </div>
 <section id="Qiskitニューラルネットワークの有効な次元">
-<h1>Qiskitニューラルネットワークの有効な次元<a class="headerlink" href="#Qiskitニューラルネットワークの有効な次元" title="このヘッドラインへのパーマリンク">¶</a></h1>
+<h1>Qiskitニューラルネットワークの有効な次元<a class="headerlink" href="#Qiskitニューラルネットワークの有効な次元" title="Permalink to this heading">¶</a></h1>
 <p>このチュートリアルでは、 <code class="docutils literal notranslate"><span class="pre">EffectiveDimension</span></code> クラスと <code class="docutils literal notranslate"><span class="pre">LocalEffectiveDimension</span></code> クラスを利用して、量子ニューラルネットワークモデルの能力を評価します。これらは、トレーニング可能性、表現可能性、一般化能力などの概念に関連する情報幾何学に基づくメトリックです。</p>
 <p>コード例に飛び込む前に、これら2つのメトリックの違いと、それらが量子ニューラルネットワークの研究に関連する理由を簡単に説明します。グローバル有効次元の詳細については、 <a class="reference external" href="https://arxiv.org/pdf/2011.00027.pdf">この論文</a> を参照してください。ローカル有効ディメンションは、 <a class="reference external" href="https://arxiv.org/abs/2112.04807">後の研究</a> で紹介されています。</p>
 <section id="1.-グローバルとローカルの有効次元">
-<h2>1. グローバルとローカルの有効次元<a class="headerlink" href="#1.-グローバルとローカルの有効次元" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<h2>1. グローバルとローカルの有効次元<a class="headerlink" href="#1.-グローバルとローカルの有効次元" title="Permalink to this heading">¶</a></h2>
 <p>古典的な機械学習モデルと量子機械学習モデルはどちらも共通の目標を共有しています。それは <strong>一般化</strong> に長けていること、つまりデータから洞察を学び、それらを目に見えないデータに適用することです。</p>
 <p>この能力を評価するための適切な指標を見つけることは重要なことです。 <a class="reference external" href="https://arxiv.org/pdf/2011.00027.pdf">The Power of Quantum Neural Networks</a> で、著者は、特定のモデルが新しいデータに対してどれだけうまく機能できるかを示す有用な指標として、<strong>グローバル</strong> な有効次元を紹介しています。 <a class="reference external" href="https://arxiv.org/pdf/2112.04807.pdf">Effective Dimension of Machine Learning Models</a> では、機械学習モデルの汎化誤差を制限する新しい容量測定値として、<strong>ローカル</strong> 有効次元が提案されています。</p>
 <p>グローバル（ <code class="docutils literal notranslate"><span class="pre">EffectiveDimension</span></code> クラス）と <strong>ローカル</strong> 有効ディメンション（ <code class="docutils literal notranslate"><span class="pre">LocalEffectiveDimension</span></code> クラス）の主な違いは、実際には計算方法ではなく、分析されるパラメーター空間の性質にあります。グローバル有効次元は、モデルの <strong>完全なパラメーター空間</strong> を組み込み、 <strong>多数のパラメーター（重み）セット</strong> から計算されます。一方、ローカルの有効な次元は、<strong>トレーニングされた</strong> モデルが新しいデータにどれだけうまく一般化できるか、そしてそれがどれほど <strong>表現力</strong> があるかに焦点を当てています。したがって、局所的な有効寸法は、<strong>単一の</strong> 重みサンプルのセットから計算されます（トレーニング結果）。この違いは、実際の実装に関してはわずかですが、概念レベルでは非常に重要です。</p>
 </section>
 <section id="2.-有効次元アルゴリズム">
-<h2>2. 有効次元アルゴリズム<a class="headerlink" href="#2.-有効次元アルゴリズム" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<h2>2. 有効次元アルゴリズム<a class="headerlink" href="#2.-有効次元アルゴリズム" title="Permalink to this heading">¶</a></h2>
 <p>グローバルおよびローカルの有効次元アルゴリズムはどちらも、フィッシャー情報量マトリックスを使用して複雑さの尺度を提供します。この行列の計算方法の詳細は <a class="reference external" href="https://arxiv.org/pdf/2011.00027.pdf">参考論文</a> に記載されていますが、一般的にこの行列は、ニューラルネットワークの出力がネットワークのパラメータ空間の変化に対してどれほど敏感であるかを示しています。</p>
 <p>特に、このアルゴリズムは4つの主要なステップに従います。</p>
 <ol class="arabic simple">
@@ -589,7 +587,7 @@ div.rendered_html tbody tr:hover {
 </ol>
 </section>
 <section id="3.-基本的な例（CircuitQNN）">
-<h2>3. 基本的な例（CircuitQNN）<a class="headerlink" href="#3.-基本的な例（CircuitQNN）" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<h2>3. 基本的な例（CircuitQNN）<a class="headerlink" href="#3.-基本的な例（CircuitQNN）" title="Permalink to this heading">¶</a></h2>
 <p>この例は、QNNモデルの問題を設定し、グローバル有効次元アルゴリズムを実行する方法を示しています。Qiskit <code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code> （この例に示されている）と <code class="docutils literal notranslate"><span class="pre">OpflowQNN</span></code> （後の例に示されている）の両方を <code class="docutils literal notranslate"><span class="pre">EffectiveDimension</span></code> クラスで使用できます。</p>
 <p>再現性を目的として、必要なインポートと乱数ジェネレーターの固定シードから開始します。</p>
 <div class="nbinput nblast docutils container">
@@ -618,7 +616,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <section id="3.1-QNNを定義する">
-<h3>3.1 QNNを定義する<a class="headerlink" href="#3.1-QNNを定義する" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>3.1 QNNを定義する<a class="headerlink" href="#3.1-QNNを定義する" title="Permalink to this heading">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">CircuitQNN</span></code> を作成するための最初のステップは、パラメーター化された特徴マップと仮説を定義することです。このトイ・サンプルでは、3キュービットを使用し、 <code class="docutils literal notranslate"><span class="pre">TwoLayerQNN</span></code> クラスで使用される回路を定義します。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
@@ -682,7 +680,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="3.2-実効次元計算の設定">
-<h3>3.2 実効次元計算の設定<a class="headerlink" href="#3.2-実効次元計算の設定" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>3.2 実効次元計算の設定<a class="headerlink" href="#3.2-実効次元計算の設定" title="Permalink to this heading">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">EffectiveDimension</span></code> クラスを使用してQNNの有効次元を計算するには、一連の入力サンプルと重みのセット、およびデータセットで使用可能なデータサンプルの総数が必要です。 <code class="docutils literal notranslate"><span class="pre">input_samples</span></code> と <code class="docutils literal notranslate"><span class="pre">weight_samples</span></code> はクラスコンストラクターで設定され、データサンプルの数は有効なディメンション計算の呼び出し中に指定されるため、このメジャーがさまざまなデータセットサイズでどのように変化するかをテストおよび比較できます。</p>
 <p>入力サンプルと重みサンプルの数を定義できます。クラスは、正規（ <code class="docutils literal notranslate"><span class="pre">input_samples</span></code> の場合）または均一（ <code class="docutils literal notranslate"><span class="pre">weight_samples</span></code> の場合）の分布から対応する配列をランダムにサンプリングします。 多数のサンプルを渡す代わりに、手動でサンプリングされた配列を渡すことができます。</p>
 <div class="nbinput nblast docutils container">
@@ -724,7 +722,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="3.3-グローバル実効次元の計算">
-<h3>3.3 グローバル実効次元の計算<a class="headerlink" href="#3.3-グローバル実効次元の計算" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>3.3 グローバル実効次元の計算<a class="headerlink" href="#3.3-グローバル実効次元の計算" title="Permalink to this heading">¶</a></h3>
 <p>次に、以前に定義した一連の入力サンプル、重み、および5000のデータセットサイズについて、ネットワークの有効な次元を計算しましょう。</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
@@ -807,11 +805,11 @@ Number of weights: 6
 </section>
 </section>
 <section id="4.-ローカル有効次元の例">
-<h2>4. ローカル有効次元の例<a class="headerlink" href="#4.-ローカル有効次元の例" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<h2>4. ローカル有効次元の例<a class="headerlink" href="#4.-ローカル有効次元の例" title="Permalink to this heading">¶</a></h2>
 <p>はじめに説明したように、ローカル有効次元アルゴリズムは <strong>1</strong> セットの重みのみを使用し、トレーニングがニューラルネットワークの表現力にどのように影響するかを監視するために使用できます。 <code class="docutils literal notranslate"><span class="pre">LocalEffectiveDimension</span></code> クラスは、これらの計算が概念的に分離されていることを確認するためにこの制約を適用しますが、実装の残りの部分は <code class="docutils literal notranslate"><span class="pre">EffectiveDimension</span></code> と共有されます。</p>
 <p>この例は、 <code class="docutils literal notranslate"><span class="pre">LocalEffectiveDimension</span></code> クラスを活用して、QNNの表現力に対するトレーニングの効果を分析する方法を示しています。</p>
 <section id="4.1-データセットとQNNの定義">
-<h3>4.1 データセットとQNNの定義<a class="headerlink" href="#4.1-データセットとQNNの定義" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>4.1 データセットとQNNの定義<a class="headerlink" href="#4.1-データセットとQNNの定義" title="Permalink to this heading">¶</a></h3>
 <p>まず、3次元二項分類データセットを作成します。</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
@@ -837,7 +835,7 @@ Number of weights: 6
 </div>
 </section>
 <section id="4.2-QNNのトレーニング">
-<h3>4.2 QNNのトレーニング<a class="headerlink" href="#4.2-QNNのトレーニング" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>4.2 QNNのトレーニング<a class="headerlink" href="#4.2-QNNのトレーニング" title="Permalink to this heading">¶</a></h3>
 <p>これで、QNNのトレーニングに進むことができます。トレーニングステップには時間がかかる場合があります。しばらくお待ちください。 分類器にコールバックを渡して、トレーニングプロセスがどのように進行しているかを観察できます。 通常どおり、再現性のために <code class="docutils literal notranslate"><span class="pre">initial_point</span></code> を修正します。</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
@@ -915,7 +913,7 @@ Number of weights: 6
 </div>
 </section>
 <section id="4.3-トレーニングされたQNNのローカル有効次元を計算する">
-<h3>4.3 トレーニングされたQNNのローカル有効次元を計算する<a class="headerlink" href="#4.3-トレーニングされたQNNのローカル有効次元を計算する" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>4.3 トレーニングされたQNNのローカル有効次元を計算する<a class="headerlink" href="#4.3-トレーニングされたQNNのローカル有効次元を計算する" title="Permalink to this heading">¶</a></h3>
 <p>ネットワークをトレーニングしたので、トレーニングした重みに基づいてローカルの有効次元を評価しましょう。そのために、分類器から直接トレーニング済みの重みにアクセスします。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
@@ -948,7 +946,7 @@ normalized local effective dimensions for trained QNN:  [0.79663244 0.80325759 0
 </div>
 </section>
 <section id="4.4-トレーニングされていないQNNのローカル有効次元を計算する">
-<h3>4.4 トレーニングされていないQNNのローカル有効次元を計算する<a class="headerlink" href="#4.4-トレーニングされていないQNNのローカル有効次元を計算する" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>4.4 トレーニングされていないQNNのローカル有効次元を計算する<a class="headerlink" href="#4.4-トレーニングされていないQNNのローカル有効次元を計算する" title="Permalink to this heading">¶</a></h3>
 <p>重みのサンプルとして <code class="docutils literal notranslate"><span class="pre">initial_point</span></code> を使用して、この結果をトレーニングされていないネットワークの有効な次元と比較できます。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
@@ -979,7 +977,7 @@ normalized local effective dimensions for untrained QNN:  [0.80896667 0.81612261
 </div>
 </section>
 <section id="4.5-結果のプロットと分析">
-<h3>4.5 結果のプロットと分析<a class="headerlink" href="#4.5-結果のプロットと分析" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<h3>4.5 結果のプロットと分析<a class="headerlink" href="#4.5-結果のプロットと分析" title="Permalink to this heading">¶</a></h3>
 <p>トレーニングの前後の実効次元値をプロットすると、次の結果が得られます。</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
@@ -1110,8 +1108,10 @@ normalized local effective dimensions for untrained QNN:  [0.80896667 0.81612261
          <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../_static/doctools.js"></script>
          <script src="../_static/thebelab-helper.js"></script>
+         <script src="../_static/design-tabs.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>

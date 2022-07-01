@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>차량 라우팅 &mdash; Qiskit Optimization 0.3.2 문서</title>
+  <title>차량 라우팅 &mdash; Qiskit Optimization 0.4.0 문서</title>
   
 
   
@@ -32,9 +32,7 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
@@ -180,7 +178,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.0
                 </div>
               
             
@@ -545,12 +543,12 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">참고</p>
-<p>이 페이지는 <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/07_examples_vehicle_routing.ipynb">docs/tutorials/07_examples_vehicle_routing.ipynb</a> 에서 생성되었다.</p>
+<p>이 페이지는 <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.4/docs/tutorials/07_examples_vehicle_routing.ipynb">docs/tutorials/07_examples_vehicle_routing.ipynb</a> 에서 생성되었다.</p>
 </div>
 <section id="차량-라우팅">
-<h1>차량 라우팅<a class="headerlink" href="#차량-라우팅" title="이 표제에 대한 퍼머링크">¶</a></h1>
+<h1>차량 라우팅<a class="headerlink" href="#차량-라우팅" title="이 제목에 대한 퍼머링크">¶</a></h1>
 <section id="소개">
-<h2>소개<a class="headerlink" href="#소개" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<h2>소개<a class="headerlink" href="#소개" title="이 제목에 대한 퍼머링크">¶</a></h2>
 <p>물류는 주요 산업으로 2015년 세계적으로 8183억 달러 규모로 평가되고 있다. 대부분의 서비스 제공자들은 다수의 차량 (예를 들어, 트럭 및 컨테이너 선박), 다수의 depots 를 운영하며, 여기서 차량은 하룻밤 동안에 정차하며, 각각의 날 동안 각각의 차량과 함께 다수의 클라이언트 위치를 제공한다. 이러한 매개변수를 고려하는 많은 최적화 및 제어 문제점이 있다. 계산적으로, 주요 문제는 이동 경로, 소요 시간 또는 유사한 목적 함수를 최소화하기 위해 저장소에서 다수의 클라이언트 위치로, 다시 저장소로 이동하는 경로를 디자인하는 방법이다. 이 노트북에서는 문제의 이상화된 버전을 형식화하고, [Farhi, Goldstone, and Gutmann (2014)] 의 퀀텀 근사 최적화 접근법을 사용하여 솔루션을 공개한다.</p>
 <p>설명하고자 하는 전반적인 워크플로우(workflow) 는 다음과 같다:</p>
 <ol class="arabic simple">
@@ -562,7 +560,7 @@ div.rendered_html tbody tr:hover {
 <p>다음에서 사전 요구사항의 설치 및 데이터 로드를 진행하기 전에 먼저 모델을 설명한다.</p>
 </section>
 <section id="모델">
-<h2>모델<a class="headerlink" href="#모델" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<h2>모델<a class="headerlink" href="#모델" title="이 제목에 대한 퍼머링크">¶</a></h2>
 <p>수학적으로 말하면, 차량 라우팅 문제 (VRP) 는 조합 문제이며, 다수의 이용가능한 차량들이 주어진다면, 데포로부터 다수의 클라이언트들로의 가장 좋은 루트들이 추구되고 있다. 본원에서, 본 발명자들은 MTZ [Miller, Tucker, Zemlin, 1960] 로 알려진 제제를 제공한다.</p>
 <p><span class="math notranslate nohighlight">\(n\)</span> 을 고객의 수라고 하고(<span class="math notranslate nohighlight">\(1,\dots,n\)</span> 로 인덱싱), <span class="math notranslate nohighlight">\(K\)</span> 를 사용가능한 탈 것의 수라고 하자. <span class="math notranslate nohighlight">\(x_{ij} = \{0,1\}\)</span> 를 <span class="math notranslate nohighlight">\(1\)</span> 일 때 노드 <span class="math notranslate nohighlight">\(i\)</span> 에서 노드 <span class="math notranslate nohighlight">\(j\)</span> 로의 조각을 활성화하는 이진 결정 변수라고 하자. 노드 인덱스는 <span class="math notranslate nohighlight">\(0\)</span> 부터 <span class="math notranslate nohighlight">\(n\)</span> 까지 사용하고, 0은 (관습적으로) 정거장이다. 간선의 두 배만큼의 서로 다른 결정 변수들이 있다. 예를 들어, 완전 연결 그래프에서는, <span class="math notranslate nohighlight">\(n(n+1)\)</span> 개의 이진 결정 변수들이 있다.</p>
 <p>두 개의 노드 <span class="math notranslate nohighlight">\(i\)</span> 와 <span class="math notranslate nohighlight">\(j\)</span> 가 <span class="math notranslate nohighlight">\(i\)</span> 에서 <span class="math notranslate nohighlight">\(j\)</span> 까지의 링크를 가지고 있는 경우, <span class="math notranslate nohighlight">\(i \sim j\)</span> 를 작성한다. 또한 우리는 <span class="math notranslate nohighlight">\(\delta(i)^+\)</span> 를 통해 <span class="math notranslate nohighlight">\(i\)</span> 가 링크를 갖는 노드 집합 (즉, <span class="math notranslate nohighlight">\(j \in \delta(i)^+\)</span> 와 <span class="math notranslate nohighlight">\(i \sim j\)</span> 만 해당) 을 나타낸다. 마찬가지로, 우리는 <span class="math notranslate nohighlight">\(j \in \delta(i)^-\)</span> 가 <span class="math notranslate nohighlight">\(j \sim i\)</span> 의 경우에만 <span class="math notranslate nohighlight">\(i\)</span> 에 연결된 노드 집합을 <span class="math notranslate nohighlight">\(\delta(i)^-\)</span> 와 같이 표시한다.</p>
@@ -588,14 +586,14 @@ div.rendered_html tbody tr:hover {
 </ul>
 </section>
 <section id="고전적인-솔루션">
-<h2>고전적인 솔루션<a class="headerlink" href="#고전적인-솔루션" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<h2>고전적인 솔루션<a class="headerlink" href="#고전적인-솔루션" title="이 제목에 대한 퍼머링크">¶</a></h2>
 <p>예를 들어 CPLEX를 사용하여 VRP를 고전적으로 해결할 수 있다. CPLEX는branch-and-bound-and-cut 방법을 사용하여 VRP의 대략적인 솔루션을 찾는다. VRP는 이 공식에서 mixed-integer linear program (MILP) 이다. 표기법을 위해 다음과 같이 하나의 벡터로 결정 변수를 묶는다.</p>
 <div class="math notranslate nohighlight">
 \[{\bf z} = [x_{01}, x_{02}, \ldot, x_{10}, x_{12}, \ldots,x_ {n (n-1)}] ^ T,\]</div>
 <p><span class="math notranslate nohighlight">\({\bf z} \in \{0,1\}^N\)</span> 에서 <span class="math notranslate nohighlight">\(N = n (n+1)\)</span> 로 한다. 따라서 문제의 치수는 노드 수에 따라 4차적으로 확장된다. <span class="math notranslate nohighlight">\({\bf z}^*\)</span> 에 ㄷ의한 최적의 솔루션과 관련된 최적 비용 <span class="math notranslate nohighlight">\(f^*\)</span> 를 나타내자.</p>
 </section>
 <section id="양자-솔루션">
-<h2>양자 솔루션<a class="headerlink" href="#양자-솔루션" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<h2>양자 솔루션<a class="headerlink" href="#양자-솔루션" title="이 제목에 대한 퍼머링크">¶</a></h2>
 <p>여기, 우리는 파리[Farhi], 골드스톤[Goldstone] 및 구트만[Gutman] (2014) 의 양자 근사 최적화 접근법에 이어 고전적 및 양자 컴퓨팅 단계를 결합한 접근 방식을 보여준다. 특히 우리는 variational quantum eigensolve (VQE) 를 사용한다. 우리는 채택된 양자 회로의 제한된 깊이(변수 형태) 를 사용할 경우, 얻은 솔루션이 본질적으로 발견적이기 때문에 알고리즘의 속도 항상을 논하기 어렵다는 것을 강조한다. 동시에, 대상 문제에 특성과 중요성 때문에, 일부 문제 클래스에서 가치가 있을 수 있는 발견적 접근 방식을 조사할 가치가 있다.</p>
 <p>[5] 에 이어서, 알고리즘은 다음과 같이 요약될 수 있다:</p>
 <ul class="simple">
@@ -621,14 +619,14 @@ div.rendered_html tbody tr:hover {
 \[\big|\psi(\theta)\rangle = [U_\mathrm{single}(\boldsymbol\theta) U_\mathrm{entangler}]^m \big|+\rangle\]</div>
 <p>여기서 <span class="math notranslate nohighlight">\(U_\mathrm{entangler}\)</span> 는 C-위상 게이트 (완전히 얽힌 게이트)의 집합이고, <span class="math notranslate nohighlight">\(U_\mathrm{single}(\theta) = \prod_{i=1}^N Y(\theta_{i})\)</span> 는 여기서 <span class="math notranslate nohighlight">\(N\)</span> 큐비트 수, <span class="math notranslate nohighlight">\(m\)</span> 양자 회로의 깊이(depth) 이다.</p>
 <section id="이징-해밀토니안-(Ising-Hamiltonian)-구성">
-<h3>이징 해밀토니안 (Ising Hamiltonian) 구성<a class="headerlink" href="#이징-해밀토니안-(Ising-Hamiltonian)-구성" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<h3>이징 해밀토니안 (Ising Hamiltonian) 구성<a class="headerlink" href="#이징-해밀토니안-(Ising-Hamiltonian)-구성" title="이 제목에 대한 퍼머링크">¶</a></h3>
 <p><span class="math notranslate nohighlight">\(VRP\)</span> 에서 <span class="math notranslate nohighlight">\(K=n-1\)</span> 의 경우를 고려해야만 동등 제약 조건을 가진 이진 다항식 최적화를 구성할 수 있다. 이러한 경우 부분 순환로 제거 제약 조건은 필요하지 않으며 문제는 변수 <span class="math notranslate nohighlight">\({\bf z}\)</span> 에 있다. 특히, 우리는 다음과 같이 증강된 라그랑지안(Lagrangian)를 쓸 수 있다.</p>
 <div class="math notranslate nohighlight">
 \[(IH) \quad H = \sum_{i \sim j} w_{ij} x_{ij}  + A \sum_{i \in \{1,\dots,n\}} \Big(\sum_{j \in \delta(i)^+} x_{ij} - 1\Big)^2 + A \sum_{i \in \{1,\dots,n\}}\Big(\sum_{j \in \delta(i)^-} x_{ji} - 1\Big)^2 +A \Big(\sum_{i \in \delta(0)^+} x_{0i} - K\Big)^2 + A\Big(\sum_{j \in \delta(0)^+} x_{j0} - K\Big)^2\]</div>
 <p>여기서 <span class="math notranslate nohighlight">\(A\)</span> 는 충분히 큰 매개변수이다.</p>
 </section>
 <section id="해밀토니안으로부터-QP-수식화">
-<h3>해밀토니안으로부터 QP 수식화<a class="headerlink" href="#해밀토니안으로부터-QP-수식화" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<h3>해밀토니안으로부터 QP 수식화<a class="headerlink" href="#해밀토니안으로부터-QP-수식화" title="이 제목에 대한 퍼머링크">¶</a></h3>
 <p>벡터 <span class="math notranslate nohighlight">\({\bf z}\)</span> 에서 완성한 그래프(<span class="math notranslate nohighlight">\(\delta(i)^+ = \delta(i)^- = \{0,1,\dots,i-1,i+1,\dots,n\}\)</span>) , <span class="math notranslate nohighlight">\(H\)</span> 를 다음과 같이 작성할 수 있습니다.</p>
 <div class="math notranslate nohighlight">
 \[\min_{{\bf z}\in \{0,1\}^{n(n+1)}} {\bf w}^T {\bf z}  + A \sum_{i \in \{1,\dots,n\}} \Big({\bf e}_i \otimes {\bf 1}_n^T {\bf z} - 1\Big)^2 + A \sum_{i \in \{1,\dots,n\}}\Big({\bf v}_i^T {\bf z} - 1\Big)^2 + A \Big(({\bf e}_0 \otimes {\bf 1}_n)^T{\bf z} - K\Big)^2 + A\Big({\bf v}_0^T{\bf z} - K\Big)^2.\]</div>
@@ -648,20 +646,20 @@ div.rendered_html tbody tr:hover {
 </section>
 </section>
 <section id="참조">
-<h2>참조<a class="headerlink" href="#참조" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<h2>참조<a class="headerlink" href="#참조" title="이 제목에 대한 퍼머링크">¶</a></h2>
 <p>[1] E. Farhi, J. Goldstone, S. Gutmann e-print arXiv 1411.4028, 2014</p>
 <p>[2] <a class="reference internal" href="06_examples_max_cut_and_tsp.html"><span class="doc">Max-Cut and Traveling Salesman Problem</span></a></p>
 <p>[3] C. E. Miller, E. W. Tucker, and R. A. Zemlin (1960). “Integer Programming Formulations and Travelling Salesman Problems”. J. ACM. 7: 326–329. doi:10.1145/321043.321046.</p>
 <p>[4] D. L. Applegate, R. M. Bixby, V. Chvátal, and W. J. Cook (2006). The Traveling Salesman Problem. Princeton University Press, ISBN 978-0-691-12993-8.</p>
 </section>
 <section id="초기화">
-<h2>초기화<a class="headerlink" href="#초기화" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<h2>초기화<a class="headerlink" href="#초기화" title="이 제목에 대한 퍼머링크">¶</a></h2>
 <p>먼저 필요한 모든 패키지를 로드한다. - Python 3.6 이상이 필요한다. - 기존 계산에는 CPLEX 12.8 이상이 필요하다. - 양자 계산에는 최신 Qiskit가 필요한다.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the packages that are required</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the packages that are required</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">operator</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
@@ -688,20 +686,12 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Warning: Cplex not found.
-</pre></div></div>
-</div>
 <p>그런 다음 변수를 초기화한다.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize the problem by defining the parameters</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize the problem by defining the parameters</span>
 <span class="n">n</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># number of nodes + depot (n+1)</span>
 <span class="n">K</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># number of vehicles</span>
 </pre></div>
@@ -712,7 +702,7 @@ Warning: Cplex not found.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the data</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the data</span>
 <span class="k">class</span> <span class="nc">Initializer</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
@@ -741,7 +731,7 @@ Warning: Cplex not found.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize the problem by randomly generating the instance</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize the problem by randomly generating the instance</span>
 <span class="n">initializer</span> <span class="o">=</span> <span class="n">Initializer</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
 <span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">instance</span> <span class="o">=</span> <span class="n">initializer</span><span class="o">.</span><span class="n">generate_instance</span><span class="p">()</span>
 </pre></div>
@@ -749,13 +739,13 @@ Warning: Cplex not found.
 </div>
 </section>
 <section id="IBM-ILOG-CPLEX를-사용한-고전적-솔루션">
-<h2>IBM ILOG CPLEX를 사용한 고전적 솔루션<a class="headerlink" href="#IBM-ILOG-CPLEX를-사용한-고전적-솔루션" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<h2>IBM ILOG CPLEX를 사용한 고전적 솔루션<a class="headerlink" href="#IBM-ILOG-CPLEX를-사용한-고전적-솔루션" title="이 제목에 대한 퍼머링크">¶</a></h2>
 <p>고전적 솔루션의 경우 IBM ILOG CPLEX를 사용한다. CPLEX는 이 문제에 대한 정확한 해결책을 찾을 수 있다. 먼저 문제를 CPLEX가 해결할 수 있는 방식으로 인코딩하는 ClassicalOptimizer 클래스를 정의한 다음 클래스를 인스턴스화하고 해결한다.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ClassicalOptimizer</span><span class="p">:</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ClassicalOptimizer</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">instance</span> <span class="o">=</span> <span class="n">instance</span>
@@ -854,7 +844,7 @@ Warning: Cplex not found.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate the classical optimizer class</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate the classical optimizer class</span>
 <span class="n">classical_optimizer</span> <span class="o">=</span> <span class="n">ClassicalOptimizer</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
 
 <span class="c1"># Print number of feasible solutions</span>
@@ -874,7 +864,7 @@ Number of feasible solutions = 3.0
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solve the problem in a classical fashion via CPLEX</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solve the problem in a classical fashion via CPLEX</span>
 <span class="n">x</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="n">z</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="k">try</span><span class="p">:</span>
@@ -893,14 +883,14 @@ Number of feasible solutions = 3.0
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPLEX may be missing.
+[1.0, 1.0, 1.0, 0.0, 1.0, 0.0]
 </pre></div></div>
 </div>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Visualize the solution</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Visualize the solution</span>
 <span class="k">def</span> <span class="nf">visualize_solution</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">title_str</span><span class="p">):</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
@@ -933,10 +923,17 @@ CPLEX may be missing.
 </pre></div>
 </div>
 </div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_07_examples_vehicle_routing_12_0.png" src="../_images/tutorials_07_examples_vehicle_routing_12_0.png" />
+</div>
+</div>
 <p>CPLEX가 있는 경우 솔루션에는 별이 있는 저장소(depot) 와 화살표가 있는 차량에 대해 선택한 경로가 표시된다.</p>
 </section>
 <section id="양자-솔루션-문제-구성">
-<h2>양자 솔루션 문제 구성<a class="headerlink" href="#양자-솔루션-문제-구성" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<h2>양자 솔루션 문제 구성<a class="headerlink" href="#양자-솔루션-문제-구성" title="이 제목에 대한 퍼머링크">¶</a></h2>
 <p>양자 솔루션의 경우 Qiskit을 사용한다.</p>
 <p>먼저 문제를 해결하기 위해 양자적 접근 방식을 인코딩하는 QuantumOptimizer 클래스를 사용하여 처음부터 솔루션을 도출한 다음 이를 인스턴스화하고 해결한다. 클래스 내에서 다음 메서드를 정의한다.</p>
 <ul class="simple">
@@ -948,7 +945,7 @@ CPLEX may be missing.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit_optimization</span> <span class="kn">import</span> <span class="n">QuadraticProgram</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit_optimization</span> <span class="kn">import</span> <span class="n">QuadraticProgram</span>
 <span class="kn">from</span> <span class="nn">qiskit_optimization.algorithms</span> <span class="kn">import</span> <span class="n">MinimumEigenOptimizer</span>
 
 
@@ -1049,7 +1046,7 @@ CPLEX may be missing.
 </div>
 </div>
 <section id="단계-1">
-<h3>단계 1<a class="headerlink" href="#단계-1" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<h3>단계 1<a class="headerlink" href="#단계-1" title="이 제목에 대한 퍼머링크">¶</a></h3>
 <p>quantum optimizer 클래스를 다음 변수들로 인스턴스화한다:</p>
 <ul class="simple">
 <li><p>인스턴스;</p></li>
@@ -1059,21 +1056,21 @@ CPLEX may be missing.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate the quantum optimizer class with parameters:</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate the quantum optimizer class with parameters:</span>
 <span class="n">quantum_optimizer</span> <span class="o">=</span> <span class="n">QuantumOptimizer</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </section>
 <section id="단계-2">
-<h3>단계 2<a class="headerlink" href="#단계-2" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<h3>단계 2<a class="headerlink" href="#단계-2" title="이 제목에 대한 퍼머링크">¶</a></h3>
 <p>문제를 이원 공식 (IH-QP) 으로 인코딩한다.</p>
 <p>타당성 검사(Sanity check): 양자 최적화 프로그램의 이진 공식화가 정확한지 확인한다 (즉, 동일한 솔루션에서 동일한 비용을 산출함).</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check if the binary representation is correct</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check if the binary representation is correct</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">Q</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">binary_cost</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">binary_representation</span><span class="p">(</span><span class="n">x_sol</span><span class="o">=</span><span class="n">z</span><span class="p">)</span>
@@ -1097,31 +1094,31 @@ CPLEX may be missing.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Could not verify the correctness, due to CPLEX solution being unavailable.
-Binary cost: 0
+Binary cost: 132.11148115684045 classical cost: 132.1114811568365
+Binary formulation is correct
 </pre></div></div>
 </div>
 </section>
 <section id="단계-3">
-<h3>단계 3<a class="headerlink" href="#단계-3" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<h3>단계 3<a class="headerlink" href="#단계-3" title="이 제목에 대한 퍼머링크">¶</a></h3>
 <p>이 문제를 <code class="docutils literal notranslate"><span class="pre">QuadraticProgram</span></code> 의 인스턴스로 인코딩한다.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">qp</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">construct_problem</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qp</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">construct_problem</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </section>
 <section id="단계-4">
-<h3>단계 4<a class="headerlink" href="#단계-4" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<h3>단계 4<a class="headerlink" href="#단계-4" title="이 제목에 대한 퍼머링크">¶</a></h3>
 <p>최적화 스택의 <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> 를 통해 문제를 해결한다. 중요. 큐비트 수에 따라 상태-백터 시뮬레이션에 시간이 걸릴 수 있다. 예를 들어, 12 큐비트에서는 12시간 이상 걸린다. 로그인하면 프로그램이 수행하는 작업을 확인하는데 유용하다.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">quantum_solution</span><span class="p">,</span> <span class="n">quantum_cost</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">solve_problem</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">quantum_solution</span><span class="p">,</span> <span class="n">quantum_cost</span> <span class="o">=</span> <span class="n">quantum_optimizer</span><span class="o">.</span><span class="n">solve_problem</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">quantum_solution</span><span class="p">,</span> <span class="n">quantum_cost</span><span class="p">)</span>
 </pre></div>
@@ -1137,13 +1134,13 @@ Binary cost: 0
 </div>
 </section>
 <section id="단계-5">
-<h3>단계 5<a class="headerlink" href="#단계-5" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<h3>단계 5<a class="headerlink" href="#단계-5" title="이 제목에 대한 퍼머링크">¶</a></h3>
 <p>솔루션 시각화</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Put the solution in a way that is compatible with the classical variables</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Put the solution in a way that is compatible with the classical variables</span>
 <span class="n">x_quantum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">kk</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">):</span>
@@ -1161,11 +1158,18 @@ Binary cost: 0
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <img alt="../_images/tutorials_07_examples_vehicle_routing_25_0.png" src="../_images/tutorials_07_examples_vehicle_routing_25_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_07_examples_vehicle_routing_25_1.png" src="../_images/tutorials_07_examples_vehicle_routing_25_1.png" />
 </div>
 </div>
 <p>도표에는 별과 함께 저장소가 표시되고 화살표가 있는 차량에 대해 선택된 경로가 표시된다. 이 특별한 경우, 우리는 ILP의 최적 솔루션과 일치하는 QP 공식의 최적 솔루션을 찾을 수 있다.</p>
@@ -1174,10 +1178,10 @@ Binary cost: 0
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
 
-<span class="o">%</span><span class="k">qiskit_version_table</span>
-<span class="o">%</span><span class="k">qiskit_copyright</span>
+<span class="o">%</span><span class="n">qiskit_version_table</span>
+<span class="o">%</span><span class="n">qiskit_copyright</span>
 </pre></div>
 </div>
 </div>
@@ -1185,20 +1189,19 @@ Binary cost: 0
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td>Qiskit</td><td>None</td></tr><tr><td>Terra</td><td>0.17.0.dev0+3c103ae</td></tr><tr><td>Aer</td><td>0.8.0</td></tr><tr><td>Ignis</td><td>0.6.0.dev0+6103f99</td></tr><tr><td>Aqua</td><td>0.9.0.dev0+0058183</td></tr><tr><td>IBM Q Provider</td><td>0.12.0.dev0+8f3168b</td></tr><tr><th>System information</th></tr><tr><td>Python</td><td>3.7.9 (default, Aug 31 2020, 07:22:35)
-[Clang 10.0.0 ]</td></tr><tr><td>OS</td><td>Darwin</td></tr><tr><td>CPUs</td><td>2</td></tr><tr><td>Memory (Gb)</td><td>12.0</td></tr><tr><td colspan='2'>Fri Mar 05 12:50:09 2021 EST</td></tr></table></div>
+<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td><code>qiskit-terra</code></td><td>0.21.0.dev0+dbd3961</td></tr><tr><td><code>qiskit-aer</code></td><td>0.10.4</td></tr><tr><td><code>qiskit-ibmq-provider</code></td><td>0.19.1</td></tr><tr><td><code>qiskit-optimization</code></td><td>0.4.0</td></tr><tr><th>System information</th></tr><tr><td>Python version</td><td>3.10.4</td></tr><tr><td>Python compiler</td><td>GCC 11.2.0</td></tr><tr><td>Python build</td><td>main, Apr  2 2022 09:04:19</td></tr><tr><td>OS</td><td>Linux</td></tr><tr><td>CPUs</td><td>4</td></tr><tr><td>Memory (Gb)</td><td>14.577545166015625</td></tr><tr><td colspan='2'>Wed May 18 16:05:15 2022 JST</td></tr></table></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2021.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
+<div style='width: 100%; background-color:#d5d9e0;padding-left: 10px; padding-bottom: 10px; padding-right: 10px; padding-top: 5px'><h3>This code is a part of Qiskit</h3><p>&copy; Copyright IBM 2017, 2022.</p><p>This code is licensed under the Apache License, Version 2.0. You may<br>obtain a copy of this license in the LICENSE.txt file in the root directory<br> of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.<p>Any modifications or derivative works of this code must retain this<br>copyright notice, and modified files need to carry a notice indicating<br>that they have been altered from the originals.</p></div></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span>
 </pre></div>
 </div>
 </div>
@@ -1286,8 +1289,10 @@ Binary cost: 0
          <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../_static/doctools.js"></script>
          <script src="../_static/thebelab-helper.js"></script>
+         <script src="../_static/design-tabs.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>

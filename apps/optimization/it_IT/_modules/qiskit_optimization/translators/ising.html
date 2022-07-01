@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_optimization.translators.ising &mdash; Qiskit Optimization 0.3.2 documentazione</title>
+  <title>qiskit_optimization.translators.ising &mdash; Qiskit Optimization 0.4.0 documentazione</title>
   
 
   
@@ -31,9 +31,7 @@
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
@@ -177,7 +175,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.0
                 </div>
               
             
@@ -296,7 +294,7 @@
 <span class="sd">&quot;&quot;&quot;Translator between an Ising Hamiltonian and a quadratic program&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -353,10 +351,10 @@
     <span class="c1"># sign == 1 is for minimized problem. sign == -1 is for maximized problem.</span>
     <span class="n">sense</span> <span class="o">=</span> <span class="n">quad_prog</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">sense</span><span class="o">.</span><span class="n">value</span>
 
-    <span class="c1"># convert a constant part of the object function into Hamiltonian.</span>
+    <span class="c1"># convert a constant part of the objective function into Hamiltonian.</span>
     <span class="n">offset</span> <span class="o">+=</span> <span class="n">quad_prog</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">constant</span> <span class="o">*</span> <span class="n">sense</span>
 
-    <span class="c1"># convert linear parts of the object function into Hamiltonian.</span>
+    <span class="c1"># convert linear parts of the objective function into Hamiltonian.</span>
     <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">coef</span> <span class="ow">in</span> <span class="n">quad_prog</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">z_p</span> <span class="o">=</span> <span class="n">zero</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">weight</span> <span class="o">=</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">sense</span> <span class="o">/</span> <span class="mi">2</span>
@@ -395,13 +393,16 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">qubit_op</span><span class="p">,</span> <span class="n">OperatorBase</span><span class="p">):</span>
         <span class="n">qubit_op</span> <span class="o">=</span> <span class="n">qubit_op</span><span class="o">.</span><span class="n">reduce</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">qubit_op</span> <span class="o">=</span> <span class="n">I</span> <span class="o">^</span> <span class="n">num_nodes</span>
+        <span class="c1"># If there is no variable, we set num_nodes=1 so that qubit_op should be an operator.</span>
+        <span class="c1"># If num_nodes=0, I^0 = 1 (int).</span>
+        <span class="n">num_nodes</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_nodes</span><span class="p">)</span>
+        <span class="n">qubit_op</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">I</span> <span class="o">^</span> <span class="n">num_nodes</span>
 
     <span class="k">return</span> <span class="n">qubit_op</span><span class="p">,</span> <span class="n">offset</span></div>
 
 
 <div class="viewcode-block" id="from_ising"><a class="viewcode-back" href="../../../stubs/qiskit_optimization.translators.from_ising.html#qiskit_optimization.translators.from_ising">[documenti]</a><span class="k">def</span> <span class="nf">from_ising</span><span class="p">(</span>
-    <span class="n">qubit_op</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">OperatorBase</span><span class="p">,</span> <span class="n">PauliSumOp</span><span class="p">],</span>
+    <span class="n">qubit_op</span><span class="p">:</span> <span class="n">OperatorBase</span><span class="p">,</span>
     <span class="n">offset</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
     <span class="n">linear</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuadraticProgram</span><span class="p">:</span>
@@ -468,7 +469,9 @@
         <span class="n">z_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pauli</span><span class="o">.</span><span class="n">z</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">num_z</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">z_index</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">num_z</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">num_z</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="n">coeff</span><span class="o">.</span><span class="n">real</span>
+        <span class="k">elif</span> <span class="n">num_z</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">pauli_coeffs_diag</span><span class="p">[</span><span class="n">z_index</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">coeff</span><span class="o">.</span><span class="n">real</span>
         <span class="k">elif</span> <span class="n">num_z</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="n">pauli_coeffs_triu</span><span class="p">[</span><span class="n">z_index</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">z_index</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">coeff</span><span class="o">.</span><span class="n">real</span>
@@ -483,7 +486,7 @@
     <span class="c1"># For quadratic pauli terms of operator</span>
     <span class="c1"># x_i * x_j = (1 - Z_i - Z_j + Z_i * Z_j)/4</span>
     <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">weight</span> <span class="ow">in</span> <span class="n">pauli_coeffs_triu</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="c1"># Add a quadratic term to the object function of `QuadraticProgram`</span>
+        <span class="c1"># Add a quadratic term to the objective function of `QuadraticProgram`</span>
         <span class="c1"># The coefficient of the quadratic term in `QuadraticProgram` is</span>
         <span class="c1"># 4 * weight of the pauli</span>
         <span class="n">quadratic_terms</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">weight</span>
@@ -494,7 +497,7 @@
     <span class="c1"># After processing quadratic pauli terms, only linear paulis are left</span>
     <span class="c1"># x_i = (1 - Z_i)/2</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pauli_coeffs_diag</span><span class="p">):</span>
-        <span class="c1"># Add a linear term to the object function of `QuadraticProgram`</span>
+        <span class="c1"># Add a linear term to the objective function of `QuadraticProgram`</span>
         <span class="c1"># The coefficient of the linear term in `QuadraticProgram` is</span>
         <span class="c1"># 2 * weight of the pauli</span>
         <span class="k">if</span> <span class="n">linear</span><span class="p">:</span>
@@ -554,8 +557,10 @@
          <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
          <script src="../../../_static/jquery.js"></script>
          <script src="../../../_static/underscore.js"></script>
+         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../_static/doctools.js"></script>
          <script src="../../../_static/thebelab-helper.js"></script>
+         <script src="../../../_static/design-tabs.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>

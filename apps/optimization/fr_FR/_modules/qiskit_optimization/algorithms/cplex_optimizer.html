@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qiskit_optimization.algorithms.cplex_optimizer &mdash; Documentation Qiskit Optimization 0.3.2</title>
+  <title>qiskit_optimization.algorithms.cplex_optimizer &mdash; Documentation Qiskit Optimization 0.4.0</title>
   
 
   
@@ -31,9 +31,7 @@
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
@@ -177,7 +175,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.0
                 </div>
               
             
@@ -283,7 +281,7 @@
   <h1>Code source de qiskit_optimization.algorithms.cplex_optimizer</h1><div class="highlight"><pre>
 <span></span><span class="c1"># This code is part of Qiskit.</span>
 <span class="c1">#</span>
-<span class="c1"># (C) Copyright IBM 2020, 2021.</span>
+<span class="c1"># (C) Copyright IBM 2020, 2022.</span>
 <span class="c1">#</span>
 <span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
 <span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
@@ -298,10 +296,9 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
 
-<span class="kn">from</span> <span class="nn">qiskit.exceptions</span> <span class="kn">import</span> <span class="n">MissingOptionalLibraryError</span>
-
 <span class="kn">from</span> <span class="nn">qiskit_optimization.problems.quadratic_program</span> <span class="kn">import</span> <span class="n">QuadraticProgram</span>
 <span class="kn">from</span> <span class="nn">qiskit_optimization.translators</span> <span class="kn">import</span> <span class="n">to_docplex_mp</span>
+<span class="kn">import</span> <span class="nn">qiskit_optimization.optionals</span> <span class="k">as</span> <span class="nn">_optionals</span>
 <span class="kn">from</span> <span class="nn">.optimization_algorithm</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">OptimizationAlgorithm</span><span class="p">,</span>
     <span class="n">OptimizationResult</span><span class="p">,</span>
@@ -309,15 +306,8 @@
 <span class="p">)</span>
 
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">cplex</span> <span class="kn">import</span> <span class="n">Cplex</span>  <span class="c1"># pylint: disable=unused-import</span>
-
-    <span class="n">_HAS_CPLEX</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="n">_HAS_CPLEX</span> <span class="o">=</span> <span class="kc">False</span>
-
-
-<div class="viewcode-block" id="CplexOptimizer"><a class="viewcode-back" href="../../../stubs/qiskit_optimization.algorithms.CplexOptimizer.html#qiskit_optimization.algorithms.CplexOptimizer">[docs]</a><span class="k">class</span> <span class="nc">CplexOptimizer</span><span class="p">(</span><span class="n">OptimizationAlgorithm</span><span class="p">):</span>
+<div class="viewcode-block" id="CplexOptimizer"><a class="viewcode-back" href="../../../stubs/qiskit_optimization.algorithms.CplexOptimizer.html#qiskit_optimization.algorithms.CplexOptimizer">[docs]</a><span class="nd">@_optionals</span><span class="o">.</span><span class="n">HAS_CPLEX</span><span class="o">.</span><span class="n">require_in_instance</span>
+<span class="k">class</span> <span class="nc">CplexOptimizer</span><span class="p">(</span><span class="n">OptimizationAlgorithm</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The CPLEX optimizer wrapped as an Qiskit :class:`OptimizationAlgorithm`.</span>
 
 <span class="sd">    This class provides a wrapper for ``cplex.Cplex`` (https://pypi.org/project/cplex/)</span>
@@ -341,24 +331,14 @@
 <span class="sd">            disp: Whether to print CPLEX output or not.</span>
 <span class="sd">            cplex_parameters: The parameters for CPLEX.</span>
 <span class="sd">                See https://www.ibm.com/docs/en/icos/20.1.0?topic=cplex-parameters for details.</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            MissingOptionalLibraryError: CPLEX is not installed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">_HAS_CPLEX</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">MissingOptionalLibraryError</span><span class="p">(</span>
-                <span class="n">libname</span><span class="o">=</span><span class="s2">&quot;CPLEX&quot;</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;CplexOptimizer&quot;</span><span class="p">,</span>
-                <span class="n">pip_install</span><span class="o">=</span><span class="s2">&quot;pip install &#39;qiskit-optimization[cplex]&#39;&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_disp</span> <span class="o">=</span> <span class="n">disp</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cplex_parameters</span> <span class="o">=</span> <span class="n">cplex_parameters</span>
 
 <div class="viewcode-block" id="CplexOptimizer.is_cplex_installed"><a class="viewcode-back" href="../../../stubs/qiskit_optimization.algorithms.CplexOptimizer.is_cplex_installed.html#qiskit_optimization.algorithms.CplexOptimizer.is_cplex_installed">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">is_cplex_installed</span><span class="p">():</span>
         <span class="sd">&quot;&quot;&quot;Returns True if cplex is installed&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_HAS_CPLEX</span></div>
+        <span class="k">return</span> <span class="n">_optionals</span><span class="o">.</span><span class="n">HAS_CPLEX</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">disp</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -493,9 +473,11 @@
          <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
          <script src="../../../_static/jquery.js"></script>
          <script src="../../../_static/underscore.js"></script>
+         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../_static/doctools.js"></script>
          <script src="../../../_static/thebelab-helper.js"></script>
          <script src="../../../_static/translations.js"></script>
+         <script src="../../../_static/design-tabs.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>

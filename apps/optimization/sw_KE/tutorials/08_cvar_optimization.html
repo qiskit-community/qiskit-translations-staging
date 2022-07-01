@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Improving Variational Quantum Optimization using CVaR &mdash; Qiskit Optimization 0.3.2 documentation</title>
+  <title>Improving Variational Quantum Optimization using CVaR &mdash; Qiskit Optimization 0.4.0 documentation</title>
   
 
   
@@ -32,9 +32,7 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
@@ -180,7 +178,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.4.0
                 </div>
               
             
@@ -545,23 +543,23 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This page was generated from <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.3/docs/tutorials/08_cvar_optimization.ipynb">docs/tutorials/08_cvar_optimization.ipynb</a>.</p>
+<p>This page was generated from <a class="reference external" href="https://github.com/Qiskit/qiskit-optimization/blob/stable/0.4/docs/tutorials/08_cvar_optimization.ipynb">docs/tutorials/08_cvar_optimization.ipynb</a>.</p>
 </div>
 <section id="Improving-Variational-Quantum-Optimization-using-CVaR">
-<h1>Improving Variational Quantum Optimization using CVaR<a class="headerlink" href="#Improving-Variational-Quantum-Optimization-using-CVaR" title="Permalink to this headline">¶</a></h1>
+<h1>Improving Variational Quantum Optimization using CVaR<a class="headerlink" href="#Improving-Variational-Quantum-Optimization-using-CVaR" title="Permalink to this heading">¶</a></h1>
 <section id="Introduction">
-<h2>Introduction<a class="headerlink" href="#Introduction" title="Permalink to this headline">¶</a></h2>
+<h2>Introduction<a class="headerlink" href="#Introduction" title="Permalink to this heading">¶</a></h2>
 <p>This notebook shows how to use the Conditional Value at Risk (CVaR) objective function introduced in [1] within the variational quantum optimization algorithms provided by Qiskit. Particularly, it is shown how to setup the <code class="docutils literal notranslate"><span class="pre">MinimumEigenOptimizer</span></code> using <code class="docutils literal notranslate"><span class="pre">VQE</span></code> accordingly. For a given set of shots with corresponding objective values of the considered optimization problem, the CVaR with confidence level <span class="math notranslate nohighlight">\(\alpha \in [0, 1]\)</span> is defined as the average of the <span class="math notranslate nohighlight">\(\alpha\)</span> best shots. Thus,
 <span class="math notranslate nohighlight">\(\alpha = 1\)</span> corresponds to the standard expected value, while <span class="math notranslate nohighlight">\(\alpha=0\)</span> corresponds to the minimum of the given shots, and <span class="math notranslate nohighlight">\(\alpha \in (0, 1)\)</span> is a tradeoff between focusing on better shots, but still applying some averaging to smoothen the optimization landscape.</p>
 </section>
 <section id="References">
-<h2>References<a class="headerlink" href="#References" title="Permalink to this headline">¶</a></h2>
+<h2>References<a class="headerlink" href="#References" title="Permalink to this heading">¶</a></h2>
 <p>[1] <a class="reference external" href="https://quantum-journal.org/papers/q-2020-04-20-256/">P. Barkoutsos et al., Improving Variational Quantum Optimization using CVaR, Quantum 4, 256 (2020).</a></p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">RealAmplitudes</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">RealAmplitudes</span>
 <span class="kn">from</span> <span class="nn">qiskit.algorithms.optimizers</span> <span class="kn">import</span> <span class="n">COBYLA</span>
 <span class="kn">from</span> <span class="nn">qiskit.algorithms</span> <span class="kn">import</span> <span class="n">NumPyMinimumEigensolver</span><span class="p">,</span> <span class="n">VQE</span>
 <span class="kn">from</span> <span class="nn">qiskit.opflow</span> <span class="kn">import</span> <span class="n">PauliExpectation</span><span class="p">,</span> <span class="n">CVaRExpectation</span>
@@ -582,19 +580,19 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">123456</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">algorithm_globals</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">123456</span>
 </pre></div>
 </div>
 </div>
 </section>
 <section id="Portfolio-Optimization">
-<h2>Portfolio Optimization<a class="headerlink" href="#Portfolio-Optimization" title="Permalink to this headline">¶</a></h2>
+<h2>Portfolio Optimization<a class="headerlink" href="#Portfolio-Optimization" title="Permalink to this heading">¶</a></h2>
 <p>In the following we define a problem instance for portfolio optimization as introduced in [1].</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># prepare problem instance</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># prepare problem instance</span>
 <span class="n">n</span> <span class="o">=</span> <span class="mi">6</span>  <span class="c1"># number of assets</span>
 <span class="n">q</span> <span class="o">=</span> <span class="mf">0.5</span>  <span class="c1"># risk factor</span>
 <span class="n">budget</span> <span class="o">=</span> <span class="n">n</span> <span class="o">//</span> <span class="mi">2</span>  <span class="c1"># budget</span>
@@ -606,7 +604,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># instance from [1]</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># instance from [1]</span>
 <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.7313</span><span class="p">,</span> <span class="mf">0.9893</span><span class="p">,</span> <span class="mf">0.2725</span><span class="p">,</span> <span class="mf">0.8750</span><span class="p">,</span> <span class="mf">0.7667</span><span class="p">,</span> <span class="mf">0.3622</span><span class="p">])</span>
 <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
     <span class="p">[</span>
@@ -628,7 +626,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># create docplex model</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create docplex model</span>
 <span class="n">mdl</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="s2">&quot;portfolio_optimization&quot;</span><span class="p">)</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">mdl</span><span class="o">.</span><span class="n">binary_var_list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
 <span class="n">objective</span> <span class="o">=</span> <span class="n">mdl</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">mu</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
@@ -645,20 +643,19 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># solve classically as reference</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># solve classically as reference</span>
 <span class="n">opt_result</span> <span class="o">=</span> <span class="n">MinimumEigenOptimizer</span><span class="p">(</span><span class="n">NumPyMinimumEigensolver</span><span class="p">())</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">qp</span><span class="p">)</span>
-<span class="n">opt_result</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">opt_result</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-optimal function value: 1.27835
-optimal value: [1. 1. 0. 0. 1. 0.]
+objective function value: 1.27835
+variable values: x_0=1.0, x_1=1.0, x_2=0.0, x_3=0.0, x_4=1.0, x_5=0.0
 status: SUCCESS
 </pre></div></div>
 </div>
@@ -666,7 +663,7 @@ status: SUCCESS
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># we convert the problem to an unconstrained problem for further analysis,</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># we convert the problem to an unconstrained problem for further analysis,</span>
 <span class="c1"># otherwise this would not be necessary as the MinimumEigenSolver would do this</span>
 <span class="c1"># translation automatically</span>
 <span class="n">linear2penalty</span> <span class="o">=</span> <span class="n">LinearEqualityToPenalty</span><span class="p">(</span><span class="n">penalty</span><span class="o">=</span><span class="n">penalty</span><span class="p">)</span>
@@ -677,12 +674,12 @@ status: SUCCESS
 </div>
 </section>
 <section id="Minimum-Eigen-Optimizer-using-VQE">
-<h2>Minimum Eigen Optimizer using VQE<a class="headerlink" href="#Minimum-Eigen-Optimizer-using-VQE" title="Permalink to this headline">¶</a></h2>
+<h2>Minimum Eigen Optimizer using VQE<a class="headerlink" href="#Minimum-Eigen-Optimizer-using-VQE" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># set classical optimizer</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># set classical optimizer</span>
 <span class="n">maxiter</span> <span class="o">=</span> <span class="mi">100</span>
 <span class="n">optimizer</span> <span class="o">=</span> <span class="n">COBYLA</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="n">maxiter</span><span class="p">)</span>
 
@@ -704,7 +701,7 @@ status: SUCCESS
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># dictionaries to store optimization progress and results</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># dictionaries to store optimization progress and results</span>
 <span class="n">objectives</span> <span class="o">=</span> <span class="p">{</span><span class="n">alpha</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">alpha</span> <span class="ow">in</span> <span class="n">alphas</span><span class="p">}</span>  <span class="c1"># set of tested objective functions w.r.t. alpha</span>
 <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># results of minimum eigensolver w.r.t alpha</span>
 
@@ -739,7 +736,7 @@ status: SUCCESS
 
     <span class="c1"># print results</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;alpha = </span><span class="si">{}</span><span class="s2">:&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">alpha</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">alpha</span><span class="p">]</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">())</span>
     <span class="nb">print</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -750,18 +747,18 @@ status: SUCCESS
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 alpha = 1.0:
-optimal function value: 0.9716499999999968
-optimal value: [1. 0. 0. 0. 1. 1.]
+objective function value: 1.2783500000000174
+variable values: x_0=1.0, x_1=1.0, x_2=0.0, x_3=0.0, x_4=1.0, x_5=0.0
 status: SUCCESS
 
 alpha = 0.5:
-optimal function value: 0.34159999999998547
-optimal value: [0. 0. 1. 0. 1. 1.]
+objective function value: 1.2783500000000174
+variable values: x_0=1.0, x_1=1.0, x_2=0.0, x_3=0.0, x_4=1.0, x_5=0.0
 status: SUCCESS
 
 alpha = 0.25:
-optimal function value: 1.2783500000000174
-optimal value: [1. 1. 0. 0. 1. 0.]
+objective function value: 1.2783500000000174
+variable values: x_0=1.0, x_1=1.0, x_2=0.0, x_3=0.0, x_4=1.0, x_5=0.0
 status: SUCCESS
 
 </pre></div></div>
@@ -770,7 +767,7 @@ status: SUCCESS
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># plot resulting history of objective values</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># plot resulting history of objective values</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxiter</span><span class="p">],</span> <span class="p">[</span><span class="n">opt_result</span><span class="o">.</span><span class="n">fval</span><span class="p">,</span> <span class="n">opt_result</span><span class="o">.</span><span class="n">fval</span><span class="p">],</span> <span class="s2">&quot;r--&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;optimum&quot;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">alpha</span> <span class="ow">in</span> <span class="n">alphas</span><span class="p">:</span>
@@ -796,7 +793,7 @@ status: SUCCESS
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># evaluate and sort all objective values</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># evaluate and sort all objective values</span>
 <span class="n">objective_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span><span class="p">):</span>
     <span class="n">x_bin</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;{0:0</span><span class="si">%s</span><span class="s2">b}&quot;</span> <span class="o">%</span> <span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
@@ -824,19 +821,19 @@ status: SUCCESS
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-optimal probabilitiy (alpha = 1.00):  0.0000
-optimal probabilitiy (alpha = 0.50):  0.0000
-optimal probabilitiy (alpha = 0.25):  0.1287
+optimal probabilitiy (alpha = 1.00):  0.0084
+optimal probabilitiy (alpha = 0.50):  0.0314
+optimal probabilitiy (alpha = 0.25):  0.1278
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">qiskit.tools.jupyter</span>
 
-<span class="o">%</span><span class="k">qiskit_version_table</span>
-<span class="o">%</span><span class="k">qiskit_copyright</span>
+<span class="o">%</span><span class="n">qiskit_version_table</span>
+<span class="o">%</span><span class="n">qiskit_copyright</span>
 </pre></div>
 </div>
 </div>
@@ -844,7 +841,7 @@ optimal probabilitiy (alpha = 0.25):  0.1287
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td><code>qiskit-terra</code></td><td>0.20.0.dev0+e7fd3ba</td></tr><tr><td><code>qiskit-aer</code></td><td>0.10.2</td></tr><tr><td><code>qiskit-ignis</code></td><td>0.7.0</td></tr><tr><td><code>qiskit-ibmq-provider</code></td><td>0.18.3</td></tr><tr><td><code>qiskit-optimization</code></td><td>0.4.0</td></tr><tr><th>System information</th></tr><tr><td>Python version</td><td>3.9.10</td></tr><tr><td>Python compiler</td><td>Clang 13.0.0 (clang-1300.0.29.3)</td></tr><tr><td>Python build</td><td>main, Jan 15 2022 11:48:00</td></tr><tr><td>OS</td><td>Darwin</td></tr><tr><td>CPUs</td><td>4</td></tr><tr><td>Memory (Gb)</td><td>16.0</td></tr><tr><td colspan='2'>Fri Jan 21 15:20:05 2022 JST</td></tr></table></div>
+<h3>Version Information</h3><table><tr><th>Qiskit Software</th><th>Version</th></tr><tr><td><code>qiskit-terra</code></td><td>0.21.0.dev0+dbd3961</td></tr><tr><td><code>qiskit-aer</code></td><td>0.10.4</td></tr><tr><td><code>qiskit-ibmq-provider</code></td><td>0.19.1</td></tr><tr><td><code>qiskit-optimization</code></td><td>0.4.0</td></tr><tr><th>System information</th></tr><tr><td>Python version</td><td>3.10.4</td></tr><tr><td>Python compiler</td><td>GCC 11.2.0</td></tr><tr><td>Python build</td><td>main, Apr  2 2022 09:04:19</td></tr><tr><td>OS</td><td>Linux</td></tr><tr><td>CPUs</td><td>4</td></tr><tr><td>Memory (Gb)</td><td>14.577545166015625</td></tr><tr><td colspan='2'>Wed May 18 16:05:25 2022 JST</td></tr></table></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
@@ -856,7 +853,7 @@ optimal probabilitiy (alpha = 0.25):  0.1287
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span>
 </pre></div>
 </div>
 </div>
@@ -928,8 +925,10 @@ optimal probabilitiy (alpha = 0.25):  0.1287
          <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../_static/doctools.js"></script>
          <script src="../_static/thebelab-helper.js"></script>
+         <script src="../_static/design-tabs.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>

@@ -32,15 +32,13 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
     <link rel="index" title="Índice" href="../genindex.html" />
     <link rel="search" title="Pesquisar" href="../search.html" />
-    <link rel="next" title="Quantum Kernel Training for Machine Learning Applications" href="08_quantum_kernel_trainer.html" />
+    <link rel="next" title="Treinamento de Kernel Quântico para Aplicatições em Machine Learning" href="08_quantum_kernel_trainer.html" />
     <link rel="prev" title="Torch Runtime" href="06_torch_runtime.html" /> 
 
   
@@ -568,11 +566,11 @@ div.rendered_html tbody tr:hover {
 <p>Esta página foi gerada a partir de <a class="reference external" href="https://github.com/Qiskit/qiskit-machine-learning/blob/stable/0.4/docs/tutorials/07_pegasos_qsvc.ipynb">docs/tutorials/07_pegasos_qsvc.ipynb</a>.</p>
 </div>
 <section id="Classificador-quântico-de-vetores-de-suporte-Pegasos">
-<h1>Classificador quântico de vetores de suporte Pegasos<a class="headerlink" href="#Classificador-quântico-de-vetores-de-suporte-Pegasos" title="Link permanente para este título">¶</a></h1>
-<p>There’s another SVM based algorithm that benefits from the quantum kernel method. Here, we introduce an implementation of a another classification algorithm, which is an alternative version to the QSVC shown above. This classification algorithm implements the Pegasos algorithm from the paper “Pegasos: Primal Estimated sub-GrAdient SOlver for SVM” by Shalev-Shwartz et al., see: <a class="reference external" href="https://home.ttic.edu/~nati/Publications/PegasosMPB.pdf">https://home.ttic.edu/~nati/Publications/PegasosMPB.pdf</a>.</p>
-<p>This algorithm is an alternative to the dual optimization from the <code class="docutils literal notranslate"><span class="pre">scikit-learn</span></code> package, beneficial of the kernel trick, and yields a training complexity that is independent of the size of the training set. Thus, the <code class="docutils literal notranslate"><span class="pre">PegasosQSVC</span></code> is expected to train faster than QSVC for sufficiently large training sets.</p>
-<p>The algorithm can be used as direct replacement of <code class="docutils literal notranslate"><span class="pre">QSVC</span></code> with some hyper-parameterization.</p>
-<p>Let’s generate some data:</p>
+<h1>Classificador quântico de vetores de suporte Pegasos<a class="headerlink" href="#Classificador-quântico-de-vetores-de-suporte-Pegasos" title="Permalink to this heading">¶</a></h1>
+<p>Há outro algoritmo baseado em SVM que se beneficia do método do kernel quântico. Aqui, apresentamos uma implementação de outro algoritmo de classificação, que é uma versão alternativa ao QSVC mostrado acima. Este algoritmo de classificação implementa o algoritmo Pegasos do artigo “Pegasos: Primal Estimated sub-GrAdient SOlver for SVM” de Shalev-Shwartz et al., consulte: <a class="reference external" href="https://home.ttic.edu/~nati/Publications/PegasosMPB.pdf">https://home.ttic.edu/~nati/Publications/PegasosMPB.pdf</a>.</p>
+<p>This algorithm is an alternative to the dual optimization from the <code class="docutils literal notranslate"><span class="pre">scikit-learn</span></code> package, benefits from the kernel trick, and yields a training complexity that is independent of the size of the training set. Thus, the <code class="docutils literal notranslate"><span class="pre">PegasosQSVC</span></code> is expected to train faster than QSVC for sufficiently large training sets.</p>
+<p>O algoritmo pode ser usado como substituição direta do <code class="docutils literal notranslate"><span class="pre">QSVC</span></code> com um pouco de hiper-parametrização.</p>
+<p>Vamos gerar alguns dados:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -584,7 +582,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>We pre-process the data to ensure compatibility with the rotation encoding and split it into the training and test datasets.</p>
+<p>Pré-processamos os dados para garantir a compatibilidade com a codificação de rotação e os dividimos nos conjuntos de dados de treinamento e teste.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -602,10 +600,9 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>We have two features in the dataset, so we set a number of qubits to the number of features in the dataset.</p>
-<p>Then we set <span class="math notranslate nohighlight">\(\tau\)</span> to the number of steps performed during the training procedure. Please note that, there is no early stopping criterion in the algorithm. The algorithm iterates over all <span class="math notranslate nohighlight">\(\tau\)</span> steps.</p>
-<p>And the last one is the hyperparameter <span class="math notranslate nohighlight">\(C\)</span>. This is a positive regularization parameter. The strength of the regularization is inversely proportional to <span class="math notranslate nohighlight">\(C\)</span>. Smaller <span class="math notranslate nohighlight">\(C\)</span> induce smaller weights which generally helps preventing overfitting. However, due to the nature of this algorithm, some of the computation steps become trivial for larger <span class="math notranslate nohighlight">\(C\)</span>. Thus, larger <span class="math notranslate nohighlight">\(C\)</span> improve the performance of the algorithm drastically. If the data is linearly separable in feature space,
-<span class="math notranslate nohighlight">\(C\)</span> should be chosen to be large. If the separation is not perfect, <span class="math notranslate nohighlight">\(C\)</span> should be chosen smaller to prevent overfitting.</p>
+<p>Temos dois recursos no conjunto de dados, então definimos um número de qubits para o número de recursos no conjunto de dados.</p>
+<p>Em seguida, definimos <span class="math notranslate nohighlight">\(\tau\)</span> para o número de etapas realizadas durante o procedimento de treinamento. Observe que não há critério de parada antecipada no algoritmo. O algoritmo itera em todas as etapas de <span class="math notranslate nohighlight">\(\tau\)</span>.</p>
+<p>E o último é o hiperparâmetro <span class="math notranslate nohighlight">\(C\)</span>. Este é um parâmetro de regularização positivo. A força da regularização é inversamente proporcional a <span class="math notranslate nohighlight">\(C\)</span>. <span class="math notranslate nohighlight">\(C\)</span> menores induzem pesos menores que geralmente ajudam a prevenir sobreajuste. No entanto, devido à natureza deste algoritmo, alguns dos passos de computação tornam-se triviais para <span class="math notranslate nohighlight">\(C\)</span> maiores. Assim, maiores <span class="math notranslate nohighlight">\(C\)</span> melhoram drasticamente o desempenho do algoritmo. Se os dados são separáveis ​​linearmente no espaço de características, <span class="math notranslate nohighlight">\(C\)</span> deve ser escolhido para ser grande. Se a separação não for perfeita, <span class="math notranslate nohighlight">\(C\)</span> deve ser escolhido menor para evitar sobreajuste.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -621,10 +618,10 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>The algorithm will run using:</p>
+<p>O algoritmo rodará usando:</p>
 <ul class="simple">
-<li><p>A statevector simulator</p></li>
-<li><p>A quantum kernel created from <code class="docutils literal notranslate"><span class="pre">ZFeatureMap</span></code></p></li>
+<li><p>Um simulador de vetor de estado</p></li>
+<li><p>Um kernel quântico criado a partir de <code class="docutils literal notranslate"><span class="pre">ZFeatureMap</span></code></p></li>
 </ul>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -650,9 +647,9 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>The implementation <code class="docutils literal notranslate"><span class="pre">PegasosQSVC</span></code> is compatible with the <code class="docutils literal notranslate"><span class="pre">scikit-learn</span></code> interfaces and has a pretty standard way of training a model. In the constructor we pass parameters of the algorithm, in this case there are a regularization hyper-parameter <span class="math notranslate nohighlight">\(C\)</span> and a number of steps.</p>
-<p>Then we pass training features and labels to the <code class="docutils literal notranslate"><span class="pre">fit</span></code> method, which trains a models and returns a fitted classifier.</p>
-<p>Afterwards, we score our model using test features and labels.</p>
+<p>A implementação <code class="docutils literal notranslate"><span class="pre">PegasosQSVC</span></code> é compatível com as interfaces <code class="docutils literal notranslate"><span class="pre">scikit-learn</span></code> e tem uma maneira muito usual de treinar um modelo. No construtor passamos parâmetros do algoritmo, neste caso há um hiperparâmetro de regularização <span class="math notranslate nohighlight">\(C\)</span> e uma série de passos.</p>
+<p>Em seguida, passamos recursos de treinamento e rótulos para o método <code class="docutils literal notranslate"><span class="pre">fit</span></code>, que treina um modelo e retorna um classificador ajustado.</p>
+<p>Depois, pontuamos nosso modelo usando recursos de teste e rótulos.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
@@ -678,7 +675,7 @@ div.rendered_html tbody tr:hover {
 PegasosQSVC classification test score: 1.0
 </pre></div></div>
 </div>
-<p>For visualization purposes we create a mesh grid of a predefined step that spans our minimum and maximum values we applied in MinMaxScaler. We also add some margin to the grid for better representation of the training and test samples.</p>
+<p>Para fins de visualização, criamos uma grade de malha de uma etapa predefinida que abrange nossos valores mínimo e máximo que aplicamos no MinMaxScaler. Também adicionamos alguma margem à grade para melhor representação das amostras de treinamento e teste.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
@@ -691,7 +688,7 @@ PegasosQSVC classification test score: 1.0
 </pre></div>
 </div>
 </div>
-<p>We convert the grid to the shape compatible with the model, the shape should be <code class="docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_features)</span></code>. Then for each grid point we predict a label. In our case predicted labels will be used for coloring the grid.</p>
+<p>Convertemos a grade para uma forma compatível com o modelo, a forma deve ser <code class="docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_features)</span></code>. Então, para cada ponto da grade, prevemos um rótulo. No nosso caso, os rótulos previstos serão usados ​​para colorir a grade.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
@@ -792,7 +789,7 @@ PegasosQSVC classification test score: 1.0
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="08_quantum_kernel_trainer.html" class="btn btn-neutral float-right" title="Quantum Kernel Training for Machine Learning Applications" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="08_quantum_kernel_trainer.html" class="btn btn-neutral float-right" title="Treinamento de Kernel Quântico para Aplicatições em Machine Learning" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
         <a href="06_torch_runtime.html" class="btn btn-neutral" title="Torch Runtime" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
@@ -843,8 +840,10 @@ PegasosQSVC classification test score: 1.0
          <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../_static/doctools.js"></script>
          <script src="../_static/thebelab-helper.js"></script>
+         <script src="../_static/design-tabs.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>

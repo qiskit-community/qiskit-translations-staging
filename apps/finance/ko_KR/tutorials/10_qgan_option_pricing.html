@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qGANs 을 이용한 옵션 가격 책정 (Option Pricing) &mdash; Qiskit Finance 0.3.2 문서</title>
+  <title>qGANs 을 이용한 옵션 가격 책정 (Option Pricing) &mdash; Qiskit Finance 0.3.3 문서</title>
   
 
   
@@ -32,9 +32,7 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
   <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
@@ -180,7 +178,7 @@
               
               
                 <div class="version">
-                  0.3.2
+                  0.3.3
                 </div>
               
             
@@ -209,10 +207,12 @@
             
             
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">시작하기</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../apidocs/qiskit_finance.html">API Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">튜토리얼</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../apidocs/qiskit_finance.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">릴리스 노트</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Qiskit/qiskit-finance">GitHub</a></li>
 </ul>
 
             
@@ -546,9 +546,9 @@ div.rendered_html tbody tr:hover {
 <p>이 페이지는 <a class="reference external" href="https://github.com/Qiskit/qiskit-finance/blob/stable/0.3/docs/tutorials/10_qgan_option_pricing.ipynb">docs/tutorials/10_qgan_option_pricing.ipynb</a> 에서 생성되었다.</p>
 </div>
 <section id="qGANs-을-이용한-옵션-가격-책정-(Option-Pricing)">
-<h1>qGANs 을 이용한 옵션 가격 책정 (Option Pricing)<a class="headerlink" href="#qGANs-을-이용한-옵션-가격-책정-(Option-Pricing)" title="이 표제에 대한 퍼머링크">¶</a></h1>
+<h1>qGANs 을 이용한 옵션 가격 책정 (Option Pricing)<a class="headerlink" href="#qGANs-을-이용한-옵션-가격-책정-(Option-Pricing)" title="이 제목에 대한 퍼머링크">¶</a></h1>
 <section id="소개">
-<h2>소개<a class="headerlink" href="#소개" title="이 표제에 대한 퍼머링크">¶</a></h2>
+<h2>소개<a class="headerlink" href="#소개" title="이 제목에 대한 퍼머링크">¶</a></h2>
 <p>이 노트북에서는 양자 머신 러닝 알고리즘 (Quantum Machine Learning Algorithm), 즉 양자 (quantum Generative Adversarial Network, qGAN) 이 유럽 호출 옵션의 가격 결정을 용이하게 할 수 있는 방법에 대해 논의한다. 보다 구체적으로, qGAN 은 양자 회로가 유럽 콜옵션에 기초한 자산의 현물 가격을 모델링하도록 훈련될 수 있다. 그 결과 얻어진 모델을 양자 진폭 추정 (Quantum Amplitude Estimation) 기반 알고리즘에 통합하여 예상되는 페이오프를 평가할 수 있다 - 참고: <a class="reference internal" href="03_european_call_option_pricing.html"><span class="doc">유럽 콜옵션 가격 모델링</span></a>. qGAN을 훈련하여 랜덤 분포를 학습하고 로드하는 방법에 대한 자세한 내용은 양자 생성 (<a class="reference external" href="https://www.nature.com/articles/s41534-019-0223-2">Quantum Generative Adversarial Networks for Learning and Loading Random Distributions. Zoufal, Lucchi, Woerner. 2019.</a>) 을 참조하라.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
@@ -570,7 +570,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <section id="불확실성-모델">
-<h3>불확실성 모델<a class="headerlink" href="#불확실성-모델" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<h3>불확실성 모델<a class="headerlink" href="#불확실성-모델" title="이 제목에 대한 퍼머링크">¶</a></h3>
 <p>블랙 스콜스 모델은 유럽 호출 옵션에 대한 성숙도 <span class="math notranslate nohighlight">\(S_T\)</span> 의 현물 가격이 정상적으로 분산되어 있다고 가정합니다. 따라서, 로그 정규 분포의 샘플에 대해 qGAN을 훈련하고 결과를 옵션에 기반한 불확실성 모델로 사용할 수 있다. 다음에, 불확실성 모델을 로딩하는 양자 회로를 구성한다. 회로 출력 판독</p>
 <div class="math notranslate nohighlight">
 \[\big| g_{\theta}\rangle = \sum_{j=0}^{2^n-1}\sqrt{p_{\theta}^{j}} \big| j \rangle ,\]</div>
@@ -604,7 +604,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="기대수익-(Expected-Payoff)-평가">
-<h3>기대수익 (Expected Payoff) 평가<a class="headerlink" href="#기대수익-(Expected-Payoff)-평가" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<h3>기대수익 (Expected Payoff) 평가<a class="headerlink" href="#기대수익-(Expected-Payoff)-평가" title="이 제목에 대한 퍼머링크">¶</a></h3>
 <p>이제 학습된 불확실성 모델을 사용하여 양자 진폭 추정으로 옵션의 수익 함수의 기대값을 평가할 수 있다.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
@@ -620,7 +620,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="확률-분포를-시각화-한다.">
-<h3>확률 분포를 시각화 한다.<a class="headerlink" href="#확률-분포를-시각화-한다." title="이 표제에 대한 퍼머링크">¶</a></h3>
+<h3>확률 분포를 시각화 한다.<a class="headerlink" href="#확률-분포를-시각화-한다." title="이 제목에 대한 퍼머링크">¶</a></h3>
 <p>다음으로, 우리는 훈련된 확률 분포를 구성하고, 비교의 이유로, 또한 타겟 확률 분포를 구성한다.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -674,7 +674,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="id2">
-<h3>기대수익 (Expected Payoff) 평가<a class="headerlink" href="#id2" title="이 표제에 대한 퍼머링크">¶</a></h3>
+<h3>기대수익 (Expected Payoff) 평가<a class="headerlink" href="#id2" title="이 제목에 대한 퍼머링크">¶</a></h3>
 <p>이제 훈련된 불확실성 모델을 사용하여 양자 진폭 추정으로 옵션의 페이오프 함수의 기대값을 평가할 수 있다.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
@@ -871,8 +871,10 @@ Confidence interval:    [0.9965, 1.0455]
          <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../_static/doctools.js"></script>
          <script src="../_static/thebelab-helper.js"></script>
+         <script src="../_static/design-tabs.js"></script>
          <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
          <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
          <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
